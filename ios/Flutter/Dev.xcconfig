@@ -1,0 +1,4 @@
+#include "Generated.xcconfig"
+PRODUCT_BUNDLE_IDENTIFIER=com.aydev.nibbles.dev
+FLUTTER_TARGET=lib/main_dev.dart
+DISPLAY_NAME=Nibbles Dev
