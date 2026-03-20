@@ -43,3 +43,22 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Environment files — never commit
+.env
+.env.dev
+.env.prod
+
+# Firebase config — contains API keys, generated per environment
+google-services.json
+GoogleService-Info.plist
+firebase_app_id_file.json
+
+# Android signing
+*.jks
+*.keystore
+key.properties
+android/key.properties
+
+# Flutter plugins lock file (auto-generated)
+.flutter-plugins
