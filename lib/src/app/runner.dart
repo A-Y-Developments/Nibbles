@@ -11,6 +11,7 @@ import 'package:nibbles/src/app/config/flavor_config.dart';
 import 'package:nibbles/src/app/firebase/dev_firebase_options.dart';
 import 'package:nibbles/src/app/firebase/prod_firebase_options.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Bootstrap order is strict — do not reorder.
 Future<void> bootstrap({required Flavor flavor}) async {
@@ -66,7 +67,29 @@ Future<void> bootstrap({required Flavor flavor}) async {
         .setDefaultEventParameters({'flavor': 'dev'});
   }
 
-  // 7. RevenueCat configure
+  // 7. Supabase init — scheme io.supabase.nibbles handles auth deep links
+  // (password recovery, magic link). PKCE flow intercepts the incoming URL
+  // so supabase_flutter fires AuthChangeEvent.passwordRecovery before the
+  // router processes the route.
+  await Supabase.initialize(
+    url: FlavorConfig.instance.supabaseUrl,
+    anonKey: FlavorConfig.instance.supabaseAnonKey,
+    authOptions: const FlutterAuthClientOptions(
+      authFlowType: AuthFlowType.pkce,
+    ),
+  );
+
+  // Deep link → password recovery: listen for the event and navigate to
+  // /auth/reset-password (AU-03). Router is wired in NIB-9; listener kept
+  // here so it is active from app start before any widget tree exists.
+  Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+    if (data.event == AuthChangeEvent.passwordRecovery) {
+      // TODO(NIB-9): replace with router.go('/auth/reset-password') once
+      // GoRouter is wired. Navigation intentionally deferred to NIB-9.
+    }
+  });
+
+  // 8. RevenueCat configure
   final revenueCatKey = defaultTargetPlatform == TargetPlatform.iOS
       ? FlavorConfig.instance.revenueCatAppleKey
       : FlavorConfig.instance.revenueCatGoogleKey;
