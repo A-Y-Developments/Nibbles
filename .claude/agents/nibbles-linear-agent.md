@@ -27,18 +27,15 @@ Use Linear MCP to fetch the ticket by ID. Read fully:
 
 **This step is mandatory. Do not skip it. Do not start implementation until it passes.**
 
-### 2a. Extract all NIB ticket references
+### 2a. Fetch blockedBy relations from Linear
 
-Scan the ticket description and comments for:
-- Explicit patterns: `NIB-\d+` anywhere in the text
-- Sections labelled: "Prerequisites", "Depends on", "Blocked by", "Required before this ticket"
-- Checklist items that reference other tickets (e.g. `- [ ] NIB-3: Firebase config in place`)
+Call `get_issue` with `includeRelations: true` on the target ticket. Extract the `relations` field and collect all entries where `type == "blocked_by"` — each gives you a `relatedIssue.identifier` (e.g. `NIB-3`).
 
-Collect all unique NIB-xx IDs found.
+**Also** scan the ticket description and comments for any additional `NIB-\d+` references not captured in the relations (belt-and-suspenders). Union both sets.
 
-### 2b. Fetch status of each referenced ticket
+### 2b. Fetch status of each dependency
 
-For each NIB-xx found, call Linear MCP `get_issue` to retrieve its current status.
+For each NIB-xx in the union set, call `get_issue` to retrieve its current status.
 
 ### 2c. Classify each dependency
 
