@@ -3,3 +3,11 @@ include: package:very_good_analysis/analysis_options.yaml
 analyzer:
   plugins:
     - custom_lint
+  errors:
+    # .env files are intentionally gitignored — not an error in this project
+    asset_does_not_exist: ignore
+
+linter:
+  rules:
+    # App (not a library) — public API docs not required
+    public_member_api_docs: false

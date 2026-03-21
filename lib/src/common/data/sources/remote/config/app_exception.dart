@@ -4,7 +4,7 @@ sealed class AppException implements Exception {
   final String message;
 
   @override
-  String toString() => '$runtimeType: $message';
+  String toString() => 'AppException: $message';
 }
 
 /// Thrown when there is no network connectivity.
@@ -19,12 +19,16 @@ final class ServerException extends AppException {
 
 /// Thrown on HTTP 401 after a refresh retry — session is unrecoverable.
 final class UnauthorizedException extends AppException {
-  const UnauthorizedException([super.message = 'Session expired. Please log in again.']);
+  const UnauthorizedException([
+    super.message = 'Session expired. Please log in again.',
+  ]);
 }
 
 /// Thrown on HTTP 404.
 final class NotFoundException extends AppException {
-  const NotFoundException([super.message = 'The requested resource was not found.']);
+  const NotFoundException([
+    super.message = 'The requested resource was not found.',
+  ]);
 }
 
 /// Fallback for all other errors.

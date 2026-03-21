@@ -4,9 +4,9 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'local_flag_service.g.dart';
 
-/// Wraps the [HiveBoxNames.localFlags] Hive box.
+/// Wraps the `local_flags` Hive box.
 ///
-/// Read operations are synchronous — the box is opened before [runApp].
+/// Read operations are synchronous — the box is opened before runApp.
 /// Write operations are fire-and-forget (Hive writes are async but callers
 /// do not need to await them for flag semantics).
 class LocalFlagService {
@@ -18,8 +18,9 @@ class LocalFlagService {
   // App launch flag
   // ---------------------------------------------------------------------------
 
-  /// Returns [true] if the app has been launched at least once.
-  bool hasLaunched() => _box.get('app_has_launched', defaultValue: false) as bool;
+  /// Returns `true` if the app has been launched at least once.
+  bool hasLaunched() =>
+      _box.get('app_has_launched', defaultValue: false) as bool;
 
   /// Marks the app as having been launched.
   void setHasLaunched() => _box.put('app_has_launched', true);
@@ -28,11 +29,11 @@ class LocalFlagService {
   // Per-baby allergen program completion flag
   // ---------------------------------------------------------------------------
 
-  /// Returns [true] if the completion screen has already been shown for [babyId].
+  /// Returns `true` if the completion screen has been shown for `babyId`.
   bool isProgramCompletionShown(String babyId) =>
       _box.get('program_completion_shown_$babyId', defaultValue: false) as bool;
 
-  /// Marks the completion screen as shown for [babyId].
+  /// Marks the completion screen as shown for `babyId`.
   void setProgramCompletionShown(String babyId) =>
       _box.put('program_completion_shown_$babyId', true);
 }
