@@ -1,0 +1,36 @@
+[
+  {
+    "id": "peanut-banana-puree",
+    "title": "Peanut Banana Puree",
+    "age_range": "6+ months",
+    "allergen_tags": ["peanut"],
+    "ingredients": [
+      { "name": "ripe banana", "quantity": "1", "unit": "medium" },
+      { "name": "smooth peanut butter", "quantity": "1", "unit": "tsp" }
+    ],
+    "steps": [
+      "Mash the banana in a bowl until smooth.",
+      "Stir in the peanut butter until fully combined.",
+      "Serve immediately or refrigerate for up to 24 hours."
+    ],
+    "serving_guidance": "Offer a small amount (1/4 tsp peanut butter) mixed into food on day 1. Increase gradually if no reaction.",
+    "notes": "Always use smooth, unsalted peanut butter with no added sugar."
+  },
+  {
+    "id": "scrambled-egg-puree",
+    "title": "Scrambled Egg Puree",
+    "age_range": "6+ months",
+    "allergen_tags": ["egg"],
+    "ingredients": [
+      { "name": "egg", "quantity": "1", "unit": "large" },
+      { "name": "breast milk or formula", "quantity": "1", "unit": "tbsp" }
+    ],
+    "steps": [
+      "Whisk egg with breast milk or formula until combined.",
+      "Cook in a non-stick pan over low heat, stirring constantly, until fully set.",
+      "Blend or mash to a smooth consistency suitable for baby's stage."
+    ],
+    "serving_guidance": "Offer a small amount (1 tsp) on day 1. Increase to a full serving if no reaction after 3 days.",
+    "notes": "Always cook egg fully — no runny yolk for babies under 12 months."
+  }
+]
