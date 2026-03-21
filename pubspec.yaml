@@ -15,12 +15,12 @@ dependencies:
   go_router: ^14.6.3
 
   # State management
-  flutter_riverpod: ^2.1.1
-  riverpod_annotation: ^2.0.0
+  flutter_riverpod: ^2.6.0
+  riverpod_annotation: ^2.6.0
 
   # Code generation annotations
-  freezed_annotation: ^2.2.0
-  json_annotation: ^4.8.0
+  freezed_annotation: ^2.4.0
+  json_annotation: ^4.9.0
 
   # Networking
   dio: ^5.8.0+1
@@ -67,18 +67,17 @@ dev_dependencies:
     sdk: flutter
 
   # Code generation
-  build_runner:
-  freezed: ^2.3.2
-  json_serializable: ^6.6.1
-  hive_generator: ^2.0.0
-  retrofit_generator: ^9.1.7
+  build_runner: ^2.4.0
+  freezed: ^2.5.0
+  json_serializable: ^6.9.0
+  retrofit_generator: ^9.3.0
   flutter_gen_runner: ^5.2.0
-  riverpod_generator: ^2.0.0
+  riverpod_generator: ^2.4.0
 
   # Linting
   very_good_analysis: ^7.0.0
   custom_lint: ^0.7.0
-  riverpod_lint: ^2.3.10
+  riverpod_lint: ^2.6.0
 
   # Testing
   mocktail: ^1.0.3
@@ -86,7 +85,6 @@ dev_dependencies:
 
 dependency_overrides:
   intl: ^0.18.0
-  hive_generator: ^2.0.1
   analyzer: ^7.0.0
 
 flutter_gen:
