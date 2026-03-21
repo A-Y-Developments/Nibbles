@@ -95,7 +95,9 @@ If the ticket description is ambiguous or missing acceptance criteria:
 
 ## Step 4 — Load project context
 
-Read `.claude/context/PROJECT_CONTEXT.md` in the project root. This is mandatory — it tells you the architecture, stack, folder structure, and agent roles.
+Read both of the following — both are mandatory:
+1. `.claude/CLAUDE.md` — architecture rules, stack, error levels, hard constraints, agent roles
+2. `.claude/context/PROJECT_CONTEXT.md` — generated project context from `/learn`
 
 ---
 

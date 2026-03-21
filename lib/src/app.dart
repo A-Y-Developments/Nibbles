@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nibbles/src/app/themes/app_theme.dart';
+import 'package:nibbles/src/routing/routes.dart';
 
-/// Root widget — router wired in NIB-9.
 class App extends ConsumerWidget {
   const App({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return MaterialApp(
+    final router = ref.watch(goRouterProvider);
+
+    return MaterialApp.router(
       title: 'Nibbles',
       theme: AppTheme.light(),
-      home: const Scaffold(
-        body: Center(child: Text('Nibbles')),
-      ),
+      routerConfig: router,
     );
   }
 }

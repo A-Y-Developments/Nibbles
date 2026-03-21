@@ -21,9 +21,17 @@ List all tickets with their IDs, titles, statuses, and labels.
 
 ---
 
-## Step 2 — Skip already-done tickets
+## Step 2 — Transition Backlog tickets to Todo
 
-Filter out tickets with status `Done`, `Completed`, or `Cancelled`. Only process `Backlog`, `Todo`, or `In Progress` tickets.
+For every ticket that is still in `Backlog`, call:
+
+```
+mcp__linear__save_issue(id: "<NIB-xx>", state: "Todo")
+```
+
+Do this for each Backlog ticket individually. Skip tickets already in `Todo`, `In Progress`, `Done`, or `Cancelled` — never move tickets backwards.
+
+Then filter out `Done`, `Completed`, and `Cancelled` tickets. Only continue with `Todo` and `In Progress` tickets.
 
 ---
 
