@@ -6,7 +6,7 @@ part 'hive_service.g.dart';
 
 /// Provides typed access to the Hive boxes used for read-through caching.
 ///
-/// All boxes must be opened before [runApp] (done in [bootstrap]).
+/// All boxes must be opened before runApp (done in bootstrap).
 /// This service is purely a thin wrapper — caching logic lives in repositories.
 class HiveService {
   /// Box storing serialised Recipe JSON strings.

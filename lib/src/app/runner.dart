@@ -1,12 +1,12 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:nibbles/src/app.dart';
+import 'package:nibbles/src/app/config/flavor_config.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
-
-import '../app.dart';
-import 'config/flavor_config.dart';
 
 /// Bootstrap order is strict — do not reorder.
 Future<void> bootstrap({required Flavor flavor}) async {

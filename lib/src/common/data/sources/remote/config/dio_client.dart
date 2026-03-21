@@ -27,8 +27,8 @@ Dio createDio(FlavorConfig config) {
       LogInterceptor(
         requestBody: true,
         responseBody: true,
-        // ignore: avoid_print
-        logPrint: (obj) => print(obj),
+        // ignore: avoid_print — dev-only logging, intentional
+        logPrint: print,
       ),
     );
   }
