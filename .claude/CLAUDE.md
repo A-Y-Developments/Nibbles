@@ -251,6 +251,17 @@ Generated files (`*.freezed.dart`, `*.g.dart`) ARE committed to source control.
 
 Use these agents when implementing tickets. The linear-agent orchestrates them.
 
+## Linear Workflow Rules
+
+**Before working any Linear ticket**, always do this first:
+1. Look up the ticket's milestone via Linear MCP.
+2. Fetch all tickets in that milestone.
+3. Bulk-transition any tickets still in `Backlog` → `Todo`.
+4. Skip tickets already in `Todo`, `In Progress`, `Done`, or `Cancelled`.
+5. Never move tickets backwards.
+
+This applies whether starting from a single ticket (e.g. `NIB-15`) or a full milestone batch.
+
 ---
 
 ## Commit Format
