@@ -85,7 +85,12 @@ dev_dependencies:
 
 dependency_overrides:
   intl: ^0.18.0
-  analyzer: ^7.0.0
+  # analyzer_plugin 0.12.x uses publiclyExporting2 removed in analyzer 7.x.
+  # 0.13.4 is compatible with analyzer ^7.5.1.
+  analyzer_plugin: ^0.13.0
+  # retrofit_generator 9.3.0 doesn't handle Parser.DartMappable added in
+  # retrofit 4.9.x — pin retrofit below that version.
+  retrofit: ">=4.4.2 <4.9.0"
 
 flutter_gen:
   output: lib/gen/
