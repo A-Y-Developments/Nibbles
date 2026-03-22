@@ -9,7 +9,7 @@ void main() {
     });
 
     test('empty string fails with empty error', () {
-      const input = BabyNameInput.dirty('');
+      const input = BabyNameInput.dirty();
       expect(input.isValid, isFalse);
       expect(input.error, BabyNameValidationError.empty);
     });

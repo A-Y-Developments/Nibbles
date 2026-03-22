@@ -20,7 +20,7 @@ void main() {
     });
 
     test('empty string fails with tooShort', () {
-      const input = PasswordInput.dirty('');
+      const input = PasswordInput.dirty();
       expect(input.isValid, isFalse);
       expect(input.error, PasswordValidationError.tooShort);
     });
