@@ -1,25 +1,28 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'auth_service.dart';
+part of 'baby_profile_service.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$authServiceHash() => r'4899015c77970ff9f387292beb15848112699e3e';
+String _$babyProfileServiceHash() =>
+    r'e9648e03043575a4633f6a3ce40fadddd8471e03';
 
-/// See also [AuthService].
-@ProviderFor(AuthService)
-final authServiceProvider = NotifierProvider<AuthService, bool>.internal(
-  AuthService.new,
-  name: r'authServiceProvider',
+/// See also [babyProfileService].
+@ProviderFor(babyProfileService)
+final babyProfileServiceProvider = Provider<BabyProfileService>.internal(
+  babyProfileService,
+  name: r'babyProfileServiceProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
-      : _$authServiceHash,
+      : _$babyProfileServiceHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef _$AuthService = Notifier<bool>;
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef BabyProfileServiceRef = ProviderRef<BabyProfileService>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
