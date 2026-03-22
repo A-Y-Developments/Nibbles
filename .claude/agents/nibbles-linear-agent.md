@@ -13,13 +13,13 @@ You own the full development lifecycle for a NIB ticket, with a mandatory depend
 
 ---
 
-## Step 1 — Fetch the ticket
+## Step 1 — Fetch ticket + relations (parallel)
 
-Use Linear MCP to fetch the ticket by ID. Read fully:
-- Title, description, acceptance criteria
-- Comments (especially clarifications or decisions already made)
-- Labels, priority, milestone, assignee
-- Linked Figma designs or spec docs — read those too
+Make **two calls in parallel**:
+1. `get_issue(id, includeRelations: true)` — gets title, description, acceptance criteria, comments, labels, priority, milestone, relations all at once
+2. `list_comments(issueId)` — gets any clarifications or decisions in comments
+
+**Do NOT read Figma links or spec docs yet** — defer until pre-flight passes.
 
 ---
 
@@ -27,15 +27,16 @@ Use Linear MCP to fetch the ticket by ID. Read fully:
 
 **This step is mandatory. Do not skip it. Do not start implementation until it passes.**
 
-### 2a. Fetch blockedBy relations from Linear
+### 2a. Extract dependencies
 
-Call `get_issue` with `includeRelations: true` on the target ticket. Extract the `relations` field and collect all entries where `type == "blocked_by"` — each gives you a `relatedIssue.identifier` (e.g. `NIB-3`).
+From the Step 1 response:
+- Extract `relations` entries where `type == "blocked_by"` → collect `relatedIssue.identifier` (e.g. `NIB-3`)
+- Scan description + comments for additional `NIB-\d+` references not in relations
+- Union both sets
 
-**Also** scan the ticket description and comments for any additional `NIB-\d+` references not captured in the relations (belt-and-suspenders). Union both sets.
+### 2b. Fetch all dependency statuses in parallel
 
-### 2b. Fetch status of each dependency
-
-For each NIB-xx in the union set, call `get_issue` to retrieve its current status.
+Fire **all** `get_issue` calls simultaneously — one per dep in the union set. Do not wait for one before starting the next.
 
 ### 2c. Classify each dependency
 
@@ -91,19 +92,29 @@ If the ticket description is ambiguous or missing acceptance criteria:
 - Wait for answers before proceeding
 - Do not assume
 
+Also, now that pre-flight passed: read any Figma links or spec docs referenced in the ticket description.
+
 ---
 
-## Step 4 — Load project context
+## Step 4 — Load project context (scoped)
 
-Read both of the following — both are mandatory:
+Always read:
 1. `.claude/CLAUDE.md` — architecture rules, stack, error levels, hard constraints, agent roles
-2. `.claude/context/PROJECT_CONTEXT.md` — generated project context from `/learn`
+
+Only read if the ticket is **large, multi-step, or touches cross-cutting concerns** (routing, auth, shared services):
+2. `.claude/context/PROJECT_CONTEXT.md` — full project context from `/learn`
+
+Skip `PROJECT_CONTEXT.md` for small, well-scoped tickets (single feature file, single service method, clear from CLAUDE.md alone).
 
 ---
 
-## Step 5 — Explore relevant code
+## Step 5 — Explore relevant code (scoped)
 
-Find all code areas relevant to this ticket. Read them. Understand what will be touched before writing anything.
+**Small / well-defined ticket:** read only the directly affected files (controller, service, repository, screen). Do not explore broadly.
+
+**Large / multi-step ticket:** find all code areas relevant to this ticket, read them, map dependencies before writing anything.
+
+When in doubt — start narrow, expand only if you find unexpected coupling.
 
 ---
 

@@ -7,7 +7,7 @@ part of 'readiness_controller.dart';
 // **************************************************************************
 
 String _$readinessControllerHash() =>
-    r'2ae1246e837d3abf39bf8ca242ccdc3c247c2cba';
+    r'145d2a36889c05531f008f7893b4be859c5aad38';
 
 /// See also [ReadinessController].
 @ProviderFor(ReadinessController)
