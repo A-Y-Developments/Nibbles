@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nibbles/src/common/data/repositories/baby_profile_repository.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/domain/entities/baby.dart';
@@ -51,3 +52,10 @@ BabyProfileService babyProfileService(BabyProfileServiceRef ref) =>
     BabyProfileService(
       ref.watch(babyProfileRepositoryProvider),
     );
+
+/// Fetches the current baby's id. Returns null if no baby exists yet.
+@riverpod
+Future<String?> currentBabyId(Ref ref) async {
+  final baby = await ref.watch(babyProfileServiceProvider).getBaby();
+  return baby?.id;
+}
