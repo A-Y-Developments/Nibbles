@@ -63,3 +63,7 @@ android/key.properties
 # Flutter plugins lock file (auto-generated)
 .flutter-plugins
 .claude/context/
+
+# Tool-generated / temp
+.superset/
+supabase/.temp/
