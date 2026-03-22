@@ -4,6 +4,7 @@ import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/domain/entities/allergen.dart';
 import 'package:nibbles/src/common/domain/entities/allergen_board_item.dart';
 import 'package:nibbles/src/common/domain/entities/allergen_log.dart';
+import 'package:nibbles/src/common/domain/entities/allergen_program_state.dart';
 import 'package:nibbles/src/common/domain/entities/reaction_detail.dart';
 import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
 import 'package:nibbles/src/common/domain/enums/emoji_taste.dart';
@@ -153,6 +154,14 @@ class AllergenService {
     final next = sorted[nextIndex];
     return _repo.advanceProgramState(babyId, next.key, next.sequenceOrder);
   }
+
+  /// Returns the allergen program state for [babyId].
+  Future<Result<AllergenProgramState>> getProgramState(String babyId) =>
+      _repo.getProgramState(babyId);
+
+  /// Returns the reaction detail for a given [logId], or null if none exists.
+  Future<Result<ReactionDetail?>> getReactionDetail(String logId) =>
+      _repo.getReactionDetail(logId);
 
   /// Marks the allergen program as completed.
   Future<Result<void>> completeProgram(String babyId) =>
