@@ -3,6 +3,7 @@
 // ignore_for_file: invalid_annotation_target
 import 'dart:convert';
 
+import 'package:nibbles/src/app/constants/allergen_emoji.dart';
 import 'package:nibbles/src/common/data/sources/local/hive_service.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
@@ -293,12 +294,15 @@ class AllergenRepositoryImpl implements AllergenRepository {
 
   // --- Row mappers ---
 
-  Allergen _allergenFromRow(Map<String, dynamic> row) => Allergen(
-        key: row['key'] as String,
-        name: row['name'] as String,
-        sequenceOrder: row['sequence_order'] as int,
-        emoji: row['emoji'] as String,
-      );
+  Allergen _allergenFromRow(Map<String, dynamic> row) {
+    final key = row['key'] as String;
+    return Allergen(
+      key: key,
+      name: row['display_name'] as String,
+      sequenceOrder: row['sequence_order'] as int,
+      emoji: AllergenEmoji.get(key),
+    );
+  }
 
   AllergenLog _logFromRow(Map<String, dynamic> row) => AllergenLog(
         id: row['id'] as String,
