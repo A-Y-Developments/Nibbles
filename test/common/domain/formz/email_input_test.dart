@@ -15,7 +15,7 @@ void main() {
     });
 
     test('empty string fails', () {
-      const input = EmailInput.dirty('');
+      const input = EmailInput.dirty();
       expect(input.isValid, isFalse);
       expect(input.error, EmailValidationError.invalid);
     });
