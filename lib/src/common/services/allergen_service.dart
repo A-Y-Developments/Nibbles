@@ -180,6 +180,24 @@ class AllergenService {
     return AllergenStatus.inProgress;
   }
 
+  /// Returns all 9 allergens ordered by sequence_order.
+  Future<Result<List<Allergen>>> getAllergens({bool refresh = false}) =>
+      _repo.getAllergens(refresh: refresh);
+
+  /// Returns all logs for a baby, optionally filtered by allergen key.
+  Future<Result<List<AllergenLog>>> getLogs(
+    String babyId, {
+    String? allergenKey,
+  }) =>
+      _repo.getLogs(babyId, allergenKey: allergenKey);
+
+  /// Returns true if a log already exists for this allergen today.
+  Future<Result<bool>> hasLoggedToday(
+    String babyId,
+    String allergenKey,
+  ) =>
+      _repo.hasLogForToday(babyId, allergenKey, DateTime.now());
+
   Future<String> _resolveAllergenName(String allergenKey) async {
     final result = await _repo.getAllergens();
     if (result.isFailure) return 'this allergen';
