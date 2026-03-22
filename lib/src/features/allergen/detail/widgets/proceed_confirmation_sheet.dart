@@ -43,7 +43,7 @@ class _ProceedConfirmationSheetState
     if (!mounted) return;
 
     result.when(
-      success: (nextKey) {
+      success: (String? nextKey) {
         Navigator.of(context).pop();
         if (nextKey != null) {
           context.goNamed(
