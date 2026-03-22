@@ -106,6 +106,16 @@ final class Analytics {
     );
   }
 
+  Future<void> logAllergenAdvanced({
+    required String fromKey,
+    required String toKey,
+  }) async {
+    await _logEvent(
+      'allergen_advanced',
+      parameters: {'from_key': fromKey, 'to_key': toKey},
+    );
+  }
+
   Future<void> logAllergenProgramCompleted() async {
     await _logEvent('allergen_program_completed');
   }
