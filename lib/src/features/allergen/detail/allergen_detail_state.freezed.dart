@@ -17,11 +17,6 @@ final _privateConstructorUsedError = UnsupportedError(
 
 /// @nodoc
 mixin _$AllergenDetailState {
-<<<<<<< HEAD
-  AllergenBoardItem get boardItem => throw _privateConstructorUsedError;
-  String get babyId => throw _privateConstructorUsedError;
-  Allergen? get nextAllergen => throw _privateConstructorUsedError;
-=======
   Allergen get allergen => throw _privateConstructorUsedError;
   List<AllergenLog> get logs => throw _privateConstructorUsedError;
   AllergenProgramState get programState => throw _privateConstructorUsedError;
@@ -29,7 +24,6 @@ mixin _$AllergenDetailState {
   AllergenStatus get status => throw _privateConstructorUsedError;
   Map<String, ReactionDetail> get reactionDetails =>
       throw _privateConstructorUsedError;
->>>>>>> 9739361 (feat(allergen): AL-03 Allergen Detail screen — log history, timing guidance, CTAs [NIB-23])
 
   /// Create a copy of AllergenDetailState
   /// with the given fields replaced by the non-null parameter values.
@@ -46,15 +40,6 @@ abstract class $AllergenDetailStateCopyWith<$Res> {
   ) = _$AllergenDetailStateCopyWithImpl<$Res, AllergenDetailState>;
   @useResult
   $Res call({
-<<<<<<< HEAD
-    AllergenBoardItem boardItem,
-    String babyId,
-    Allergen? nextAllergen,
-  });
-
-  $AllergenBoardItemCopyWith<$Res> get boardItem;
-  $AllergenCopyWith<$Res>? get nextAllergen;
-=======
     Allergen allergen,
     List<AllergenLog> logs,
     AllergenProgramState programState,
@@ -65,7 +50,6 @@ abstract class $AllergenDetailStateCopyWith<$Res> {
 
   $AllergenCopyWith<$Res> get allergen;
   $AllergenProgramStateCopyWith<$Res> get programState;
->>>>>>> 9739361 (feat(allergen): AL-03 Allergen Detail screen — log history, timing guidance, CTAs [NIB-23])
 }
 
 /// @nodoc
@@ -83,26 +67,6 @@ class _$AllergenDetailStateCopyWithImpl<$Res, $Val extends AllergenDetailState>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-<<<<<<< HEAD
-    Object? boardItem = null,
-    Object? babyId = null,
-    Object? nextAllergen = freezed,
-  }) {
-    return _then(
-      _value.copyWith(
-            boardItem: null == boardItem
-                ? _value.boardItem
-                : boardItem // ignore: cast_nullable_to_non_nullable
-                      as AllergenBoardItem,
-            babyId: null == babyId
-                ? _value.babyId
-                : babyId // ignore: cast_nullable_to_non_nullable
-                      as String,
-            nextAllergen: freezed == nextAllergen
-                ? _value.nextAllergen
-                : nextAllergen // ignore: cast_nullable_to_non_nullable
-                      as Allergen?,
-=======
     Object? allergen = null,
     Object? logs = null,
     Object? programState = null,
@@ -136,7 +100,6 @@ class _$AllergenDetailStateCopyWithImpl<$Res, $Val extends AllergenDetailState>
                 ? _value.reactionDetails
                 : reactionDetails // ignore: cast_nullable_to_non_nullable
                       as Map<String, ReactionDetail>,
->>>>>>> 9739361 (feat(allergen): AL-03 Allergen Detail screen — log history, timing guidance, CTAs [NIB-23])
           )
           as $Val,
     );
@@ -146,15 +109,9 @@ class _$AllergenDetailStateCopyWithImpl<$Res, $Val extends AllergenDetailState>
   /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
-<<<<<<< HEAD
-  $AllergenBoardItemCopyWith<$Res> get boardItem {
-    return $AllergenBoardItemCopyWith<$Res>(_value.boardItem, (value) {
-      return _then(_value.copyWith(boardItem: value) as $Val);
-=======
   $AllergenCopyWith<$Res> get allergen {
     return $AllergenCopyWith<$Res>(_value.allergen, (value) {
       return _then(_value.copyWith(allergen: value) as $Val);
->>>>>>> 9739361 (feat(allergen): AL-03 Allergen Detail screen — log history, timing guidance, CTAs [NIB-23])
     });
   }
 
@@ -162,19 +119,9 @@ class _$AllergenDetailStateCopyWithImpl<$Res, $Val extends AllergenDetailState>
   /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
-<<<<<<< HEAD
-  $AllergenCopyWith<$Res>? get nextAllergen {
-    if (_value.nextAllergen == null) {
-      return null;
-    }
-
-    return $AllergenCopyWith<$Res>(_value.nextAllergen!, (value) {
-      return _then(_value.copyWith(nextAllergen: value) as $Val);
-=======
   $AllergenProgramStateCopyWith<$Res> get programState {
     return $AllergenProgramStateCopyWith<$Res>(_value.programState, (value) {
       return _then(_value.copyWith(programState: value) as $Val);
->>>>>>> 9739361 (feat(allergen): AL-03 Allergen Detail screen — log history, timing guidance, CTAs [NIB-23])
     });
   }
 }
@@ -189,17 +136,6 @@ abstract class _$$AllergenDetailStateImplCopyWith<$Res>
   @override
   @useResult
   $Res call({
-<<<<<<< HEAD
-    AllergenBoardItem boardItem,
-    String babyId,
-    Allergen? nextAllergen,
-  });
-
-  @override
-  $AllergenBoardItemCopyWith<$Res> get boardItem;
-  @override
-  $AllergenCopyWith<$Res>? get nextAllergen;
-=======
     Allergen allergen,
     List<AllergenLog> logs,
     AllergenProgramState programState,
@@ -212,7 +148,6 @@ abstract class _$$AllergenDetailStateImplCopyWith<$Res>
   $AllergenCopyWith<$Res> get allergen;
   @override
   $AllergenProgramStateCopyWith<$Res> get programState;
->>>>>>> 9739361 (feat(allergen): AL-03 Allergen Detail screen — log history, timing guidance, CTAs [NIB-23])
 }
 
 /// @nodoc
@@ -229,26 +164,6 @@ class __$$AllergenDetailStateImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-<<<<<<< HEAD
-    Object? boardItem = null,
-    Object? babyId = null,
-    Object? nextAllergen = freezed,
-  }) {
-    return _then(
-      _$AllergenDetailStateImpl(
-        boardItem: null == boardItem
-            ? _value.boardItem
-            : boardItem // ignore: cast_nullable_to_non_nullable
-                  as AllergenBoardItem,
-        babyId: null == babyId
-            ? _value.babyId
-            : babyId // ignore: cast_nullable_to_non_nullable
-                  as String,
-        nextAllergen: freezed == nextAllergen
-            ? _value.nextAllergen
-            : nextAllergen // ignore: cast_nullable_to_non_nullable
-                  as Allergen?,
-=======
     Object? allergen = null,
     Object? logs = null,
     Object? programState = null,
@@ -282,7 +197,6 @@ class __$$AllergenDetailStateImplCopyWithImpl<$Res>
             ? _value._reactionDetails
             : reactionDetails // ignore: cast_nullable_to_non_nullable
                   as Map<String, ReactionDetail>,
->>>>>>> 9739361 (feat(allergen): AL-03 Allergen Detail screen — log history, timing guidance, CTAs [NIB-23])
       ),
     );
   }
@@ -292,23 +206,6 @@ class __$$AllergenDetailStateImplCopyWithImpl<$Res>
 
 class _$AllergenDetailStateImpl implements _AllergenDetailState {
   const _$AllergenDetailStateImpl({
-<<<<<<< HEAD
-    required this.boardItem,
-    required this.babyId,
-    this.nextAllergen,
-  });
-
-  @override
-  final AllergenBoardItem boardItem;
-  @override
-  final String babyId;
-  @override
-  final Allergen? nextAllergen;
-
-  @override
-  String toString() {
-    return 'AllergenDetailState(boardItem: $boardItem, babyId: $babyId, nextAllergen: $nextAllergen)';
-=======
     required this.allergen,
     required final List<AllergenLog> logs,
     required this.programState,
@@ -347,7 +244,6 @@ class _$AllergenDetailStateImpl implements _AllergenDetailState {
   @override
   String toString() {
     return 'AllergenDetailState(allergen: $allergen, logs: $logs, programState: $programState, hasLoggedToday: $hasLoggedToday, status: $status, reactionDetails: $reactionDetails)';
->>>>>>> 9739361 (feat(allergen): AL-03 Allergen Detail screen — log history, timing guidance, CTAs [NIB-23])
   }
 
   @override
@@ -355,17 +251,6 @@ class _$AllergenDetailStateImpl implements _AllergenDetailState {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$AllergenDetailStateImpl &&
-<<<<<<< HEAD
-            (identical(other.boardItem, boardItem) ||
-                other.boardItem == boardItem) &&
-            (identical(other.babyId, babyId) || other.babyId == babyId) &&
-            (identical(other.nextAllergen, nextAllergen) ||
-                other.nextAllergen == nextAllergen));
-  }
-
-  @override
-  int get hashCode => Object.hash(runtimeType, boardItem, babyId, nextAllergen);
-=======
             (identical(other.allergen, allergen) ||
                 other.allergen == allergen) &&
             const DeepCollectionEquality().equals(other._logs, _logs) &&
@@ -390,7 +275,6 @@ class _$AllergenDetailStateImpl implements _AllergenDetailState {
     status,
     const DeepCollectionEquality().hash(_reactionDetails),
   );
->>>>>>> 9739361 (feat(allergen): AL-03 Allergen Detail screen — log history, timing guidance, CTAs [NIB-23])
 
   /// Create a copy of AllergenDetailState
   /// with the given fields replaced by the non-null parameter values.
@@ -406,19 +290,6 @@ class _$AllergenDetailStateImpl implements _AllergenDetailState {
 
 abstract class _AllergenDetailState implements AllergenDetailState {
   const factory _AllergenDetailState({
-<<<<<<< HEAD
-    required final AllergenBoardItem boardItem,
-    required final String babyId,
-    final Allergen? nextAllergen,
-  }) = _$AllergenDetailStateImpl;
-
-  @override
-  AllergenBoardItem get boardItem;
-  @override
-  String get babyId;
-  @override
-  Allergen? get nextAllergen;
-=======
     required final Allergen allergen,
     required final List<AllergenLog> logs,
     required final AllergenProgramState programState,
@@ -439,7 +310,6 @@ abstract class _AllergenDetailState implements AllergenDetailState {
   AllergenStatus get status;
   @override
   Map<String, ReactionDetail> get reactionDetails;
->>>>>>> 9739361 (feat(allergen): AL-03 Allergen Detail screen — log history, timing guidance, CTAs [NIB-23])
 
   /// Create a copy of AllergenDetailState
   /// with the given fields replaced by the non-null parameter values.
