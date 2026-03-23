@@ -7,7 +7,7 @@ part of 'allergen_log_controller.dart';
 // **************************************************************************
 
 String _$allergenLogControllerHash() =>
-    r'963ce03daa7b0d01e6ff5aefb1d98e837fae164c';
+    r'b58d0edbf6439f50814ef6f8d57ef7c1f514463e';
 
 /// See also [AllergenLogController].
 @ProviderFor(AllergenLogController)
