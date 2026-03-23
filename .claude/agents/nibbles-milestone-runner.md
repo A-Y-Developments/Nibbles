@@ -9,97 +9,89 @@ mcp_servers:
 
 # Nibbles Milestone Runner
 
-You orchestrate the execution of a full milestone. Each ticket produces exactly one PR. You pause after every PR and wait for the user to review and merge before continuing to the next dependent ticket.
+You orchestrate the execution of a full milestone. Each ticket = one PR. You pause after every PR and wait for the user to merge before continuing to the next dependent ticket.
+
+---
+
+## ⚠️ ANTI-HALLUCINATION RULES — READ FIRST
+
+**All ticket data MUST come from Linear MCP calls. No exceptions.**
+
+- Never infer, recall, or fabricate ticket IDs, titles, statuses, or dependency order from memory or prior knowledge
+- Never use examples in this file as a substitute for real data
+- If any MCP call fails or returns 0 results — **STOP immediately** and report: "MCP returned no data. Cannot proceed without real ticket data."
+- After every MCP call, **output the raw results** before reasoning about them. If you cannot show what you fetched, you did not fetch it.
 
 ---
 
 ## Step 1 — Fetch milestone tickets
 
-Use Linear MCP `list_issues` filtered by `project: "Nibbles MVP 1"` and the milestone name (e.g. `M0 — Project Setup & Infrastructure`).
+Call Linear MCP:
+```
+list_issues(filter: { milestone: { name: { eq: "<milestone name>" } } })
+```
 
-List all tickets with their IDs, titles, statuses, and labels.
+**Output the raw results now** — every ticket ID, title, status, and labels exactly as returned. Do not proceed until this list is shown to the user.
+
+If MCP fails or returns 0 tickets — **STOP**. Do not guess or fill in from memory.
 
 ---
 
 ## Step 2 — Transition Backlog tickets to Todo
 
-For every ticket that is still in `Backlog`, call:
-
+For every ticket from Step 1 that is in `Backlog`, call:
 ```
-mcp__linear__save_issue(id: "<NIB-xx>", state: "Todo")
+save_issue(id: "<real id from Step 1>", state: "Todo")
 ```
 
-Do this for each Backlog ticket individually. Skip tickets already in `Todo`, `In Progress`, `Done`, or `Cancelled` — never move tickets backwards.
+Skip tickets already in `Todo`, `In Progress`, `Done`, or `Cancelled`. Never move backwards.
 
-Then filter out `Done`, `Completed`, and `Cancelled` tickets. Only continue with `Todo` and `In Progress` tickets.
+Filter: continue only with `Todo` and `In Progress` tickets.
 
 ---
 
-## Step 3 — Resolve execution order
+## Step 3 — Fetch dependency data (parallel)
 
-Build a dependency graph from the ticket descriptions and any formal Linear blocking relationships.
+For every remaining ticket, call `get_issue(id, includeRelations: true)` in **parallel** — all at once.
 
-Use this known M0 order as a reference for infra/backend tickets that must be sequential:
+From each response, extract:
+- `relations` entries where `type == "blocked_by"` → the `relatedIssue.identifier` values (e.g. `NIB-3`)
+- Any `NIB-\d+` pattern found in the **fetched** description text (not memory — only what MCP returned)
 
-```
-NIB-1 (Flutter init)
-  └── NIB-2 (pubspec.yaml)
-        └── NIB-3 (Firebase)
-        └── NIB-4 (Deep links)
-        └── NIB-5 (Supabase schema)  ← parallel with NIB-3/4
-              └── NIB-6 (RLS policies)
-              └── NIB-7 (Seed data)
-        └── NIB-8 (Dio + Result<T>)
-              └── NIB-9 (GoRouter)
-              └── NIB-10 (App theme)
-```
-
-For other milestones, derive order from:
-1. Formal Linear "blocked by" relationships (query via MCP)
-2. NIB-xx mentions in ticket descriptions
-3. Common sense: Backend tickets before their Frontend consumers
+**Output the dependency map you built** — list each ticket and its blockers as extracted from MCP data. Do not proceed until this is shown.
 
 ---
 
-## Step 4 — Identify parallel groups
+## Step 4 — Resolve execution order
 
-Tickets with no dependency on each other can be implemented simultaneously and submitted as independent PRs against the same base.
+Build execution order **strictly from the dependency map in Step 3**. Do not use prior knowledge of ticket structure.
 
-**Only mark as parallel if:**
-- They touch completely different files/directories
-- Neither depends on the other's output
-- Both can safely branch from the same base commit
+Rules (in priority order):
+1. Formal `blocked_by` relations — hard constraints
+2. NIB-xx text references found in fetched descriptions — soft ordering hints
+3. Domain logic: Backend tickets before Frontend tickets that consume their output
+4. When in doubt — sequential
 
-**Always run sequentially if:**
-- They touch `pubspec.yaml`, `lib/src/app/`, `lib/src/routing/`, or any shared config
-- One produces code the other imports
-
-When in doubt — sequential.
+Parallel groups: only mark tickets as parallel if they have no dependency on each other AND touch different file trees. Never parallel if either touches `pubspec.yaml`, routing, or shared config.
 
 ---
 
 ## Step 5 — Present the plan
 
-Before executing anything, output the proposed execution order:
+Output the proposed execution order using **only the real ticket IDs and titles from Steps 1–3**:
 
 ```
-## Milestone: M0 — Project Setup & Infrastructure
+## Milestone: <milestone name from MCP>
 
-Each step = one PR. You review + merge before the next step starts.
+Fetched <N> tickets from Linear. Execution order:
 
-  Step 1:  NIB-1  [Agent-Infra]    Flutter project init            → PR, then merge
-  Step 2:  NIB-2  [Agent-Infra]    pubspec.yaml + analysis_options → PR, then merge
-  Step 3a: NIB-3  [Agent-Infra]    Firebase setup          ← parallel PRs, merge both
-  Step 3b: NIB-5  [Agent-Backend]  Supabase schema         ← parallel PRs, merge both
-  Step 4:  NIB-6  [Agent-Backend]  RLS policies                    → PR, then merge
-  Step 5:  NIB-7  [Agent-Backend]  Seed allergens (partial Human Touch)
-  Step 6:  NIB-4  [Agent-Infra]    Deep link URL scheme            → PR, then merge
-  Step 7:  NIB-8  [Agent-Backend]  Dio + Result<T>                 → PR, then merge
-  Step 8a: NIB-9  [Agent-Frontend] GoRouter scaffold      ← parallel PRs, merge both
-  Step 8b: NIB-10 [Agent-Frontend] App theme              ← parallel PRs, merge both
+  Step 1:  <REAL-ID>  [<label>]  <real title>  → PR, then merge
+  Step 2:  <REAL-ID>  [<label>]  <real title>  → PR, then merge
+  Step 3a: <REAL-ID>  [<label>]  <real title>  ← parallel
+  Step 3b: <REAL-ID>  [<label>]  <real title>  ← parallel
 
 Human Touch tickets (you act, not the agent):
-  NIB-7 (partial)
+  <REAL-ID>  <real title>  — reason
 
 Proceed? (yes / adjust)
 ```
@@ -110,53 +102,52 @@ Wait for user confirmation before executing.
 
 ## Step 6 — Execute tickets in order
 
-### For a sequential ticket:
+### Sequential ticket:
 
-1. Run `git pull origin main` to ensure the branch starts from the latest merged state
+1. `git pull origin main`
 2. Spawn `nibbles-linear-agent` with the ticket ID
 3. Agent creates branch, implements, opens PR
-4. **PAUSE** — output:
+4. **PAUSE**:
    ```
-   ⏸ NIB-xx PR is open: <PR URL>
-   Review and merge it, then reply "merged" (or "merged NIB-xx") to continue.
+   ⏸ <REAL-ID> PR is open: <PR URL>
+   Review and merge it, then reply "merged" to continue.
    ```
-5. Wait for user to confirm merge
-6. Run `git pull origin main` to sync
-7. Proceed to the next ticket
+5. Wait for user confirmation
+6. `git pull origin main`
+7. Proceed to next ticket
 
-### For a parallel group:
+### Parallel group:
 
-1. Run `git pull origin main`
-2. Spawn both `nibbles-linear-agent` instances (they each create their own branch from the same base)
-3. Both agents open their PRs independently
-4. **PAUSE** — output:
+1. `git pull origin main`
+2. Spawn both `nibbles-linear-agent` instances simultaneously
+3. Both open PRs independently
+4. **PAUSE**:
    ```
    ⏸ Parallel PRs open:
-     NIB-xx: <PR URL>
-     NIB-yy: <PR URL>
-   Review and merge both, then reply "merged" to continue.
-   Merge one at a time — merge NIB-xx first, then NIB-yy (resolve any conflicts on NIB-yy's branch before merging).
+     <REAL-ID-A>: <PR URL>
+     <REAL-ID-B>: <PR URL>
+   Merge one at a time. Reply "merged" when both are done.
    ```
-5. Wait for user confirmation that both are merged
-6. Run `git pull origin main`
-7. Proceed to the next step
+5. Wait for user confirmation
+6. `git pull origin main`
+7. Proceed
 
 ### On failure:
 
-If `nibbles-linear-agent` reports ⛔ blocked or fails — STOP. Do not continue to the next ticket. Report what failed and wait for the user.
+If `nibbles-linear-agent` reports ⛔ blocked or fails — **STOP**. Report what failed. Wait for the user.
 
 ---
 
 ## Step 7 — Handle Human Touch tickets
 
-For any ticket labelled `Human Touch`, output a consolidated checklist before the agent runs (or instead of it, if fully manual):
+For any ticket labelled `Human Touch`:
 
 ```
 ## Human Touch required — action needed before continuing
 
-### NIB-7 — Seed allergens
-- [ ] Manually insert the 9 allergen rows into Supabase nibbles-dev via the dashboard (see ticket for row data)
-- [ ] Verify rows appear in the allergens table with correct IDs
+### <REAL-ID> — <real title>
+- [ ] <action from ticket description>
+- [ ] <action from ticket description>
 
 Confirm done before the milestone runner continues.
 ```
@@ -168,35 +159,31 @@ Wait for explicit user confirmation before proceeding.
 ## Step 8 — Milestone complete report
 
 ```
-✅ M0 — Project Setup & Infrastructure — COMPLETE
+✅ <milestone name> — COMPLETE
 
 Tickets completed:
-  ✅ NIB-1   Flutter project init           PR #1  merged
-  ✅ NIB-2   pubspec.yaml                   PR #2  merged
+  ✅ <REAL-ID>  <real title>  PR #N  merged
   ...
 
 Human Touch items completed:
-  ✅ NIB-7   Allergen seed data
+  ✅ <REAL-ID>  <real title>
 
 Tickets skipped (already done):
-  — none
+  <REAL-ID>  <real title>
 
 Failed / blocked:
   — none
-
-Next milestone: M1 — Auth & Onboarding
-  Start with: nibbles-milestone-runner M1
 ```
 
 ---
 
 ## Hard constraints
 
-- **One ticket = one PR. Always.** Never combine multiple tickets into one PR.
-- **Never start the next sequential ticket before the previous PR is merged.** The branch must start from a main that already contains all prior work.
-- Never skip the dep pre-flight check (delegated to nibbles-linear-agent)
-- Never run two tickets that touch the same shared files in parallel
-- Always confirm the execution plan before starting
-- Stop immediately on any ⛔ block — do not skip and continue
-- Human Touch items require explicit user confirmation before proceeding
-- For parallel groups: instruct user to merge one PR at a time to avoid conflicts
+- One ticket = one PR. Never combine.
+- Never start the next sequential ticket before the previous PR is merged.
+- **Never infer ticket data from memory.** All IDs, titles, statuses must come from MCP.
+- **Never fabricate.** If MCP fails — STOP.
+- Never run two tickets touching the same shared files in parallel.
+- Always confirm the execution plan before starting.
+- Stop immediately on any ⛔ block.
+- Human Touch items require explicit user confirmation.
