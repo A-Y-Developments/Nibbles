@@ -3,12 +3,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
+import 'package:nibbles/src/common/domain/entities/allergen_board_item.dart';
+import 'package:nibbles/src/common/domain/entities/reaction_detail.dart';
 import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
+import 'package:nibbles/src/common/domain/enums/reaction_severity.dart';
+import 'package:nibbles/src/common/services/allergen_service.dart';
+import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/features/allergen/detail/allergen_detail_controller.dart';
 import 'package:nibbles/src/features/allergen/detail/allergen_detail_state.dart';
 import 'package:nibbles/src/features/allergen/detail/widgets/gp_referral_block.dart';
 import 'package:nibbles/src/features/allergen/detail/widgets/log_entry_card.dart';
+import 'package:nibbles/src/features/allergen/detail/widgets/proceed_confirmation_sheet.dart';
 import 'package:nibbles/src/features/allergen/detail/widgets/timing_guidance_card.dart';
+import 'package:nibbles/src/features/allergen/log/allergen_log_sheet.dart';
+import 'package:nibbles/src/features/allergen/tracker/allergen_tracker_controller.dart';
 
 class AllergenDetailScreen extends ConsumerWidget {
   const AllergenDetailScreen({required this.allergenKey, super.key});
@@ -219,13 +227,91 @@ class _DayProgressChip extends StatelessWidget {
 
 class _ReactionSummaryTile extends StatelessWidget {
   const _ReactionSummaryTile({required this.detail, super.key});
-  final dynamic detail;
+  final ReactionDetail? detail;
 
   @override
   Widget build(BuildContext context) {
     if (detail == null) return const SizedBox.shrink();
-    return const SizedBox.shrink();
+    final textTheme = Theme.of(context).textTheme;
+    final d = detail!;
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSizes.sm),
+      padding: const EdgeInsets.all(AppSizes.cardPadding),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+        border: Border.all(color: AppColors.divider),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.warning_amber_rounded,
+                size: AppSizes.iconSm,
+                color: _severityColor(d.severity),
+              ),
+              const SizedBox(width: AppSizes.xs),
+              Text(
+                _severityLabel(d.severity),
+                style: textTheme.labelMedium?.copyWith(
+                  color: _severityColor(d.severity),
+                ),
+              ),
+            ],
+          ),
+          if (d.symptoms.isNotEmpty) ...[
+            const SizedBox(height: AppSizes.xs),
+            Wrap(
+              spacing: AppSizes.xs,
+              runSpacing: AppSizes.xs,
+              children: d.symptoms
+                  .map(
+                    (s) => Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSizes.sm,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.allergenFlagged.withAlpha(26),
+                        borderRadius:
+                            BorderRadius.circular(AppSizes.radiusFull),
+                      ),
+                      child: Text(
+                        s,
+                        style: textTheme.bodySmall
+                            ?.copyWith(color: AppColors.allergenFlagged),
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ],
+          if (d.notes != null && d.notes!.isNotEmpty) ...[
+            const SizedBox(height: AppSizes.xs),
+            Text(
+              d.notes!,
+              style: textTheme.bodySmall
+                  ?.copyWith(color: AppColors.subtext),
+            ),
+          ],
+        ],
+      ),
+    );
   }
+
+  Color _severityColor(ReactionSeverity s) => switch (s) {
+        ReactionSeverity.mild => AppColors.warning,
+        ReactionSeverity.moderate => AppColors.secondary,
+        ReactionSeverity.severe => AppColors.allergenFlagged,
+      };
+
+  String _severityLabel(ReactionSeverity s) => switch (s) {
+        ReactionSeverity.mild => 'Mild',
+        ReactionSeverity.moderate => 'Moderate',
+        ReactionSeverity.severe => 'Severe',
+      };
 }
 
 class _CtaSection extends ConsumerWidget {
@@ -263,11 +349,27 @@ class _CtaSection extends ConsumerWidget {
           if (showLogToday)
             FilledButton(
               key: const Key('log_today_button'),
-              onPressed: () {
-                // TODO(NIB-24): open AL-04 log today modal.
-                // After modal saves, invalidate:
-                // allergenDetailControllerProvider(allergenKey)
-                // allergenTrackerControllerProvider
+              onPressed: () async {
+                final baby = await ref
+                    .read(babyProfileServiceProvider)
+                    .getBaby();
+                if (baby == null || !context.mounted) return;
+                final saved = await showAllergenLogSheet(
+                  context,
+                  babyId: baby.id,
+                  babyName: baby.name,
+                  allergenKey: allergenKey,
+                  allergenName: state.allergen.name,
+                  allergenEmoji: state.allergen.emoji,
+                );
+                if (saved == true) {
+                  ref.invalidate(
+                    allergenDetailControllerProvider(allergenKey),
+                  );
+                  ref.invalidate(
+                    allergenTrackerControllerProvider,
+                  );
+                }
               },
               child: const Text('Log Today'),
             )
@@ -313,8 +415,45 @@ class _CtaSection extends ConsumerWidget {
               ),
             FilledButton(
               key: const Key('proceed_button'),
-              onPressed: () {
-                // TODO(NIB-25): open AL-07 confirmation bottom sheet
+              onPressed: () async {
+                final boardItem = AllergenBoardItem(
+                  allergen: state.allergen,
+                  logs: state.logs,
+                  status: state.status,
+                );
+
+                final allergensResult = await ref
+                    .read(allergenServiceProvider)
+                    .getAllergens();
+                final nextAllergen = allergensResult.dataOrNull
+                    ?.where(
+                      (a) =>
+                          a.sequenceOrder >
+                          state.allergen.sequenceOrder,
+                    )
+                    .toList()
+                  ?..sort(
+                    (a, b) =>
+                        a.sequenceOrder.compareTo(b.sequenceOrder),
+                  );
+                final next = nextAllergen?.firstOrNull;
+
+                if (!context.mounted) return;
+                await showModalBottomSheet<void>(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: AppColors.surface,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(AppSizes.radiusXl),
+                    ),
+                  ),
+                  builder: (_) => ProceedConfirmationSheet(
+                    allergenKey: allergenKey,
+                    boardItem: boardItem,
+                    nextAllergen: next,
+                  ),
+                );
               },
               child: const Text('Proceed to Next Allergen'),
             ),
