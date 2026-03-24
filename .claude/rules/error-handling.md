@@ -1,4 +1,13 @@
-# Error Rules Per Feature
+# Error Levels (mandatory)
+
+| Level | Definition | UI behaviour |
+|---|---|---|
+| P0 | Fatal — app cannot function (auth lost, subscription check fails on launch) | Full-screen error + retry CTA |
+| P1 | Blocking — user action failed, can't proceed | Modal/inline error + retry button |
+| P2 | Non-blocking — action failed, user can continue | Toast/snackbar, auto-dismiss 3s |
+| P3 | Silent — background read failed, fallback available | No UI. Log to Crashlytics. Show stale cache. |
+
+## Error rules per feature
 
 | Feature | Level | Message |
 |---|---|---|
