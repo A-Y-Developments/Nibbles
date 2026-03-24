@@ -124,11 +124,7 @@ class ShoppingListController extends _$ShoppingListController {
     final result =
         await ref.read(shoppingListServiceProvider).clearAll(babyId);
     if (result.isFailure) throw result.errorOrNull!;
-
-    final current = state.valueOrNull;
-    if (current != null) {
-      state = const AsyncData(ShoppingListState(items: []));
-    }
+    state = const AsyncData(ShoppingListState(items: []));
   }
 
   /// Returns true if clipboard write succeeded, false otherwise.

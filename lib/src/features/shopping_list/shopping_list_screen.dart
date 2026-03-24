@@ -210,6 +210,41 @@ class _ShoppingListBodyState extends ConsumerState<_ShoppingListBody>
 
 enum _MenuAction { copy, clear }
 
+// Top-level helpers shared by both List and Bought tabs.
+
+Future<void> _deleteShoppingItem(
+  WidgetRef ref,
+  String babyId,
+  String itemId,
+  VoidCallback onFailed,
+) async {
+  try {
+    await ref
+        .read(shoppingListControllerProvider(babyId).notifier)
+        .delete(itemId);
+  } on Exception catch (_) {
+    onFailed();
+  }
+}
+
+Future<void> _confirmAndDeleteShoppingItem(
+  BuildContext context,
+  WidgetRef ref,
+  String babyId,
+  String itemId,
+  VoidCallback onFailed,
+) async {
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (_) => const _ConfirmDialog(
+      title: 'Delete item',
+      message: "Are you sure you want to delete? You can't restore it.",
+    ),
+  );
+  if (confirmed != true) return;
+  await _deleteShoppingItem(ref, babyId, itemId, onFailed);
+}
+
 // ---------------------------------------------------------------------------
 // List Tab (unchecked items)
 // ---------------------------------------------------------------------------
@@ -269,27 +304,13 @@ class _ListTabState extends ConsumerState<_ListTab> {
     }
   }
 
-  Future<void> _deleteDirect(String itemId) async {
-    try {
-      await ref
-          .read(shoppingListControllerProvider(widget.babyId).notifier)
-          .delete(itemId);
-    } on Exception catch (_) {
-      widget.onDeleteFailed();
-    }
-  }
+  Future<void> _deleteDirect(String itemId) =>
+      _deleteShoppingItem(ref, widget.babyId, itemId, widget.onDeleteFailed);
 
-  Future<void> _deleteWithConfirm(String itemId) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (_) => const _ConfirmDialog(
-        title: 'Delete item',
-        message: "Are you sure you want to delete? You can't restore it.",
-      ),
-    );
-    if (confirmed != true) return;
-    await _deleteDirect(itemId);
-  }
+  Future<void> _deleteWithConfirm(String itemId) =>
+      _confirmAndDeleteShoppingItem(
+        context, ref, widget.babyId, itemId, widget.onDeleteFailed,
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -430,35 +451,6 @@ class _BoughtTab extends ConsumerWidget {
     }
   }
 
-  Future<void> _deleteDirect(
-    WidgetRef ref,
-    String itemId,
-  ) async {
-    try {
-      await ref
-          .read(shoppingListControllerProvider(babyId).notifier)
-          .delete(itemId);
-    } on Exception catch (_) {
-      onDeleteFailed();
-    }
-  }
-
-  Future<void> _deleteWithConfirm(
-    BuildContext context,
-    WidgetRef ref,
-    String itemId,
-  ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (_) => const _ConfirmDialog(
-        title: 'Delete item',
-        message: "Are you sure you want to delete? You can't restore it.",
-      ),
-    );
-    if (confirmed != true) return;
-    await _deleteDirect(ref, itemId);
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final items = state.boughtItems;
@@ -477,8 +469,11 @@ class _BoughtTab extends ConsumerWidget {
         return _ShoppingItemTile(
           item: item,
           onToggle: () => _uncheck(context, ref, item.id),
-          onDeleteDirect: () => _deleteDirect(ref, item.id),
-          onDeleteWithConfirm: () => _deleteWithConfirm(context, ref, item.id),
+          onDeleteDirect: () =>
+              _deleteShoppingItem(ref, babyId, item.id, onDeleteFailed),
+          onDeleteWithConfirm: () => _confirmAndDeleteShoppingItem(
+            context, ref, babyId, item.id, onDeleteFailed,
+          ),
         );
       },
     );
@@ -506,8 +501,12 @@ class _ShoppingItemTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Optimistic placeholders have id=''; use createdAt to avoid key collision.
+    final key = item.id.isEmpty
+        ? ValueKey('new_${item.createdAt.millisecondsSinceEpoch}')
+        : ValueKey(item.id);
     return Dismissible(
-      key: ValueKey(item.id),
+      key: key,
       direction: DismissDirection.endToStart,
       background: Container(
         alignment: Alignment.centerRight,
