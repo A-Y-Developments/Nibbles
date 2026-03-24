@@ -55,6 +55,7 @@ class LocalFlagService {
 }
 
 @riverpod
+// ignore: deprecated_member_use_from_same_package // *Ref types deprecated in riverpod 3.0; upgrade deferred
 LocalFlagService localFlagService(LocalFlagServiceRef ref) {
   return LocalFlagService(Hive.box<dynamic>(HiveBoxNames.localFlags));
 }
