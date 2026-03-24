@@ -37,6 +37,7 @@ Dio createDio(FlavorConfig config) {
 }
 
 @Riverpod(keepAlive: true)
+// ignore: deprecated_member_use_from_same_package // *Ref types deprecated in riverpod 3.0; upgrade deferred
 Dio dio(DioRef ref) {
   return createDio(FlavorConfig.instance);
 }

@@ -30,7 +30,7 @@ class AllergenCompleteController extends _$AllergenCompleteController {
 
         try {
           unawaited(Analytics.instance.logAllergenProgramCompleted());
-        } catch (_) {}
+        } on Object catch (_) {}
 
         return AllergenCompleteState(
           babyName: baby.name,

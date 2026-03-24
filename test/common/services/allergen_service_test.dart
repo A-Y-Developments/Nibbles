@@ -230,7 +230,10 @@ void main() {
       final status = sut.deriveStatus(logs);
       expect(status, AllergenStatus.safe);
       // Canonical rule: passed allergens are `safe`, NEVER `completed`.
-      expect(AllergenStatus.values.map((e) => e.name), isNot(contains('completed')));
+      expect(
+        AllergenStatus.values.map((e) => e.name),
+        isNot(contains('completed')),
+      );
     });
 
     test('any log with hadReaction=true → flagged', () {
@@ -270,7 +273,7 @@ void main() {
     });
 
     test('logs are correctly bucketed per allergen', () async {
-      final peanutLog = _makeLog(id: 'log-p1', allergenKey: 'peanut');
+      final peanutLog = _makeLog(id: 'log-p1');
       final eggLog = _makeLog(id: 'log-e1', allergenKey: 'egg');
 
       when(() => mockRepo.getAllergens())
