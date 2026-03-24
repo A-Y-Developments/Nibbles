@@ -28,7 +28,9 @@ class AllergenCompleteController extends _$AllergenCompleteController {
         final allergens = items.map((i) => i.allergen).toList()
           ..sort((a, b) => a.sequenceOrder.compareTo(b.sequenceOrder));
 
-        unawaited(Analytics.instance.logAllergenProgramCompleted());
+        try {
+          unawaited(Analytics.instance.logAllergenProgramCompleted());
+        } catch (_) {}
 
         return AllergenCompleteState(
           babyName: baby.name,

@@ -177,6 +177,8 @@ void main() {
       ),
     );
     registerFallbackValue(_now);
+    registerFallbackValue(EmojiTaste.love);
+    registerFallbackValue(<AllergenLog>[]);
   });
 
   setUp(() {
@@ -192,13 +194,12 @@ void main() {
       ];
 
   // -------------------------------------------------------------------------
-  // Test 1: 3-day log flow — Proceed CTA appears after 3 logs
+  // Test 1a: day 0 — Log Today CTA visible, Proceed hidden
   // -------------------------------------------------------------------------
 
   testWidgets(
-    '3-day allergen log → Proceed to next allergen CTA enabled',
+    'allergen detail day 0 — Log Today shown, Proceed hidden',
     (tester) async {
-      // Day 0: no logs yet → "Log Today" CTA visible
       when(() => mockBabyService.getBaby()).thenAnswer((_) async => _fakeBaby);
       when(() => mockAllergenService.getAllergens())
           .thenAnswer((_) async => Result.success(_allergens));
@@ -223,19 +224,35 @@ void main() {
 
       expect(find.byKey(const Key('log_today_button')), findsOneWidget);
       expect(find.byKey(const Key('proceed_button')), findsNothing);
+    },
+  );
 
-      // Day 3: all 3 logs done, no reactions → "Proceed" CTA visible
+  // -------------------------------------------------------------------------
+  // Test 1b: day 3 — Proceed CTA visible, progress chip complete
+  // -------------------------------------------------------------------------
+
+  testWidgets(
+    '3-day allergen log → Proceed to next allergen CTA enabled',
+    (tester) async {
       final threeLogs = [
         _makeLog(id: 'l1'),
         _makeLog(id: 'l2'),
         _makeLog(id: 'l3'),
       ];
+
+      when(() => mockBabyService.getBaby()).thenAnswer((_) async => _fakeBaby);
+      when(() => mockAllergenService.getAllergens())
+          .thenAnswer((_) async => Result.success(_allergens));
       when(() => mockAllergenService.getLogs(_babyId, allergenKey: 'peanut'))
           .thenAnswer((_) async => Result.success(threeLogs));
+      when(() => mockAllergenService.getProgramState(_babyId))
+          .thenAnswer((_) async => Result.success(_makeProgramState()));
       when(() => mockAllergenService.hasLoggedToday(_babyId, 'peanut'))
           .thenAnswer((_) async => const Result.success(true));
       when(() => mockAllergenService.deriveStatus(any()))
           .thenReturn(AllergenStatus.safe);
+      when(() => mockAllergenService.getReactionDetail(any()))
+          .thenAnswer((_) async => const Result.success(null));
 
       await tester.pumpWidget(
         _wrap(
@@ -245,11 +262,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // "Proceed to Next Allergen" button is shown
       expect(find.byKey(const Key('proceed_button')), findsOneWidget);
       expect(find.text('Proceed to Next Allergen'), findsOneWidget);
-
-      // Day 3/3 progress chip shows complete state
       expect(find.text('Day 3/3 — Complete'), findsOneWidget);
     },
   );

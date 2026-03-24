@@ -9,6 +9,8 @@ part 'splash_controller.g.dart';
 class SplashController extends _$SplashController {
   @override
   Future<String> build() async {
+    await Future.delayed(const Duration(seconds: 3));
+
     final flags = ref.read(localFlagServiceProvider);
     if (!flags.hasLaunched()) {
       flags.setHasLaunched();
@@ -24,6 +26,10 @@ class SplashController extends _$SplashController {
     final onboardingDone =
         await ref.read(babyProfileServiceProvider).onboardingCompleted;
     if (!onboardingDone) return '/onboarding/intro';
+
+    // Seed local flags from Supabase so reinstalls don't re-trigger onboarding.
+    flags.setOnboardingReadinessDone();
+    flags.setOnboardingBabySetupDone();
 
     // TODO(nibbles-backend): uncomment when subscriptionServiceProvider ships
     // if (!ref.read(subscriptionServiceProvider)) {

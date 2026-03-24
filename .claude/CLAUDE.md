@@ -38,7 +38,7 @@ Screen (ConsumerWidget)
 4. **Hive** — 3 boxes only: `recipes`, `allergens`, `local_flags`. Read-through cache for recipes/allergens. LocalFlagService wraps `local_flags` box.
 5. **JWT** — stored in `flutter_secure_storage` ONLY. Never Hive, never SharedPreferences.
 6. **Online only** — no offline write queue. If no connectivity on write → P1 error.
-7. **Subscription guard** — GoRouter redirect checks `SubscriptionService.isActive` on every nav event.
+7. **Subscription guard** — GoRouter redirect checks `SubscriptionService.isActive` on every nav event. ⚠️ Currently removed from `routes.dart` while M2 is deferred — do not treat as a bug.
 
 ---
 
@@ -194,10 +194,11 @@ Pushed without bottom nav (full-screen on top of shell):
 
 Redirect logic (GoRouter, runs on every nav event):
 1. `app_has_launched` = false → `/onboarding/intro`
-2. Not logged in → `/auth/login`
-3. Logged in, onboarding incomplete → `/onboarding/intro`
-4. Logged in, no subscription → `/subscription/paywall`
-5. All good → proceed
+2. Not logged in → `/auth/login` (only auth + intro paths allowed pre-login)
+3. Logged in, `onboarding_readiness_done` = false → `/onboarding/readiness`
+4. Logged in, `onboarding_baby_setup_done` = false → `/onboarding/baby_setup`
+5. ~~Logged in, no subscription → `/subscription/paywall`~~ — **removed, M2 deferred**
+6. All good → proceed
 
 ---
 
@@ -206,7 +207,7 @@ Redirect logic (GoRouter, runs on every nav event):
 |---|---|
 | `recipes` | Read-through cache — JSON strings |
 | `allergens` | Read-through cache — JSON strings |
-| `local_flags` | `app_has_launched` (bool), `program_completion_shown_{babyId}` (bool) |
+| `local_flags` | `app_has_launched` (bool), `onboarding_readiness_done` (bool), `onboarding_baby_setup_done` (bool), `program_completion_shown_{babyId}` (bool) |
 
 LocalFlagService reads synchronously (boxes opened before runApp).
 

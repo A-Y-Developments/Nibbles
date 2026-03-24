@@ -26,6 +26,22 @@ class LocalFlagService {
   void setHasLaunched() => _box.put('app_has_launched', true);
 
   // ---------------------------------------------------------------------------
+  // Onboarding flow flags
+  // ---------------------------------------------------------------------------
+
+  bool isOnboardingReadinessDone() =>
+      _box.get('onboarding_readiness_done', defaultValue: false) as bool;
+
+  void setOnboardingReadinessDone() =>
+      _box.put('onboarding_readiness_done', true);
+
+  bool isOnboardingBabySetupDone() =>
+      _box.get('onboarding_baby_setup_done', defaultValue: false) as bool;
+
+  void setOnboardingBabySetupDone() =>
+      _box.put('onboarding_baby_setup_done', true);
+
+  // ---------------------------------------------------------------------------
   // Per-baby allergen program completion flag
   // ---------------------------------------------------------------------------
 
