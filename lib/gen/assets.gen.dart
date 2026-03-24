@@ -53,13 +53,8 @@ class $AssetsTranslationsGen {
 class Assets {
   const Assets._();
 
-  static const String aEnvDev = '.env.dev';
-  static const String aEnvProd = '.env.prod';
   static const $AssetsIconsGen icons = $AssetsIconsGen();
   static const $AssetsImagesGen images = $AssetsImagesGen();
   static const $AssetsJsonsGen jsons = $AssetsJsonsGen();
   static const $AssetsTranslationsGen translations = $AssetsTranslationsGen();
-
-  /// List of all assets
-  static List<String> get values => [aEnvDev, aEnvProd];
 }
