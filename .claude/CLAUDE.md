@@ -225,10 +225,22 @@ LocalFlagService reads synchronously (boxes opened before runApp).
 Run after any `@freezed`, `@JsonSerializable`, `@RestApi`, `@riverpod` change:
 
 ```bash
-dart run build_runner build --delete-conflicting-outputs
+make gen        # one-shot build
+make gen-watch  # watch mode during active development
 ```
 
 Generated files (`*.freezed.dart`, `*.g.dart`) ARE committed to source control.
+
+## Common Commands (Makefile)
+
+| Command | What it does |
+|---|---|
+| `make gen` | `dart run build_runner build --delete-conflicting-outputs` |
+| `make gen-watch` | build_runner in watch mode |
+| `make run-dev` | `flutter run` with dev flavor + entry point |
+| `make run-prod` | `flutter run` with prod flavor + entry point |
+| `make clean` | `flutter clean && flutter pub get` |
+| `make fix` | `dart fix --apply && dart format .` |
 
 ---
 
