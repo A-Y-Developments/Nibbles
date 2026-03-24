@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/domain/enums/gender.dart';
+import 'package:nibbles/src/common/services/local_flag_service.dart';
 import 'package:nibbles/src/features/onboarding/baby_setup/baby_setup_controller.dart';
 import 'package:nibbles/src/features/onboarding/baby_setup/baby_setup_state.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
@@ -46,8 +47,12 @@ class OnboardingBabySetupScreen extends ConsumerWidget {
             _ => _GenderStep(
                 state: state,
                 controller: controller,
-                onSuccess: () =>
-                    context.goNamed(AppRoute.paywall.name),
+                onSuccess: () {
+                  ref
+                      .read(localFlagServiceProvider)
+                      .setOnboardingBabySetupDone();
+                  context.goNamed(AppRoute.home.name);
+                },
               ),
           },
         ),
@@ -107,7 +112,8 @@ class _DobStep extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final now = DateTime.now();
-    final initialDate = state.dob ?? now.subtract(const Duration(days: 180));
+    final today = DateTime(now.year, now.month, now.day);
+    final initialDate = state.dob ?? today.subtract(const Duration(days: 180));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -121,8 +127,8 @@ class _DobStep extends StatelessWidget {
             key: const Key('baby_dob_picker'),
             mode: CupertinoDatePickerMode.date,
             initialDateTime: initialDate,
-            maximumDate: now,
-            minimumDate: now.subtract(const Duration(days: 365 * 3)),
+            maximumDate: today,
+            minimumDate: DateTime(now.year - 3, now.month, now.day),
             onDateTimeChanged: controller.updateDob,
           ),
         ),

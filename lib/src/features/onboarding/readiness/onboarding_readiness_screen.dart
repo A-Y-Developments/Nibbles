@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
+import 'package:nibbles/src/common/services/local_flag_service.dart';
 import 'package:nibbles/src/features/onboarding/readiness/readiness_controller.dart';
 import 'package:nibbles/src/features/onboarding/readiness/widgets/readiness_question_card.dart';
 import 'package:nibbles/src/features/onboarding/readiness/widgets/readiness_warning.dart';
@@ -55,7 +56,10 @@ class _OnboardingReadinessScreenState
             controller.goBack();
             setState(() => _currentIndex = _questions.length - 1);
           },
-          onContinue: () => context.goNamed(AppRoute.register.name),
+          onContinue: () {
+            ref.read(localFlagServiceProvider).setOnboardingReadinessDone();
+            context.goNamed(AppRoute.onboardingBabySetup.name);
+          },
         ),
       );
     }
@@ -155,7 +159,8 @@ class _OnboardingReadinessScreenState
       controller.finish();
       final updatedState = ref.read(readinessControllerProvider);
       if (!updatedState.showWarning) {
-        context.goNamed(AppRoute.register.name);
+        ref.read(localFlagServiceProvider).setOnboardingReadinessDone();
+        context.goNamed(AppRoute.onboardingBabySetup.name);
       }
     }
   }

@@ -40,4 +40,18 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
   end
+
+  # Fix ambiguous SubscriptionPeriod between StoreKit 2 and RevenueCat
+  hybrid_file = File.join(
+    installer.sandbox.root,
+    'PurchasesHybridCommon/ios/PurchasesHybridCommon/PurchasesHybridCommon/StoreProduct+HybridAdditions.swift'
+  )
+  if File.exist?(hybrid_file)
+    File.chmod(0644, hybrid_file)
+    content = File.read(hybrid_file)
+    patched = content
+      .gsub('subscriptionPeriod: SubscriptionPeriod) -> String', 'subscriptionPeriod: RevenueCat.SubscriptionPeriod) -> String')
+      .gsub('subscriptionPeriodUnit: SubscriptionPeriod.Unit) -> String', 'subscriptionPeriodUnit: RevenueCat.SubscriptionPeriod.Unit) -> String')
+    File.write(hybrid_file, patched) if patched != content
+  end
 end

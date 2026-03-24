@@ -1,4 +1,5 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:nibbles/src/app/config/flavor_config.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -91,7 +92,7 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await _supabase.auth.resetPasswordForEmail(
         email,
-        redirectTo: 'io.supabase.nibbles://reset',
+        redirectTo: '${FlavorConfig.instance.appScheme}://auth/reset-password',
       );
       return const Result.success(null);
     } on AuthException catch (e) {
