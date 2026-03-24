@@ -1,0 +1,260 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:nibbles/src/common/data/repositories/allergen_repository.dart';
+import 'package:nibbles/src/common/data/repositories/recipe_repository.dart';
+import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
+import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
+import 'package:nibbles/src/common/domain/entities/allergen_log.dart';
+import 'package:nibbles/src/common/domain/entities/recipe.dart';
+import 'package:nibbles/src/common/domain/enums/emoji_taste.dart';
+import 'package:nibbles/src/common/services/recipe_service.dart';
+
+class MockRecipeRepository extends Mock implements RecipeRepository {}
+
+class MockAllergenRepository extends Mock implements AllergenRepository {}
+
+const _babyId = 'baby-001';
+final _now = DateTime(2026, 3, 24);
+
+AllergenLog _makeLog({
+  String allergenKey = 'peanut',
+  bool hadReaction = false,
+}) =>
+    AllergenLog(
+      id: 'log-1',
+      babyId: _babyId,
+      allergenKey: allergenKey,
+      emojiTaste: EmojiTaste.love,
+      hadReaction: hadReaction,
+      logDate: _now,
+      createdAt: _now,
+    );
+
+Recipe _makeRecipe({
+  String id = 'r1',
+  List<String> allergenTags = const [],
+}) =>
+    Recipe(
+      id: id,
+      title: 'Test Recipe $id',
+      ageRange: '6m+',
+      allergenTags: allergenTags,
+      ingredients: const [],
+      steps: const ['Step 1'],
+      howToServe: 'Serve warm.',
+    );
+
+void main() {
+  late MockRecipeRepository mockRecipeRepo;
+  late MockAllergenRepository mockAllergenRepo;
+  late RecipeService sut;
+
+  setUpAll(() {
+    registerFallbackValue(_makeLog());
+    registerFallbackValue(_now);
+  });
+
+  setUp(() {
+    mockRecipeRepo = MockRecipeRepository();
+    mockAllergenRepo = MockAllergenRepository();
+    sut = RecipeService(mockRecipeRepo, mockAllergenRepo);
+  });
+
+  // ---------------------------------------------------------------------------
+  // getFilteredRecipes
+  // ---------------------------------------------------------------------------
+
+  group('RecipeService.getFilteredRecipes', () {
+    test('no flagged allergens → returns all recipes', () async {
+      when(() => mockAllergenRepo.getLogs(_babyId))
+          .thenAnswer((_) async => const Result.success([]));
+      when(() => mockRecipeRepo.getAllRecipes()).thenAnswer(
+        (_) async => Result.success([
+          _makeRecipe(id: 'r1', allergenTags: ['peanut']),
+          _makeRecipe(id: 'r2', allergenTags: ['egg']),
+        ]),
+      );
+
+      final result = await sut.getFilteredRecipes(_babyId);
+
+      expect(result.isSuccess, isTrue);
+      expect(result.dataOrNull, hasLength(2));
+    });
+
+    test('flagged allergen tag → recipe excluded, other retained', () async {
+      when(() => mockAllergenRepo.getLogs(_babyId)).thenAnswer(
+        (_) async => Result.success([
+          _makeLog(allergenKey: 'peanut', hadReaction: true),
+        ]),
+      );
+      when(() => mockRecipeRepo.getAllRecipes()).thenAnswer(
+        (_) async => Result.success([
+          _makeRecipe(id: 'r1', allergenTags: ['peanut']),
+          _makeRecipe(id: 'r2', allergenTags: ['egg']),
+        ]),
+      );
+
+      final result = await sut.getFilteredRecipes(_babyId);
+
+      expect(result.isSuccess, isTrue);
+      final recipes = result.dataOrNull!;
+      expect(recipes, hasLength(1));
+      expect(recipes.first.id, 'r2');
+    });
+
+    test('recipe with no allergen tags → never excluded', () async {
+      when(() => mockAllergenRepo.getLogs(_babyId)).thenAnswer(
+        (_) async => Result.success([
+          _makeLog(allergenKey: 'peanut', hadReaction: true),
+        ]),
+      );
+      when(() => mockRecipeRepo.getAllRecipes()).thenAnswer(
+        (_) async => Result.success([
+          _makeRecipe(id: 'r1', allergenTags: []),
+        ]),
+      );
+
+      final result = await sut.getFilteredRecipes(_babyId);
+
+      expect(result.isSuccess, isTrue);
+      expect(result.dataOrNull, hasLength(1));
+    });
+
+    test('recipe with non-flagged allergen tag → remains visible', () async {
+      when(() => mockAllergenRepo.getLogs(_babyId)).thenAnswer(
+        (_) async => Result.success([
+          _makeLog(allergenKey: 'peanut', hadReaction: true),
+        ]),
+      );
+      when(() => mockRecipeRepo.getAllRecipes()).thenAnswer(
+        (_) async => Result.success([
+          _makeRecipe(id: 'r1', allergenTags: ['egg']),
+        ]),
+      );
+
+      final result = await sut.getFilteredRecipes(_babyId);
+
+      expect(result.isSuccess, isTrue);
+      expect(result.dataOrNull, hasLength(1));
+    });
+
+    test(
+        'allergenRepo failure → propagates, getAllRecipes never called',
+        () async {
+      when(() => mockAllergenRepo.getLogs(_babyId)).thenAnswer(
+        (_) async => const Result.failure(ServerException('DB error')),
+      );
+
+      final result = await sut.getFilteredRecipes(_babyId);
+
+      expect(result.isFailure, isTrue);
+      verifyNever(() => mockRecipeRepo.getAllRecipes());
+    });
+
+    test('recipeRepo failure → propagates', () async {
+      when(() => mockAllergenRepo.getLogs(_babyId))
+          .thenAnswer((_) async => const Result.success([]));
+      when(() => mockRecipeRepo.getAllRecipes()).thenAnswer(
+        (_) async => const Result.failure(ServerException('DB error')),
+      );
+
+      final result = await sut.getFilteredRecipes(_babyId);
+
+      expect(result.isFailure, isTrue);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // getRecommendationsForAllergen
+  // ---------------------------------------------------------------------------
+
+  group('RecipeService.getRecommendationsForAllergen', () {
+    test('target allergen not flagged → returns recipes from repo', () async {
+      when(() => mockAllergenRepo.getLogs(_babyId))
+          .thenAnswer((_) async => const Result.success([]));
+      when(() => mockRecipeRepo.getRecipesByAllergen('egg')).thenAnswer(
+        (_) async => Result.success([
+          _makeRecipe(id: 'r1', allergenTags: ['egg']),
+        ]),
+      );
+
+      final result = await sut.getRecommendationsForAllergen('egg', _babyId);
+
+      expect(result.isSuccess, isTrue);
+      expect(result.dataOrNull, hasLength(1));
+    });
+
+    test(
+        'target allergen is flagged → returns empty list, no getRecipesByAllergen call',
+        () async {
+      when(() => mockAllergenRepo.getLogs(_babyId)).thenAnswer(
+        (_) async => Result.success([
+          _makeLog(allergenKey: 'egg', hadReaction: true),
+        ]),
+      );
+
+      final result = await sut.getRecommendationsForAllergen('egg', _babyId);
+
+      expect(result.isSuccess, isTrue);
+      expect(result.dataOrNull, isEmpty);
+      verifyNever(() => mockRecipeRepo.getRecipesByAllergen(any()));
+    });
+
+    test('recipe with OTHER flagged tag → excluded from recommendations',
+        () async {
+      when(() => mockAllergenRepo.getLogs(_babyId)).thenAnswer(
+        (_) async => Result.success([
+          _makeLog(allergenKey: 'peanut', hadReaction: true),
+        ]),
+      );
+      when(() => mockRecipeRepo.getRecipesByAllergen('egg')).thenAnswer(
+        (_) async => Result.success([
+          _makeRecipe(id: 'r1', allergenTags: ['egg', 'peanut']),
+        ]),
+      );
+
+      final result = await sut.getRecommendationsForAllergen('egg', _babyId);
+
+      expect(result.isSuccess, isTrue);
+      expect(result.dataOrNull, isEmpty);
+    });
+
+    test('allergenRepo failure → propagates', () async {
+      when(() => mockAllergenRepo.getLogs(_babyId)).thenAnswer(
+        (_) async => const Result.failure(ServerException('DB error')),
+      );
+
+      final result = await sut.getRecommendationsForAllergen('egg', _babyId);
+
+      expect(result.isFailure, isTrue);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // getRecipeById
+  // ---------------------------------------------------------------------------
+
+  group('RecipeService.getRecipeById', () {
+    test('delegates to recipeRepo and returns result', () async {
+      final recipe = _makeRecipe(id: 'r42');
+      when(() => mockRecipeRepo.getRecipeById('r42'))
+          .thenAnswer((_) async => Result.success(recipe));
+
+      final result = await sut.getRecipeById('r42');
+
+      expect(result.isSuccess, isTrue);
+      expect(result.dataOrNull, recipe);
+      verify(() => mockRecipeRepo.getRecipeById('r42')).called(1);
+    });
+
+    test('propagates failure from repo', () async {
+      when(() => mockRecipeRepo.getRecipeById(any())).thenAnswer(
+        (_) async => const Result.failure(ServerException('not found')),
+      );
+
+      final result = await sut.getRecipeById('r-missing');
+
+      expect(result.isFailure, isTrue);
+    });
+  });
+}
