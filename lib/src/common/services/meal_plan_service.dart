@@ -17,8 +17,7 @@ class MealPlanService {
   Future<Result<List<MealPlanEntry>>> getWeekMeals(
     String babyId,
     DateTime weekStart,
-  ) =>
-      _repo.getWeekMeals(babyId, weekStart, _weekEnd(weekStart));
+  ) => _repo.getWeekMeals(babyId, weekStart, _weekEnd(weekStart));
 
   /// Upserts a recipe assignment for [planDate] — replaces any existing entry
   /// on that day for the same baby.
@@ -27,8 +26,7 @@ class MealPlanService {
     String recipeId,
     DateTime planDate, {
     TimeOfDay? mealTime,
-  }) =>
-      _repo.assignRecipe(babyId, recipeId, planDate, mealTime);
+  }) => _repo.assignRecipe(babyId, recipeId, planDate, mealTime);
 
   /// Deletes all meal plan entries for the 7-day week starting on [weekStart].
   Future<Result<void>> clearWeek(String babyId, DateTime weekStart) =>
@@ -43,8 +41,11 @@ class MealPlanService {
     String babyId,
     DateTime weekStart,
   ) async {
-    final mealsResult =
-        await _repo.getWeekMeals(babyId, weekStart, _weekEnd(weekStart));
+    final mealsResult = await _repo.getWeekMeals(
+      babyId,
+      weekStart,
+      _weekEnd(weekStart),
+    );
     if (mealsResult.isFailure) {
       return Result.failure(mealsResult.errorOrNull!);
     }
@@ -53,13 +54,15 @@ class MealPlanService {
     for (final entry in mealsResult.dataOrNull!) {
       final recipeResult = await _recipeRepo.getRecipeById(entry.recipeId);
       if (recipeResult.isFailure) continue;
-      names.addAll(
-        recipeResult.dataOrNull!.ingredients.map((i) => i.name),
-      );
+      names.addAll(recipeResult.dataOrNull!.ingredients.map((i) => i.name));
     }
 
     return Result.success(names.toList());
   }
+
+  /// Deletes a single meal plan entry by ID.
+  Future<Result<void>> removeEntry(String entryId) =>
+      _repo.removeEntry(entryId);
 
   static DateTime _weekEnd(DateTime weekStart) =>
       weekStart.add(const Duration(days: 6));
@@ -70,8 +73,7 @@ MealPlanService mealPlanService(
   // Specific *Ref types are deprecated; will be Ref in riverpod_generator 3.0.
   // ignore: deprecated_member_use_from_same_package
   MealPlanServiceRef ref,
-) =>
-    MealPlanService(
-      ref.watch(mealPlanRepositoryProvider),
-      ref.watch(recipeRepositoryProvider),
-    );
+) => MealPlanService(
+  ref.watch(mealPlanRepositoryProvider),
+  ref.watch(recipeRepositoryProvider),
+);

@@ -31,11 +31,14 @@ abstract interface class MealPlanRepository {
     DateTime weekStart,
     DateTime weekEnd,
   );
+
+  /// MEAL-04: Delete a single meal plan entry by ID.
+  Future<Result<void>> removeEntry(String entryId);
 }
 
 class MealPlanRepositoryImpl implements MealPlanRepository {
   MealPlanRepositoryImpl({SupabaseClient? supabaseClient})
-      : _supabase = supabaseClient ?? Supabase.instance.client;
+    : _supabase = supabaseClient ?? Supabase.instance.client;
 
   final SupabaseClient _supabase;
 
@@ -79,8 +82,7 @@ class MealPlanRepositoryImpl implements MealPlanRepository {
         'baby_id': babyId,
         'recipe_id': recipeId,
         'plan_date': _formatDate(planDate),
-        if (mealTime != null)
-          'meal_time': _formatTime(mealTime),
+        if (mealTime != null) 'meal_time': _formatTime(mealTime),
       };
 
       final data = await _supabase
@@ -119,6 +121,18 @@ class MealPlanRepositoryImpl implements MealPlanRepository {
     }
   }
 
+  @override
+  Future<Result<void>> removeEntry(String entryId) async {
+    try {
+      await _supabase.from('meal_plan_entries').delete().eq('id', entryId);
+      return const Result.success(null);
+    } on PostgrestException catch (e) {
+      return Result.failure(ServerException(e.message));
+    } on Object {
+      return const Result.failure(UnknownException());
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // Row mapper
   // ---------------------------------------------------------------------------
@@ -126,10 +140,9 @@ class MealPlanRepositoryImpl implements MealPlanRepository {
   MealPlanEntry _entryFromRow(Map<String, dynamic> row) {
     final rawTime = row['meal_time'] as String?;
     // Supabase returns time as "HH:mm:ss" — keep only "HH:mm".
-    final mealTime =
-        (rawTime != null && rawTime.length >= 5)
-            ? rawTime.substring(0, 5)
-            : rawTime;
+    final mealTime = (rawTime != null && rawTime.length >= 5)
+        ? rawTime.substring(0, 5)
+        : rawTime;
 
     return MealPlanEntry(
       id: row['id'] as String,
@@ -159,5 +172,4 @@ MealPlanRepository mealPlanRepository(
   // Specific *Ref types are deprecated; will be Ref in riverpod_generator 3.0.
   // ignore: deprecated_member_use_from_same_package
   MealPlanRepositoryRef ref,
-) =>
-    MealPlanRepositoryImpl();
+) => MealPlanRepositoryImpl();
