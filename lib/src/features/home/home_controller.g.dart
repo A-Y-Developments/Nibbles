@@ -1,13 +1,12 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'recipe_library_controller.dart';
+part of 'home_controller.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$recipeLibraryControllerHash() =>
-    r'09bb8ab545b29b901450f143e0a29d1787a3909e';
+String _$homeControllerHash() => r'8c227ade2f72c8919d6e339d17bd9a5c6aee0511';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -30,31 +29,30 @@ class _SystemHash {
   }
 }
 
-abstract class _$RecipeLibraryController
-    extends BuildlessAutoDisposeAsyncNotifier<RecipeLibraryState> {
+abstract class _$HomeController
+    extends BuildlessAutoDisposeAsyncNotifier<HomeState> {
   late final String babyId;
 
-  FutureOr<RecipeLibraryState> build(String babyId);
+  FutureOr<HomeState> build(String babyId);
 }
 
-/// See also [RecipeLibraryController].
-@ProviderFor(RecipeLibraryController)
-const recipeLibraryControllerProvider = RecipeLibraryControllerFamily();
+/// See also [HomeController].
+@ProviderFor(HomeController)
+const homeControllerProvider = HomeControllerFamily();
 
-/// See also [RecipeLibraryController].
-class RecipeLibraryControllerFamily
-    extends Family<AsyncValue<RecipeLibraryState>> {
-  /// See also [RecipeLibraryController].
-  const RecipeLibraryControllerFamily();
+/// See also [HomeController].
+class HomeControllerFamily extends Family<AsyncValue<HomeState>> {
+  /// See also [HomeController].
+  const HomeControllerFamily();
 
-  /// See also [RecipeLibraryController].
-  RecipeLibraryControllerProvider call(String babyId) {
-    return RecipeLibraryControllerProvider(babyId);
+  /// See also [HomeController].
+  HomeControllerProvider call(String babyId) {
+    return HomeControllerProvider(babyId);
   }
 
   @override
-  RecipeLibraryControllerProvider getProviderOverride(
-    covariant RecipeLibraryControllerProvider provider,
+  HomeControllerProvider getProviderOverride(
+    covariant HomeControllerProvider provider,
   ) {
     return call(provider.babyId);
   }
@@ -71,32 +69,28 @@ class RecipeLibraryControllerFamily
       _allTransitiveDependencies;
 
   @override
-  String? get name => r'recipeLibraryControllerProvider';
+  String? get name => r'homeControllerProvider';
 }
 
-/// See also [RecipeLibraryController].
-class RecipeLibraryControllerProvider
-    extends
-        AutoDisposeAsyncNotifierProviderImpl<
-          RecipeLibraryController,
-          RecipeLibraryState
-        > {
-  /// See also [RecipeLibraryController].
-  RecipeLibraryControllerProvider(String babyId)
+/// See also [HomeController].
+class HomeControllerProvider
+    extends AutoDisposeAsyncNotifierProviderImpl<HomeController, HomeState> {
+  /// See also [HomeController].
+  HomeControllerProvider(String babyId)
     : this._internal(
-        () => RecipeLibraryController()..babyId = babyId,
-        from: recipeLibraryControllerProvider,
-        name: r'recipeLibraryControllerProvider',
+        () => HomeController()..babyId = babyId,
+        from: homeControllerProvider,
+        name: r'homeControllerProvider',
         debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
             ? null
-            : _$recipeLibraryControllerHash,
-        dependencies: RecipeLibraryControllerFamily._dependencies,
+            : _$homeControllerHash,
+        dependencies: HomeControllerFamily._dependencies,
         allTransitiveDependencies:
-            RecipeLibraryControllerFamily._allTransitiveDependencies,
+            HomeControllerFamily._allTransitiveDependencies,
         babyId: babyId,
       );
 
-  RecipeLibraryControllerProvider._internal(
+  HomeControllerProvider._internal(
     super._createNotifier, {
     required super.name,
     required super.dependencies,
@@ -109,17 +103,15 @@ class RecipeLibraryControllerProvider
   final String babyId;
 
   @override
-  FutureOr<RecipeLibraryState> runNotifierBuild(
-    covariant RecipeLibraryController notifier,
-  ) {
+  FutureOr<HomeState> runNotifierBuild(covariant HomeController notifier) {
     return notifier.build(babyId);
   }
 
   @override
-  Override overrideWith(RecipeLibraryController Function() create) {
+  Override overrideWith(HomeController Function() create) {
     return ProviderOverride(
       origin: this,
-      override: RecipeLibraryControllerProvider._internal(
+      override: HomeControllerProvider._internal(
         () => create()..babyId = babyId,
         from: from,
         name: null,
@@ -132,17 +124,14 @@ class RecipeLibraryControllerProvider
   }
 
   @override
-  AutoDisposeAsyncNotifierProviderElement<
-    RecipeLibraryController,
-    RecipeLibraryState
-  >
+  AutoDisposeAsyncNotifierProviderElement<HomeController, HomeState>
   createElement() {
-    return _RecipeLibraryControllerProviderElement(this);
+    return _HomeControllerProviderElement(this);
   }
 
   @override
   bool operator ==(Object other) {
-    return other is RecipeLibraryControllerProvider && other.babyId == babyId;
+    return other is HomeControllerProvider && other.babyId == babyId;
   }
 
   @override
@@ -156,23 +145,18 @@ class RecipeLibraryControllerProvider
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-mixin RecipeLibraryControllerRef
-    on AutoDisposeAsyncNotifierProviderRef<RecipeLibraryState> {
+mixin HomeControllerRef on AutoDisposeAsyncNotifierProviderRef<HomeState> {
   /// The parameter `babyId` of this provider.
   String get babyId;
 }
 
-class _RecipeLibraryControllerProviderElement
-    extends
-        AutoDisposeAsyncNotifierProviderElement<
-          RecipeLibraryController,
-          RecipeLibraryState
-        >
-    with RecipeLibraryControllerRef {
-  _RecipeLibraryControllerProviderElement(super.provider);
+class _HomeControllerProviderElement
+    extends AutoDisposeAsyncNotifierProviderElement<HomeController, HomeState>
+    with HomeControllerRef {
+  _HomeControllerProviderElement(super.provider);
 
   @override
-  String get babyId => (origin as RecipeLibraryControllerProvider).babyId;
+  String get babyId => (origin as HomeControllerProvider).babyId;
 }
 
 // ignore_for_file: type=lint
