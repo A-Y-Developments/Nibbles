@@ -7,7 +7,7 @@ part of 'allergen_complete_controller.dart';
 // **************************************************************************
 
 String _$allergenCompleteControllerHash() =>
-    r'd6a59746d10498ad9ba7cab57e16d34350d21356';
+    r'4c1db5bef27e51f979b82d277c9664480684f360';
 
 /// See also [AllergenCompleteController].
 @ProviderFor(AllergenCompleteController)
