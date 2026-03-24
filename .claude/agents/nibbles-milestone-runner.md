@@ -1,7 +1,7 @@
 ---
 name: nibbles-milestone-runner
 description: Runs a full Nibbles milestone by resolving ticket execution order, checking dependencies, and orchestrating nibbles-linear-agent for each ticket in sequence. Each ticket = one PR. Pauses after every PR for review and merge before starting the next dependent ticket.
-tools: [read, write, bash, mcp]
+tools: [read, write, edit, glob, grep, bash, mcp]
 mcp_servers:
   - name: linear
     url: https://mcp.linear.app/mcp

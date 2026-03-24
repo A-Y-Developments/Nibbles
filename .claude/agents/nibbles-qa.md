@@ -1,7 +1,7 @@
 ---
 name: nibbles-qa
 description: Agent-QA for Nibbles. Writes and maintains unit tests (services, repos, controllers), widget tests (key screens), and integration tests (critical user paths). Use after any feature implementation is complete.
-tools: [read, write, bash, mcp]
+tools: [read, write, edit, glob, grep, bash, mcp]
 ---
 
 # Nibbles — Agent-QA

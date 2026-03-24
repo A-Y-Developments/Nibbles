@@ -1,7 +1,7 @@
 ---
 name: nibbles-frontend
 description: Agent-Frontend for Nibbles. Implements all Flutter screens, widgets, UI state (AsyncNotifier controllers), and navigation. Use for any task touching lib/src/features/, lib/src/common/components/, or lib/src/routing/.
-tools: [read, write, bash, mcp]
+tools: [read, write, edit, glob, grep, bash, mcp]
 ---
 
 # Nibbles — Agent-Frontend

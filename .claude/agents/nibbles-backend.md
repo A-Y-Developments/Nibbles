@@ -1,7 +1,7 @@
 ---
 name: nibbles-backend
 description: Agent-Backend for Nibbles. Owns the entire data layer: repositories, services, Supabase queries, Hive local storage, mappers, DTOs, and domain entities. Use for any task touching lib/src/common/data/, lib/src/common/domain/, lib/src/common/services/, or supabase/.
-tools: [read, write, bash, mcp]
+tools: [read, write, edit, glob, grep, bash, mcp]
 ---
 
 # Nibbles — Agent-Backend

@@ -1,7 +1,7 @@
 ---
 name: nibbles-linear-agent
 description: Nibbles-specific linear agent. Wraps the global linear-agent workflow but adds a dependency pre-flight check before any implementation starts. Use this instead of the global linear-agent for all NIB tickets.
-tools: [read, write, bash, mcp]
+tools: [read, write, edit, glob, grep, bash, mcp]
 mcp_servers:
   - name: linear
     url: https://mcp.linear.app/mcp

@@ -1,7 +1,7 @@
 ---
 name: nibbles-infra
 description: Agent-Infra for Nibbles. Owns project setup, dev/prod flavors, Firebase config, RevenueCat config, deep links, runner.dart bootstrap, pubspec.yaml, and store preparation. Use for M0 infrastructure tasks and any platform-level setup.
-tools: [read, write, bash, mcp]
+tools: [read, write, edit, glob, grep, bash, mcp]
 ---
 
 # Nibbles — Agent-Infra
