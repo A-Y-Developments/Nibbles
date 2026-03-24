@@ -80,11 +80,11 @@ class _ShoppingListBodyState extends ConsumerState<_ShoppingListBody>
   }
 
   Future<void> _copyToClipboard() async {
-    await ref
+    final ok = await ref
         .read(shoppingListControllerProvider(widget.babyId).notifier)
         .copyToClipboard();
     if (!mounted) return;
-    _showToast('Copied to clipboard');
+    _showToast(ok ? 'Copied to clipboard' : "Couldn't copy. Try again.");
   }
 
   Future<void> _runWrite(
@@ -269,7 +269,17 @@ class _ListTabState extends ConsumerState<_ListTab> {
     }
   }
 
-  Future<void> _delete(String itemId) async {
+  Future<void> _deleteDirect(String itemId) async {
+    try {
+      await ref
+          .read(shoppingListControllerProvider(widget.babyId).notifier)
+          .delete(itemId);
+    } on Exception catch (_) {
+      widget.onDeleteFailed();
+    }
+  }
+
+  Future<void> _deleteWithConfirm(String itemId) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => const _ConfirmDialog(
@@ -278,13 +288,7 @@ class _ListTabState extends ConsumerState<_ListTab> {
       ),
     );
     if (confirmed != true) return;
-    try {
-      await ref
-          .read(shoppingListControllerProvider(widget.babyId).notifier)
-          .delete(itemId);
-    } on Exception catch (_) {
-      widget.onDeleteFailed();
-    }
+    await _deleteDirect(itemId);
   }
 
   @override
@@ -384,7 +388,8 @@ class _ListTabState extends ConsumerState<_ListTab> {
                     return _ShoppingItemTile(
                       item: item,
                       onToggle: () => _check(item.id),
-                      onDelete: () => _delete(item.id),
+                      onDeleteDirect: () => _deleteDirect(item.id),
+                      onDeleteWithConfirm: () => _deleteWithConfirm(item.id),
                     );
                   },
                 ),
@@ -425,7 +430,20 @@ class _BoughtTab extends ConsumerWidget {
     }
   }
 
-  Future<void> _delete(
+  Future<void> _deleteDirect(
+    WidgetRef ref,
+    String itemId,
+  ) async {
+    try {
+      await ref
+          .read(shoppingListControllerProvider(babyId).notifier)
+          .delete(itemId);
+    } on Exception catch (_) {
+      onDeleteFailed();
+    }
+  }
+
+  Future<void> _deleteWithConfirm(
     BuildContext context,
     WidgetRef ref,
     String itemId,
@@ -438,13 +456,7 @@ class _BoughtTab extends ConsumerWidget {
       ),
     );
     if (confirmed != true) return;
-    try {
-      await ref
-          .read(shoppingListControllerProvider(babyId).notifier)
-          .delete(itemId);
-    } on Exception catch (_) {
-      onDeleteFailed();
-    }
+    await _deleteDirect(ref, itemId);
   }
 
   @override
@@ -465,7 +477,8 @@ class _BoughtTab extends ConsumerWidget {
         return _ShoppingItemTile(
           item: item,
           onToggle: () => _uncheck(context, ref, item.id),
-          onDelete: () => _delete(context, ref, item.id),
+          onDeleteDirect: () => _deleteDirect(ref, item.id),
+          onDeleteWithConfirm: () => _deleteWithConfirm(context, ref, item.id),
         );
       },
     );
@@ -480,12 +493,16 @@ class _ShoppingItemTile extends StatelessWidget {
   const _ShoppingItemTile({
     required this.item,
     required this.onToggle,
-    required this.onDelete,
+    // Called after swipe-confirm — no dialog needed, already confirmed.
+    required this.onDeleteDirect,
+    // Called by trash icon — shows confirmation dialog.
+    required this.onDeleteWithConfirm,
   });
 
   final ShoppingListItem item;
   final VoidCallback onToggle;
-  final VoidCallback onDelete;
+  final VoidCallback onDeleteDirect;
+  final VoidCallback onDeleteWithConfirm;
 
   @override
   Widget build(BuildContext context) {
@@ -507,7 +524,7 @@ class _ShoppingItemTile extends StatelessWidget {
           ),
         );
       },
-      onDismissed: (_) => onDelete(),
+      onDismissed: (_) => onDeleteDirect(),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(
           horizontal: AppSizes.pagePaddingH,
@@ -529,7 +546,7 @@ class _ShoppingItemTile extends StatelessWidget {
         trailing: IconButton(
           icon: const Icon(Icons.delete_outline, size: AppSizes.iconMd),
           color: AppColors.hint,
-          onPressed: onDelete,
+          onPressed: onDeleteWithConfirm,
         ),
       ),
     );
