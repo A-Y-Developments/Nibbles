@@ -70,7 +70,7 @@ void main() {
           .thenAnswer((_) async => const Result.success([]));
       when(() => mockRecipeRepo.getAllRecipes()).thenAnswer(
         (_) async => Result.success([
-          _makeRecipe(id: 'r1', allergenTags: ['peanut']),
+          _makeRecipe(allergenTags: ['peanut']),
           _makeRecipe(id: 'r2', allergenTags: ['egg']),
         ]),
       );
@@ -84,12 +84,12 @@ void main() {
     test('flagged allergen tag → recipe excluded, other retained', () async {
       when(() => mockAllergenRepo.getLogs(_babyId)).thenAnswer(
         (_) async => Result.success([
-          _makeLog(allergenKey: 'peanut', hadReaction: true),
+          _makeLog(hadReaction: true),
         ]),
       );
       when(() => mockRecipeRepo.getAllRecipes()).thenAnswer(
         (_) async => Result.success([
-          _makeRecipe(id: 'r1', allergenTags: ['peanut']),
+          _makeRecipe(allergenTags: ['peanut']),
           _makeRecipe(id: 'r2', allergenTags: ['egg']),
         ]),
       );
@@ -105,12 +105,12 @@ void main() {
     test('recipe with no allergen tags → never excluded', () async {
       when(() => mockAllergenRepo.getLogs(_babyId)).thenAnswer(
         (_) async => Result.success([
-          _makeLog(allergenKey: 'peanut', hadReaction: true),
+          _makeLog(hadReaction: true),
         ]),
       );
       when(() => mockRecipeRepo.getAllRecipes()).thenAnswer(
         (_) async => Result.success([
-          _makeRecipe(id: 'r1', allergenTags: []),
+          _makeRecipe(),
         ]),
       );
 
@@ -123,12 +123,12 @@ void main() {
     test('recipe with non-flagged allergen tag → remains visible', () async {
       when(() => mockAllergenRepo.getLogs(_babyId)).thenAnswer(
         (_) async => Result.success([
-          _makeLog(allergenKey: 'peanut', hadReaction: true),
+          _makeLog(hadReaction: true),
         ]),
       );
       when(() => mockRecipeRepo.getAllRecipes()).thenAnswer(
         (_) async => Result.success([
-          _makeRecipe(id: 'r1', allergenTags: ['egg']),
+          _makeRecipe(allergenTags: ['egg']),
         ]),
       );
 
@@ -174,7 +174,7 @@ void main() {
           .thenAnswer((_) async => const Result.success([]));
       when(() => mockRecipeRepo.getRecipesByAllergen('egg')).thenAnswer(
         (_) async => Result.success([
-          _makeRecipe(id: 'r1', allergenTags: ['egg']),
+          _makeRecipe(allergenTags: ['egg']),
         ]),
       );
 
@@ -185,7 +185,8 @@ void main() {
     });
 
     test(
-        'target allergen is flagged → returns empty list, no getRecipesByAllergen call',
+        'target allergen is flagged → returns empty list, '
+        'no getRecipesByAllergen call',
         () async {
       when(() => mockAllergenRepo.getLogs(_babyId)).thenAnswer(
         (_) async => Result.success([
@@ -204,12 +205,12 @@ void main() {
         () async {
       when(() => mockAllergenRepo.getLogs(_babyId)).thenAnswer(
         (_) async => Result.success([
-          _makeLog(allergenKey: 'peanut', hadReaction: true),
+          _makeLog(hadReaction: true),
         ]),
       );
       when(() => mockRecipeRepo.getRecipesByAllergen('egg')).thenAnswer(
         (_) async => Result.success([
-          _makeRecipe(id: 'r1', allergenTags: ['egg', 'peanut']),
+          _makeRecipe(allergenTags: ['egg', 'peanut']),
         ]),
       );
 

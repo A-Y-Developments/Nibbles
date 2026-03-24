@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/domain/entities/shopping_list_item.dart';
 import 'package:nibbles/src/common/domain/enums/shopping_list_source.dart';
@@ -88,7 +87,7 @@ void main() {
     testWidgets('unchecked items appear in List tab', (tester) async {
       when(() => mockService.getItems(any())).thenAnswer(
         (_) async => Result.success([
-          _makeItem(id: 'item-1', name: 'Apples'),
+          _makeItem(),
           _makeItem(id: 'item-2', name: 'Bananas'),
         ]),
       );
@@ -105,7 +104,7 @@ void main() {
         (tester) async {
       when(() => mockService.getItems(any())).thenAnswer(
         (_) async => Result.success([
-          _makeItem(id: 'item-1', name: 'Apples', isChecked: false),
+          _makeItem(),
           _makeItem(id: 'item-2', name: 'Bananas', isChecked: true),
         ]),
       );
@@ -135,7 +134,7 @@ void main() {
         (tester) async {
       when(() => mockService.getItems(any())).thenAnswer(
         (_) async => Result.success([
-          _makeItem(id: 'item-1', name: 'Apples', isChecked: false),
+          _makeItem(),
         ]),
       );
       when(() => mockService.checkItem(any()))
@@ -160,7 +159,7 @@ void main() {
     testWidgets('delete icon tap shows confirmation dialog', (tester) async {
       when(() => mockService.getItems(any())).thenAnswer(
         (_) async => Result.success([
-          _makeItem(id: 'item-1', name: 'Apples'),
+          _makeItem(),
         ]),
       );
 
@@ -178,7 +177,7 @@ void main() {
     testWidgets('confirm Yes → deleteItem called', (tester) async {
       when(() => mockService.getItems(any())).thenAnswer(
         (_) async => Result.success([
-          _makeItem(id: 'item-1', name: 'Apples'),
+          _makeItem(),
         ]),
       );
       when(() => mockService.deleteItem(any()))
@@ -200,7 +199,7 @@ void main() {
     testWidgets('confirm No → deleteItem never called', (tester) async {
       when(() => mockService.getItems(any())).thenAnswer(
         (_) async => Result.success([
-          _makeItem(id: 'item-1', name: 'Apples'),
+          _makeItem(),
         ]),
       );
 
@@ -249,7 +248,7 @@ void main() {
     testWidgets('Copy to clipboard shows success snackbar', (tester) async {
       when(() => mockService.getItems(any())).thenAnswer(
         (_) async => Result.success([
-          _makeItem(id: 'item-1', name: 'Apples'),
+          _makeItem(),
         ]),
       );
       when(() => mockService.copyToClipboard(any())).thenReturn('• Apples');
@@ -271,7 +270,7 @@ void main() {
         (tester) async {
       when(() => mockService.getItems(any())).thenAnswer(
         (_) async => Result.success([
-          _makeItem(id: 'item-1', name: 'Apples'),
+          _makeItem(),
         ]),
       );
       when(() => mockService.copyToClipboard(any())).thenReturn('• Apples');
