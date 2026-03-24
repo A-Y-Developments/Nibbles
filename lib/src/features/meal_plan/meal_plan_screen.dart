@@ -84,18 +84,15 @@ class _MealPlanBody extends ConsumerWidget {
         ),
         data: (state) => _WeekView(
           state: state,
-          babyId: babyId,
           onPreviousWeek: () => ref
               .read(mealPlanControllerProvider(babyId).notifier)
               .previousWeek(),
           onNextWeek: () =>
               ref.read(mealPlanControllerProvider(babyId).notifier).nextWeek(),
-          onAssignRecipe: (date) async =>
-              _openRecipeSelect(context, ref, babyId, date),
+          onAssignRecipe: (date) async => _openRecipeSelect(context, ref, date),
           onEditEntry: (entry) async =>
-              _openRecipeSelect(context, ref, babyId, entry.planDate),
-          onRemoveEntry: (entry) async =>
-              _removeEntry(context, ref, babyId, entry),
+              _openRecipeSelect(context, ref, entry.planDate),
+          onRemoveEntry: (entry) async => _removeEntry(context, ref, entry),
         ),
       ),
     );
@@ -160,7 +157,6 @@ class _MealPlanBody extends ConsumerWidget {
   Future<void> _openRecipeSelect(
     BuildContext context,
     WidgetRef ref,
-    String babyId,
     DateTime date,
   ) async {
     final recipe = await showModalBottomSheet<Recipe>(
@@ -191,7 +187,6 @@ class _MealPlanBody extends ConsumerWidget {
   Future<void> _removeEntry(
     BuildContext context,
     WidgetRef ref,
-    String babyId,
     MealPlanEntry entry,
   ) async {
     final ok = await ref
@@ -212,7 +207,6 @@ class _MealPlanBody extends ConsumerWidget {
 class _WeekView extends StatelessWidget {
   const _WeekView({
     required this.state,
-    required this.babyId,
     required this.onPreviousWeek,
     required this.onNextWeek,
     required this.onAssignRecipe,
@@ -221,7 +215,6 @@ class _WeekView extends StatelessWidget {
   });
 
   final MealPlanState state;
-  final String babyId;
   final VoidCallback onPreviousWeek;
   final VoidCallback onNextWeek;
   final Future<void> Function(DateTime date) onAssignRecipe;
