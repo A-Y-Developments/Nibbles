@@ -1,5 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
+import 'package:nibbles/src/common/domain/entities/shopping_list_item.dart';
+import 'package:nibbles/src/common/domain/enums/shopping_list_source.dart';
 import 'package:nibbles/src/common/services/shopping_list_service.dart';
 import 'package:nibbles/src/features/shopping_list/shopping_list_state.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -20,15 +22,35 @@ class ShoppingListController extends _$ShoppingListController {
     final trimmed = name.trim();
     if (trimmed.isEmpty) return;
 
+    // Optimistic: insert placeholder immediately so the item appears at top.
+    // id='' is replaced once the invalidate/refetch brings back the real UUID.
+    final now = DateTime.now();
+    final placeholder = ShoppingListItem(
+      id: '',
+      babyId: babyId,
+      name: trimmed,
+      isChecked: false,
+      source: ShoppingListSource.manual,
+      createdAt: now,
+    );
+    final current = state.valueOrNull;
+    if (current != null) {
+      state = AsyncData(
+        ShoppingListState(items: [...current.items, placeholder]),
+      );
+    }
+
     final result = await ref
         .read(shoppingListServiceProvider)
         .addManualItem(babyId, trimmed);
 
     if (result.isFailure) {
+      // Revert placeholder
+      if (current != null) state = AsyncData(current);
       throw result.errorOrNull!;
     }
 
-    // Optimistic: reload
+    // Reload to replace placeholder with server-assigned ID
     ref.invalidateSelf();
     await future;
   }
@@ -109,13 +131,19 @@ class ShoppingListController extends _$ShoppingListController {
     }
   }
 
-  Future<void> copyToClipboard() async {
+  /// Returns true if clipboard write succeeded, false otherwise.
+  Future<bool> copyToClipboard() async {
     final current = state.valueOrNull;
-    if (current == null) return;
+    if (current == null) return false;
 
-    final text = ref
-        .read(shoppingListServiceProvider)
-        .copyToClipboard(current.listItems);
-    await Clipboard.setData(ClipboardData(text: text));
+    try {
+      final text = ref
+          .read(shoppingListServiceProvider)
+          .copyToClipboard(current.listItems);
+      await Clipboard.setData(ClipboardData(text: text));
+      return true;
+    } on Exception catch (_) {
+      return false;
+    }
   }
 }
