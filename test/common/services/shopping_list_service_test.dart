@@ -172,7 +172,7 @@ void main() {
   group('ShoppingListService.copyToClipboard', () {
     test('formats unchecked items as bullet list', () {
       final items = [
-        _makeItem(name: 'Apples'),
+        _makeItem(),
         _makeItem(name: 'Bananas'),
         _makeItem(name: 'Carrots'),
       ];

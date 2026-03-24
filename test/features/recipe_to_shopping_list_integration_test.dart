@@ -1,4 +1,5 @@
-// Integration widget test: recipe library → recipe detail → add to shopping list.
+// Integration widget test: recipe library → recipe detail →
+// add to shopping list.
 //
 // Covers ticket NIB-32 acceptance criteria:
 //   - names only in shopping list (zero quantity strings)
@@ -130,16 +131,16 @@ void main() {
   testWidgets(
     'RC-01 → RC-02 → Add to Shopping List: names only, deselected excluded',
     (tester) async {
-      final recipe = Recipe(
+      const recipe = Recipe(
         id: 'r1',
         title: 'Avocado Toast',
         ageRange: '6m+',
-        allergenTags: const [],
-        ingredients: const [
+        allergenTags: [],
+        ingredients: [
           Ingredient(name: 'Avocado', quantity: '1 whole'),
           Ingredient(name: 'Bread', quantity: '2 slices'),
         ],
-        steps: const ['Mash avocado.', 'Spread on bread.'],
+        steps: ['Mash avocado.', 'Spread on bread.'],
         howToServe: 'Serve immediately.',
       );
 
@@ -147,14 +148,14 @@ void main() {
 
       // RC-01: library loads filtered recipes
       when(() => mockRecipeService.getFilteredRecipes(any()))
-          .thenAnswer((_) async => Result.success([recipe]));
+          .thenAnswer((_) async => const Result.success([recipe]));
       // RC-01: allergen program state (for section grouping)
       when(() => mockAllergenService.getProgramState(any()))
           .thenAnswer((_) async => Result.success(_makeProgramState()));
 
       // RC-02: recipe detail loads
       when(() => mockRecipeService.getRecipeById('r1'))
-          .thenAnswer((_) async => Result.success(recipe));
+          .thenAnswer((_) async => const Result.success(recipe));
       when(() => mockAllergenService.getLogs(any()))
           .thenAnswer((_) async => const Result.success([]));
       // deriveStatus is a pure sync method — returns notStarted for empty logs

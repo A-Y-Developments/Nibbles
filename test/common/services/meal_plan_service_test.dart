@@ -145,14 +145,13 @@ void main() {
         () => mockMealPlanRepo.getWeekMeals(any(), any(), any()),
       ).thenAnswer(
         (_) async => Result.success([
-          _makeEntry(id: 'e1', recipeId: 'r1'),
+          _makeEntry(),
           _makeEntry(id: 'e2', recipeId: 'r2'),
         ]),
       );
       when(() => mockRecipeRepo.getRecipeById('r1')).thenAnswer(
         (_) async => Result.success(
           _makeRecipe(
-            id: 'r1',
             ingredients: [
               const Ingredient(name: 'Olive Oil', quantity: '1 tbsp'),
               const Ingredient(name: 'Rice', quantity: '1 cup'),
@@ -185,7 +184,7 @@ void main() {
         () => mockMealPlanRepo.getWeekMeals(any(), any(), any()),
       ).thenAnswer(
         (_) async => Result.success([
-          _makeEntry(id: 'e1', recipeId: 'r1'),
+          _makeEntry(),
           _makeEntry(id: 'e2', recipeId: 'r2'),
         ]),
       );
