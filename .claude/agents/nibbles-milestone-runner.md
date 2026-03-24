@@ -102,25 +102,38 @@ Wait for user confirmation before executing.
 
 ## Step 6 — Execute tickets in order
 
-### Sequential ticket:
+**Do NOT spawn `nibbles-linear-agent`.** Execute the ticket workflow inline to avoid an unnecessary agent hop.
+
+### Sequential ticket (inline workflow):
 
 1. `git pull origin main`
-2. Spawn `nibbles-linear-agent` with the ticket ID
-3. Agent creates branch, implements, opens PR
-4. **PAUSE**:
-   ```
-   ⏸ <REAL-ID> PR is open: <PR URL>
-   Review and merge it, then reply "merged" to continue.
-   ```
-5. Wait for user confirmation
-6. `git pull origin main`
-7. Proceed to next ticket
+2. Fetch ticket (parallel): `get_issue(id, includeRelations: true)` + `list_comments(issueId)`
+3. Dependency pre-flight: check all `blocked_by` relations. Any Backlog/Todo dep → ⛔ STOP.
+4. If description is ambiguous or missing acceptance criteria → ask user before continuing.
+5. Explore relevant code files (read only files this ticket will touch).
+6. Create branch: `git checkout -b <type>/<ticket-id>-<2-4-word-slug>`
+7. Mark ticket **In Progress** via Linear MCP.
+8. Spawn domain agent based on ticket label (from MCP — not title text):
+   - `Agent-Frontend` → `nibbles-frontend`
+   - `Agent-Backend` → `nibbles-backend`
+   - `Agent-Infra` → `nibbles-infra`
+   - `Agent-QA` → `nibbles-qa`
+   - `Human Touch` → see Step 7; do not spawn an agent
+9. After domain agent completes: spawn `nibbles-qa` on affected files (skip if QA ticket).
+10. Run `/review` on uncommitted changes. If Must Fix → re-spawn domain agent to resolve → re-run `/review`.
+11. Run `/pr-finish`. Add PR URL as Linear attachment via `create_attachment`. Set ticket to **In Review**.
+12. **PAUSE**:
+    ```
+    ⏸ <REAL-ID> PR is open: <PR URL>
+    Review and merge it, then reply "merged" to continue.
+    ```
+13. Wait for user confirmation → `git pull origin main` → proceed to next ticket.
 
-### Parallel group:
+### Parallel group (inline workflow):
 
 1. `git pull origin main`
-2. Spawn both `nibbles-linear-agent` instances simultaneously
-3. Both open PRs independently
+2. Spawn both domain agents simultaneously (each gets its own ticket context in the prompt)
+3. Both complete implementation → both run `/pr-finish` → both PRs open independently
 4. **PAUSE**:
    ```
    ⏸ Parallel PRs open:
@@ -128,13 +141,11 @@ Wait for user confirmation before executing.
      <REAL-ID-B>: <PR URL>
    Merge one at a time. Reply "merged" when both are done.
    ```
-5. Wait for user confirmation
-6. `git pull origin main`
-7. Proceed
+5. Wait for user confirmation → `git pull origin main` → proceed
 
 ### On failure:
 
-If `nibbles-linear-agent` reports ⛔ blocked or fails — **STOP**. Report what failed. Wait for the user.
+If any step reports ⛔ blocked or fails — **STOP**. Report what failed. Wait for the user.
 
 ---
 

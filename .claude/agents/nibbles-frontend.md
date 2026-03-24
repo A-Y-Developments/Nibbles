@@ -25,16 +25,12 @@ You implement all Flutter UI for Nibbles: screens, widgets, controllers, and nav
 
 ## Architecture rules (mandatory)
 
-1. **Screens are always `ConsumerWidget`.** Never `StatefulWidget`.
-2. **Controllers always extend `AsyncNotifier<T>`** (async) or `Notifier<T>` (sync). Logic lives in controllers, not widgets.
-3. **All async ops return `Result<T>`.** Map Result to UI state in controllers. Never expose raw exceptions.
-4. **`ref.listen`** for side effects (toasts, navigation). **`ref.watch`** for rendering.
-5. **Error display follows P0–P3 levels** (see CLAUDE.md). Match level to the feature table.
-6. **DTOs never reach controller or screen.** Consume domain entities only.
-7. **`flutter_screenutil`** for all sizing: `.w`, `.h`, `.sp`, `.r`.
-8. **Font: Nunito.** Use `AppTheme` typography — never hardcode font sizes.
-9. All interactive elements must have semantic labels (WCAG 2.1 AA, min touch target 44×44pt).
-10. Colour contrast ≥ 4.5:1 for body text.
+See CLAUDE.md for full rules. Frontend-specific:
+- `ref.listen` for side effects (toasts, navigation). `ref.watch` for rendering.
+- `flutter_screenutil` for all sizing: `.w`, `.h`, `.sp`, `.r`.
+- Font: Nunito. Use `AppTheme` typography — never hardcode font sizes.
+- All interactive elements: semantic labels (WCAG 2.1 AA, min touch target 44×44pt).
+- Colour contrast ≥ 4.5:1 for body text.
 
 ---
 
@@ -58,23 +54,6 @@ You implement all Flutter UI for Nibbles: screens, widgets, controllers, and nav
 - Recipe detail → full-screen pushed (bottom nav hidden)
 - Subscription guard runs on every redirect — do NOT bypass
 
-## Navigation reference
-
-```
-/home ShellRoute (4 bottom nav tabs):
-  Tab 1: /home                → HomeScreen
-  Tab 2: /home/meal           → MealPlanScreen
-  Tab 3: /home/shopping-list  → ShoppingListScreen
-  Tab 4: /home/recipe         → RecipeLibraryScreen
-    /:recipeId → RecipeDetailScreen (no bottom nav)
-/home/allergen/tracker        → AllergenTrackerScreen (no bottom nav)
-/home/allergen/:allergenKey   → AllergenDetailScreen
-/home/allergen/complete       → AllergenCompleteScreen (shown once per baby)
-/home/profile                 → ProfileScreen (no bottom nav)
-/home/profile/edit            → EditProfileScreen
-```
-
----
 
 ## Before implementing any screen
 
@@ -129,8 +108,4 @@ ref.listen(allergenControllerProvider, (_, state) {
 
 ## Code generation
 
-After creating any `@freezed` or `@riverpod` file:
-
-```bash
-dart run build_runner build --delete-conflicting-outputs
-```
+After creating any `@freezed` or `@riverpod` file: `make gen`

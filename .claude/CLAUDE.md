@@ -74,7 +74,8 @@ Generated files (`*.freezed.dart`, `*.g.dart`) ARE committed to source control.
 | `nibbles-infra` | flavors, Firebase, RevenueCat, deep links, runner.dart, store prep |
 | `nibbles-qa` | unit tests, widget tests, integration tests |
 
-Use these agents when implementing tickets. The linear-agent orchestrates them.
+**Single ticket:** `/linear-start NIB-xx` (skill — runs in current context, routes to correct domain agent)
+**Full milestone:** use `nibbles-milestone-runner` agent
 
 ## Linear Workflow Rules
 

@@ -30,13 +30,10 @@ You own the entire data layer for Nibbles.
 
 ## Architecture rules (mandatory)
 
-1. **Supabase calls go through Repository layer only.** No direct Supabase calls in Service, Controller, or Screen.
-2. **All async ops return `Result<T>`** — freezed `Success<T> | Failure`. Never throw raw exceptions.
-3. **Mappers**: every Supabase response DTO maps to domain entity in `mappers/`. Service receives entities, never DTOs.
-4. **Hive**: 3 boxes only — `recipes`, `allergens`, `local_flags`. Recipes/allergens stored as JSON strings (decode on read). `local_flags` stores booleans.
-5. **JWT** stored in `flutter_secure_storage`. Injected in Dio auth interceptor. Never in Hive.
-6. **Auth interceptor**: inject Bearer JWT on every request. On 401 → `supabase.auth.refreshSession()` → retry once. If refresh fails → sign out.
-7. **RLS**: all user tables are RLS-protected. Queries scoped to `auth.uid()` via RLS — no manual user_id filter needed in app.
+See CLAUDE.md for full rules. Backend-specific:
+- Auth interceptor: inject Bearer JWT on every request. On 401 → `supabase.auth.refreshSession()` → retry once. If refresh fails → sign out.
+- RLS: all user tables scoped to `auth.uid()` — no manual user_id filter needed in app.
+- Hive: recipes/allergens stored as JSON strings (decode on read). `local_flags` stores booleans.
 
 ---
 
@@ -55,12 +52,11 @@ You own the entire data layer for Nibbles.
 
 ---
 
-## Critical enum facts
+## Critical enum facts (DB-specific)
 
-- `AllergenStatus.safe` — canonical name for passed allergen. **NEVER `.completed`.**
-- `EmojiTaste`: `love`, `neutral`, `dislike` — maps to `emoji_taste` DB column values
-- `AllergenKey` sequence: peanut(1) egg(2) dairy(3) tree_nuts(4) sesame(5) soy(6) wheat(7) fish(8) shellfish(9)
+- `EmojiTaste`: `love`, `neutral`, `dislike` — exact values stored in `emoji_taste` column
 - `AllergenKey.treeNuts` → DB key `tree_nuts` (underscore, not camelCase)
+- See `domain.md` for full enum reference and allergen sequence
 
 ---
 
@@ -130,8 +126,4 @@ Assembled by `AllergenService.getAllergenBoardSummary()`:
 
 ## Code generation
 
-After any `@freezed`, `@JsonSerializable`, `@RestApi` change:
-
-```bash
-dart run build_runner build --delete-conflicting-outputs
-```
+After any `@freezed`, `@JsonSerializable`, `@RestApi` change: `make gen`
