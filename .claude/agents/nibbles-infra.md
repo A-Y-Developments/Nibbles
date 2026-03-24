@@ -186,6 +186,3 @@ push:
 - `.env.dev` and `.env.prod` must be in `.gitignore` — never commit secrets
 - Crashlytics collection: prod only (`FlavorConfig.instance.isProd`)
 - Firebase Analytics events: no PII in parameters (internal IDs only)
-- No CI/CD pipeline for MVP 1 — manual builds only
-- No staging environment — dev + prod only
-- `analysis_options.yaml` uses `very_good_analysis` — zero linting warnings merged to main
