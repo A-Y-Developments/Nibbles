@@ -116,6 +116,17 @@ Start narrow, expand only if you find unexpected coupling. Show the user what yo
 
 ---
 
+## Step 6b — Create task list
+
+After scope is assessed (and plan approved if large), create tasks with `TaskCreate` to track the remaining steps:
+
+- One task per logical implementation unit (e.g. "Implement AllergenRepository", "Build AllergenDetailScreen", "Wire routing")
+- Plus fixed tasks at the end: "QA tests", "Review", "PR + Linear update"
+
+Mark each task **done immediately** when that unit of work completes. Do not batch.
+
+---
+
 ## Step 7 — Route to domain agent
 
 Use the ticket's **labels** field (from Step 1 MCP response — not title text):
@@ -160,19 +171,21 @@ Spawn the domain agent identified in Step 7. Pass it:
 - Any plan approved in Step 6
 
 After the domain agent completes:
-1. Spawn `nibbles-qa` on affected files (skip if this is a QA ticket)
-2. Run `/review` on all uncommitted changes
-3. If review flags Must Fix → spawn domain agent to resolve → re-run `/review`
+1. Mark implementation task(s) done via `TaskUpdate`
+2. Spawn `nibbles-qa` on affected files (skip if this is a QA ticket) → mark "QA tests" task done
+3. Run `/review` on all uncommitted changes → mark "Review" task done
+4. If review flags Must Fix → spawn domain agent to resolve → re-run `/review`
 
 ---
 
-## Step 11 — Open PR
+## Step 11 — Commit, push, and open PR
 
-Run `/pr-finish`.
+Run `/pr-finish`. Do NOT ask for confirmation — execute immediately.
 
 After PR is created:
 - Add PR URL as attachment on the ticket via Linear MCP: `create_attachment(issueId, url, title: "PR")`
 - Set ticket status to **In Review** via Linear MCP
+- Mark "PR + Linear update" task done
 
 ---
 
@@ -201,6 +214,7 @@ Manual steps: <any or "none">
 - Never start while ⛔ blocked tickets exist
 - Never implement Human Touch items
 - Branch name must include ticket ID
+- Always invoke `commit-push-pr` skill at Step 11 — never skip
 - Keep ticket status in sync at each major step
 - If ticket has no acceptance criteria — ask before building
 - If Linear MCP is unavailable — STOP. Do not proceed.
