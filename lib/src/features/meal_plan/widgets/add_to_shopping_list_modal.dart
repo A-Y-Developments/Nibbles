@@ -61,6 +61,8 @@ class _AddToShoppingListModalState
     if (selected.isEmpty) return;
 
     setState(() => _submitting = true);
+    // recipeId is required by the signature but not stored in
+    // ShoppingListItem — empty string is intentional for bulk meal-plan adds.
     final result = await ref
         .read(shoppingListServiceProvider)
         .addFromRecipe(widget.babyId, '', selected);
