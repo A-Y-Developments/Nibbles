@@ -36,7 +36,7 @@ Screen (ConsumerWidget)
 2. **Mappers** — every Supabase response DTO maps to a domain entity before reaching Service. UI/Service never touch DTOs.
 3. **Supabase** — Repository layer only. No direct Supabase calls in Service, Controller, or Screen.
 4. **Hive** — 3 boxes only: `recipes`, `allergens`, `local_flags`. Read-through cache for recipes/allergens. LocalFlagService wraps `local_flags` box.
-5. **JWT** — stored in `flutter_secure_storage` ONLY. Never Hive, never SharedPreferences.
+5. **JWT** — read via `Supabase.instance.client.auth.currentSession?.accessToken`. The Supabase Flutter SDK manages session persistence; do NOT reintroduce `flutter_secure_storage` or persist tokens in Hive.
 6. **Online only** — no offline write queue. If no connectivity on write → P1 error.
 7. **Subscription guard** — GoRouter redirect checks `SubscriptionService.isActive` on every nav event. ⚠️ Currently removed from `routes.dart` while M2 is deferred — do not treat as a bug.
 

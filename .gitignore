@@ -67,4 +67,5 @@ android/key.properties
 # Tool-generated / temp
 .superset/
 supabase/.temp/
+supabase/.branches/
 .mcp.json

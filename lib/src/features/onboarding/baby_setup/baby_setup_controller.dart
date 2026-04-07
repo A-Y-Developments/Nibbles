@@ -9,7 +9,15 @@ part 'baby_setup_controller.g.dart';
 @riverpod
 class BabySetupController extends _$BabySetupController {
   @override
-  BabySetupState build() => const BabySetupState();
+  BabySetupState build() {
+    final now = DateTime.now();
+    final defaultDob = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).subtract(const Duration(days: 180));
+    return BabySetupState(dob: defaultDob);
+  }
 
   void updateName(String value) {
     state = state.copyWith(
@@ -41,11 +49,9 @@ class BabySetupController extends _$BabySetupController {
 
     state = state.copyWith(isLoading: true, errorMessage: null);
 
-    final result = await ref.read(babyProfileServiceProvider).createBaby(
-          state.babyName.value,
-          state.dob!,
-          state.gender!,
-        );
+    final result = await ref
+        .read(babyProfileServiceProvider)
+        .createBaby(state.babyName.value, state.dob!, state.gender!);
 
     return result.when(
       success: (_) {
@@ -53,10 +59,7 @@ class BabySetupController extends _$BabySetupController {
         return true;
       },
       failure: (error) {
-        state = state.copyWith(
-          isLoading: false,
-          errorMessage: error.message,
-        );
+        state = state.copyWith(isLoading: false, errorMessage: error.message);
         return false;
       },
     );
