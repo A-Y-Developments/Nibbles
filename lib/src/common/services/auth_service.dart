@@ -1,5 +1,7 @@
 import 'package:nibbles/src/common/data/repositories/auth_repository.dart';
+import 'package:nibbles/src/common/data/repositories/baby_profile_repository.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
+import 'package:nibbles/src/common/services/local_flag_service.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -13,6 +15,15 @@ class AuthService extends _$AuthService {
   @override
   bool build() {
     _repo = ref.watch(authRepositoryProvider);
+
+    // Keep state in sync with Supabase's internal auth events (session restore,
+    // token refresh, expiry). Without this, the initial build() value would
+    // never update if Supabase restores or clears a session after boot.
+    final sub = _repo.authStateStream.listen((authState) {
+      state = authState.session != null;
+    });
+    ref.onDispose(sub.cancel);
+
     return _repo.isLoggedIn;
   }
 
@@ -32,8 +43,30 @@ class AuthService extends _$AuthService {
 
   Future<Result<void>> signIn(String email, String password) async {
     final result = await _repo.signIn(email, password);
-    if (result.isSuccess) state = true;
+    if (result.isSuccess) {
+      // Backfill Hive flags before triggering router redirect so reinstalled
+      // users with existing baby data skip onboarding.
+      await _backfillOnboardingFlagsIfNeeded();
+      state = true;
+    }
     return result;
+  }
+
+  Future<void> _backfillOnboardingFlagsIfNeeded() async {
+    final flags = ref.read(localFlagServiceProvider);
+    if (flags.isOnboardingBabySetupDone()) return;
+    try {
+      final isCompleted = await ref
+          .read(babyProfileRepositoryProvider)
+          .isOnboardingCompleted();
+      if (isCompleted) {
+        flags
+          ..setOnboardingReadinessDone()
+          ..setOnboardingBabySetupDone();
+      }
+    } on Object {
+      // Non-critical — if this fails the user re-does onboarding, which is safe
+    }
   }
 
   Future<Result<void>> signOut() async {

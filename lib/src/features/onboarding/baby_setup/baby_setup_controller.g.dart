@@ -7,7 +7,7 @@ part of 'baby_setup_controller.dart';
 // **************************************************************************
 
 String _$babySetupControllerHash() =>
-    r'1cdcbfb30e3f6284988f16f59eac37801e6f5c39';
+    r'cea13cf349ac113249c043e2d1cecafbd4f4efe0';
 
 /// See also [BabySetupController].
 @ProviderFor(BabySetupController)

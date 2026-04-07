@@ -14,6 +14,11 @@ class App extends ConsumerWidget {
       title: 'Nibbles',
       theme: AppTheme.light(),
       routerConfig: router,
+      builder: (context, child) => GestureDetector(
+        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+        behavior: HitTestBehavior.translucent,
+        child: child,
+      ),
     );
   }
 }

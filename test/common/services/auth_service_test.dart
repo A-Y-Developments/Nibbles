@@ -5,22 +5,33 @@ import 'package:nibbles/src/common/data/repositories/auth_repository.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/services/auth_service.dart';
+import 'package:nibbles/src/common/services/local_flag_service.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
+class MockLocalFlagService extends Mock implements LocalFlagService {}
+
 void main() {
   late MockAuthRepository mockRepo;
+  late MockLocalFlagService mockFlags;
   late ProviderContainer container;
   late AuthService sut;
 
   setUp(() {
     mockRepo = MockAuthRepository();
+    mockFlags = MockLocalFlagService();
     when(() => mockRepo.isLoggedIn).thenReturn(false);
-    when(() => mockRepo.authStateStream)
-        .thenAnswer((_) => const Stream.empty());
+    when(
+      () => mockRepo.authStateStream,
+    ).thenAnswer((_) => const Stream.empty());
+    // Backfill short-circuits when onboarding is already marked done.
+    when(mockFlags.isOnboardingBabySetupDone).thenReturn(true);
 
     container = ProviderContainer(
-      overrides: [authRepositoryProvider.overrideWithValue(mockRepo)],
+      overrides: [
+        authRepositoryProvider.overrideWithValue(mockRepo),
+        localFlagServiceProvider.overrideWithValue(mockFlags),
+      ],
     );
     sut = container.read(authServiceProvider.notifier);
   });
@@ -29,8 +40,9 @@ void main() {
 
   group('AuthService.signUp', () {
     test('returns Result.success on success', () async {
-      when(() => mockRepo.signUp(any(), any(), any()))
-          .thenAnswer((_) async => const Result.success(null));
+      when(
+        () => mockRepo.signUp(any(), any(), any()),
+      ).thenAnswer((_) async => const Result.success(null));
 
       final result = await sut.signUp(
         'Alice',
@@ -45,9 +57,8 @@ void main() {
       'returns Result.failure with error message on duplicate email',
       () async {
         when(() => mockRepo.signUp(any(), any(), any())).thenAnswer(
-          (_) async => const Result.failure(
-            ServerException('Email already in use.'),
-          ),
+          (_) async =>
+              const Result.failure(ServerException('Email already in use.')),
         );
 
         final result = await sut.signUp(
@@ -64,8 +75,9 @@ void main() {
 
   group('AuthService.signIn', () {
     test('isLoggedIn becomes true on success', () async {
-      when(() => mockRepo.signIn(any(), any()))
-          .thenAnswer((_) async => const Result.success(null));
+      when(
+        () => mockRepo.signIn(any(), any()),
+      ).thenAnswer((_) async => const Result.success(null));
 
       await sut.signIn('alice@example.com', 'password123');
 
@@ -91,13 +103,15 @@ void main() {
 
   group('AuthService.signOut', () {
     test('isLoggedIn becomes false on success', () async {
-      when(() => mockRepo.signIn(any(), any()))
-          .thenAnswer((_) async => const Result.success(null));
+      when(
+        () => mockRepo.signIn(any(), any()),
+      ).thenAnswer((_) async => const Result.success(null));
       await sut.signIn('alice@example.com', 'password123');
       expect(container.read(authServiceProvider), isTrue);
 
-      when(() => mockRepo.signOut())
-          .thenAnswer((_) async => const Result.success(null));
+      when(
+        () => mockRepo.signOut(),
+      ).thenAnswer((_) async => const Result.success(null));
 
       final result = await sut.signOut();
 
@@ -108,8 +122,9 @@ void main() {
 
   group('AuthService.resetPassword', () {
     test('delegates to repository with correct redirect URL', () async {
-      when(() => mockRepo.resetPassword(any()))
-          .thenAnswer((_) async => const Result.success(null));
+      when(
+        () => mockRepo.resetPassword(any()),
+      ).thenAnswer((_) async => const Result.success(null));
 
       final result = await sut.resetPassword('alice@example.com');
 
@@ -120,8 +135,9 @@ void main() {
 
   group('AuthService.updatePassword', () {
     test('returns Result.success on success', () async {
-      when(() => mockRepo.updatePassword(any()))
-          .thenAnswer((_) async => const Result.success(null));
+      when(
+        () => mockRepo.updatePassword(any()),
+      ).thenAnswer((_) async => const Result.success(null));
 
       final result = await sut.updatePassword('newpassword123');
 

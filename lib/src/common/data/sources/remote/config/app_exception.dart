@@ -35,12 +35,3 @@ final class NotFoundException extends AppException {
 final class UnknownException extends AppException {
   const UnknownException([super.message = 'An unexpected error occurred.']);
 }
-
-/// Returned when a user attempts to log the same allergen twice in one day.
-final class DuplicateLogException extends AppException {
-  DuplicateLogException(String allergenName)
-      : super(
-          "You've already logged $allergenName today. "
-          'Come back tomorrow for the next day.',
-        );
-}

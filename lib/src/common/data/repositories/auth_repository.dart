@@ -1,4 +1,3 @@
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:nibbles/src/app/config/flavor_config.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
@@ -6,8 +5,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'auth_repository.g.dart';
-
-const _kJwtKey = 'jwt_token';
 
 abstract interface class AuthRepository {
   Future<Result<void>> signUp(String name, String email, String password);
@@ -20,14 +17,10 @@ abstract interface class AuthRepository {
 }
 
 class AuthRepositoryImpl implements AuthRepository {
-  AuthRepositoryImpl({
-    SupabaseClient? supabaseClient,
-    FlutterSecureStorage? storage,
-  })  : _supabase = supabaseClient ?? Supabase.instance.client,
-        _storage = storage ?? const FlutterSecureStorage();
+  AuthRepositoryImpl({SupabaseClient? supabaseClient})
+    : _supabase = supabaseClient ?? Supabase.instance.client;
 
   final SupabaseClient _supabase;
-  final FlutterSecureStorage _storage;
 
   @override
   bool get isLoggedIn => _supabase.auth.currentSession != null;
@@ -42,11 +35,16 @@ class AuthRepositoryImpl implements AuthRepository {
     String password,
   ) async {
     try {
-      await _supabase.auth.signUp(
+      final response = await _supabase.auth.signUp(
         email: email,
         password: password,
         data: {'full_name': name},
       );
+      if (response.session == null) {
+        return const Result.failure(
+          ServerException('Please confirm your email before continuing.'),
+        );
+      }
       return const Result.success(null);
     } on AuthException catch (e) {
       return Result.failure(ServerException(e.message));
@@ -58,14 +56,7 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Result<void>> signIn(String email, String password) async {
     try {
-      final response = await _supabase.auth.signInWithPassword(
-        email: email,
-        password: password,
-      );
-      final token = response.session?.accessToken;
-      if (token != null) {
-        await _storage.write(key: _kJwtKey, value: token);
-      }
+      await _supabase.auth.signInWithPassword(email: email, password: password);
       return const Result.success(null);
     } on AuthException catch (e) {
       return Result.failure(ServerException(e.message));
@@ -78,7 +69,6 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Result<void>> signOut() async {
     try {
       await _supabase.auth.signOut();
-      await _storage.delete(key: _kJwtKey);
       return const Result.success(null);
     } on AuthException catch (e) {
       return Result.failure(ServerException(e.message));
@@ -118,5 +108,4 @@ class AuthRepositoryImpl implements AuthRepository {
 @Riverpod(keepAlive: true)
 // Specific *Ref types are deprecated; will be Ref in riverpod_generator 3.0.
 // ignore: deprecated_member_use_from_same_package
-AuthRepository authRepository(AuthRepositoryRef ref) =>
-    AuthRepositoryImpl();
+AuthRepository authRepository(AuthRepositoryRef ref) => AuthRepositoryImpl();
