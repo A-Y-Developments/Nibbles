@@ -30,8 +30,7 @@ class RegisterScreen extends ConsumerWidget {
               const SizedBox(height: AppSizes.sm),
               Text(
                 "Let's get you started.",
-                style:
-                    textTheme.bodyLarge?.copyWith(color: AppColors.subtext),
+                style: textTheme.bodyLarge?.copyWith(color: AppColors.subtext),
               ),
               const SizedBox(height: AppSizes.xl),
               TextField(
@@ -53,8 +52,8 @@ class RegisterScreen extends ConsumerWidget {
                   labelText: 'Email',
                   errorText:
                       state.email.isNotValid && state.email.value.isNotEmpty
-                          ? 'Please enter a valid email.'
-                          : null,
+                      ? 'Please enter a valid email.'
+                      : null,
                 ),
               ),
               const SizedBox(height: AppSizes.md),
@@ -66,7 +65,8 @@ class RegisterScreen extends ConsumerWidget {
                 obscureText: true,
                 decoration: InputDecoration(
                   labelText: 'Password',
-                  errorText: state.password.isNotValid &&
+                  errorText:
+                      state.password.isNotValid &&
                           state.password.value.isNotEmpty
                       ? 'Password must be at least 8 characters.'
                       : null,
@@ -76,8 +76,7 @@ class RegisterScreen extends ConsumerWidget {
                 const SizedBox(height: AppSizes.sm),
                 Text(
                   state.errorMessage!,
-                  style:
-                      textTheme.bodySmall?.copyWith(color: AppColors.error),
+                  style: textTheme.bodySmall?.copyWith(color: AppColors.error),
                 ),
               ],
               const SizedBox(height: AppSizes.xl),
@@ -92,9 +91,7 @@ class RegisterScreen extends ConsumerWidget {
                               .read(registerControllerProvider.notifier)
                               .submit();
                           if (ok && context.mounted) {
-                            context.goNamed(
-                              AppRoute.onboardingBabySetup.name,
-                            );
+                            context.goNamed(AppRoute.onboardingBabySetup.name);
                           }
                         },
                   child: state.isLoading
@@ -113,13 +110,9 @@ class RegisterScreen extends ConsumerWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    'Already have an account?',
-                    style: textTheme.bodySmall,
-                  ),
+                  Text('Already have an account?', style: textTheme.bodySmall),
                   TextButton(
-                    onPressed: () =>
-                        context.goNamed(AppRoute.login.name),
+                    onPressed: () => context.goNamed(AppRoute.login.name),
                     child: const Text('Log In'),
                   ),
                 ],

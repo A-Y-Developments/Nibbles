@@ -121,8 +121,9 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
         ref.watch(profileEditControllerProvider(widget.babyId)).valueOrNull ??
         widget.formState;
     final textTheme = Theme.of(context).textTheme;
-    final controller =
-        ref.read(profileEditControllerProvider(widget.babyId).notifier);
+    final controller = ref.read(
+      profileEditControllerProvider(widget.babyId).notifier,
+    );
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
@@ -202,9 +203,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
               const SizedBox(height: AppSizes.lg),
               FilledButton(
                 key: const Key('edit_profile_save_button'),
-                onPressed: formState.isLoading
-                    ? null
-                    : () => _save(controller),
+                onPressed: formState.isLoading ? null : () => _save(controller),
                 child: formState.isLoading
                     ? const SizedBox(
                         width: 20,

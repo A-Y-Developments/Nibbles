@@ -50,9 +50,9 @@ class SplashScreen extends ConsumerWidget {
         Text(
           'Nibbles',
           style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w800,
-              ),
+            color: AppColors.primary,
+            fontWeight: FontWeight.w800,
+          ),
         ),
       ],
     );
@@ -60,9 +60,7 @@ class SplashScreen extends ConsumerWidget {
 
   Widget _buildError(BuildContext context, Object? error) {
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.pagePaddingH,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: AppSizes.pagePaddingH),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -75,9 +73,9 @@ class SplashScreen extends ConsumerWidget {
           Text(
             error?.toString() ??
                 'Something went wrong. Please restart the app.',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: AppColors.error,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(color: AppColors.error),
             textAlign: TextAlign.center,
           ),
         ],

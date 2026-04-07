@@ -5,9 +5,8 @@ part 'shopping_list_state.freezed.dart';
 
 @freezed
 class ShoppingListState with _$ShoppingListState {
-  const factory ShoppingListState({
-    required List<ShoppingListItem> items,
-  }) = _ShoppingListState;
+  const factory ShoppingListState({required List<ShoppingListItem> items}) =
+      _ShoppingListState;
 
   const ShoppingListState._();
 

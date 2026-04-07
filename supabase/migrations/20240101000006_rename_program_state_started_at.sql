@@ -1,2 +1,2 @@
-ALTER TABLE allergen_program_state
-  RENAME COLUMN started_at TO created_at;
+-- No-op: column was already named created_at in the original create migration.
+-- Kept for migration history continuity.

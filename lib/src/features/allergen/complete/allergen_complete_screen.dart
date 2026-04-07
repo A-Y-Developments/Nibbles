@@ -36,10 +36,7 @@ class AllergenCompleteScreen extends ConsumerWidget {
                 children: [
                   const SizedBox(height: AppSizes.xl),
                   Center(
-                    child: const Text(
-                      '🎉',
-                      style: TextStyle(fontSize: 80),
-                    )
+                    child: const Text('🎉', style: TextStyle(fontSize: 80))
                         .animate()
                         .scale(
                           begin: const Offset(0.5, 0.5),
@@ -59,9 +56,9 @@ class AllergenCompleteScreen extends ConsumerWidget {
                   Text(
                     "You've done an incredible job introducing allergens "
                     'safely. Keep enjoying a wide variety of foods together!',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.subtext,
-                        ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: AppColors.subtext),
                     textAlign: TextAlign.center,
                   ).animate().fadeIn(delay: 500.ms, duration: 400.ms),
                   const SizedBox(height: AppSizes.xl),
@@ -77,14 +74,13 @@ class AllergenCompleteScreen extends ConsumerWidget {
                               style: const TextStyle(fontSize: 16),
                             ),
                             label: Text(a.name),
-                            backgroundColor:
-                                AppColors.allergenSafe.withValues(alpha: 0.15),
+                            backgroundColor: AppColors.allergenSafe.withValues(
+                              alpha: 0.15,
+                            ),
                             side: const BorderSide(
                               color: AppColors.allergenSafe,
                             ),
-                            labelStyle: Theme.of(context)
-                                .textTheme
-                                .labelMedium
+                            labelStyle: Theme.of(context).textTheme.labelMedium
                                 ?.copyWith(color: AppColors.allergenSafe),
                           ),
                         )

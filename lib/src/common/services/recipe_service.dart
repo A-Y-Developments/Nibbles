@@ -12,10 +12,10 @@ class RecipeService {
   final RecipeRepository _recipeRepo;
   final AllergenRepository _allergenRepo;
 
-  /// Fetches all recipes, filtering out any tagged with the baby's flagged
-  /// allergens (i.e. allergens where a reaction was recorded).
-  Future<Result<List<Recipe>>> getFilteredRecipes(String babyId) async {
-    final flaggedResult = await _getFlaggedAllergenKeys(babyId);
+  /// Fetches all recipes (no filtering). Safe recipes appear first, recipes
+  /// containing flagged allergens are sorted to the end.
+  Future<Result<List<Recipe>>> getAllRecipes(String babyId) async {
+    final flaggedResult = await getFlaggedAllergenKeys(babyId);
     if (flaggedResult.isFailure) {
       return Result.failure(flaggedResult.errorOrNull!);
     }
@@ -30,59 +30,73 @@ class RecipeService {
 
     if (flagged.isEmpty) return Result.success(recipes);
 
-    return Result.success(
-      recipes
-          .where((r) => !r.allergenTags.any(flagged.contains))
-          .toList(),
-    );
+    // Sort: safe recipes first, flagged-allergen recipes last.
+    final safe = <Recipe>[];
+    final unsafe = <Recipe>[];
+    for (final r in recipes) {
+      if (r.allergenTags.any(flagged.contains)) {
+        unsafe.add(r);
+      } else {
+        safe.add(r);
+      }
+    }
+    return Result.success([...safe, ...unsafe]);
   }
 
-  /// Returns recipes tagged with [allergenKey] that are not flagged for
-  /// [babyId]. Used for the Home recommendations strip.
+  /// Returns recipes tagged with [allergenKey]. Recipes containing other
+  /// flagged allergens are sorted to the end (not removed).
   Future<Result<List<Recipe>>> getRecommendationsForAllergen(
     String allergenKey,
     String babyId,
   ) async {
-    final flaggedResult = await _getFlaggedAllergenKeys(babyId);
+    final flaggedResult = await getFlaggedAllergenKeys(babyId);
     if (flaggedResult.isFailure) {
       return Result.failure(flaggedResult.errorOrNull!);
     }
-
-    final flagged = flaggedResult.dataOrNull!;
-
-    // If the target allergen itself is flagged, no recommendations.
-    if (flagged.contains(allergenKey)) return const Result.success([]);
 
     final recipesResult = await _recipeRepo.getRecipesByAllergen(allergenKey);
     if (recipesResult.isFailure) {
       return Result.failure(recipesResult.errorOrNull!);
     }
 
+    final flagged = flaggedResult.dataOrNull!;
     final recipes = recipesResult.dataOrNull!;
 
-    // Also exclude recipes that have other flagged allergen tags.
-    return Result.success(
-      recipes
-          .where((r) => !r.allergenTags.any(flagged.contains))
-          .toList(),
-    );
+    // Sort: safe first, recipes with flagged allergens last.
+    final safe = <Recipe>[];
+    final unsafe = <Recipe>[];
+    for (final r in recipes) {
+      if (r.allergenTags.any(flagged.contains)) {
+        unsafe.add(r);
+      } else {
+        safe.add(r);
+      }
+    }
+    return Result.success([...safe, ...unsafe]);
+  }
+
+  /// Returns a general set of recipes (not tied to any allergen) for
+  /// use when the current allergen is already safe or flagged.
+  /// Safe recipes appear first, flagged-allergen recipes last.
+  Future<Result<List<Recipe>>> getGeneralRecommendations(String babyId) async {
+    final result = await getAllRecipes(babyId);
+    if (result.isFailure) return result;
+    final recipes = result.dataOrNull!;
+    return Result.success(recipes.take(10).toList());
   }
 
   /// Fetches a single recipe by ID.
   Future<Result<Recipe>> getRecipeById(String recipeId) =>
       _recipeRepo.getRecipeById(recipeId);
 
-  // --- Private helpers ---
-
   /// Returns the set of allergen keys for which [babyId] has had a reaction.
-  Future<Result<Set<String>>> _getFlaggedAllergenKeys(String babyId) async {
+  Future<Result<Set<String>>> getFlaggedAllergenKeys(String babyId) async {
     final logsResult = await _allergenRepo.getLogs(babyId);
     if (logsResult.isFailure) {
       return Result.failure(logsResult.errorOrNull!);
     }
 
-    final flaggedKeys = logsResult
-        .dataOrNull!
+    final flaggedKeys = logsResult.dataOrNull!
         .where((l) => l.hadReaction)
         .map((l) => l.allergenKey)
         .toSet();
@@ -96,8 +110,7 @@ RecipeService recipeService(
   // Specific *Ref types are deprecated; will be Ref in riverpod_generator 3.0.
   // ignore: deprecated_member_use_from_same_package
   RecipeServiceRef ref,
-) =>
-    RecipeService(
-      ref.watch(recipeRepositoryProvider),
-      ref.watch(allergenRepositoryProvider),
-    );
+) => RecipeService(
+  ref.watch(recipeRepositoryProvider),
+  ref.watch(allergenRepositoryProvider),
+);

@@ -98,8 +98,7 @@ abstract final class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSizes.radiusMd),
           ),
-          textStyle:
-              AppTypography.button.copyWith(color: AppColors.primary),
+          textStyle: AppTypography.button.copyWith(color: AppColors.primary),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
@@ -126,8 +125,7 @@ abstract final class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          borderSide:
-              const BorderSide(color: AppColors.primary, width: 2),
+          borderSide: const BorderSide(color: AppColors.primary, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSizes.radiusMd),
@@ -137,8 +135,7 @@ abstract final class AppTheme {
           borderRadius: BorderRadius.circular(AppSizes.radiusMd),
           borderSide: const BorderSide(color: AppColors.error, width: 2),
         ),
-        errorStyle:
-            textTheme.bodySmall?.copyWith(color: AppColors.error),
+        errorStyle: textTheme.bodySmall?.copyWith(color: AppColors.error),
       ),
       cardTheme: const CardThemeData(
         color: AppColors.surface,
@@ -151,9 +148,7 @@ abstract final class AppTheme {
         labelStyle: textTheme.labelMedium,
         side: BorderSide.none,
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(
-            Radius.circular(AppSizes.radiusFull),
-          ),
+          borderRadius: BorderRadius.all(Radius.circular(AppSizes.radiusFull)),
         ),
         padding: const EdgeInsets.symmetric(
           horizontal: AppSizes.md,
@@ -163,12 +158,9 @@ abstract final class AppTheme {
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         backgroundColor: AppColors.text,
-        contentTextStyle:
-            textTheme.bodyMedium?.copyWith(color: Colors.white),
+        contentTextStyle: textTheme.bodyMedium?.copyWith(color: Colors.white),
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(
-            Radius.circular(AppSizes.radiusMd),
-          ),
+          borderRadius: BorderRadius.all(Radius.circular(AppSizes.radiusMd)),
         ),
       ),
     );

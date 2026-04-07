@@ -13,8 +13,7 @@ class OnboardingIntroScreen extends ConsumerStatefulWidget {
       _OnboardingIntroScreenState();
 }
 
-class _OnboardingIntroScreenState
-    extends ConsumerState<OnboardingIntroScreen> {
+class _OnboardingIntroScreenState extends ConsumerState<OnboardingIntroScreen> {
   final _pageController = PageController();
   int _currentPage = 0;
 
@@ -34,12 +33,8 @@ class _OnboardingIntroScreenState
             Expanded(
               child: PageView(
                 controller: _pageController,
-                onPageChanged: (page) =>
-                    setState(() => _currentPage = page),
-                children: const [
-                  _OB01Welcome(),
-                  _OB02ValueProp(),
-                ],
+                onPageChanged: (page) => setState(() => _currentPage = page),
+                children: const [_OB01Welcome(), _OB02ValueProp()],
               ),
             ),
             _BottomSection(
@@ -48,8 +43,7 @@ class _OnboardingIntroScreenState
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeInOut,
               ),
-              onNext: () =>
-                  context.goNamed(AppRoute.onboardingReadiness.name),
+              onNext: () => context.goNamed(AppRoute.onboardingReadiness.name),
             ),
           ],
         ),
@@ -131,22 +125,19 @@ class _OB02ValueProp extends StatelessWidget {
           const _FeatureRow(
             icon: Icons.track_changes_rounded,
             title: 'Allergen tracking',
-            subtitle:
-                'Introduce the top 9 allergens safely with guided steps.',
+            subtitle: 'Introduce the top 9 allergens safely with guided steps.',
           ),
           const SizedBox(height: AppSizes.lg),
           const _FeatureRow(
             icon: Icons.calendar_month_rounded,
             title: 'Meal planning',
-            subtitle:
-                "Plan weekly meals tailored to your baby's progress.",
+            subtitle: "Plan weekly meals tailored to your baby's progress.",
           ),
           const SizedBox(height: AppSizes.lg),
           const _FeatureRow(
             icon: Icons.menu_book_rounded,
             title: 'Recipe library',
-            subtitle:
-                'Age-appropriate recipes your whole family will love.',
+            subtitle: 'Age-appropriate recipes your whole family will love.',
           ),
         ],
       ),
@@ -177,11 +168,7 @@ class _FeatureRow extends StatelessWidget {
             color: AppColors.primary.withAlpha(26),
             borderRadius: BorderRadius.circular(AppSizes.radiusMd),
           ),
-          child: Icon(
-            icon,
-            color: AppColors.primary,
-            size: AppSizes.iconMd,
-          ),
+          child: Icon(icon, color: AppColors.primary, size: AppSizes.iconMd),
         ),
         const SizedBox(width: AppSizes.md),
         Expanded(
@@ -197,9 +184,7 @@ class _FeatureRow extends StatelessWidget {
               const SizedBox(height: AppSizes.xs),
               Text(
                 subtitle,
-                style: textTheme.bodySmall?.copyWith(
-                  color: AppColors.subtext,
-                ),
+                style: textTheme.bodySmall?.copyWith(color: AppColors.subtext),
               ),
             ],
           ),
@@ -240,8 +225,7 @@ class _BottomSection extends StatelessWidget {
                 height: 8,
                 decoration: BoxDecoration(
                   color: active ? AppColors.primary : AppColors.divider,
-                  borderRadius:
-                      BorderRadius.circular(AppSizes.radiusFull),
+                  borderRadius: BorderRadius.circular(AppSizes.radiusFull),
                 ),
               );
             }),

@@ -19,8 +19,8 @@ class MealPlanService {
     DateTime weekStart,
   ) => _repo.getWeekMeals(babyId, weekStart, _weekEnd(weekStart));
 
-  /// Upserts a recipe assignment for [planDate] — replaces any existing entry
-  /// on that day for the same baby.
+  /// Inserts a new recipe assignment for [planDate].
+  /// Multiple meals per day are allowed.
   Future<Result<MealPlanEntry>> assignRecipe(
     String babyId,
     String recipeId,
@@ -60,9 +60,37 @@ class MealPlanService {
     return Result.success(names.toList());
   }
 
+  /// Returns deduplicated ingredient names across all recipes planned
+  /// for [date].
+  ///
+  /// Individual recipe fetch failures are skipped (best-effort); only a
+  /// failure to fetch the day's meal plan propagates as [Result.failure].
+  Future<Result<List<String>>> getDayIngredientNames(
+    String babyId,
+    DateTime date,
+  ) async {
+    final mealsResult = await _repo.getWeekMeals(babyId, date, date);
+    if (mealsResult.isFailure) {
+      return Result.failure(mealsResult.errorOrNull!);
+    }
+
+    final names = <String>{};
+    for (final entry in mealsResult.dataOrNull!) {
+      final recipeResult = await _recipeRepo.getRecipeById(entry.recipeId);
+      if (recipeResult.isFailure) continue;
+      names.addAll(recipeResult.dataOrNull!.ingredients.map((i) => i.name));
+    }
+
+    return Result.success(names.toList());
+  }
+
   /// Deletes a single meal plan entry by ID.
   Future<Result<void>> removeEntry(String entryId) =>
       _repo.removeEntry(entryId);
+
+  /// Deletes all meal plan entries for [babyId] on [date].
+  Future<Result<void>> clearDay(String babyId, DateTime date) =>
+      _repo.clearDay(babyId, date);
 
   static DateTime _weekEnd(DateTime weekStart) =>
       weekStart.add(const Duration(days: 6));

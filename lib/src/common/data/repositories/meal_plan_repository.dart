@@ -16,8 +16,8 @@ abstract interface class MealPlanRepository {
     DateTime weekEnd,
   );
 
-  /// MEAL-02: Upsert meal for a day.
-  /// Conflicts on (baby_id, plan_date) replace the existing entry.
+  /// MEAL-02: Insert a new meal entry for [planDate].
+  /// Multiple entries per day are allowed.
   Future<Result<MealPlanEntry>> assignRecipe(
     String babyId,
     String recipeId,
@@ -34,6 +34,9 @@ abstract interface class MealPlanRepository {
 
   /// MEAL-04: Delete a single meal plan entry by ID.
   Future<Result<void>> removeEntry(String entryId);
+
+  /// MEAL-05: Delete all entries for baby on [date].
+  Future<Result<void>> clearDay(String babyId, DateTime date);
 }
 
 class MealPlanRepositoryImpl implements MealPlanRepository {
@@ -87,7 +90,7 @@ class MealPlanRepositoryImpl implements MealPlanRepository {
 
       final data = await _supabase
           .from('meal_plan_entries')
-          .upsert(payload, onConflict: 'baby_id,plan_date')
+          .insert(payload)
           .select()
           .single();
 
@@ -125,6 +128,22 @@ class MealPlanRepositoryImpl implements MealPlanRepository {
   Future<Result<void>> removeEntry(String entryId) async {
     try {
       await _supabase.from('meal_plan_entries').delete().eq('id', entryId);
+      return const Result.success(null);
+    } on PostgrestException catch (e) {
+      return Result.failure(ServerException(e.message));
+    } on Object {
+      return const Result.failure(UnknownException());
+    }
+  }
+
+  @override
+  Future<Result<void>> clearDay(String babyId, DateTime date) async {
+    try {
+      await _supabase
+          .from('meal_plan_entries')
+          .delete()
+          .eq('baby_id', babyId)
+          .eq('plan_date', _formatDate(date));
       return const Result.success(null);
     } on PostgrestException catch (e) {
       return Result.failure(ServerException(e.message));

@@ -12,10 +12,7 @@ class LoginController extends _$LoginController {
   LoginState build() => const LoginState();
 
   void updateEmail(String value) {
-    state = state.copyWith(
-      email: EmailInput.dirty(value),
-      errorMessage: null,
-    );
+    state = state.copyWith(email: EmailInput.dirty(value), errorMessage: null);
   }
 
   void updatePassword(String value) {
@@ -28,17 +25,14 @@ class LoginController extends _$LoginController {
   Future<void> submit() async {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
-    final result = await ref.read(authServiceProvider.notifier).signIn(
-          state.email.value,
-          state.password.value,
-        );
+    final result = await ref
+        .read(authServiceProvider.notifier)
+        .signIn(state.email.value, state.password.value);
 
     result.when(
       success: (_) => state = state.copyWith(isLoading: false),
-      failure: (error) => state = state.copyWith(
-        isLoading: false,
-        errorMessage: error.message,
-      ),
+      failure: (error) =>
+          state = state.copyWith(isLoading: false, errorMessage: error.message),
     );
     // On success: GoRouter redirect picks up authServiceProvider state change
   }

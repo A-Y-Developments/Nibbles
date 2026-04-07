@@ -19,23 +19,22 @@ ShoppingListItem _makeItem({
   String id = 'item-1',
   String name = 'Apples',
   bool isChecked = false,
-}) =>
-    ShoppingListItem(
-      id: id,
-      babyId: _babyId,
-      name: name,
-      isChecked: isChecked,
-      source: ShoppingListSource.manual,
-      createdAt: _now,
-    );
+}) => ShoppingListItem(
+  id: id,
+  babyId: _babyId,
+  name: name,
+  isChecked: isChecked,
+  source: ShoppingListSource.manual,
+  createdAt: _now,
+);
 
 Widget _buildSut(MockShoppingListService svc) => ProviderScope(
-      overrides: [
-        currentBabyIdProvider.overrideWith((ref) async => _babyId),
-        shoppingListServiceProvider.overrideWithValue(svc),
-      ],
-      child: const MaterialApp(home: ShoppingListScreen()),
-    );
+  overrides: [
+    currentBabyIdProvider.overrideWith((ref) async => _babyId),
+    shoppingListServiceProvider.overrideWithValue(svc),
+  ],
+  child: const MaterialApp(home: ShoppingListScreen()),
+);
 
 void main() {
   late MockShoppingListService mockService;
@@ -46,21 +45,19 @@ void main() {
     registerFallbackValue(_now);
     // Suppress clipboard platform channel errors in tests.
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-      SystemChannels.platform,
-      (call) async {
-        if (call.method == 'Clipboard.setData') return null;
-        if (call.method == 'Clipboard.getData') return {'text': ''};
-        return null;
-      },
-    );
+        .setMockMethodCallHandler(SystemChannels.platform, (call) async {
+          if (call.method == 'Clipboard.setData') return null;
+          if (call.method == 'Clipboard.getData') return {'text': ''};
+          return null;
+        });
   });
 
   setUp(() {
     mockService = MockShoppingListService();
     // Default: empty list
-    when(() => mockService.getItems(any()))
-        .thenAnswer((_) async => const Result.success([]));
+    when(
+      () => mockService.getItems(any()),
+    ).thenAnswer((_) async => const Result.success([]));
   });
 
   // ---------------------------------------------------------------------------
@@ -99,9 +96,9 @@ void main() {
       expect(find.text('Bananas'), findsOneWidget);
     });
 
-    testWidgets(
-        'checked item appears in Bought tab and not in List tab',
-        (tester) async {
+    testWidgets('checked item appears in Bought tab and not in List tab', (
+      tester,
+    ) async {
       when(() => mockService.getItems(any())).thenAnswer(
         (_) async => Result.success([
           _makeItem(),
@@ -130,15 +127,15 @@ void main() {
   // ---------------------------------------------------------------------------
 
   group('ShoppingListScreen - check', () {
-    testWidgets('tapping checkbox calls checkItem on the service',
-        (tester) async {
-      when(() => mockService.getItems(any())).thenAnswer(
-        (_) async => Result.success([
-          _makeItem(),
-        ]),
-      );
-      when(() => mockService.checkItem(any()))
-          .thenAnswer((_) async => const Result.success(null));
+    testWidgets('tapping checkbox calls checkItem on the service', (
+      tester,
+    ) async {
+      when(
+        () => mockService.getItems(any()),
+      ).thenAnswer((_) async => Result.success([_makeItem()]));
+      when(
+        () => mockService.checkItem(any()),
+      ).thenAnswer((_) async => const Result.success(null));
 
       await tester.pumpWidget(_buildSut(mockService));
       await tester.pumpAndSettle();
@@ -157,11 +154,9 @@ void main() {
 
   group('ShoppingListScreen - delete', () {
     testWidgets('delete icon tap shows confirmation dialog', (tester) async {
-      when(() => mockService.getItems(any())).thenAnswer(
-        (_) async => Result.success([
-          _makeItem(),
-        ]),
-      );
+      when(
+        () => mockService.getItems(any()),
+      ).thenAnswer((_) async => Result.success([_makeItem()]));
 
       await tester.pumpWidget(_buildSut(mockService));
       await tester.pumpAndSettle();
@@ -175,13 +170,12 @@ void main() {
     });
 
     testWidgets('confirm Yes → deleteItem called', (tester) async {
-      when(() => mockService.getItems(any())).thenAnswer(
-        (_) async => Result.success([
-          _makeItem(),
-        ]),
-      );
-      when(() => mockService.deleteItem(any()))
-          .thenAnswer((_) async => const Result.success(null));
+      when(
+        () => mockService.getItems(any()),
+      ).thenAnswer((_) async => Result.success([_makeItem()]));
+      when(
+        () => mockService.deleteItem(any()),
+      ).thenAnswer((_) async => const Result.success(null));
 
       await tester.pumpWidget(_buildSut(mockService));
       await tester.pumpAndSettle();
@@ -197,11 +191,9 @@ void main() {
     });
 
     testWidgets('confirm No → deleteItem never called', (tester) async {
-      when(() => mockService.getItems(any())).thenAnswer(
-        (_) async => Result.success([
-          _makeItem(),
-        ]),
-      );
+      when(
+        () => mockService.getItems(any()),
+      ).thenAnswer((_) async => Result.success([_makeItem()]));
 
       await tester.pumpWidget(_buildSut(mockService));
       await tester.pumpAndSettle();
@@ -246,11 +238,9 @@ void main() {
 
   group('ShoppingListScreen - clipboard', () {
     testWidgets('Copy to clipboard shows success snackbar', (tester) async {
-      when(() => mockService.getItems(any())).thenAnswer(
-        (_) async => Result.success([
-          _makeItem(),
-        ]),
-      );
+      when(
+        () => mockService.getItems(any()),
+      ).thenAnswer((_) async => Result.success([_makeItem()]));
       when(() => mockService.copyToClipboard(any())).thenReturn('• Apples');
 
       await tester.pumpWidget(_buildSut(mockService));
@@ -265,24 +255,19 @@ void main() {
       expect(find.text('Copied to clipboard'), findsOneWidget);
     });
 
-    testWidgets(
-        'Copy to clipboard shows error snackbar when clipboard fails',
-        (tester) async {
-      when(() => mockService.getItems(any())).thenAnswer(
-        (_) async => Result.success([
-          _makeItem(),
-        ]),
-      );
+    testWidgets('Copy to clipboard shows error snackbar when clipboard fails', (
+      tester,
+    ) async {
+      when(
+        () => mockService.getItems(any()),
+      ).thenAnswer((_) async => Result.success([_makeItem()]));
       when(() => mockService.copyToClipboard(any())).thenReturn('• Apples');
       // Override clipboard to throw
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(
-        SystemChannels.platform,
-        (call) async {
-          if (call.method == 'Clipboard.setData') throw Exception('fail');
-          return null;
-        },
-      );
+          .setMockMethodCallHandler(SystemChannels.platform, (call) async {
+            if (call.method == 'Clipboard.setData') throw Exception('fail');
+            return null;
+          });
 
       await tester.pumpWidget(_buildSut(mockService));
       await tester.pumpAndSettle();
@@ -297,14 +282,11 @@ void main() {
 
       // Restore normal clipboard mock
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(
-        SystemChannels.platform,
-        (call) async {
-          if (call.method == 'Clipboard.setData') return null;
-          if (call.method == 'Clipboard.getData') return {'text': ''};
-          return null;
-        },
-      );
+          .setMockMethodCallHandler(SystemChannels.platform, (call) async {
+            if (call.method == 'Clipboard.setData') return null;
+            if (call.method == 'Clipboard.getData') return {'text': ''};
+            return null;
+          });
     });
   });
 }

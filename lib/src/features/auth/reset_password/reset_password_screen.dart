@@ -15,19 +15,14 @@ class ResetPasswordScreen extends ConsumerWidget {
     final state = ref.watch(resetPasswordControllerProvider);
     final textTheme = Theme.of(context).textTheme;
 
-    ref.listen(
-      resetPasswordControllerProvider,
-      (_, ResetPasswordState next) {
-        if (next.success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Password updated. Please log in.'),
-            ),
-          );
-          context.goNamed(AppRoute.login.name);
-        }
-      },
-    );
+    ref.listen(resetPasswordControllerProvider, (_, ResetPasswordState next) {
+      if (next.success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Password updated. Please log in.')),
+        );
+        context.goNamed(AppRoute.login.name);
+      }
+    });
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -49,8 +44,7 @@ class ResetPasswordScreen extends ConsumerWidget {
               const SizedBox(height: AppSizes.sm),
               Text(
                 'Your new password must be at least 8 characters.',
-                style:
-                    textTheme.bodyLarge?.copyWith(color: AppColors.subtext),
+                style: textTheme.bodyLarge?.copyWith(color: AppColors.subtext),
               ),
               const SizedBox(height: AppSizes.xl),
               TextField(
@@ -61,7 +55,8 @@ class ResetPasswordScreen extends ConsumerWidget {
                 obscureText: true,
                 decoration: InputDecoration(
                   labelText: 'New password',
-                  errorText: state.password.isNotValid &&
+                  errorText:
+                      state.password.isNotValid &&
                           state.password.value.isNotEmpty
                       ? 'Password must be at least 8 characters.'
                       : null,
@@ -76,8 +71,8 @@ class ResetPasswordScreen extends ConsumerWidget {
                 obscureText: true,
                 decoration: InputDecoration(
                   labelText: 'Confirm password',
-                  errorText: state.confirmPassword.isNotEmpty &&
-                          !state.passwordsMatch
+                  errorText:
+                      state.confirmPassword.isNotEmpty && !state.passwordsMatch
                       ? 'Passwords do not match.'
                       : null,
                 ),
@@ -86,8 +81,7 @@ class ResetPasswordScreen extends ConsumerWidget {
                 const SizedBox(height: AppSizes.sm),
                 Text(
                   state.errorMessage!,
-                  style: textTheme.bodySmall
-                      ?.copyWith(color: AppColors.error),
+                  style: textTheme.bodySmall?.copyWith(color: AppColors.error),
                 ),
               ],
               const SizedBox(height: AppSizes.xl),
@@ -95,11 +89,13 @@ class ResetPasswordScreen extends ConsumerWidget {
                 width: double.infinity,
                 child: FilledButton(
                   key: const Key('reset_password_submit_button'),
-                  onPressed: state.isLoading ? null : () {
-                    ref
-                        .read(resetPasswordControllerProvider.notifier)
-                        .submit();
-                  },
+                  onPressed: state.isLoading
+                      ? null
+                      : () {
+                          ref
+                              .read(resetPasswordControllerProvider.notifier)
+                              .submit();
+                        },
                   child: state.isLoading
                       ? const SizedBox(
                           width: 20,

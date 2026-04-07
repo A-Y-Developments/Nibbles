@@ -57,14 +57,14 @@ const _safePeanutItem = AllergenBoardItem(
 // ---------------------------------------------------------------------------
 
 Widget _wrap(Widget screen, List<Override> overrides) => ProviderScope(
-      overrides: overrides,
-      child: MaterialApp.router(
-        routerConfig: GoRouter(
-          initialLocation: '/',
-          routes: [GoRoute(path: '/', builder: (_, __) => screen)],
-        ),
-      ),
-    );
+  overrides: overrides,
+  child: MaterialApp.router(
+    routerConfig: GoRouter(
+      initialLocation: '/',
+      routes: [GoRoute(path: '/', builder: (_, __) => screen)],
+    ),
+  ),
+);
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -80,141 +80,136 @@ void main() {
     mockAllergenService = MockAllergenService();
     mockAuthRepo = MockAuthRepository();
     when(() => mockAuthRepo.isLoggedIn).thenReturn(true);
-    when(() => mockAuthRepo.authStateStream)
-        .thenAnswer((_) => const Stream.empty());
+    when(
+      () => mockAuthRepo.authStateStream,
+    ).thenAnswer((_) => const Stream.empty());
   });
 
   List<Override> buildOverrides() => [
-        babyProfileServiceProvider.overrideWithValue(mockBabyService),
-        allergenServiceProvider.overrideWithValue(mockAllergenService),
-        authRepositoryProvider.overrideWithValue(mockAuthRepo),
-      ];
+    babyProfileServiceProvider.overrideWithValue(mockBabyService),
+    allergenServiceProvider.overrideWithValue(mockAllergenService),
+    authRepositoryProvider.overrideWithValue(mockAuthRepo),
+  ];
 
   void stubCommon({List<AllergenBoardItem> boardItems = const []}) {
     when(() => mockBabyService.getBaby()).thenAnswer((_) async => _fakeBaby);
-    when(() => mockAllergenService.getAllergenBoardSummary(_babyId))
-        .thenAnswer((_) async => Result.success(boardItems));
+    when(
+      () => mockAllergenService.getAllergenBoardSummary(_babyId),
+    ).thenAnswer((_) async => Result.success(boardItems));
   }
 
   // -------------------------------------------------------------------------
   // Baby info
   // -------------------------------------------------------------------------
 
-  testWidgets(
-    'baby name, age, gender and subscription label shown correctly',
-    (tester) async {
-      stubCommon();
+  testWidgets('baby name, age, gender and subscription label shown correctly', (
+    tester,
+  ) async {
+    stubCommon();
 
-      await tester.pumpWidget(_wrap(const ProfileScreen(), buildOverrides()));
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(_wrap(const ProfileScreen(), buildOverrides()));
+    await tester.pumpAndSettle();
 
-      expect(find.text('Lily'), findsOneWidget);
-      expect(find.textContaining('old'), findsOneWidget);
-      expect(find.text('Female'), findsOneWidget);
-      expect(find.text('Trial'), findsOneWidget);
-    },
-  );
+    expect(find.text('Lily'), findsOneWidget);
+    expect(find.textContaining('old'), findsOneWidget);
+    expect(find.text('Female'), findsOneWidget);
+    expect(find.text('Trial'), findsOneWidget);
+  });
 
   // -------------------------------------------------------------------------
   // Safe allergens — with data
   // -------------------------------------------------------------------------
 
-  testWidgets(
-    'safe allergen chips shown for AllergenStatus.safe allergens',
-    (tester) async {
-      stubCommon(boardItems: [_safePeanutItem]);
+  testWidgets('safe allergen chips shown for AllergenStatus.safe allergens', (
+    tester,
+  ) async {
+    stubCommon(boardItems: [_safePeanutItem]);
 
-      await tester.pumpWidget(_wrap(const ProfileScreen(), buildOverrides()));
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(_wrap(const ProfileScreen(), buildOverrides()));
+    await tester.pumpAndSettle();
 
-      expect(find.text('Peanut'), findsOneWidget);
-      expect(find.text('🥜'), findsOneWidget);
-    },
-  );
+    expect(find.text('Peanut'), findsOneWidget);
+    expect(find.text('🥜'), findsOneWidget);
+  });
 
   // -------------------------------------------------------------------------
   // Safe allergens — empty state
   // -------------------------------------------------------------------------
 
-  testWidgets(
-    'empty state shown when no safe allergens confirmed',
-    (tester) async {
-      stubCommon();
+  testWidgets('empty state shown when no safe allergens confirmed', (
+    tester,
+  ) async {
+    stubCommon();
 
-      await tester.pumpWidget(_wrap(const ProfileScreen(), buildOverrides()));
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(_wrap(const ProfileScreen(), buildOverrides()));
+    await tester.pumpAndSettle();
 
-      expect(
-        find.text('No safe allergens confirmed yet. Keep going!'),
-        findsOneWidget,
-      );
-    },
-  );
+    expect(
+      find.text('No safe allergens confirmed yet. Keep going!'),
+      findsOneWidget,
+    );
+  });
 
   // -------------------------------------------------------------------------
   // Sign out — dialog shown
   // -------------------------------------------------------------------------
 
-  testWidgets(
-    'tapping Sign Out button shows confirmation dialog',
-    (tester) async {
-      stubCommon();
+  testWidgets('tapping Sign Out button shows confirmation dialog', (
+    tester,
+  ) async {
+    stubCommon();
 
-      await tester.pumpWidget(_wrap(const ProfileScreen(), buildOverrides()));
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(_wrap(const ProfileScreen(), buildOverrides()));
+    await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('profile_sign_out_button')));
-      await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('profile_sign_out_button')));
+    await tester.pumpAndSettle();
 
-      expect(find.text('Sign Out'), findsWidgets);
-      expect(find.text('Are you sure you want to sign out?'), findsOneWidget);
-    },
-  );
+    expect(find.text('Sign Out'), findsWidgets);
+    expect(find.text('Are you sure you want to sign out?'), findsOneWidget);
+  });
 
   // -------------------------------------------------------------------------
   // Sign out — dialog No
   // -------------------------------------------------------------------------
 
-  testWidgets(
-    'tapping No dismisses dialog and keeps profile screen',
-    (tester) async {
-      stubCommon();
+  testWidgets('tapping No dismisses dialog and keeps profile screen', (
+    tester,
+  ) async {
+    stubCommon();
 
-      await tester.pumpWidget(_wrap(const ProfileScreen(), buildOverrides()));
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(_wrap(const ProfileScreen(), buildOverrides()));
+    await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('profile_sign_out_button')));
-      await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('profile_sign_out_button')));
+    await tester.pumpAndSettle();
 
-      await tester.tap(find.text('No'));
-      await tester.pumpAndSettle();
+    await tester.tap(find.text('No'));
+    await tester.pumpAndSettle();
 
-      expect(find.text('Are you sure you want to sign out?'), findsNothing);
-      expect(find.byKey(const Key('profile_sign_out_button')), findsOneWidget);
-    },
-  );
+    expect(find.text('Are you sure you want to sign out?'), findsNothing);
+    expect(find.byKey(const Key('profile_sign_out_button')), findsOneWidget);
+  });
 
   // -------------------------------------------------------------------------
   // Sign out — dialog Yes
   // -------------------------------------------------------------------------
 
-  testWidgets(
-    'tapping Yes calls AuthService.signOut',
-    (tester) async {
-      stubCommon();
-      when(() => mockAuthRepo.signOut())
-          .thenAnswer((_) async => const Result.success(null));
+  testWidgets('tapping Yes calls AuthService.signOut', (tester) async {
+    stubCommon();
+    when(
+      () => mockAuthRepo.signOut(),
+    ).thenAnswer((_) async => const Result.success(null));
 
-      await tester.pumpWidget(_wrap(const ProfileScreen(), buildOverrides()));
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(_wrap(const ProfileScreen(), buildOverrides()));
+    await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('profile_sign_out_button')));
-      await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('profile_sign_out_button')));
+    await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Yes'));
-      await tester.pumpAndSettle();
+    await tester.tap(find.text('Yes'));
+    await tester.pumpAndSettle();
 
-      verify(() => mockAuthRepo.signOut()).called(1);
-    },
-  );
+    verify(() => mockAuthRepo.signOut()).called(1);
+  });
 }

@@ -9,6 +9,7 @@ class MealPlanEntry with _$MealPlanEntry {
     required String babyId,
     required String recipeId,
     required DateTime planDate,
+
     /// Optional meal time stored as "HH:mm".
     String? mealTime,
   }) = _MealPlanEntry;

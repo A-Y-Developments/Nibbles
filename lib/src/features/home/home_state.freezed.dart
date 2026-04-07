@@ -19,12 +19,14 @@ final _privateConstructorUsedError = UnsupportedError(
 mixin _$HomeState {
   Baby get baby => throw _privateConstructorUsedError;
   AllergenProgramState get programState => throw _privateConstructorUsedError;
-  bool get hasLoggedToday => throw _privateConstructorUsedError;
   List<Recipe> get recommendations => throw _privateConstructorUsedError;
   AllergenBoardItem? get currentAllergenBoardItem =>
       throw _privateConstructorUsedError;
-  MealPlanEntry? get todayMeal => throw _privateConstructorUsedError;
-  Recipe? get todayRecipe => throw _privateConstructorUsedError;
+  List<MealPlanEntry> get todayMeals => throw _privateConstructorUsedError;
+  List<Recipe> get todayRecipes => throw _privateConstructorUsedError;
+  bool get isGeneralRecommendations => throw _privateConstructorUsedError;
+  List<Recipe> get generalRecommendations => throw _privateConstructorUsedError;
+  Set<String> get flaggedAllergenKeys => throw _privateConstructorUsedError;
 
   /// Create a copy of HomeState
   /// with the given fields replaced by the non-null parameter values.
@@ -41,18 +43,18 @@ abstract class $HomeStateCopyWith<$Res> {
   $Res call({
     Baby baby,
     AllergenProgramState programState,
-    bool hasLoggedToday,
     List<Recipe> recommendations,
     AllergenBoardItem? currentAllergenBoardItem,
-    MealPlanEntry? todayMeal,
-    Recipe? todayRecipe,
+    List<MealPlanEntry> todayMeals,
+    List<Recipe> todayRecipes,
+    bool isGeneralRecommendations,
+    List<Recipe> generalRecommendations,
+    Set<String> flaggedAllergenKeys,
   });
 
   $BabyCopyWith<$Res> get baby;
   $AllergenProgramStateCopyWith<$Res> get programState;
   $AllergenBoardItemCopyWith<$Res>? get currentAllergenBoardItem;
-  $MealPlanEntryCopyWith<$Res>? get todayMeal;
-  $RecipeCopyWith<$Res>? get todayRecipe;
 }
 
 /// @nodoc
@@ -72,11 +74,13 @@ class _$HomeStateCopyWithImpl<$Res, $Val extends HomeState>
   $Res call({
     Object? baby = null,
     Object? programState = null,
-    Object? hasLoggedToday = null,
     Object? recommendations = null,
     Object? currentAllergenBoardItem = freezed,
-    Object? todayMeal = freezed,
-    Object? todayRecipe = freezed,
+    Object? todayMeals = null,
+    Object? todayRecipes = null,
+    Object? isGeneralRecommendations = null,
+    Object? generalRecommendations = null,
+    Object? flaggedAllergenKeys = null,
   }) {
     return _then(
       _value.copyWith(
@@ -88,10 +92,6 @@ class _$HomeStateCopyWithImpl<$Res, $Val extends HomeState>
                 ? _value.programState
                 : programState // ignore: cast_nullable_to_non_nullable
                       as AllergenProgramState,
-            hasLoggedToday: null == hasLoggedToday
-                ? _value.hasLoggedToday
-                : hasLoggedToday // ignore: cast_nullable_to_non_nullable
-                      as bool,
             recommendations: null == recommendations
                 ? _value.recommendations
                 : recommendations // ignore: cast_nullable_to_non_nullable
@@ -100,14 +100,26 @@ class _$HomeStateCopyWithImpl<$Res, $Val extends HomeState>
                 ? _value.currentAllergenBoardItem
                 : currentAllergenBoardItem // ignore: cast_nullable_to_non_nullable
                       as AllergenBoardItem?,
-            todayMeal: freezed == todayMeal
-                ? _value.todayMeal
-                : todayMeal // ignore: cast_nullable_to_non_nullable
-                      as MealPlanEntry?,
-            todayRecipe: freezed == todayRecipe
-                ? _value.todayRecipe
-                : todayRecipe // ignore: cast_nullable_to_non_nullable
-                      as Recipe?,
+            todayMeals: null == todayMeals
+                ? _value.todayMeals
+                : todayMeals // ignore: cast_nullable_to_non_nullable
+                      as List<MealPlanEntry>,
+            todayRecipes: null == todayRecipes
+                ? _value.todayRecipes
+                : todayRecipes // ignore: cast_nullable_to_non_nullable
+                      as List<Recipe>,
+            isGeneralRecommendations: null == isGeneralRecommendations
+                ? _value.isGeneralRecommendations
+                : isGeneralRecommendations // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            generalRecommendations: null == generalRecommendations
+                ? _value.generalRecommendations
+                : generalRecommendations // ignore: cast_nullable_to_non_nullable
+                      as List<Recipe>,
+            flaggedAllergenKeys: null == flaggedAllergenKeys
+                ? _value.flaggedAllergenKeys
+                : flaggedAllergenKeys // ignore: cast_nullable_to_non_nullable
+                      as Set<String>,
           )
           as $Val,
     );
@@ -148,34 +160,6 @@ class _$HomeStateCopyWithImpl<$Res, $Val extends HomeState>
       return _then(_value.copyWith(currentAllergenBoardItem: value) as $Val);
     });
   }
-
-  /// Create a copy of HomeState
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @pragma('vm:prefer-inline')
-  $MealPlanEntryCopyWith<$Res>? get todayMeal {
-    if (_value.todayMeal == null) {
-      return null;
-    }
-
-    return $MealPlanEntryCopyWith<$Res>(_value.todayMeal!, (value) {
-      return _then(_value.copyWith(todayMeal: value) as $Val);
-    });
-  }
-
-  /// Create a copy of HomeState
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @pragma('vm:prefer-inline')
-  $RecipeCopyWith<$Res>? get todayRecipe {
-    if (_value.todayRecipe == null) {
-      return null;
-    }
-
-    return $RecipeCopyWith<$Res>(_value.todayRecipe!, (value) {
-      return _then(_value.copyWith(todayRecipe: value) as $Val);
-    });
-  }
 }
 
 /// @nodoc
@@ -190,11 +174,13 @@ abstract class _$$HomeStateImplCopyWith<$Res>
   $Res call({
     Baby baby,
     AllergenProgramState programState,
-    bool hasLoggedToday,
     List<Recipe> recommendations,
     AllergenBoardItem? currentAllergenBoardItem,
-    MealPlanEntry? todayMeal,
-    Recipe? todayRecipe,
+    List<MealPlanEntry> todayMeals,
+    List<Recipe> todayRecipes,
+    bool isGeneralRecommendations,
+    List<Recipe> generalRecommendations,
+    Set<String> flaggedAllergenKeys,
   });
 
   @override
@@ -203,10 +189,6 @@ abstract class _$$HomeStateImplCopyWith<$Res>
   $AllergenProgramStateCopyWith<$Res> get programState;
   @override
   $AllergenBoardItemCopyWith<$Res>? get currentAllergenBoardItem;
-  @override
-  $MealPlanEntryCopyWith<$Res>? get todayMeal;
-  @override
-  $RecipeCopyWith<$Res>? get todayRecipe;
 }
 
 /// @nodoc
@@ -225,11 +207,13 @@ class __$$HomeStateImplCopyWithImpl<$Res>
   $Res call({
     Object? baby = null,
     Object? programState = null,
-    Object? hasLoggedToday = null,
     Object? recommendations = null,
     Object? currentAllergenBoardItem = freezed,
-    Object? todayMeal = freezed,
-    Object? todayRecipe = freezed,
+    Object? todayMeals = null,
+    Object? todayRecipes = null,
+    Object? isGeneralRecommendations = null,
+    Object? generalRecommendations = null,
+    Object? flaggedAllergenKeys = null,
   }) {
     return _then(
       _$HomeStateImpl(
@@ -241,10 +225,6 @@ class __$$HomeStateImplCopyWithImpl<$Res>
             ? _value.programState
             : programState // ignore: cast_nullable_to_non_nullable
                   as AllergenProgramState,
-        hasLoggedToday: null == hasLoggedToday
-            ? _value.hasLoggedToday
-            : hasLoggedToday // ignore: cast_nullable_to_non_nullable
-                  as bool,
         recommendations: null == recommendations
             ? _value._recommendations
             : recommendations // ignore: cast_nullable_to_non_nullable
@@ -253,14 +233,26 @@ class __$$HomeStateImplCopyWithImpl<$Res>
             ? _value.currentAllergenBoardItem
             : currentAllergenBoardItem // ignore: cast_nullable_to_non_nullable
                   as AllergenBoardItem?,
-        todayMeal: freezed == todayMeal
-            ? _value.todayMeal
-            : todayMeal // ignore: cast_nullable_to_non_nullable
-                  as MealPlanEntry?,
-        todayRecipe: freezed == todayRecipe
-            ? _value.todayRecipe
-            : todayRecipe // ignore: cast_nullable_to_non_nullable
-                  as Recipe?,
+        todayMeals: null == todayMeals
+            ? _value._todayMeals
+            : todayMeals // ignore: cast_nullable_to_non_nullable
+                  as List<MealPlanEntry>,
+        todayRecipes: null == todayRecipes
+            ? _value._todayRecipes
+            : todayRecipes // ignore: cast_nullable_to_non_nullable
+                  as List<Recipe>,
+        isGeneralRecommendations: null == isGeneralRecommendations
+            ? _value.isGeneralRecommendations
+            : isGeneralRecommendations // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        generalRecommendations: null == generalRecommendations
+            ? _value._generalRecommendations
+            : generalRecommendations // ignore: cast_nullable_to_non_nullable
+                  as List<Recipe>,
+        flaggedAllergenKeys: null == flaggedAllergenKeys
+            ? _value._flaggedAllergenKeys
+            : flaggedAllergenKeys // ignore: cast_nullable_to_non_nullable
+                  as Set<String>,
       ),
     );
   }
@@ -272,19 +264,23 @@ class _$HomeStateImpl implements _HomeState {
   const _$HomeStateImpl({
     required this.baby,
     required this.programState,
-    required this.hasLoggedToday,
     required final List<Recipe> recommendations,
     this.currentAllergenBoardItem,
-    this.todayMeal,
-    this.todayRecipe,
-  }) : _recommendations = recommendations;
+    final List<MealPlanEntry> todayMeals = const [],
+    final List<Recipe> todayRecipes = const [],
+    this.isGeneralRecommendations = false,
+    final List<Recipe> generalRecommendations = const [],
+    final Set<String> flaggedAllergenKeys = const <String>{},
+  }) : _recommendations = recommendations,
+       _todayMeals = todayMeals,
+       _todayRecipes = todayRecipes,
+       _generalRecommendations = generalRecommendations,
+       _flaggedAllergenKeys = flaggedAllergenKeys;
 
   @override
   final Baby baby;
   @override
   final AllergenProgramState programState;
-  @override
-  final bool hasLoggedToday;
   final List<Recipe> _recommendations;
   @override
   List<Recipe> get recommendations {
@@ -295,14 +291,50 @@ class _$HomeStateImpl implements _HomeState {
 
   @override
   final AllergenBoardItem? currentAllergenBoardItem;
+  final List<MealPlanEntry> _todayMeals;
   @override
-  final MealPlanEntry? todayMeal;
+  @JsonKey()
+  List<MealPlanEntry> get todayMeals {
+    if (_todayMeals is EqualUnmodifiableListView) return _todayMeals;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_todayMeals);
+  }
+
+  final List<Recipe> _todayRecipes;
   @override
-  final Recipe? todayRecipe;
+  @JsonKey()
+  List<Recipe> get todayRecipes {
+    if (_todayRecipes is EqualUnmodifiableListView) return _todayRecipes;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_todayRecipes);
+  }
+
+  @override
+  @JsonKey()
+  final bool isGeneralRecommendations;
+  final List<Recipe> _generalRecommendations;
+  @override
+  @JsonKey()
+  List<Recipe> get generalRecommendations {
+    if (_generalRecommendations is EqualUnmodifiableListView)
+      return _generalRecommendations;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_generalRecommendations);
+  }
+
+  final Set<String> _flaggedAllergenKeys;
+  @override
+  @JsonKey()
+  Set<String> get flaggedAllergenKeys {
+    if (_flaggedAllergenKeys is EqualUnmodifiableSetView)
+      return _flaggedAllergenKeys;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableSetView(_flaggedAllergenKeys);
+  }
 
   @override
   String toString() {
-    return 'HomeState(baby: $baby, programState: $programState, hasLoggedToday: $hasLoggedToday, recommendations: $recommendations, currentAllergenBoardItem: $currentAllergenBoardItem, todayMeal: $todayMeal, todayRecipe: $todayRecipe)';
+    return 'HomeState(baby: $baby, programState: $programState, recommendations: $recommendations, currentAllergenBoardItem: $currentAllergenBoardItem, todayMeals: $todayMeals, todayRecipes: $todayRecipes, isGeneralRecommendations: $isGeneralRecommendations, generalRecommendations: $generalRecommendations, flaggedAllergenKeys: $flaggedAllergenKeys)';
   }
 
   @override
@@ -313,8 +345,6 @@ class _$HomeStateImpl implements _HomeState {
             (identical(other.baby, baby) || other.baby == baby) &&
             (identical(other.programState, programState) ||
                 other.programState == programState) &&
-            (identical(other.hasLoggedToday, hasLoggedToday) ||
-                other.hasLoggedToday == hasLoggedToday) &&
             const DeepCollectionEquality().equals(
               other._recommendations,
               _recommendations,
@@ -324,10 +354,27 @@ class _$HomeStateImpl implements _HomeState {
                   currentAllergenBoardItem,
                 ) ||
                 other.currentAllergenBoardItem == currentAllergenBoardItem) &&
-            (identical(other.todayMeal, todayMeal) ||
-                other.todayMeal == todayMeal) &&
-            (identical(other.todayRecipe, todayRecipe) ||
-                other.todayRecipe == todayRecipe));
+            const DeepCollectionEquality().equals(
+              other._todayMeals,
+              _todayMeals,
+            ) &&
+            const DeepCollectionEquality().equals(
+              other._todayRecipes,
+              _todayRecipes,
+            ) &&
+            (identical(
+                  other.isGeneralRecommendations,
+                  isGeneralRecommendations,
+                ) ||
+                other.isGeneralRecommendations == isGeneralRecommendations) &&
+            const DeepCollectionEquality().equals(
+              other._generalRecommendations,
+              _generalRecommendations,
+            ) &&
+            const DeepCollectionEquality().equals(
+              other._flaggedAllergenKeys,
+              _flaggedAllergenKeys,
+            ));
   }
 
   @override
@@ -335,11 +382,13 @@ class _$HomeStateImpl implements _HomeState {
     runtimeType,
     baby,
     programState,
-    hasLoggedToday,
     const DeepCollectionEquality().hash(_recommendations),
     currentAllergenBoardItem,
-    todayMeal,
-    todayRecipe,
+    const DeepCollectionEquality().hash(_todayMeals),
+    const DeepCollectionEquality().hash(_todayRecipes),
+    isGeneralRecommendations,
+    const DeepCollectionEquality().hash(_generalRecommendations),
+    const DeepCollectionEquality().hash(_flaggedAllergenKeys),
   );
 
   /// Create a copy of HomeState
@@ -355,11 +404,13 @@ abstract class _HomeState implements HomeState {
   const factory _HomeState({
     required final Baby baby,
     required final AllergenProgramState programState,
-    required final bool hasLoggedToday,
     required final List<Recipe> recommendations,
     final AllergenBoardItem? currentAllergenBoardItem,
-    final MealPlanEntry? todayMeal,
-    final Recipe? todayRecipe,
+    final List<MealPlanEntry> todayMeals,
+    final List<Recipe> todayRecipes,
+    final bool isGeneralRecommendations,
+    final List<Recipe> generalRecommendations,
+    final Set<String> flaggedAllergenKeys,
   }) = _$HomeStateImpl;
 
   @override
@@ -367,15 +418,19 @@ abstract class _HomeState implements HomeState {
   @override
   AllergenProgramState get programState;
   @override
-  bool get hasLoggedToday;
-  @override
   List<Recipe> get recommendations;
   @override
   AllergenBoardItem? get currentAllergenBoardItem;
   @override
-  MealPlanEntry? get todayMeal;
+  List<MealPlanEntry> get todayMeals;
   @override
-  Recipe? get todayRecipe;
+  List<Recipe> get todayRecipes;
+  @override
+  bool get isGeneralRecommendations;
+  @override
+  List<Recipe> get generalRecommendations;
+  @override
+  Set<String> get flaggedAllergenKeys;
 
   /// Create a copy of HomeState
   /// with the given fields replaced by the non-null parameter values.

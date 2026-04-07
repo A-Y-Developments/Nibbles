@@ -18,15 +18,14 @@ ShoppingListItem _makeItem({
   String name = 'Apples',
   bool isChecked = false,
   ShoppingListSource source = ShoppingListSource.manual,
-}) =>
-    ShoppingListItem(
-      id: id,
-      babyId: _babyId,
-      name: name,
-      isChecked: isChecked,
-      source: source,
-      createdAt: _now,
-    );
+}) => ShoppingListItem(
+  id: id,
+  babyId: _babyId,
+  name: name,
+  isChecked: isChecked,
+  source: source,
+  createdAt: _now,
+);
 
 void main() {
   late MockShoppingListRepository mockRepo;
@@ -48,26 +47,29 @@ void main() {
   // ---------------------------------------------------------------------------
 
   group('ShoppingListService.addFromRecipe', () {
-    test('creates items with source=recipe, isChecked=false, id empty',
-        () async {
-      when(() => mockRepo.addItems(any()))
-          .thenAnswer((_) async => const Result.success(null));
+    test(
+      'creates items with source=recipe, isChecked=false, id empty',
+      () async {
+        when(
+          () => mockRepo.addItems(any()),
+        ).thenAnswer((_) async => const Result.success(null));
 
-      await sut.addFromRecipe(_babyId, 'r1', ['Avocado', 'Bread']);
+        await sut.addFromRecipe(_babyId, 'r1', ['Avocado', 'Bread']);
 
-      final captured =
-          verify(() => mockRepo.addItems(captureAny())).captured.single
-              as List<ShoppingListItem>;
-      expect(captured, hasLength(2));
-      expect(captured[0].name, 'Avocado');
-      expect(captured[1].name, 'Bread');
-      for (final item in captured) {
-        expect(item.source, ShoppingListSource.recipe);
-        expect(item.isChecked, isFalse);
-        expect(item.id, '');
-        expect(item.babyId, _babyId);
-      }
-    });
+        final captured =
+            verify(() => mockRepo.addItems(captureAny())).captured.single
+                as List<ShoppingListItem>;
+        expect(captured, hasLength(2));
+        expect(captured[0].name, 'Avocado');
+        expect(captured[1].name, 'Bread');
+        for (final item in captured) {
+          expect(item.source, ShoppingListSource.recipe);
+          expect(item.isChecked, isFalse);
+          expect(item.id, '');
+          expect(item.babyId, _babyId);
+        }
+      },
+    );
 
     test('repo failure propagates', () async {
       when(() => mockRepo.addItems(any())).thenAnswer(
@@ -86,8 +88,9 @@ void main() {
 
   group('ShoppingListService.addManualItem', () {
     test('creates item with source=manual', () async {
-      when(() => mockRepo.addItems(any()))
-          .thenAnswer((_) async => const Result.success(null));
+      when(
+        () => mockRepo.addItems(any()),
+      ).thenAnswer((_) async => const Result.success(null));
 
       await sut.addManualItem(_babyId, 'Milk');
 
@@ -118,8 +121,9 @@ void main() {
 
   group('ShoppingListService.checkItem', () {
     test('calls setChecked with isChecked=true', () async {
-      when(() => mockRepo.setChecked(any(), isChecked: any(named: 'isChecked')))
-          .thenAnswer((_) async => const Result.success(null));
+      when(
+        () => mockRepo.setChecked(any(), isChecked: any(named: 'isChecked')),
+      ).thenAnswer((_) async => const Result.success(null));
 
       final result = await sut.checkItem('item-1');
 
@@ -128,8 +132,9 @@ void main() {
     });
 
     test('repo failure propagates', () async {
-      when(() => mockRepo.setChecked(any(), isChecked: any(named: 'isChecked')))
-          .thenAnswer(
+      when(
+        () => mockRepo.setChecked(any(), isChecked: any(named: 'isChecked')),
+      ).thenAnswer(
         (_) async => const Result.failure(ServerException('DB error')),
       );
 
@@ -145,8 +150,9 @@ void main() {
 
   group('ShoppingListService.clearAll', () {
     test('delegates to repo.clearAll with correct babyId', () async {
-      when(() => mockRepo.clearAll(any()))
-          .thenAnswer((_) async => const Result.success(null));
+      when(
+        () => mockRepo.clearAll(any()),
+      ).thenAnswer((_) async => const Result.success(null));
 
       final result = await sut.clearAll(_babyId);
 

@@ -26,7 +26,7 @@ abstract interface class ShoppingListRepository {
 
 class ShoppingListRepositoryImpl implements ShoppingListRepository {
   ShoppingListRepositoryImpl({SupabaseClient? supabaseClient})
-      : _supabase = supabaseClient ?? Supabase.instance.client;
+    : _supabase = supabaseClient ?? Supabase.instance.client;
 
   final SupabaseClient _supabase;
 
@@ -56,9 +56,9 @@ class ShoppingListRepositoryImpl implements ShoppingListRepository {
   Future<Result<void>> addItems(List<ShoppingListItem> items) async {
     if (items.isEmpty) return const Result.success(null);
     try {
-      await _supabase.from('shopping_list_items').insert(
-            items.map(_itemToRow).toList(),
-          );
+      await _supabase
+          .from('shopping_list_items')
+          .insert(items.map(_itemToRow).toList());
       return const Result.success(null);
     } on PostgrestException catch (e) {
       return Result.failure(ServerException(e.message));
@@ -75,7 +75,8 @@ class ShoppingListRepositoryImpl implements ShoppingListRepository {
     try {
       await _supabase
           .from('shopping_list_items')
-          .update({'is_checked': isChecked}).eq('id', itemId);
+          .update({'is_checked': isChecked})
+          .eq('id', itemId);
       return const Result.success(null);
     } on PostgrestException catch (e) {
       return Result.failure(ServerException(e.message));
@@ -87,10 +88,7 @@ class ShoppingListRepositoryImpl implements ShoppingListRepository {
   @override
   Future<Result<void>> deleteItem(String itemId) async {
     try {
-      await _supabase
-          .from('shopping_list_items')
-          .delete()
-          .eq('id', itemId);
+      await _supabase.from('shopping_list_items').delete().eq('id', itemId);
       return const Result.success(null);
     } on PostgrestException catch (e) {
       return Result.failure(ServerException(e.message));
@@ -119,21 +117,21 @@ class ShoppingListRepositoryImpl implements ShoppingListRepository {
   // ---------------------------------------------------------------------------
 
   ShoppingListItem _itemFromRow(Map<String, dynamic> row) => ShoppingListItem(
-        id: row['id'] as String,
-        babyId: row['baby_id'] as String,
-        name: row['name'] as String,
-        isChecked: row['is_checked'] as bool,
-        source: ShoppingListSourceX.fromJson(row['source'] as String),
-        createdAt: DateTime.parse(row['created_at'] as String),
-      );
+    id: row['id'] as String,
+    babyId: row['baby_id'] as String,
+    name: row['name'] as String,
+    isChecked: row['is_checked'] as bool,
+    source: ShoppingListSourceX.fromJson(row['source'] as String),
+    createdAt: DateTime.parse(row['created_at'] as String),
+  );
 
   /// Omits the id field so Supabase auto-generates a UUID on insert.
   Map<String, dynamic> _itemToRow(ShoppingListItem item) => {
-        'baby_id': item.babyId,
-        'name': item.name,
-        'is_checked': item.isChecked,
-        'source': item.source.toJson(),
-      };
+    'baby_id': item.babyId,
+    'name': item.name,
+    'is_checked': item.isChecked,
+    'source': item.source.toJson(),
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -145,5 +143,4 @@ ShoppingListRepository shoppingListRepository(
   // Specific *Ref types are deprecated; will be Ref in riverpod_generator 3.0.
   // ignore: deprecated_member_use_from_same_package
   ShoppingListRepositoryRef ref,
-) =>
-    ShoppingListRepositoryImpl();
+) => ShoppingListRepositoryImpl();

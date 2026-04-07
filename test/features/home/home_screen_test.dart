@@ -56,12 +56,11 @@ const _peanutAllergen = Allergen(
 
 AllergenBoardItem _makeBoardItem({
   AllergenStatus status = AllergenStatus.inProgress,
-}) =>
-    AllergenBoardItem(
-      allergen: _peanutAllergen,
-      logs: const [],
-      status: status,
-    );
+}) => AllergenBoardItem(
+  allergen: _peanutAllergen,
+  logs: const [],
+  status: status,
+);
 
 AllergenProgramState _makeProgramState({
   AllergenProgramStatus status = AllergenProgramStatus.inProgress,
@@ -91,47 +90,47 @@ const _fakeRecipe = Recipe(
 );
 
 MealPlanEntry get _todayMeal => MealPlanEntry(
-      id: 'mp-001',
-      babyId: _babyId,
-      recipeId: 'recipe-001',
-      planDate: DateTime.now(),
-    );
+  id: 'mp-001',
+  babyId: _babyId,
+  recipeId: 'recipe-001',
+  planDate: DateTime.now(),
+);
 
 // ---------------------------------------------------------------------------
 // Router + widget helper
 // ---------------------------------------------------------------------------
 
 GoRouter _routerFor(Widget screen) => GoRouter(
-      initialLocation: '/',
-      routes: [
-        GoRoute(path: '/', builder: (_, __) => screen),
-        GoRoute(
-          path: AppRoute.profile.path,
-          name: AppRoute.profile.name,
-          builder: (_, __) => const Scaffold(body: Text('Profile')),
-        ),
-        GoRoute(
-          path: AppRoute.recipeLibrary.path,
-          name: AppRoute.recipeLibrary.name,
-          builder: (_, __) => const Scaffold(body: Text('Recipes')),
-        ),
-        GoRoute(
-          path: '/home/recipes/:recipeId',
-          name: AppRoute.recipeDetail.name,
-          builder: (_, __) => const Scaffold(body: Text('Recipe Detail')),
-        ),
-        GoRoute(
-          path: AppRoute.shoppingList.path,
-          name: AppRoute.shoppingList.name,
-          builder: (_, __) => const Scaffold(body: Text('Shopping List')),
-        ),
-      ],
-    );
+  initialLocation: '/',
+  routes: [
+    GoRoute(path: '/', builder: (_, __) => screen),
+    GoRoute(
+      path: AppRoute.profile.path,
+      name: AppRoute.profile.name,
+      builder: (_, __) => const Scaffold(body: Text('Profile')),
+    ),
+    GoRoute(
+      path: AppRoute.recipeLibrary.path,
+      name: AppRoute.recipeLibrary.name,
+      builder: (_, __) => const Scaffold(body: Text('Recipes')),
+    ),
+    GoRoute(
+      path: '/home/recipes/:recipeId',
+      name: AppRoute.recipeDetail.name,
+      builder: (_, __) => const Scaffold(body: Text('Recipe Detail')),
+    ),
+    GoRoute(
+      path: AppRoute.shoppingList.path,
+      name: AppRoute.shoppingList.name,
+      builder: (_, __) => const Scaffold(body: Text('Shopping List')),
+    ),
+  ],
+);
 
 Widget _wrap(Widget screen, List<Override> overrides) => ProviderScope(
-      overrides: overrides,
-      child: MaterialApp.router(routerConfig: _routerFor(screen)),
-    );
+  overrides: overrides,
+  child: MaterialApp.router(routerConfig: _routerFor(screen)),
+);
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -151,40 +150,46 @@ void main() {
   });
 
   List<Override> buildOverrides() => [
-        babyProfileServiceProvider.overrideWithValue(mockBabyService),
-        allergenServiceProvider.overrideWithValue(mockAllergenService),
-        mealPlanServiceProvider.overrideWithValue(mockMealPlanService),
-        recipeServiceProvider.overrideWithValue(mockRecipeService),
-      ];
+    babyProfileServiceProvider.overrideWithValue(mockBabyService),
+    allergenServiceProvider.overrideWithValue(mockAllergenService),
+    mealPlanServiceProvider.overrideWithValue(mockMealPlanService),
+    recipeServiceProvider.overrideWithValue(mockRecipeService),
+  ];
 
   /// Stubs the minimum service calls required for the home controller to build.
   void stubCommon({
     required AllergenProgramState programState,
-    bool hasLoggedToday = false,
     List<Recipe> recommendations = const [],
     List<MealPlanEntry> weekMeals = const [],
     Recipe? recipeForMeal,
     AllergenBoardItem? boardItem,
   }) {
     when(() => mockBabyService.getBaby()).thenAnswer((_) async => _fakeBaby);
-    when(() => mockAllergenService.getProgramState(_babyId))
-        .thenAnswer((_) async => Result.success(programState));
-    when(() => mockMealPlanService.getWeekMeals(_babyId, any()))
-        .thenAnswer((_) async => Result.success(weekMeals));
+    when(
+      () => mockAllergenService.getProgramState(_babyId),
+    ).thenAnswer((_) async => Result.success(programState));
+    when(
+      () => mockMealPlanService.getWeekMeals(_babyId, any()),
+    ).thenAnswer((_) async => Result.success(weekMeals));
+    when(
+      () => mockRecipeService.getFlaggedAllergenKeys(any()),
+    ).thenAnswer((_) async => const Result.success(<String>{}));
     if (recipeForMeal != null) {
-      when(() => mockRecipeService.getRecipeById(any()))
-          .thenAnswer((_) async => Result.success(recipeForMeal));
+      when(
+        () => mockRecipeService.getRecipeById(any()),
+      ).thenAnswer((_) async => Result.success(recipeForMeal));
     }
     if (programState.status != AllergenProgramStatus.completed) {
-      when(() => mockAllergenService.getAllergenBoardSummary(_babyId))
-          .thenAnswer(
-            (_) async => Result.success([boardItem ?? _makeBoardItem()]),
-          );
-      when(() => mockAllergenService.hasLoggedToday(_babyId, any()))
-          .thenAnswer((_) async => Result.success(hasLoggedToday));
       when(
-        () => mockRecipeService
-            .getRecommendationsForAllergen(any(), _babyId),
+        () => mockAllergenService.getAllergenBoardSummary(_babyId),
+      ).thenAnswer(
+        (_) async => Result.success([boardItem ?? _makeBoardItem()]),
+      );
+      when(
+        () => mockRecipeService.getRecommendationsForAllergen(any(), _babyId),
+      ).thenAnswer((_) async => Result.success(recommendations));
+      when(
+        () => mockRecipeService.getAllRecipes(any()),
       ).thenAnswer((_) async => Result.success(recommendations));
     }
   }
@@ -203,30 +208,13 @@ void main() {
 
       expect(find.text('🥜'), findsWidgets);
       expect(find.text('Peanut'), findsOneWidget);
-      expect(find.textContaining('Day'), findsOneWidget);
+      expect(find.textContaining('of 3 exposures logged'), findsOneWidget);
       expect(find.byKey(const Key('log_food_button')), findsOneWidget);
     },
   );
 
   // -------------------------------------------------------------------------
-  // State B: logged today
-  // -------------------------------------------------------------------------
-
-  testWidgets(
-    'State B — Log Food replaced by "Logged today" indicator when logged today',
-    (tester) async {
-      stubCommon(programState: _makeProgramState(), hasLoggedToday: true);
-
-      await tester.pumpWidget(_wrap(const HomeScreen(), buildOverrides()));
-      await tester.pumpAndSettle();
-
-      expect(find.byKey(const Key('log_food_button')), findsNothing);
-      expect(find.text('Logged today'), findsOneWidget);
-    },
-  );
-
-  // -------------------------------------------------------------------------
-  // State C: program complete
+  // State B: program complete
   // -------------------------------------------------------------------------
 
   testWidgets(
@@ -254,44 +242,40 @@ void main() {
   // No meal today
   // -------------------------------------------------------------------------
 
-  testWidgets(
-    'No meal today — empty state copy and Browse Recipe Library CTA shown',
-    (tester) async {
-      stubCommon(programState: _makeProgramState());
+  testWidgets('No meal today — empty state copy and Plan a Meal CTA shown', (
+    tester,
+  ) async {
+    stubCommon(programState: _makeProgramState());
 
-      await tester.pumpWidget(_wrap(const HomeScreen(), buildOverrides()));
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(_wrap(const HomeScreen(), buildOverrides()));
+    await tester.pumpAndSettle();
 
-      expect(
-        find.text(
-          'No meal planned for today. Add one from the recipe library.',
-        ),
-        findsOneWidget,
-      );
-      expect(find.text('Browse Recipe Library'), findsOneWidget);
-    },
-  );
+    expect(
+      find.text('No meal planned for today. Add one to get started.'),
+      findsOneWidget,
+    );
+    expect(find.text('Plan a Meal'), findsOneWidget);
+  });
 
   // -------------------------------------------------------------------------
   // With meal today
   // -------------------------------------------------------------------------
 
-  testWidgets(
-    'With meal today — recipe name and allergen badge shown',
-    (tester) async {
-      stubCommon(
-        programState: _makeProgramState(),
-        weekMeals: [_todayMeal],
-        recipeForMeal: _fakeRecipe,
-      );
+  testWidgets('With meal today — recipe name and allergen badge shown', (
+    tester,
+  ) async {
+    stubCommon(
+      programState: _makeProgramState(),
+      weekMeals: [_todayMeal],
+      recipeForMeal: _fakeRecipe,
+    );
 
-      await tester.pumpWidget(_wrap(const HomeScreen(), buildOverrides()));
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(_wrap(const HomeScreen(), buildOverrides()));
+    await tester.pumpAndSettle();
 
-      expect(find.text('Peanut Butter Toast'), findsOneWidget);
-      expect(find.textContaining('peanut'), findsWidgets);
-    },
-  );
+    expect(find.text('Peanut Butter Toast'), findsOneWidget);
+    expect(find.textContaining('peanut'), findsWidgets);
+  });
 
   // -------------------------------------------------------------------------
   // Recommendations strip visible

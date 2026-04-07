@@ -70,5 +70,4 @@ ShoppingListService shoppingListService(
   // Specific *Ref types are deprecated; will be Ref in riverpod_generator 3.0.
   // ignore: deprecated_member_use_from_same_package
   ShoppingListServiceRef ref,
-) =>
-    ShoppingListService(ref.watch(shoppingListRepositoryProvider));
+) => ShoppingListService(ref.watch(shoppingListRepositoryProvider));

@@ -18,10 +18,7 @@ class ResetPasswordController extends _$ResetPasswordController {
   }
 
   void updateConfirmPassword(String value) {
-    state = state.copyWith(
-      confirmPassword: value,
-      errorMessage: null,
-    );
+    state = state.copyWith(confirmPassword: value, errorMessage: null);
   }
 
   Future<void> submit() async {
@@ -45,12 +42,9 @@ class ResetPasswordController extends _$ResetPasswordController {
         .updatePassword(state.password.value);
 
     result.when(
-      success: (_) =>
-          state = state.copyWith(isLoading: false, success: true),
-      failure: (error) => state = state.copyWith(
-        isLoading: false,
-        errorMessage: error.message,
-      ),
+      success: (_) => state = state.copyWith(isLoading: false, success: true),
+      failure: (error) =>
+          state = state.copyWith(isLoading: false, errorMessage: error.message),
     );
   }
 }

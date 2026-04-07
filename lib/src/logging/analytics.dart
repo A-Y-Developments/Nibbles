@@ -34,10 +34,7 @@ final class Analytics {
   }
 
   Future<void> logOnboardingStepViewed({required int step}) async {
-    await _logEvent(
-      'onboarding_step_viewed',
-      parameters: {'step': step},
-    );
+    await _logEvent('onboarding_step_viewed', parameters: {'step': step});
   }
 
   // ---------------------------------------------------------------------------
@@ -99,10 +96,7 @@ final class Analytics {
   }) async {
     await _logEvent(
       'reaction_logged',
-      parameters: {
-        'allergen_key': allergenKey,
-        'severity': severity,
-      },
+      parameters: {'allergen_key': allergenKey, 'severity': severity},
     );
   }
 
@@ -125,10 +119,7 @@ final class Analytics {
   // ---------------------------------------------------------------------------
 
   Future<void> logRecipeViewed({required String recipeId}) async {
-    await _logEvent(
-      'recipe_viewed',
-      parameters: {'recipe_id': recipeId},
-    );
+    await _logEvent('recipe_viewed', parameters: {'recipe_id': recipeId});
   }
 
   Future<void> logRecipeAddedToMealPlan({required String recipeId}) async {
@@ -150,10 +141,7 @@ final class Analytics {
   // Private
   // ---------------------------------------------------------------------------
 
-  Future<void> _logEvent(
-    String name, {
-    Map<String, Object>? parameters,
-  }) async {
+  Future<void> _logEvent(String name, {Map<String, Object>? parameters}) async {
     await _analytics.logEvent(name: name, parameters: parameters);
   }
 }

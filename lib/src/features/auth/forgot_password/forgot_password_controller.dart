@@ -11,10 +11,7 @@ class ForgotPasswordController extends _$ForgotPasswordController {
   ForgotPasswordState build() => const ForgotPasswordState();
 
   void updateEmail(String value) {
-    state = state.copyWith(
-      email: EmailInput.dirty(value),
-      errorMessage: null,
-    );
+    state = state.copyWith(email: EmailInput.dirty(value), errorMessage: null);
   }
 
   Future<void> submit() async {
@@ -35,10 +32,8 @@ class ForgotPasswordController extends _$ForgotPasswordController {
 
     result.when(
       success: (_) => state = state.copyWith(isLoading: false, sent: true),
-      failure: (error) => state = state.copyWith(
-        isLoading: false,
-        errorMessage: error.message,
-      ),
+      failure: (error) =>
+          state = state.copyWith(isLoading: false, errorMessage: error.message),
     );
   }
 }

@@ -20,8 +20,7 @@ class FlavorConfig {
   bool get isDev => flavor == Flavor.dev;
   bool get isProd => flavor == Flavor.prod;
 
-  String get appScheme =>
-      isDev ? 'com.aydev.nibbles.dev' : 'com.aydev.nibbles';
+  String get appScheme => isDev ? 'com.aydev.nibbles.dev' : 'com.aydev.nibbles';
 
   static void init({
     required Flavor flavor,

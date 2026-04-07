@@ -16,10 +16,7 @@ class RegisterController extends _$RegisterController {
   }
 
   void updateEmail(String value) {
-    state = state.copyWith(
-      email: EmailInput.dirty(value),
-      errorMessage: null,
-    );
+    state = state.copyWith(email: EmailInput.dirty(value), errorMessage: null);
   }
 
   void updatePassword(String value) {
@@ -32,11 +29,9 @@ class RegisterController extends _$RegisterController {
   Future<bool> submit() async {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
-    final result = await ref.read(authServiceProvider.notifier).signUp(
-          state.name,
-          state.email.value,
-          state.password.value,
-        );
+    final result = await ref
+        .read(authServiceProvider.notifier)
+        .signUp(state.name, state.email.value, state.password.value);
 
     return result.when(
       success: (_) {
@@ -44,10 +39,7 @@ class RegisterController extends _$RegisterController {
         return true;
       },
       failure: (error) {
-        state = state.copyWith(
-          isLoading: false,
-          errorMessage: error.message,
-        );
+        state = state.copyWith(isLoading: false, errorMessage: error.message);
         return false;
       },
     );

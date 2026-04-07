@@ -12,8 +12,7 @@ part 'shopping_list_controller.g.dart';
 class ShoppingListController extends _$ShoppingListController {
   @override
   Future<ShoppingListState> build(String babyId) async {
-    final result =
-        await ref.read(shoppingListServiceProvider).getItems(babyId);
+    final result = await ref.read(shoppingListServiceProvider).getItems(babyId);
     if (result.isFailure) throw result.errorOrNull!;
     return ShoppingListState(items: result.dataOrNull!);
   }
@@ -62,16 +61,15 @@ class ShoppingListController extends _$ShoppingListController {
       state = AsyncData(
         ShoppingListState(
           items: current.items
-              .map(
-                (i) => i.id == itemId ? i.copyWith(isChecked: true) : i,
-              )
+              .map((i) => i.id == itemId ? i.copyWith(isChecked: true) : i)
               .toList(),
         ),
       );
     }
 
-    final result =
-        await ref.read(shoppingListServiceProvider).checkItem(itemId);
+    final result = await ref
+        .read(shoppingListServiceProvider)
+        .checkItem(itemId);
     if (result.isFailure) {
       // Revert
       if (current != null) state = AsyncData(current);
@@ -86,16 +84,15 @@ class ShoppingListController extends _$ShoppingListController {
       state = AsyncData(
         ShoppingListState(
           items: current.items
-              .map(
-                (i) => i.id == itemId ? i.copyWith(isChecked: false) : i,
-              )
+              .map((i) => i.id == itemId ? i.copyWith(isChecked: false) : i)
               .toList(),
         ),
       );
     }
 
-    final result =
-        await ref.read(shoppingListServiceProvider).uncheckItem(itemId);
+    final result = await ref
+        .read(shoppingListServiceProvider)
+        .uncheckItem(itemId);
     if (result.isFailure) {
       if (current != null) state = AsyncData(current);
       throw result.errorOrNull!;
@@ -112,8 +109,9 @@ class ShoppingListController extends _$ShoppingListController {
       );
     }
 
-    final result =
-        await ref.read(shoppingListServiceProvider).deleteItem(itemId);
+    final result = await ref
+        .read(shoppingListServiceProvider)
+        .deleteItem(itemId);
     if (result.isFailure) {
       if (current != null) state = AsyncData(current);
       throw result.errorOrNull!;
@@ -121,8 +119,7 @@ class ShoppingListController extends _$ShoppingListController {
   }
 
   Future<void> clearAll() async {
-    final result =
-        await ref.read(shoppingListServiceProvider).clearAll(babyId);
+    final result = await ref.read(shoppingListServiceProvider).clearAll(babyId);
     if (result.isFailure) throw result.errorOrNull!;
     state = const AsyncData(ShoppingListState(items: []));
   }
