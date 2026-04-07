@@ -18,13 +18,14 @@ final _privateConstructorUsedError = UnsupportedError(
 /// @nodoc
 mixin _$AllergenLogState {
   EmojiTaste? get taste => throw _privateConstructorUsedError;
-  bool? get hadReaction => throw _privateConstructorUsedError;
+  bool get hadReaction => throw _privateConstructorUsedError;
   List<String> get symptoms => throw _privateConstructorUsedError;
   ReactionSeverity? get severity => throw _privateConstructorUsedError;
   String? get notes => throw _privateConstructorUsedError;
+  String? get photoPath => throw _privateConstructorUsedError;
   bool get isLoading => throw _privateConstructorUsedError;
   bool get isSaved => throw _privateConstructorUsedError;
-  bool get isDuplicateLog => throw _privateConstructorUsedError;
+  bool get photoUploadFailed => throw _privateConstructorUsedError;
   String? get errorMessage => throw _privateConstructorUsedError;
 
   /// Create a copy of AllergenLogState
@@ -43,13 +44,14 @@ abstract class $AllergenLogStateCopyWith<$Res> {
   @useResult
   $Res call({
     EmojiTaste? taste,
-    bool? hadReaction,
+    bool hadReaction,
     List<String> symptoms,
     ReactionSeverity? severity,
     String? notes,
+    String? photoPath,
     bool isLoading,
     bool isSaved,
-    bool isDuplicateLog,
+    bool photoUploadFailed,
     String? errorMessage,
   });
 }
@@ -70,13 +72,14 @@ class _$AllergenLogStateCopyWithImpl<$Res, $Val extends AllergenLogState>
   @override
   $Res call({
     Object? taste = freezed,
-    Object? hadReaction = freezed,
+    Object? hadReaction = null,
     Object? symptoms = null,
     Object? severity = freezed,
     Object? notes = freezed,
+    Object? photoPath = freezed,
     Object? isLoading = null,
     Object? isSaved = null,
-    Object? isDuplicateLog = null,
+    Object? photoUploadFailed = null,
     Object? errorMessage = freezed,
   }) {
     return _then(
@@ -85,10 +88,10 @@ class _$AllergenLogStateCopyWithImpl<$Res, $Val extends AllergenLogState>
                 ? _value.taste
                 : taste // ignore: cast_nullable_to_non_nullable
                       as EmojiTaste?,
-            hadReaction: freezed == hadReaction
+            hadReaction: null == hadReaction
                 ? _value.hadReaction
                 : hadReaction // ignore: cast_nullable_to_non_nullable
-                      as bool?,
+                      as bool,
             symptoms: null == symptoms
                 ? _value.symptoms
                 : symptoms // ignore: cast_nullable_to_non_nullable
@@ -101,6 +104,10 @@ class _$AllergenLogStateCopyWithImpl<$Res, $Val extends AllergenLogState>
                 ? _value.notes
                 : notes // ignore: cast_nullable_to_non_nullable
                       as String?,
+            photoPath: freezed == photoPath
+                ? _value.photoPath
+                : photoPath // ignore: cast_nullable_to_non_nullable
+                      as String?,
             isLoading: null == isLoading
                 ? _value.isLoading
                 : isLoading // ignore: cast_nullable_to_non_nullable
@@ -109,9 +116,9 @@ class _$AllergenLogStateCopyWithImpl<$Res, $Val extends AllergenLogState>
                 ? _value.isSaved
                 : isSaved // ignore: cast_nullable_to_non_nullable
                       as bool,
-            isDuplicateLog: null == isDuplicateLog
-                ? _value.isDuplicateLog
-                : isDuplicateLog // ignore: cast_nullable_to_non_nullable
+            photoUploadFailed: null == photoUploadFailed
+                ? _value.photoUploadFailed
+                : photoUploadFailed // ignore: cast_nullable_to_non_nullable
                       as bool,
             errorMessage: freezed == errorMessage
                 ? _value.errorMessage
@@ -134,13 +141,14 @@ abstract class _$$AllergenLogStateImplCopyWith<$Res>
   @useResult
   $Res call({
     EmojiTaste? taste,
-    bool? hadReaction,
+    bool hadReaction,
     List<String> symptoms,
     ReactionSeverity? severity,
     String? notes,
+    String? photoPath,
     bool isLoading,
     bool isSaved,
-    bool isDuplicateLog,
+    bool photoUploadFailed,
     String? errorMessage,
   });
 }
@@ -160,13 +168,14 @@ class __$$AllergenLogStateImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? taste = freezed,
-    Object? hadReaction = freezed,
+    Object? hadReaction = null,
     Object? symptoms = null,
     Object? severity = freezed,
     Object? notes = freezed,
+    Object? photoPath = freezed,
     Object? isLoading = null,
     Object? isSaved = null,
-    Object? isDuplicateLog = null,
+    Object? photoUploadFailed = null,
     Object? errorMessage = freezed,
   }) {
     return _then(
@@ -175,10 +184,10 @@ class __$$AllergenLogStateImplCopyWithImpl<$Res>
             ? _value.taste
             : taste // ignore: cast_nullable_to_non_nullable
                   as EmojiTaste?,
-        hadReaction: freezed == hadReaction
+        hadReaction: null == hadReaction
             ? _value.hadReaction
             : hadReaction // ignore: cast_nullable_to_non_nullable
-                  as bool?,
+                  as bool,
         symptoms: null == symptoms
             ? _value._symptoms
             : symptoms // ignore: cast_nullable_to_non_nullable
@@ -191,6 +200,10 @@ class __$$AllergenLogStateImplCopyWithImpl<$Res>
             ? _value.notes
             : notes // ignore: cast_nullable_to_non_nullable
                   as String?,
+        photoPath: freezed == photoPath
+            ? _value.photoPath
+            : photoPath // ignore: cast_nullable_to_non_nullable
+                  as String?,
         isLoading: null == isLoading
             ? _value.isLoading
             : isLoading // ignore: cast_nullable_to_non_nullable
@@ -199,9 +212,9 @@ class __$$AllergenLogStateImplCopyWithImpl<$Res>
             ? _value.isSaved
             : isSaved // ignore: cast_nullable_to_non_nullable
                   as bool,
-        isDuplicateLog: null == isDuplicateLog
-            ? _value.isDuplicateLog
-            : isDuplicateLog // ignore: cast_nullable_to_non_nullable
+        photoUploadFailed: null == photoUploadFailed
+            ? _value.photoUploadFailed
+            : photoUploadFailed // ignore: cast_nullable_to_non_nullable
                   as bool,
         errorMessage: freezed == errorMessage
             ? _value.errorMessage
@@ -217,20 +230,22 @@ class __$$AllergenLogStateImplCopyWithImpl<$Res>
 class _$AllergenLogStateImpl implements _AllergenLogState {
   const _$AllergenLogStateImpl({
     this.taste,
-    this.hadReaction,
+    this.hadReaction = false,
     final List<String> symptoms = const [],
     this.severity,
     this.notes,
+    this.photoPath,
     this.isLoading = false,
     this.isSaved = false,
-    this.isDuplicateLog = false,
+    this.photoUploadFailed = false,
     this.errorMessage,
   }) : _symptoms = symptoms;
 
   @override
   final EmojiTaste? taste;
   @override
-  final bool? hadReaction;
+  @JsonKey()
+  final bool hadReaction;
   final List<String> _symptoms;
   @override
   @JsonKey()
@@ -245,6 +260,8 @@ class _$AllergenLogStateImpl implements _AllergenLogState {
   @override
   final String? notes;
   @override
+  final String? photoPath;
+  @override
   @JsonKey()
   final bool isLoading;
   @override
@@ -252,13 +269,13 @@ class _$AllergenLogStateImpl implements _AllergenLogState {
   final bool isSaved;
   @override
   @JsonKey()
-  final bool isDuplicateLog;
+  final bool photoUploadFailed;
   @override
   final String? errorMessage;
 
   @override
   String toString() {
-    return 'AllergenLogState(taste: $taste, hadReaction: $hadReaction, symptoms: $symptoms, severity: $severity, notes: $notes, isLoading: $isLoading, isSaved: $isSaved, isDuplicateLog: $isDuplicateLog, errorMessage: $errorMessage)';
+    return 'AllergenLogState(taste: $taste, hadReaction: $hadReaction, symptoms: $symptoms, severity: $severity, notes: $notes, photoPath: $photoPath, isLoading: $isLoading, isSaved: $isSaved, photoUploadFailed: $photoUploadFailed, errorMessage: $errorMessage)';
   }
 
   @override
@@ -273,11 +290,13 @@ class _$AllergenLogStateImpl implements _AllergenLogState {
             (identical(other.severity, severity) ||
                 other.severity == severity) &&
             (identical(other.notes, notes) || other.notes == notes) &&
+            (identical(other.photoPath, photoPath) ||
+                other.photoPath == photoPath) &&
             (identical(other.isLoading, isLoading) ||
                 other.isLoading == isLoading) &&
             (identical(other.isSaved, isSaved) || other.isSaved == isSaved) &&
-            (identical(other.isDuplicateLog, isDuplicateLog) ||
-                other.isDuplicateLog == isDuplicateLog) &&
+            (identical(other.photoUploadFailed, photoUploadFailed) ||
+                other.photoUploadFailed == photoUploadFailed) &&
             (identical(other.errorMessage, errorMessage) ||
                 other.errorMessage == errorMessage));
   }
@@ -290,9 +309,10 @@ class _$AllergenLogStateImpl implements _AllergenLogState {
     const DeepCollectionEquality().hash(_symptoms),
     severity,
     notes,
+    photoPath,
     isLoading,
     isSaved,
-    isDuplicateLog,
+    photoUploadFailed,
     errorMessage,
   );
 
@@ -311,20 +331,21 @@ class _$AllergenLogStateImpl implements _AllergenLogState {
 abstract class _AllergenLogState implements AllergenLogState {
   const factory _AllergenLogState({
     final EmojiTaste? taste,
-    final bool? hadReaction,
+    final bool hadReaction,
     final List<String> symptoms,
     final ReactionSeverity? severity,
     final String? notes,
+    final String? photoPath,
     final bool isLoading,
     final bool isSaved,
-    final bool isDuplicateLog,
+    final bool photoUploadFailed,
     final String? errorMessage,
   }) = _$AllergenLogStateImpl;
 
   @override
   EmojiTaste? get taste;
   @override
-  bool? get hadReaction;
+  bool get hadReaction;
   @override
   List<String> get symptoms;
   @override
@@ -332,11 +353,13 @@ abstract class _AllergenLogState implements AllergenLogState {
   @override
   String? get notes;
   @override
+  String? get photoPath;
+  @override
   bool get isLoading;
   @override
   bool get isSaved;
   @override
-  bool get isDuplicateLog;
+  bool get photoUploadFailed;
   @override
   String? get errorMessage;
 

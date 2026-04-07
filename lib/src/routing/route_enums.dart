@@ -24,19 +24,9 @@ enum AppRoute {
   mealPlan(path: '/home/meal', name: 'meal-plan'),
   shoppingList(path: '/home/shopping-list', name: 'shopping-list'),
   recipeLibrary(path: '/home/recipe', name: 'recipe-library'),
-  allergenTracker(
-    path: '/home/allergen/tracker',
-    name: 'allergen-tracker',
-  ),
-  allergenDetail(
-    path: '/home/allergen/:allergenKey',
-    name: 'allergen-detail',
-  ),
-  allergenComplete(
-    path: '/home/allergen/complete',
-    name: 'allergen-complete',
-  ),
-  reactionLog(path: '/home/allergen/reaction-log', name: 'reaction-log'),
+  allergenTracker(path: '/home/allergen/tracker', name: 'allergen-tracker'),
+  allergenDetail(path: '/home/allergen/:allergenKey', name: 'allergen-detail'),
+  allergenComplete(path: '/home/allergen/complete', name: 'allergen-complete'),
   recipeDetail(path: '/home/recipes/:recipeId', name: 'recipe-detail'),
   profile(path: '/home/profile', name: 'profile'),
   profileEdit(path: '/home/profile/edit', name: 'profile-edit');
@@ -47,8 +37,9 @@ enum AppRoute {
   final String name;
 }
 
-final GlobalKey<NavigatorState> rootNavigatorKey =
-    GlobalKey<NavigatorState>(debugLabel: 'root');
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>(
+  debugLabel: 'root',
+);
 final GlobalKey<NavigatorState> shellNavigatorHomeKey =
     GlobalKey<NavigatorState>(debugLabel: 'shellHome');
 final GlobalKey<NavigatorState> shellNavigatorMealKey =

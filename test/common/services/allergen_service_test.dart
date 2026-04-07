@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:nibbles/src/common/data/repositories/allergen_repository.dart';
+import 'package:nibbles/src/common/data/repositories/storage_repository.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/domain/entities/allergen.dart';
@@ -14,6 +15,8 @@ import 'package:nibbles/src/common/domain/enums/reaction_severity.dart';
 import 'package:nibbles/src/common/services/allergen_service.dart';
 
 class MockAllergenRepository extends Mock implements AllergenRepository {}
+
+class MockStorageRepository extends Mock implements StorageRepository {}
 
 const _babyId = 'baby-001';
 const _peanutKey = 'peanut';
@@ -29,12 +32,7 @@ final _allergens = [
     sequenceOrder: 4,
     emoji: '🌰',
   ),
-  const Allergen(
-    key: 'sesame',
-    name: 'Sesame',
-    sequenceOrder: 5,
-    emoji: '🫘',
-  ),
+  const Allergen(key: 'sesame', name: 'Sesame', sequenceOrder: 5, emoji: '🫘'),
   const Allergen(key: 'soy', name: 'Soy', sequenceOrder: 6, emoji: '🫘'),
   const Allergen(key: 'wheat', name: 'Wheat', sequenceOrder: 7, emoji: '🌾'),
   const Allergen(key: 'fish', name: 'Fish', sequenceOrder: 8, emoji: '🐟'),
@@ -50,33 +48,32 @@ AllergenLog _makeLog({
   String id = 'log-1',
   String allergenKey = _peanutKey,
   bool hadReaction = false,
-}) =>
-    AllergenLog(
-      id: id,
-      babyId: _babyId,
-      allergenKey: allergenKey,
-      emojiTaste: EmojiTaste.love,
-      hadReaction: hadReaction,
-      logDate: _now,
-      createdAt: _now,
-    );
+}) => AllergenLog(
+  id: id,
+  babyId: _babyId,
+  allergenKey: allergenKey,
+  emojiTaste: EmojiTaste.love,
+  hadReaction: hadReaction,
+  logDate: _now,
+  createdAt: _now,
+);
 
 AllergenProgramState _makeProgramState({
   String currentAllergenKey = _peanutKey,
   int currentSequenceOrder = 1,
-}) =>
-    AllergenProgramState(
-      id: 'ps-1',
-      babyId: _babyId,
-      currentAllergenKey: currentAllergenKey,
-      currentSequenceOrder: currentSequenceOrder,
-      status: AllergenProgramStatus.inProgress,
-      createdAt: _now,
-      updatedAt: _now,
-    );
+}) => AllergenProgramState(
+  id: 'ps-1',
+  babyId: _babyId,
+  currentAllergenKey: currentAllergenKey,
+  currentSequenceOrder: currentSequenceOrder,
+  status: AllergenProgramStatus.inProgress,
+  createdAt: _now,
+  updatedAt: _now,
+);
 
 void main() {
   late MockAllergenRepository mockRepo;
+  late MockStorageRepository mockStorage;
   late AllergenService sut;
 
   setUpAll(() {
@@ -95,7 +92,8 @@ void main() {
 
   setUp(() {
     mockRepo = MockAllergenRepository();
-    sut = AllergenService(mockRepo);
+    mockStorage = MockStorageRepository();
+    sut = AllergenService(mockRepo, mockStorage);
   });
 
   // ---------------------------------------------------------------------------
@@ -105,10 +103,9 @@ void main() {
   group('AllergenService.saveAllergenLog', () {
     test('success path: log inserted, returns AllergenLog', () async {
       final saved = _makeLog(id: 'log-saved');
-      when(() => mockRepo.hasLogForToday(any(), any(), any()))
-          .thenAnswer((_) async => const Result.success(false));
-      when(() => mockRepo.saveLog(any()))
-          .thenAnswer((_) async => Result.success(saved));
+      when(
+        () => mockRepo.saveLog(any()),
+      ).thenAnswer((_) async => Result.success(saved));
 
       final result = await sut.saveAllergenLog(
         babyId: _babyId,
@@ -124,35 +121,12 @@ void main() {
     });
 
     test(
-      'same-day duplicate: returns DuplicateLogException, no insert called',
-      () async {
-        when(() => mockRepo.hasLogForToday(any(), any(), any()))
-            .thenAnswer((_) async => const Result.success(true));
-        when(() => mockRepo.getAllergens())
-            .thenAnswer((_) async => Result.success(_allergens));
-
-        final result = await sut.saveAllergenLog(
-          babyId: _babyId,
-          allergenKey: _peanutKey,
-          emojiTaste: EmojiTaste.love,
-          hadReaction: false,
-        );
-
-        expect(result.isFailure, isTrue);
-        expect(result.errorOrNull, isA<DuplicateLogException>());
-        expect(result.errorOrNull!.message, contains('Peanut'));
-        verifyNever(() => mockRepo.saveLog(any()));
-      },
-    );
-
-    test(
       'hadReaction=true without reactionDetail: saves log, no detail insert',
       () async {
         final saved = _makeLog(id: 'log-react', hadReaction: true);
-        when(() => mockRepo.hasLogForToday(any(), any(), any()))
-            .thenAnswer((_) async => const Result.success(false));
-        when(() => mockRepo.saveLog(any()))
-            .thenAnswer((_) async => Result.success(saved));
+        when(
+          () => mockRepo.saveLog(any()),
+        ).thenAnswer((_) async => Result.success(saved));
 
         final result = await sut.saveAllergenLog(
           babyId: _babyId,
@@ -180,12 +154,12 @@ void main() {
           createdAt: _now,
         );
         final savedDetail = detail.copyWith(id: 'det-1', logId: 'log-react');
-        when(() => mockRepo.hasLogForToday(any(), any(), any()))
-            .thenAnswer((_) async => const Result.success(false));
-        when(() => mockRepo.saveLog(any()))
-            .thenAnswer((_) async => Result.success(savedLog));
-        when(() => mockRepo.saveReactionDetail(any()))
-            .thenAnswer((_) async => Result.success(savedDetail));
+        when(
+          () => mockRepo.saveLog(any()),
+        ).thenAnswer((_) async => Result.success(savedLog));
+        when(
+          () => mockRepo.saveReactionDetail(any()),
+        ).thenAnswer((_) async => Result.success(savedDetail));
 
         final result = await sut.saveAllergenLog(
           babyId: _babyId,
@@ -222,11 +196,7 @@ void main() {
     });
 
     test('3 logs, all no reaction → safe (never completed)', () {
-      final logs = [
-        _makeLog(id: 'l1'),
-        _makeLog(id: 'l2'),
-        _makeLog(id: 'l3'),
-      ];
+      final logs = [_makeLog(id: 'l1'), _makeLog(id: 'l2'), _makeLog(id: 'l3')];
       final status = sut.deriveStatus(logs);
       expect(status, AllergenStatus.safe);
       // Canonical rule: passed allergens are `safe`, NEVER `completed`.
@@ -237,10 +207,7 @@ void main() {
     });
 
     test('any log with hadReaction=true → flagged', () {
-      final logs = [
-        _makeLog(id: 'l1'),
-        _makeLog(id: 'l2', hadReaction: true),
-      ];
+      final logs = [_makeLog(id: 'l1'), _makeLog(id: 'l2', hadReaction: true)];
       expect(sut.deriveStatus(logs), AllergenStatus.flagged);
     });
 
@@ -258,10 +225,12 @@ void main() {
 
   group('AllergenService.getAllergenBoardSummary', () {
     test('returns 9 items in sequence order', () async {
-      when(() => mockRepo.getAllergens())
-          .thenAnswer((_) async => Result.success(_allergens));
-      when(() => mockRepo.getLogs(any()))
-          .thenAnswer((_) async => const Result.success([]));
+      when(
+        () => mockRepo.getAllergens(),
+      ).thenAnswer((_) async => Result.success(_allergens));
+      when(
+        () => mockRepo.getLogs(any()),
+      ).thenAnswer((_) async => const Result.success([]));
 
       final result = await sut.getAllergenBoardSummary(_babyId);
 
@@ -276,10 +245,12 @@ void main() {
       final peanutLog = _makeLog(id: 'log-p1');
       final eggLog = _makeLog(id: 'log-e1', allergenKey: 'egg');
 
-      when(() => mockRepo.getAllergens())
-          .thenAnswer((_) async => Result.success(_allergens));
-      when(() => mockRepo.getLogs(any()))
-          .thenAnswer((_) async => Result.success([peanutLog, eggLog]));
+      when(
+        () => mockRepo.getAllergens(),
+      ).thenAnswer((_) async => Result.success(_allergens));
+      when(
+        () => mockRepo.getLogs(any()),
+      ).thenAnswer((_) async => Result.success([peanutLog, eggLog]));
 
       final result = await sut.getAllergenBoardSummary(_babyId);
 
@@ -309,45 +280,52 @@ void main() {
   // ---------------------------------------------------------------------------
 
   group('AllergenService.advanceToNextAllergen', () {
-    test('advances currentAllergenKey to next in sequence (peanut → egg)',
-        () async {
-      when(() => mockRepo.getProgramState(any()))
-          .thenAnswer((_) async => Result.success(_makeProgramState()));
-      when(() => mockRepo.getAllergens())
-          .thenAnswer((_) async => Result.success(_allergens));
-      when(() => mockRepo.advanceProgramState(any(), any(), any()))
-          .thenAnswer((_) async => const Result.success(null));
+    test(
+      'advances currentAllergenKey to next in sequence (peanut → egg)',
+      () async {
+        when(
+          () => mockRepo.getProgramState(any()),
+        ).thenAnswer((_) async => Result.success(_makeProgramState()));
+        when(
+          () => mockRepo.getAllergens(),
+        ).thenAnswer((_) async => Result.success(_allergens));
+        when(
+          () => mockRepo.advanceProgramState(any(), any(), any()),
+        ).thenAnswer((_) async => const Result.success(null));
 
-      final result = await sut.advanceToNextAllergen(_babyId);
+        final result = await sut.advanceToNextAllergen(_babyId);
 
-      expect(result.isSuccess, isTrue);
-      verify(() => mockRepo.advanceProgramState(_babyId, 'egg', 2)).called(1);
-      verifyNever(() => mockRepo.completeProgramState(any()));
-    });
+        expect(result.isSuccess, isTrue);
+        verify(() => mockRepo.advanceProgramState(_babyId, 'egg', 2)).called(1);
+        verifyNever(() => mockRepo.completeProgramState(any()));
+      },
+    );
 
-    test('after Shellfish (last allergen) → calls completeProgramState',
-        () async {
-      when(() => mockRepo.getProgramState(any())).thenAnswer(
-        (_) async => Result.success(
-          _makeProgramState(
-            currentAllergenKey: 'shellfish',
-            currentSequenceOrder: 9,
+    test(
+      'after Shellfish (last allergen) → calls completeProgramState',
+      () async {
+        when(() => mockRepo.getProgramState(any())).thenAnswer(
+          (_) async => Result.success(
+            _makeProgramState(
+              currentAllergenKey: 'shellfish',
+              currentSequenceOrder: 9,
+            ),
           ),
-        ),
-      );
-      when(() => mockRepo.getAllergens())
-          .thenAnswer((_) async => Result.success(_allergens));
-      when(() => mockRepo.completeProgramState(any()))
-          .thenAnswer((_) async => const Result.success(null));
+        );
+        when(
+          () => mockRepo.getAllergens(),
+        ).thenAnswer((_) async => Result.success(_allergens));
+        when(
+          () => mockRepo.completeProgramState(any()),
+        ).thenAnswer((_) async => const Result.success(null));
 
-      final result = await sut.advanceToNextAllergen(_babyId);
+        final result = await sut.advanceToNextAllergen(_babyId);
 
-      expect(result.isSuccess, isTrue);
-      verify(() => mockRepo.completeProgramState(_babyId)).called(1);
-      verifyNever(
-        () => mockRepo.advanceProgramState(any(), any(), any()),
-      );
-    });
+        expect(result.isSuccess, isTrue);
+        verify(() => mockRepo.completeProgramState(_babyId)).called(1);
+        verifyNever(() => mockRepo.advanceProgramState(any(), any(), any()));
+      },
+    );
   });
 
   // ---------------------------------------------------------------------------
@@ -356,8 +334,9 @@ void main() {
 
   group('AllergenService.completeProgram', () {
     test('delegates to completeProgramState on repository', () async {
-      when(() => mockRepo.completeProgramState(any()))
-          .thenAnswer((_) async => const Result.success(null));
+      when(
+        () => mockRepo.completeProgramState(any()),
+      ).thenAnswer((_) async => const Result.success(null));
 
       final result = await sut.completeProgram(_babyId);
 

@@ -5,7 +5,6 @@ import 'package:nibbles/src/common/services/auth_service.dart';
 import 'package:nibbles/src/common/services/local_flag_service.dart';
 import 'package:nibbles/src/features/allergen/complete/allergen_complete_screen.dart';
 import 'package:nibbles/src/features/allergen/detail/allergen_detail_screen.dart';
-import 'package:nibbles/src/features/allergen/reaction_log/reaction_log_screen.dart';
 import 'package:nibbles/src/features/allergen/tracker/allergen_tracker_screen.dart';
 import 'package:nibbles/src/features/auth/forgot_password/forgot_password_screen.dart';
 import 'package:nibbles/src/features/auth/login/login_screen.dart';
@@ -71,7 +70,12 @@ GoRouter goRouter(Ref ref) {
         return null;
       }
 
-      // 3. Logged in — complete readiness if not done.
+      // 3. Just signed in from an auth screen — go through splash to seed
+      //    local flags from Supabase before checking onboarding state.
+      final justSignedInPaths = {AppRoute.login.path, AppRoute.register.path};
+      if (justSignedInPaths.contains(location)) return AppRoute.splash.path;
+
+      // 4. Logged in — complete readiness if not done.
       if (!readinessDone) {
         if (location != AppRoute.onboardingReadiness.path) {
           return AppRoute.onboardingReadiness.path;
@@ -79,7 +83,7 @@ GoRouter goRouter(Ref ref) {
         return null;
       }
 
-      // 4. Readiness done — complete baby setup if not done.
+      // 5. Readiness done — complete baby setup if not done.
       if (!babySetupDone) {
         if (location != AppRoute.onboardingBabySetup.path) {
           return AppRoute.onboardingBabySetup.path;
@@ -183,12 +187,6 @@ GoRouter goRouter(Ref ref) {
                     builder: (context, state) => const AllergenCompleteScreen(),
                   ),
                   GoRoute(
-                    path: 'allergen/reaction-log',
-                    name: AppRoute.reactionLog.name,
-                    parentNavigatorKey: rootNavigatorKey,
-                    builder: (context, state) => const ReactionLogScreen(),
-                  ),
-                  GoRoute(
                     path: 'recipes/:recipeId',
                     name: AppRoute.recipeDetail.name,
                     parentNavigatorKey: rootNavigatorKey,
@@ -206,8 +204,7 @@ GoRouter goRouter(Ref ref) {
                         path: 'edit',
                         name: AppRoute.profileEdit.name,
                         parentNavigatorKey: rootNavigatorKey,
-                        builder: (context, state) =>
-                            const ProfileEditScreen(),
+                        builder: (context, state) => const ProfileEditScreen(),
                       ),
                     ],
                   ),

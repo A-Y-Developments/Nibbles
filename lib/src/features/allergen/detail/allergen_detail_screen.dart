@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
+import 'package:nibbles/src/common/domain/entities/reaction_detail.dart';
 import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
+import 'package:nibbles/src/common/domain/enums/reaction_severity.dart';
 import 'package:nibbles/src/features/allergen/detail/allergen_detail_controller.dart';
 import 'package:nibbles/src/features/allergen/detail/allergen_detail_state.dart';
 import 'package:nibbles/src/features/allergen/detail/widgets/gp_referral_block.dart';
 import 'package:nibbles/src/features/allergen/detail/widgets/log_entry_card.dart';
 import 'package:nibbles/src/features/allergen/detail/widgets/timing_guidance_card.dart';
+import 'package:nibbles/src/routing/route_enums.dart';
 
 class AllergenDetailScreen extends ConsumerWidget {
   const AllergenDetailScreen({required this.allergenKey, super.key});
@@ -16,8 +20,7 @@ class AllergenDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final asyncState =
-        ref.watch(allergenDetailControllerProvider(allergenKey));
+    final asyncState = ref.watch(allergenDetailControllerProvider(allergenKey));
 
     return asyncState.when(
       loading: () => Scaffold(
@@ -40,14 +43,11 @@ class AllergenDetailScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: AppSizes.md),
                 Text(
-                  err is AppException
-                      ? err.message
-                      : 'Something went wrong.',
+                  err is AppException ? err.message : 'Something went wrong.',
                   textAlign: TextAlign.center,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyLarge
-                      ?.copyWith(color: AppColors.subtext),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyLarge?.copyWith(color: AppColors.subtext),
                 ),
                 const SizedBox(height: AppSizes.lg),
                 FilledButton(
@@ -61,19 +61,14 @@ class AllergenDetailScreen extends ConsumerWidget {
           ),
         ),
       ),
-      data: (state) => _AllergenDetailView(
-        state: state,
-        allergenKey: allergenKey,
-      ),
+      data: (state) =>
+          _AllergenDetailView(state: state, allergenKey: allergenKey),
     );
   }
 }
 
 class _AllergenDetailView extends ConsumerWidget {
-  const _AllergenDetailView({
-    required this.state,
-    required this.allergenKey,
-  });
+  const _AllergenDetailView({required this.state, required this.allergenKey});
 
   final AllergenDetailState state;
   final String allergenKey;
@@ -83,11 +78,10 @@ class _AllergenDetailView extends ConsumerWidget {
     final textTheme = Theme.of(context).textTheme;
     final isCurrent =
         state.programState.currentAllergenKey == state.allergen.key;
-    final showProceed = state.status == AllergenStatus.safe ||
+    final showProceed =
+        state.status == AllergenStatus.safe ||
         state.status == AllergenStatus.flagged;
-    final showLogToday = isCurrent && !showProceed && !state.hasLoggedToday;
-    final showAlreadyLogged =
-        isCurrent && !showProceed && state.hasLoggedToday;
+    final showLogToday = isCurrent && !showProceed;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -97,10 +91,7 @@ class _AllergenDetailView extends ConsumerWidget {
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              state.allergen.emoji,
-              style: const TextStyle(fontSize: 22),
-            ),
+            Text(state.allergen.emoji, style: const TextStyle(fontSize: 22)),
             const SizedBox(width: AppSizes.sm),
             Text(state.allergen.name),
           ],
@@ -115,8 +106,10 @@ class _AllergenDetailView extends ConsumerWidget {
                 vertical: AppSizes.pagePaddingV,
               ),
               children: [
-                // Day X/3 progress chip
-                _DayProgressChip(logCount: state.logs.length),
+                // Day X/3 progress chip — only count clean (no-reaction) logs.
+                _DayProgressChip(
+                  logCount: state.logs.where((l) => !l.hadReaction).length,
+                ),
                 const SizedBox(height: AppSizes.lg),
 
                 // Log history
@@ -124,13 +117,14 @@ class _AllergenDetailView extends ConsumerWidget {
                   Text('Your logs', style: textTheme.titleMedium),
                   const SizedBox(height: AppSizes.sm),
                   ...state.logs.asMap().entries.map(
-                        (e) => LogEntryCard(
-                          key: ValueKey(e.value.id),
-                          log: e.value,
-                          dayNumber: e.key + 1,
-                          reactionDetail: state.reactionDetails[e.value.id],
-                        ),
-                      ),
+                    (e) => LogEntryCard(
+                      key: ValueKey(e.value.id),
+                      log: e.value,
+                      dayNumber: e.key + 1,
+                      reactionDetail: state.reactionDetails[e.value.id],
+                      signedPhotoUrl: state.signedPhotoUrls[e.value.id],
+                    ),
+                  ),
                   const SizedBox(height: AppSizes.lg),
                 ],
 
@@ -166,7 +160,6 @@ class _AllergenDetailView extends ConsumerWidget {
             state: state,
             allergenKey: allergenKey,
             showLogToday: showLogToday,
-            showAlreadyLogged: showAlreadyLogged,
             showProceed: showProceed,
           ),
         ],
@@ -182,8 +175,7 @@ class _DayProgressChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final label =
-        logCount >= 3 ? 'Day 3/3 — Complete' : 'Day $logCount/3';
+    final label = logCount >= 3 ? 'Log 3/3 — Complete' : 'Log $logCount/3';
     return Row(
       children: [
         Container(
@@ -197,17 +189,13 @@ class _DayProgressChip extends StatelessWidget {
                 : AppColors.surfaceVariant,
             borderRadius: BorderRadius.circular(AppSizes.radiusFull),
             border: Border.all(
-              color: logCount >= 3
-                  ? AppColors.allergenSafe
-                  : AppColors.divider,
+              color: logCount >= 3 ? AppColors.allergenSafe : AppColors.divider,
             ),
           ),
           child: Text(
             label,
             style: textTheme.labelMedium?.copyWith(
-              color: logCount >= 3
-                  ? AppColors.allergenSafe
-                  : AppColors.subtext,
+              color: logCount >= 3 ? AppColors.allergenSafe : AppColors.subtext,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -219,12 +207,90 @@ class _DayProgressChip extends StatelessWidget {
 
 class _ReactionSummaryTile extends StatelessWidget {
   const _ReactionSummaryTile({required this.detail, super.key});
-  final dynamic detail;
+  final ReactionDetail? detail;
+
+  Color _severityColor(ReactionSeverity severity) => switch (severity) {
+    ReactionSeverity.mild => AppColors.warning,
+    ReactionSeverity.moderate => AppColors.secondary,
+    ReactionSeverity.severe => AppColors.error,
+  };
+
+  String _severityLabel(ReactionSeverity severity) => switch (severity) {
+    ReactionSeverity.mild => 'Mild',
+    ReactionSeverity.moderate => 'Moderate',
+    ReactionSeverity.severe => 'Severe',
+  };
 
   @override
   Widget build(BuildContext context) {
     if (detail == null) return const SizedBox.shrink();
-    return const SizedBox.shrink();
+    final d = detail!;
+    final textTheme = Theme.of(context).textTheme;
+    final color = _severityColor(d.severity);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSizes.sm),
+      child: Container(
+        padding: const EdgeInsets.all(AppSizes.cardPadding),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Severity badge
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSizes.sm,
+                vertical: 3,
+              ),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+              ),
+              child: Text(
+                _severityLabel(d.severity),
+                style: textTheme.labelSmall?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            if (d.symptoms.isNotEmpty) ...[
+              const SizedBox(height: AppSizes.sm),
+              Wrap(
+                spacing: AppSizes.xs,
+                runSpacing: AppSizes.xs,
+                children: d.symptoms
+                    .map(
+                      (s) => Chip(
+                        label: Text(s),
+                        labelStyle: textTheme.labelSmall,
+                        padding: EdgeInsets.zero,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        backgroundColor: AppColors.surfaceVariant,
+                        side: BorderSide.none,
+                      ),
+                    )
+                    .toList(),
+              ),
+            ],
+            if (d.notes != null && d.notes!.isNotEmpty) ...[
+              const SizedBox(height: AppSizes.sm),
+              Text(
+                d.notes!,
+                style: textTheme.bodySmall?.copyWith(
+                  color: AppColors.subtext,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -233,14 +299,12 @@ class _CtaSection extends ConsumerWidget {
     required this.state,
     required this.allergenKey,
     required this.showLogToday,
-    required this.showAlreadyLogged,
     required this.showProceed,
   });
 
   final AllergenDetailState state;
   final String allergenKey;
   final bool showLogToday;
-  final bool showAlreadyLogged;
   final bool showProceed;
 
   @override
@@ -271,24 +335,6 @@ class _CtaSection extends ConsumerWidget {
               },
               child: const Text('Log Today'),
             )
-          else if (showAlreadyLogged)
-            Container(
-              padding: const EdgeInsets.symmetric(
-                vertical: AppSizes.md,
-                horizontal: AppSizes.cardPadding,
-              ),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceVariant,
-                borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-              ),
-              child: Text(
-                "You've already logged ${state.allergen.name} today. "
-                'Come back tomorrow for Day ${state.logs.length + 1}.',
-                textAlign: TextAlign.center,
-                style: textTheme.bodyMedium
-                    ?.copyWith(color: AppColors.subtext),
-              ),
-            )
           else if (showProceed) ...[
             if (state.status == AllergenStatus.flagged)
               Padding(
@@ -313,13 +359,34 @@ class _CtaSection extends ConsumerWidget {
               ),
             FilledButton(
               key: const Key('proceed_button'),
-              onPressed: () {
-                // TODO(NIB-25): open AL-07 confirmation bottom sheet
-              },
+              onPressed: () => _handleProceed(context, ref),
               child: const Text('Proceed to Next Allergen'),
             ),
           ],
         ],
+      ),
+    );
+  }
+
+  Future<void> _handleProceed(BuildContext context, WidgetRef ref) async {
+    final result = await ref
+        .read(allergenDetailControllerProvider(allergenKey).notifier)
+        .advanceToNext();
+
+    if (!context.mounted) return;
+    result.when(
+      success: (nextKey) {
+        if (nextKey == null) {
+          context.goNamed(AppRoute.allergenComplete.name);
+        } else {
+          context.goNamed(
+            AppRoute.allergenDetail.name,
+            pathParameters: {'allergenKey': nextKey},
+          );
+        }
+      },
+      failure: (_) => ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Couldn't advance. Please try again.")),
       ),
     );
   }

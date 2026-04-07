@@ -24,6 +24,7 @@ mixin _$AllergenLog {
   bool get hadReaction => throw _privateConstructorUsedError;
   DateTime get logDate => throw _privateConstructorUsedError;
   DateTime get createdAt => throw _privateConstructorUsedError;
+  String? get photoUrl => throw _privateConstructorUsedError;
 
   /// Create a copy of AllergenLog
   /// with the given fields replaced by the non-null parameter values.
@@ -47,6 +48,7 @@ abstract class $AllergenLogCopyWith<$Res> {
     bool hadReaction,
     DateTime logDate,
     DateTime createdAt,
+    String? photoUrl,
   });
 }
 
@@ -72,6 +74,7 @@ class _$AllergenLogCopyWithImpl<$Res, $Val extends AllergenLog>
     Object? hadReaction = null,
     Object? logDate = null,
     Object? createdAt = null,
+    Object? photoUrl = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -103,6 +106,10 @@ class _$AllergenLogCopyWithImpl<$Res, $Val extends AllergenLog>
                 ? _value.createdAt
                 : createdAt // ignore: cast_nullable_to_non_nullable
                       as DateTime,
+            photoUrl: freezed == photoUrl
+                ? _value.photoUrl
+                : photoUrl // ignore: cast_nullable_to_non_nullable
+                      as String?,
           )
           as $Val,
     );
@@ -126,6 +133,7 @@ abstract class _$$AllergenLogImplCopyWith<$Res>
     bool hadReaction,
     DateTime logDate,
     DateTime createdAt,
+    String? photoUrl,
   });
 }
 
@@ -150,6 +158,7 @@ class __$$AllergenLogImplCopyWithImpl<$Res>
     Object? hadReaction = null,
     Object? logDate = null,
     Object? createdAt = null,
+    Object? photoUrl = freezed,
   }) {
     return _then(
       _$AllergenLogImpl(
@@ -181,6 +190,10 @@ class __$$AllergenLogImplCopyWithImpl<$Res>
             ? _value.createdAt
             : createdAt // ignore: cast_nullable_to_non_nullable
                   as DateTime,
+        photoUrl: freezed == photoUrl
+            ? _value.photoUrl
+            : photoUrl // ignore: cast_nullable_to_non_nullable
+                  as String?,
       ),
     );
   }
@@ -197,6 +210,7 @@ class _$AllergenLogImpl implements _AllergenLog {
     required this.hadReaction,
     required this.logDate,
     required this.createdAt,
+    this.photoUrl,
   });
 
   @override
@@ -213,10 +227,12 @@ class _$AllergenLogImpl implements _AllergenLog {
   final DateTime logDate;
   @override
   final DateTime createdAt;
+  @override
+  final String? photoUrl;
 
   @override
   String toString() {
-    return 'AllergenLog(id: $id, babyId: $babyId, allergenKey: $allergenKey, emojiTaste: $emojiTaste, hadReaction: $hadReaction, logDate: $logDate, createdAt: $createdAt)';
+    return 'AllergenLog(id: $id, babyId: $babyId, allergenKey: $allergenKey, emojiTaste: $emojiTaste, hadReaction: $hadReaction, logDate: $logDate, createdAt: $createdAt, photoUrl: $photoUrl)';
   }
 
   @override
@@ -234,7 +250,9 @@ class _$AllergenLogImpl implements _AllergenLog {
                 other.hadReaction == hadReaction) &&
             (identical(other.logDate, logDate) || other.logDate == logDate) &&
             (identical(other.createdAt, createdAt) ||
-                other.createdAt == createdAt));
+                other.createdAt == createdAt) &&
+            (identical(other.photoUrl, photoUrl) ||
+                other.photoUrl == photoUrl));
   }
 
   @override
@@ -247,6 +265,7 @@ class _$AllergenLogImpl implements _AllergenLog {
     hadReaction,
     logDate,
     createdAt,
+    photoUrl,
   );
 
   /// Create a copy of AllergenLog
@@ -267,6 +286,7 @@ abstract class _AllergenLog implements AllergenLog {
     required final bool hadReaction,
     required final DateTime logDate,
     required final DateTime createdAt,
+    final String? photoUrl,
   }) = _$AllergenLogImpl;
 
   @override
@@ -283,6 +303,8 @@ abstract class _AllergenLog implements AllergenLog {
   DateTime get logDate;
   @override
   DateTime get createdAt;
+  @override
+  String? get photoUrl;
 
   /// Create a copy of AllergenLog
   /// with the given fields replaced by the non-null parameter values.
