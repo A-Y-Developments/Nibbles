@@ -24,11 +24,15 @@ abstract interface class BabyProfileRepository {
 
 class BabyProfileRepositoryImpl implements BabyProfileRepository {
   BabyProfileRepositoryImpl({SupabaseClient? supabaseClient})
-      : _supabase = supabaseClient ?? Supabase.instance.client;
+    : _supabase = supabaseClient ?? Supabase.instance.client;
 
   final SupabaseClient _supabase;
 
-  String get _userId => _supabase.auth.currentUser!.id;
+  String get _userId {
+    final uid = _supabase.auth.currentUser?.id;
+    if (uid == null) throw const UnauthorizedException();
+    return uid;
+  }
 
   @override
   Future<Result<Baby>> createBaby(
@@ -49,6 +53,8 @@ class BabyProfileRepositoryImpl implements BabyProfileRepository {
           .select()
           .single();
       return Result.success(BabyResponse.fromJson(data).toDomain());
+    } on AppException catch (e) {
+      return Result.failure(e);
     } on PostgrestException catch (e) {
       return Result.failure(ServerException(e.message));
     } on Object {
@@ -136,5 +142,4 @@ BabyProfileRepository babyProfileRepository(
   // Specific *Ref types are deprecated; will be Ref in riverpod_generator 3.0.
   // ignore: deprecated_member_use_from_same_package
   BabyProfileRepositoryRef ref,
-) =>
-    BabyProfileRepositoryImpl();
+) => BabyProfileRepositoryImpl();

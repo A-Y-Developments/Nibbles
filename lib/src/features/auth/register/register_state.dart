@@ -16,6 +16,5 @@ class RegisterState with _$RegisterState {
 
   const RegisterState._();
 
-  bool get isValid =>
-      name.isNotEmpty && email.isValid && password.isValid;
+  bool get isValid => name.isNotEmpty && email.isValid && password.isValid;
 }

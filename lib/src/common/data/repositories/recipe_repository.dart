@@ -31,8 +31,8 @@ class RecipeRepositoryImpl implements RecipeRepository {
   RecipeRepositoryImpl({
     SupabaseClient? supabaseClient,
     HiveService? hiveService,
-  })  : _supabase = supabaseClient ?? Supabase.instance.client,
-        _hive = hiveService ?? HiveService();
+  }) : _supabase = supabaseClient ?? Supabase.instance.client,
+       _hive = hiveService ?? HiveService();
 
   final SupabaseClient _supabase;
   final HiveService _hive;
@@ -73,8 +73,7 @@ class RecipeRepositoryImpl implements RecipeRepository {
     if (allResult.isFailure) {
       return Result.failure(allResult.errorOrNull!);
     }
-    final filtered = allResult
-        .dataOrNull!
+    final filtered = allResult.dataOrNull!
         .where((r) => r.allergenTags.contains(allergenKey))
         .toList();
     return Result.success(filtered);
@@ -116,10 +115,7 @@ class RecipeRepositoryImpl implements RecipeRepository {
 
   Future<Result<List<Recipe>>> _fetchFromSupabaseAndCache() async {
     try {
-      final data = await _supabase
-          .from('recipes')
-          .select()
-          .order('title');
+      final data = await _supabase.from('recipes').select().order('title');
 
       final recipes = (data as List<dynamic>)
           .cast<Map<String, dynamic>>()
@@ -141,10 +137,7 @@ class RecipeRepositoryImpl implements RecipeRepository {
 
   Future<void> _refreshCache() async {
     try {
-      final data = await _supabase
-          .from('recipes')
-          .select()
-          .order('title');
+      final data = await _supabase.from('recipes').select().order('title');
 
       final recipes = (data as List<dynamic>)
           .cast<Map<String, dynamic>>()
@@ -161,8 +154,8 @@ class RecipeRepositoryImpl implements RecipeRepository {
   }
 
   Recipe _recipeFromRow(Map<String, dynamic> row) {
-    final rawIngredients =
-        (row['ingredients'] as List<dynamic>).cast<Map<String, dynamic>>();
+    final rawIngredients = (row['ingredients'] as List<dynamic>)
+        .cast<Map<String, dynamic>>();
     return Recipe(
       id: row['id'] as String,
       title: row['title'] as String,
@@ -170,7 +163,7 @@ class RecipeRepositoryImpl implements RecipeRepository {
       allergenTags: (row['allergen_tags'] as List<dynamic>).cast<String>(),
       ingredients: rawIngredients.map(Ingredient.fromJson).toList(),
       steps: (row['steps'] as List<dynamic>).cast<String>(),
-      howToServe: row['how_to_serve'] as String,
+      howToServe: row['serving_guidance'] as String,
       notes: row['notes'] as String?,
       thumbnailUrl: row['thumbnail_url'] as String?,
     );
@@ -182,5 +175,4 @@ RecipeRepository recipeRepository(
   // Specific *Ref types are deprecated; will be Ref in riverpod_generator 3.0.
   // ignore: deprecated_member_use_from_same_package
   RecipeRepositoryRef ref,
-) =>
-    RecipeRepositoryImpl();
+) => RecipeRepositoryImpl();

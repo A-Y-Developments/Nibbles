@@ -37,18 +37,37 @@ const _allergenSequence = [
 class RecipeLibraryController extends _$RecipeLibraryController {
   @override
   Future<RecipeLibraryState> build(String babyId) async {
-    final (recipesResult, programResult) = await (
-      ref.read(recipeServiceProvider).getFilteredRecipes(babyId),
+    final recipeService = ref.read(recipeServiceProvider);
+    final (recipesResult, programResult, flaggedResult) = await (
+      recipeService.getAllRecipes(babyId),
       ref.read(allergenServiceProvider).getProgramState(babyId),
+      recipeService.getFlaggedAllergenKeys(babyId),
     ).wait;
 
     if (recipesResult.isFailure) throw recipesResult.errorOrNull!;
     if (programResult.isFailure) throw programResult.errorOrNull!;
+    if (flaggedResult.isFailure) throw flaggedResult.errorOrNull!;
 
     final recipes = recipesResult.dataOrNull!;
     final currentKey = programResult.dataOrNull!.currentAllergenKey;
+    final flagged = flaggedResult.dataOrNull!;
 
     final sections = <RecipeSection>[];
+
+    // Helper: sort safe recipes first, flagged-allergen recipes last.
+    List<Recipe> sortByFlagged(List<Recipe> list) {
+      if (flagged.isEmpty) return list;
+      final safe = <Recipe>[];
+      final unsafe = <Recipe>[];
+      for (final r in list) {
+        if (r.allergenTags.any(flagged.contains)) {
+          unsafe.add(r);
+        } else {
+          safe.add(r);
+        }
+      }
+      return [...safe, ...unsafe];
+    }
 
     // 1. Recommendations — recipes tagged with current allergen.
     final recommendations = recipes
@@ -60,7 +79,7 @@ class RecipeLibraryController extends _$RecipeLibraryController {
       sections.add(
         RecipeSection(
           title: 'Recommendation for $name $emoji',
-          recipes: recommendations,
+          recipes: sortByFlagged(recommendations),
         ),
       );
     }
@@ -74,7 +93,9 @@ class RecipeLibraryController extends _$RecipeLibraryController {
       if (tagged.isEmpty) continue;
       final name = _allergenNames[key] ?? key;
       final emoji = AllergenEmoji.get(key);
-      sections.add(RecipeSection(title: '$name $emoji', recipes: tagged));
+      sections.add(
+        RecipeSection(title: '$name $emoji', recipes: sortByFlagged(tagged)),
+      );
     }
 
     // 3. Untagged recipes — "All Recipes".
@@ -85,7 +106,7 @@ class RecipeLibraryController extends _$RecipeLibraryController {
       sections.add(RecipeSection(title: 'All Recipes', recipes: untagged));
     }
 
-    return RecipeLibraryState(sections: sections);
+    return RecipeLibraryState(sections: sections, flaggedAllergenKeys: flagged);
   }
 
   Future<void> refresh() async {

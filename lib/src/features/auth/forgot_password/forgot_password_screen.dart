@@ -34,8 +34,7 @@ class ForgotPasswordScreen extends ConsumerWidget {
           ),
           child: state.sent
               ? _ConfirmationView(
-                  onBackToLogin: () =>
-                      context.goNamed(AppRoute.login.name),
+                  onBackToLogin: () => context.goNamed(AppRoute.login.name),
                 )
               : _InputView(
                   state: state,
@@ -70,10 +69,7 @@ class _InputView extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: AppSizes.xxl),
-        Text(
-          'Reset your password',
-          style: textTheme.headlineLarge,
-        ),
+        Text('Reset your password', style: textTheme.headlineLarge),
         const SizedBox(height: AppSizes.sm),
         Text(
           "Enter your email and we'll send you a reset link.",
@@ -86,8 +82,7 @@ class _InputView extends StatelessWidget {
           keyboardType: TextInputType.emailAddress,
           decoration: InputDecoration(
             labelText: 'Email',
-            errorText: state.email.isNotValid &&
-                    state.email.value.isNotEmpty
+            errorText: state.email.isNotValid && state.email.value.isNotEmpty
                 ? 'Please enter a valid email.'
                 : null,
           ),

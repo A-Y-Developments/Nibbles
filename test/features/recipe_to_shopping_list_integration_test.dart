@@ -41,58 +41,56 @@ const _babyId = 'baby-001';
 final _now = DateTime(2026, 3, 24);
 
 AllergenProgramState _makeProgramState() => AllergenProgramState(
-      id: 'ps-1',
-      babyId: _babyId,
-      currentAllergenKey: 'peanut',
-      currentSequenceOrder: 1,
-      status: AllergenProgramStatus.inProgress,
-      createdAt: _now,
-      updatedAt: _now,
-    );
+  id: 'ps-1',
+  babyId: _babyId,
+  currentAllergenKey: 'peanut',
+  currentSequenceOrder: 1,
+  status: AllergenProgramStatus.inProgress,
+  createdAt: _now,
+  updatedAt: _now,
+);
 
 AllergenLog _makeLog() => AllergenLog(
-      id: 'log-1',
-      babyId: _babyId,
-      allergenKey: 'peanut',
-      emojiTaste: EmojiTaste.love,
-      hadReaction: false,
-      logDate: _now,
-      createdAt: _now,
-    );
+  id: 'log-1',
+  babyId: _babyId,
+  allergenKey: 'peanut',
+  emojiTaste: EmojiTaste.love,
+  hadReaction: false,
+  logDate: _now,
+  createdAt: _now,
+);
 
 GoRouter _makeTestRouter() => GoRouter(
-      initialLocation: AppRoute.recipeLibrary.path,
-      routes: [
-        GoRoute(
-          path: AppRoute.recipeLibrary.path,
-          name: AppRoute.recipeLibrary.name,
-          builder: (_, __) => const RecipeLibraryScreen(),
-        ),
-        GoRoute(
-          path: AppRoute.recipeDetail.path,
-          name: AppRoute.recipeDetail.name,
-          builder: (_, state) => RecipeDetailScreen(
-            recipeId: state.pathParameters['recipeId'] ?? '',
-          ),
-        ),
-      ],
-    );
+  initialLocation: AppRoute.recipeLibrary.path,
+  routes: [
+    GoRoute(
+      path: AppRoute.recipeLibrary.path,
+      name: AppRoute.recipeLibrary.name,
+      builder: (_, __) => const RecipeLibraryScreen(),
+    ),
+    GoRoute(
+      path: AppRoute.recipeDetail.path,
+      name: AppRoute.recipeDetail.name,
+      builder: (_, state) =>
+          RecipeDetailScreen(recipeId: state.pathParameters['recipeId'] ?? ''),
+    ),
+  ],
+);
 
 Widget _buildSut({
   required MockRecipeService recipeService,
   required MockAllergenService allergenService,
   required MockShoppingListService shoppingListService,
   required GoRouter router,
-}) =>
-    ProviderScope(
-      overrides: [
-        currentBabyIdProvider.overrideWith((ref) async => _babyId),
-        recipeServiceProvider.overrideWithValue(recipeService),
-        allergenServiceProvider.overrideWithValue(allergenService),
-        shoppingListServiceProvider.overrideWithValue(shoppingListService),
-      ],
-      child: MaterialApp.router(routerConfig: router),
-    );
+}) => ProviderScope(
+  overrides: [
+    currentBabyIdProvider.overrideWith((ref) async => _babyId),
+    recipeServiceProvider.overrideWithValue(recipeService),
+    allergenServiceProvider.overrideWithValue(allergenService),
+    shoppingListServiceProvider.overrideWithValue(shoppingListService),
+  ],
+  child: MaterialApp.router(routerConfig: router),
+);
 
 void main() {
   late MockRecipeService mockRecipeService;
@@ -107,14 +105,11 @@ void main() {
     registerFallbackValue(<String>[]);
     // Suppress clipboard channel errors.
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-      SystemChannels.platform,
-      (call) async {
-        if (call.method == 'Clipboard.setData') return null;
-        if (call.method == 'Clipboard.getData') return {'text': ''};
-        return null;
-      },
-    );
+        .setMockMethodCallHandler(SystemChannels.platform, (call) async {
+          if (call.method == 'Clipboard.setData') return null;
+          if (call.method == 'Clipboard.getData') return {'text': ''};
+          return null;
+        });
   });
 
   setUp(() {
@@ -146,25 +141,34 @@ void main() {
 
       // --- Stubs ---
 
-      // RC-01: library loads filtered recipes
-      when(() => mockRecipeService.getFilteredRecipes(any()))
-          .thenAnswer((_) async => const Result.success([recipe]));
+      // RC-01: library loads all recipes
+      when(
+        () => mockRecipeService.getAllRecipes(any()),
+      ).thenAnswer((_) async => const Result.success([recipe]));
+      when(
+        () => mockRecipeService.getFlaggedAllergenKeys(any()),
+      ).thenAnswer((_) async => const Result.success(<String>{}));
       // RC-01: allergen program state (for section grouping)
-      when(() => mockAllergenService.getProgramState(any()))
-          .thenAnswer((_) async => Result.success(_makeProgramState()));
+      when(
+        () => mockAllergenService.getProgramState(any()),
+      ).thenAnswer((_) async => Result.success(_makeProgramState()));
 
       // RC-02: recipe detail loads
-      when(() => mockRecipeService.getRecipeById('r1'))
-          .thenAnswer((_) async => const Result.success(recipe));
-      when(() => mockAllergenService.getLogs(any()))
-          .thenAnswer((_) async => const Result.success([]));
+      when(
+        () => mockRecipeService.getRecipeById('r1'),
+      ).thenAnswer((_) async => const Result.success(recipe));
+      when(
+        () => mockAllergenService.getLogs(any()),
+      ).thenAnswer((_) async => const Result.success([]));
       // deriveStatus is a pure sync method — returns notStarted for empty logs
-      when(() => mockAllergenService.deriveStatus(any()))
-          .thenReturn(AllergenStatus.notStarted);
+      when(
+        () => mockAllergenService.deriveStatus(any()),
+      ).thenReturn(AllergenStatus.notStarted);
 
       // Shopping list add
-      when(() => mockShoppingListService.addFromRecipe(any(), any(), any()))
-          .thenAnswer((_) async => const Result.success(null));
+      when(
+        () => mockShoppingListService.addFromRecipe(any(), any(), any()),
+      ).thenAnswer((_) async => const Result.success(null));
 
       await tester.pumpWidget(
         _buildSut(
@@ -215,11 +219,7 @@ void main() {
 
       // --- Verify addFromRecipe call ---
       final captured = verify(
-        () => mockShoppingListService.addFromRecipe(
-          any(),
-          any(),
-          captureAny(),
-        ),
+        () => mockShoppingListService.addFromRecipe(any(), any(), captureAny()),
       ).captured;
 
       final selectedNames = captured.single as List<String>;

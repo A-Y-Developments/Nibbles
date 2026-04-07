@@ -30,8 +30,7 @@ class LoginScreen extends ConsumerWidget {
               const SizedBox(height: AppSizes.sm),
               Text(
                 'Log in to continue.',
-                style:
-                    textTheme.bodyLarge?.copyWith(color: AppColors.subtext),
+                style: textTheme.bodyLarge?.copyWith(color: AppColors.subtext),
               ),
               const SizedBox(height: AppSizes.xl),
               TextField(
@@ -44,8 +43,8 @@ class LoginScreen extends ConsumerWidget {
                   labelText: 'Email',
                   errorText:
                       state.email.isNotValid && state.email.value.isNotEmpty
-                          ? 'Please enter a valid email.'
-                          : null,
+                      ? 'Please enter a valid email.'
+                      : null,
                 ),
               ),
               const SizedBox(height: AppSizes.md),
@@ -69,8 +68,7 @@ class LoginScreen extends ConsumerWidget {
                 const SizedBox(height: AppSizes.xs),
                 Text(
                   state.errorMessage!,
-                  style:
-                      textTheme.bodySmall?.copyWith(color: AppColors.error),
+                  style: textTheme.bodySmall?.copyWith(color: AppColors.error),
                 ),
               ],
               const SizedBox(height: AppSizes.lg),
@@ -80,9 +78,7 @@ class LoginScreen extends ConsumerWidget {
                   key: const Key('login_submit_button'),
                   onPressed: state.isLoading
                       ? null
-                      : ref
-                          .read(loginControllerProvider.notifier)
-                          .submit,
+                      : ref.read(loginControllerProvider.notifier).submit,
                   child: state.isLoading
                       ? const SizedBox(
                           width: 20,
@@ -99,13 +95,9 @@ class LoginScreen extends ConsumerWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    "Don't have an account?",
-                    style: textTheme.bodySmall,
-                  ),
+                  Text("Don't have an account?", style: textTheme.bodySmall),
                   TextButton(
-                    onPressed: () =>
-                        context.goNamed(AppRoute.register.name),
+                    onPressed: () => context.goNamed(AppRoute.register.name),
                     child: const Text('Sign Up'),
                   ),
                 ],

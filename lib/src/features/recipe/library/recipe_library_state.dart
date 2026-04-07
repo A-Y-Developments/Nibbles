@@ -5,8 +5,10 @@ part 'recipe_library_state.freezed.dart';
 
 @freezed
 class RecipeLibraryState with _$RecipeLibraryState {
-  const factory RecipeLibraryState({required List<RecipeSection> sections}) =
-      _RecipeLibraryState;
+  const factory RecipeLibraryState({
+    required List<RecipeSection> sections,
+    @Default(<String>{}) Set<String> flaggedAllergenKeys,
+  }) = _RecipeLibraryState;
 }
 
 @freezed

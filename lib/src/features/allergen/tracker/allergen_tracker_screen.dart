@@ -6,6 +6,7 @@ import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/domain/entities/allergen_board_item.dart';
 import 'package:nibbles/src/common/domain/entities/allergen_log.dart';
 import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
+import 'package:nibbles/src/common/domain/enums/emoji_taste.dart';
 import 'package:nibbles/src/common/domain/enums/reaction_severity.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/features/allergen/tracker/allergen_tracker_controller.dart';
@@ -20,9 +21,8 @@ class AllergenTrackerScreen extends ConsumerWidget {
     final babyIdAsync = ref.watch(currentBabyIdProvider);
 
     return babyIdAsync.when(
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (_, __) => const Scaffold(
         body: Center(child: Text('Could not load baby profile.')),
       ),
@@ -45,8 +45,7 @@ class _TrackerBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final trackerAsync =
-        ref.watch(allergenTrackerControllerProvider(babyId));
+    final trackerAsync = ref.watch(allergenTrackerControllerProvider(babyId));
 
     return DefaultTabController(
       length: 2,
@@ -70,8 +69,7 @@ class _TrackerBody extends ConsumerWidget {
           ),
         ),
         body: trackerAsync.when(
-          loading: () =>
-              const Center(child: CircularProgressIndicator()),
+          loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => Center(
             child: Padding(
               padding: const EdgeInsets.all(AppSizes.pagePaddingH),
@@ -129,22 +127,14 @@ class _OverviewTab extends StatelessWidget {
   int get _flaggedCount =>
       state.boardItems.where((b) => b.status == AllergenStatus.flagged).length;
 
-  bool get _hasAnyLogs =>
-      state.boardItems.any((b) => b.logs.isNotEmpty);
+  bool get _hasAnyLogs => state.boardItems.any((b) => b.logs.isNotEmpty);
 
-  bool _isTodayLogged() {
+  int get _currentLogCount {
     final currentKey = state.programState.currentAllergenKey;
     final currentItem = state.boardItems
         .where((b) => b.allergen.key == currentKey)
         .firstOrNull;
-    if (currentItem == null) return false;
-    final today = DateTime.now();
-    return currentItem.logs.any(
-      (l) =>
-          l.logDate.year == today.year &&
-          l.logDate.month == today.month &&
-          l.logDate.day == today.day,
-    );
+    return currentItem?.logs.length ?? 0;
   }
 
   AllergenBoardItem? get _currentItem {
@@ -168,10 +158,7 @@ class _OverviewTab extends StatelessWidget {
         children: [
           // Progress circle
           Center(
-            child: _ProgressCircle(
-              introduced: _introducedCount,
-              total: 9,
-            ),
+            child: _ProgressCircle(introduced: _introducedCount, total: 9),
           ),
           const SizedBox(height: AppSizes.lg),
 
@@ -196,22 +183,26 @@ class _OverviewTab extends StatelessWidget {
 
           // Today's checklist card
           if (!_hasAnyLogs)
-            _EmptyState(
-              currentItem: _currentItem,
-            )
+            _EmptyState(currentItem: _currentItem)
           else
-            _TodayCard(
+            _CurrentAllergenCard(
               currentItem: _currentItem,
-              isTodayLogged: _isTodayLogged(),
+              logCount: _currentLogCount,
             ),
 
-          // Recent reactions
-          if (state.recentReactions.isNotEmpty) ...[
+          // Recent logs (all exposures)
+          if (state.recentLogs.isNotEmpty) ...[
             const SizedBox(height: AppSizes.lg),
-            Text('Recent Reactions', style: textTheme.titleMedium),
+            Text('Recent Logs', style: textTheme.titleMedium),
             const SizedBox(height: AppSizes.sm),
-            ...state.recentReactions.map(
-              (r) => _ReactionRow(reaction: r),
+            ...state.recentLogs.map(
+              (entry) => _LogRow(
+                entry: entry,
+                onTap: () => context.pushNamed(
+                  AppRoute.allergenDetail.name,
+                  pathParameters: {'allergenKey': entry.allergenKey},
+                ),
+              ),
             ),
           ],
         ],
@@ -242,8 +233,9 @@ class _ProgressCircle extends StatelessWidget {
               value: progress,
               strokeWidth: 12,
               backgroundColor: AppColors.divider,
-              valueColor:
-                  const AlwaysStoppedAnimation<Color>(AppColors.primary),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                AppColors.primary,
+              ),
             ),
           ),
           Column(
@@ -256,10 +248,7 @@ class _ProgressCircle extends StatelessWidget {
                   fontWeight: FontWeight.w800,
                 ),
               ),
-              Text(
-                'introduced',
-                style: textTheme.bodySmall,
-              ),
+              Text('introduced', style: textTheme.bodySmall),
             ],
           ),
         ],
@@ -297,17 +286,14 @@ class _StatChip extends StatelessWidget {
           Container(
             width: 8,
             height: 8,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
           const SizedBox(width: AppSizes.xs),
           Text(
             '$count $label',
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: color,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.labelMedium?.copyWith(color: color),
           ),
         ],
       ),
@@ -343,10 +329,9 @@ class _EmptyState extends StatelessWidget {
           const SizedBox(height: AppSizes.xs),
           Text(
             'Begin with $emoji $name.',
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(color: AppColors.subtext),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppColors.subtext),
             textAlign: TextAlign.center,
           ),
         ],
@@ -355,20 +340,21 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
-class _TodayCard extends StatelessWidget {
-  const _TodayCard({
+class _CurrentAllergenCard extends StatelessWidget {
+  const _CurrentAllergenCard({
     required this.currentItem,
-    required this.isTodayLogged,
+    required this.logCount,
   });
 
   final AllergenBoardItem? currentItem;
-  final bool isTodayLogged;
+  final int logCount;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final emoji = currentItem?.allergen.emoji ?? '';
     final name = currentItem?.allergen.name ?? 'Current Allergen';
+    final isComplete = logCount >= 3;
 
     return Container(
       padding: const EdgeInsets.all(AppSizes.cardPadding),
@@ -392,7 +378,7 @@ class _TodayCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("Today's allergen", style: textTheme.bodySmall),
+                Text('Current allergen', style: textTheme.bodySmall),
                 const SizedBox(height: 2),
                 Text(name, style: textTheme.titleMedium),
               ],
@@ -404,17 +390,15 @@ class _TodayCard extends StatelessWidget {
               vertical: AppSizes.xs,
             ),
             decoration: BoxDecoration(
-              color: isTodayLogged
+              color: isComplete
                   ? AppColors.allergenSafe.withValues(alpha: 0.12)
                   : AppColors.surfaceVariant,
               borderRadius: BorderRadius.circular(AppSizes.radiusFull),
             ),
             child: Text(
-              isTodayLogged ? '✓ Logged' : 'Not yet logged',
+              '$logCount of 3 logged',
               style: textTheme.labelSmall?.copyWith(
-                color: isTodayLogged
-                    ? AppColors.allergenSafe
-                    : AppColors.subtext,
+                color: isComplete ? AppColors.allergenSafe : AppColors.subtext,
               ),
             ),
           ),
@@ -424,13 +408,21 @@ class _TodayCard extends StatelessWidget {
   }
 }
 
-class _ReactionRow extends StatelessWidget {
-  const _ReactionRow({required this.reaction});
+class _LogRow extends StatelessWidget {
+  const _LogRow({required this.entry, required this.onTap});
 
-  final RecentReaction reaction;
+  final RecentLogEntry entry;
+  final VoidCallback onTap;
 
-  String get _severityLabel {
-    return switch (reaction.severity) {
+  String get _tasteEmoji => switch (entry.taste) {
+    EmojiTaste.love => '😍',
+    EmojiTaste.neutral => '😐',
+    EmojiTaste.dislike => '😣',
+  };
+
+  String get _badgeLabel {
+    if (!entry.hadReaction) return 'No Reaction';
+    return switch (entry.severity) {
       ReactionSeverity.mild => 'Mild',
       ReactionSeverity.moderate => 'Moderate',
       ReactionSeverity.severe => 'Severe',
@@ -438,8 +430,9 @@ class _ReactionRow extends StatelessWidget {
     };
   }
 
-  Color get _severityColor {
-    return switch (reaction.severity) {
+  Color get _badgeColor {
+    if (!entry.hadReaction) return AppColors.allergenSafe;
+    return switch (entry.severity) {
       ReactionSeverity.mild => AppColors.warning,
       ReactionSeverity.moderate => AppColors.secondary,
       ReactionSeverity.severe => AppColors.allergenFlagged,
@@ -450,53 +443,59 @@ class _ReactionRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final date = reaction.logDate;
+    final date = entry.logDate;
     final dateStr =
         '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
 
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSizes.sm),
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.cardPadding,
-          vertical: AppSizes.sm,
-        ),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          border: Border.all(color: AppColors.divider),
-        ),
-        child: Row(
-          children: [
-            Text(
-              reaction.allergenEmoji,
-              style: const TextStyle(fontSize: 20),
-            ),
-            const SizedBox(width: AppSizes.sm),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(reaction.allergenName, style: textTheme.labelLarge),
-                  Text(dateStr, style: textTheme.bodySmall),
-                ],
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSizes.cardPadding,
+            vertical: AppSizes.sm,
+          ),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+            border: Border.all(color: AppColors.divider),
+          ),
+          child: Row(
+            children: [
+              Text(entry.allergenEmoji, style: const TextStyle(fontSize: 20)),
+              const SizedBox(width: AppSizes.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(entry.allergenName, style: textTheme.labelLarge),
+                    Row(
+                      children: [
+                        Text(dateStr, style: textTheme.bodySmall),
+                        const SizedBox(width: AppSizes.xs),
+                        Text(_tasteEmoji, style: const TextStyle(fontSize: 14)),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSizes.sm,
-                vertical: 3,
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSizes.sm,
+                  vertical: 3,
+                ),
+                decoration: BoxDecoration(
+                  color: _badgeColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+                ),
+                child: Text(
+                  _badgeLabel,
+                  style: textTheme.labelSmall?.copyWith(color: _badgeColor),
+                ),
               ),
-              decoration: BoxDecoration(
-                color: _severityColor.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-              ),
-              child: Text(
-                _severityLabel,
-                style: textTheme.labelSmall?.copyWith(color: _severityColor),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -591,10 +590,7 @@ class _AllergenBoardRow extends StatelessWidget {
         child: Row(
           children: [
             // Emoji + name
-            Text(
-              item.allergen.emoji,
-              style: const TextStyle(fontSize: 24),
-            ),
+            Text(item.allergen.emoji, style: const TextStyle(fontSize: 24)),
             const SizedBox(width: AppSizes.sm),
             Expanded(
               child: Column(
@@ -618,8 +614,7 @@ class _AllergenBoardRow extends StatelessWidget {
                   // 3 day-slot dot indicators
                   Row(
                     children: List.generate(3, (i) {
-                      final log =
-                          i < item.logs.length ? item.logs[i] : null;
+                      final log = i < item.logs.length ? item.logs[i] : null;
                       return Padding(
                         padding: const EdgeInsets.only(right: 6),
                         child: _DotIndicator(log: log),

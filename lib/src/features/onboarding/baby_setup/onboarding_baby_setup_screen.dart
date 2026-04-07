@@ -45,15 +45,13 @@ class OnboardingBabySetupScreen extends ConsumerWidget {
             0 => _NameStep(state: state, controller: controller),
             1 => _DobStep(state: state, controller: controller),
             _ => _GenderStep(
-                state: state,
-                controller: controller,
-                onSuccess: () {
-                  ref
-                      .read(localFlagServiceProvider)
-                      .setOnboardingBabySetupDone();
-                  context.goNamed(AppRoute.home.name);
-                },
-              ),
+              state: state,
+              controller: controller,
+              onSuccess: () {
+                ref.read(localFlagServiceProvider).setOnboardingBabySetupDone();
+                context.goNamed(AppRoute.home.name);
+              },
+            ),
           },
         ),
       ),
@@ -82,8 +80,8 @@ class _NameStep extends StatelessWidget {
           textCapitalization: TextCapitalization.words,
           decoration: InputDecoration(
             labelText: "Baby's name",
-            errorText: state.babyName.isNotValid &&
-                    state.babyName.value.isNotEmpty
+            errorText:
+                state.babyName.isNotValid && state.babyName.value.isNotEmpty
                 ? 'Please enter a valid name.'
                 : null,
           ),
@@ -122,7 +120,7 @@ class _DobStep extends StatelessWidget {
         Text('When was your baby born?', style: textTheme.headlineLarge),
         const SizedBox(height: AppSizes.xl),
         SizedBox(
-          height: 200,
+          height: 160,
           child: CupertinoDatePicker(
             key: const Key('baby_dob_picker'),
             mode: CupertinoDatePickerMode.date,
@@ -212,10 +210,10 @@ class _GenderStep extends StatelessWidget {
   }
 
   String _genderLabel(Gender g) => switch (g) {
-        Gender.male => 'Male',
-        Gender.female => 'Female',
-        Gender.preferNotToSay => 'Prefer not to say',
-      };
+    Gender.male => 'Male',
+    Gender.female => 'Female',
+    Gender.preferNotToSay => 'Prefer not to say',
+  };
 }
 
 class _GenderCard extends StatelessWidget {
@@ -250,9 +248,9 @@ class _GenderCard extends StatelessWidget {
         child: Text(
           label,
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: selected ? AppColors.onPrimary : AppColors.text,
-                fontWeight: FontWeight.w600,
-              ),
+            color: selected ? AppColors.onPrimary : AppColors.text,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );

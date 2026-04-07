@@ -12,10 +12,15 @@ import 'package:nibbles/src/common/domain/entities/allergen_log.dart';
 import 'package:nibbles/src/common/domain/entities/baby.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
 import 'package:nibbles/src/common/domain/enums/allergen_program_status.dart';
+import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
+import 'package:nibbles/src/common/domain/enums/emoji_taste.dart';
+import 'package:nibbles/src/common/services/allergen_service.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
+import 'package:nibbles/src/features/allergen/log/allergen_log_controller.dart';
 import 'package:nibbles/src/features/allergen/log/allergen_log_sheet.dart';
 import 'package:nibbles/src/features/home/home_controller.dart';
 import 'package:nibbles/src/features/home/home_state.dart';
+import 'package:nibbles/src/features/recipe/library/widgets/recipe_grid_card.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -26,9 +31,8 @@ class HomeScreen extends ConsumerWidget {
     final babyIdAsync = ref.watch(currentBabyIdProvider);
 
     return babyIdAsync.when(
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (_, __) => const Scaffold(
         body: Center(child: Text('Could not load baby profile.')),
       ),
@@ -54,9 +58,8 @@ class _HomeBody extends ConsumerWidget {
     final asyncState = ref.watch(homeControllerProvider(babyId));
 
     return asyncState.when(
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (err, _) => Scaffold(
         backgroundColor: AppColors.background,
         body: Center(
@@ -74,10 +77,9 @@ class _HomeBody extends ConsumerWidget {
                 Text(
                   err is AppException ? err.message : 'Something went wrong.',
                   textAlign: TextAlign.center,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyLarge
-                      ?.copyWith(color: AppColors.subtext),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyLarge?.copyWith(color: AppColors.subtext),
                 ),
                 const SizedBox(height: AppSizes.lg),
                 FilledButton(
@@ -129,6 +131,7 @@ class _HomeContent extends ConsumerWidget {
                   babyId: babyId,
                   state: state,
                   onLogFood: () => _openLogSheet(context, ref, state),
+                  onProceedToNext: () => _proceedToNext(context, ref),
                 ),
               ),
             ),
@@ -138,13 +141,78 @@ class _HomeContent extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSizes.pagePaddingH,
                 ),
-                child: _TodayMealCard(babyId: babyId, state: state),
+                child: _TodayMealCard(
+                  babyId: babyId,
+                  state: state,
+                  flaggedAllergenKeys: state.flaggedAllergenKeys,
+                ),
               ),
             ),
             if (_showRecommendations(state)) ...[
               const SliverToBoxAdapter(child: SizedBox(height: AppSizes.md)),
               SliverToBoxAdapter(
-                child: _RecommendationsStrip(state: state),
+                child: _RecommendationsStrip(
+                  state: state,
+                  flaggedAllergenKeys: state.flaggedAllergenKeys,
+                ),
+              ),
+            ],
+            if (_showGeneralGrid(state)) ...[
+              const SliverToBoxAdapter(child: SizedBox(height: AppSizes.md)),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSizes.pagePaddingH,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        state.isGeneralRecommendations
+                            ? 'Recipes for You 🍽️'
+                            : 'General Recommendations 🍽️',
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () =>
+                            context.goNamed(AppRoute.recipeLibrary.name),
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: const Text('See All'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: AppSizes.sm)),
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSizes.pagePaddingH,
+                ),
+                sliver: SliverGrid(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: AppSizes.sm,
+                    mainAxisSpacing: AppSizes.sm,
+                    childAspectRatio: 0.72,
+                  ),
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final recipe = state.generalRecommendations[index];
+                    return RecipeGridCard(
+                      recipe: recipe,
+                      flaggedAllergenKeys: state.flaggedAllergenKeys,
+                      onTap: () => context.pushNamed(
+                        AppRoute.recipeDetail.name,
+                        pathParameters: {'recipeId': recipe.id},
+                      ),
+                    );
+                  }, childCount: state.generalRecommendations.length),
+                ),
               ),
             ],
             const SliverToBoxAdapter(child: SizedBox(height: AppSizes.xl)),
@@ -156,7 +224,31 @@ class _HomeContent extends ConsumerWidget {
 
   bool _showRecommendations(HomeState state) {
     return state.programState.status != AllergenProgramStatus.completed &&
+        !state.isGeneralRecommendations &&
         state.recommendations.isNotEmpty;
+  }
+
+  bool _showGeneralGrid(HomeState state) {
+    return state.programState.status != AllergenProgramStatus.completed &&
+        state.generalRecommendations.isNotEmpty;
+  }
+
+  Future<void> _proceedToNext(BuildContext context, WidgetRef ref) async {
+    final result = await ref
+        .read(allergenServiceProvider)
+        .advanceToNextAllergen(babyId);
+    result.when(
+      success: (_) => ref.invalidate(homeControllerProvider(babyId)),
+      failure: (_) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Couldn't advance. Please try again."),
+            ),
+          );
+        }
+      },
+    );
   }
 
   Future<void> _openLogSheet(
@@ -170,7 +262,6 @@ class _HomeContent extends ConsumerWidget {
     final logged = await showAllergenLogSheet(
       context,
       babyId: babyId,
-      babyName: state.baby.name,
       allergenKey: boardItem.allergen.key,
       allergenName: boardItem.allergen.name,
       allergenEmoji: boardItem.allergen.emoji,
@@ -178,6 +269,15 @@ class _HomeContent extends ConsumerWidget {
 
     if (logged ?? false) {
       ref.invalidate(homeControllerProvider(babyId));
+
+      // If a reaction was logged, show GP referral dialog.
+      final logState = ref.read(allergenLogControllerProvider);
+      if (logState.hadReaction == true && context.mounted) {
+        await showDialog<void>(
+          context: context,
+          builder: (_) => const _GpReferralDialog(),
+        );
+      }
     }
   }
 }
@@ -197,17 +297,9 @@ class _Header extends StatelessWidget {
 
     return Row(
       children: [
-        // Left: logo / app name
-        Text(
-          'Nibbles',
-          style: textTheme.titleLarge?.copyWith(
-            color: AppColors.primary,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        const Spacer(),
-        // Center: greeting
+        // Left: greeting
         Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               "Hi, ${baby.name}'s Parents 👋",
@@ -273,11 +365,13 @@ class _AllergenWidget extends StatelessWidget {
     required this.babyId,
     required this.state,
     required this.onLogFood,
+    required this.onProceedToNext,
   });
 
   final String babyId;
   final HomeState state;
   final VoidCallback onLogFood;
+  final VoidCallback onProceedToNext;
 
   @override
   Widget build(BuildContext context) {
@@ -289,10 +383,13 @@ class _AllergenWidget extends StatelessWidget {
     final boardItem = state.currentAllergenBoardItem;
     if (boardItem == null) return const SizedBox.shrink();
 
-    return _ActiveAllergenCard(
-      boardItem: boardItem,
-      hasLoggedToday: state.hasLoggedToday,
-      onLogFood: onLogFood,
+    return GestureDetector(
+      onTap: () => context.pushNamed(AppRoute.allergenTracker.name),
+      child: _ActiveAllergenCard(
+        boardItem: boardItem,
+        onLogFood: onLogFood,
+        onProceedToNext: onProceedToNext,
+      ),
     );
   }
 }
@@ -344,26 +441,35 @@ class _CompletionBanner extends StatelessWidget {
 class _ActiveAllergenCard extends StatelessWidget {
   const _ActiveAllergenCard({
     required this.boardItem,
-    required this.hasLoggedToday,
     required this.onLogFood,
+    required this.onProceedToNext,
   });
 
   final AllergenBoardItem boardItem;
-  final bool hasLoggedToday;
   final VoidCallback onLogFood;
+  final VoidCallback onProceedToNext;
+
+  String _progressCopy(int logCount, bool isSafe, bool isFlagged) {
+    if (isSafe) return 'All 3 exposures done — no reaction! 🎉';
+    if (isFlagged) return 'Reaction detected — you can skip to the next one.';
+    if (logCount == 0) return 'Feed 3 times over a few days to confirm safe.';
+    if (logCount == 1) return '2 more exposures needed — keep going!';
+    return '1 more exposure to go — almost there!';
+  }
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final logs = boardItem.logs;
     final allergen = boardItem.allergen;
-    final dayCount = min(logs.length, 3);
-    final weeklyDots = _buildWeeklyDots(logs);
+    final logCount = min(logs.length, 3);
+    final isSafe = boardItem.status == AllergenStatus.safe;
+    final isFlagged = boardItem.status == AllergenStatus.flagged;
     final lastLog = logs.isEmpty
         ? null
-        : (List<AllergenLog>.from(logs)
-              ..sort((a, b) => b.logDate.compareTo(a.logDate)))
-            .first;
+        : (List<AllergenLog>.from(
+            logs,
+          )..sort((a, b) => b.logDate.compareTo(a.logDate))).first;
 
     return Container(
       padding: const EdgeInsets.all(AppSizes.cardPadding),
@@ -381,10 +487,42 @@ class _ActiveAllergenCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Eyebrow label
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSizes.sm,
+              vertical: 3,
+            ),
+            decoration: BoxDecoration(
+              color: isFlagged
+                  ? AppColors.warning.withValues(alpha: 0.15)
+                  : isSafe
+                  ? AppColors.success.withValues(alpha: 0.15)
+                  : AppColors.primary.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+            ),
+            child: Text(
+              isFlagged
+                  ? '⚠️ Reaction flagged'
+                  : isSafe
+                  ? '✅ Allergen safe'
+                  : '🧪 Now introducing',
+              style: textTheme.labelSmall?.copyWith(
+                color: isFlagged
+                    ? AppColors.warning
+                    : isSafe
+                    ? AppColors.success
+                    : AppColors.primary,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.3,
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSizes.sm),
           // Allergen header
           Row(
             children: [
-              Text(allergen.emoji, style: const TextStyle(fontSize: 28)),
+              Text(allergen.emoji, style: const TextStyle(fontSize: 32)),
               const SizedBox(width: AppSizes.sm),
               Expanded(
                 child: Column(
@@ -397,7 +535,7 @@ class _ActiveAllergenCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      'Day $dayCount/3',
+                      '$logCount of 3 exposures logged',
                       style: textTheme.bodySmall?.copyWith(
                         color: AppColors.subtext,
                       ),
@@ -405,114 +543,160 @@ class _ActiveAllergenCard extends StatelessWidget {
                   ],
                 ),
               ),
+              // Tap hint
+              const Icon(
+                Icons.chevron_right,
+                color: AppColors.subtext,
+                size: AppSizes.iconSm,
+              ),
             ],
           ),
           const SizedBox(height: AppSizes.md),
-          // Weekly dots (Sun–Sat)
-          _WeeklyDots(dots: weeklyDots),
+          // Introduction dots (3 required logs)
+          _IntroductionDots(logs: logs),
           const SizedBox(height: AppSizes.sm),
+          // Progress copy
+          Text(
+            _progressCopy(logCount, isSafe, isFlagged),
+            style: textTheme.bodySmall?.copyWith(color: AppColors.subtext),
+          ),
           // Last log summary
           if (lastLog != null) ...[
+            const SizedBox(height: AppSizes.xs),
             Text(
               lastLog.hadReaction
                   ? 'Last log: Had Reaction ⚠️'
                   : 'Last log: No Reaction ✅',
-              style: textTheme.bodySmall?.copyWith(color: AppColors.subtext),
-            ),
-            const SizedBox(height: AppSizes.md),
-          ],
-          // CTA — State A vs State B
-          if (hasLoggedToday)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.check_circle,
-                  color: AppColors.success,
-                  size: AppSizes.iconMd,
-                ),
-                const SizedBox(width: AppSizes.xs),
-                Text(
-                  'Logged today',
-                  style: textTheme.bodyMedium?.copyWith(
-                    color: AppColors.success,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            )
-          else
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                key: const Key('log_food_button'),
-                onPressed: onLogFood,
-                child: const Text('Log Food'),
+              style: textTheme.bodySmall?.copyWith(
+                color: AppColors.subtext,
+                fontStyle: FontStyle.italic,
               ),
             ),
+          ],
+          const SizedBox(height: AppSizes.md),
+          SizedBox(
+            width: double.infinity,
+            child: isSafe
+                ? FilledButton(
+                    key: const Key('proceed_next_button'),
+                    onPressed: onProceedToNext,
+                    child: const Text('Proceed to Next Allergen'),
+                  )
+                : isFlagged
+                ? FilledButton(
+                    key: const Key('skip_next_button'),
+                    onPressed: onProceedToNext,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.warning,
+                    ),
+                    child: const Text('Skip to Next Allergen'),
+                  )
+                : FilledButton(
+                    key: const Key('log_food_button'),
+                    onPressed: onLogFood,
+                    child: const Text('Log Food Today'),
+                  ),
+          ),
         ],
       ),
     );
   }
+}
 
-  List<bool> _buildWeeklyDots(List<AllergenLog> logs) {
-    final today = DateTime.now();
-    final sundayStart = today.subtract(Duration(days: today.weekday % 7));
-    return List.generate(7, (i) {
-      final day = sundayStart.add(Duration(days: i));
-      return logs.any(
-        (log) =>
-            log.logDate.year == day.year &&
-            log.logDate.month == day.month &&
-            log.logDate.day == day.day,
-      );
-    });
+class _IntroductionDots extends StatelessWidget {
+  const _IntroductionDots({required this.logs});
+
+  final List<AllergenLog> logs;
+
+  String _tasteEmoji(EmojiTaste taste) => switch (taste) {
+    EmojiTaste.love => '😍',
+    EmojiTaste.neutral => '😐',
+    EmojiTaste.dislike => '😣',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final sorted = List<AllergenLog>.from(logs)
+      ..sort((a, b) => a.logDate.compareTo(b.logDate));
+    final capped = sorted.length > 3 ? sorted.sublist(0, 3) : sorted;
+    return Row(
+      children: List.generate(3, (i) {
+        final log = i < capped.length ? capped[i] : null;
+        final filled = log != null;
+        final isReaction = log?.hadReaction ?? false;
+        final dotColor = !filled
+            ? AppColors.surfaceVariant
+            : isReaction
+            ? AppColors.allergenFlagged
+            : AppColors.allergenSafe;
+        final borderColor = !filled ? AppColors.divider : dotColor;
+
+        return Padding(
+          padding: const EdgeInsets.only(right: AppSizes.sm),
+          child: Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: dotColor,
+              border: Border.all(color: borderColor, width: 1.5),
+            ),
+            child: filled
+                ? Center(
+                    child: Text(
+                      isReaction ? '⚠️' : _tasteEmoji(log.emojiTaste),
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  )
+                : null,
+          ),
+        );
+      }),
+    );
   }
 }
 
-class _WeeklyDots extends StatelessWidget {
-  const _WeeklyDots({required this.dots});
+// ---------------------------------------------------------------------------
+// GP Referral Dialog — shown after a reaction is logged
+// ---------------------------------------------------------------------------
 
-  final List<bool> dots;
-
-  static const _labels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+class _GpReferralDialog extends StatelessWidget {
+  const _GpReferralDialog();
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: List.generate(7, (i) {
-        final filled = i < dots.length && dots[i];
-        return Column(
-          children: [
-            Container(
-              width: 28,
-              height: 28,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: filled ? AppColors.primary : AppColors.surfaceVariant,
-                border: Border.all(
-                  color: filled ? AppColors.primary : AppColors.divider,
-                  width: 1.5,
-                ),
-              ),
-              child: filled
-                  ? const Icon(
-                      Icons.check,
-                      size: 14,
-                      color: AppColors.onPrimary,
-                    )
-                  : null,
-            ),
-            const SizedBox(height: AppSizes.xs),
-            Text(
-              _labels[i],
-              style: textTheme.labelSmall?.copyWith(color: AppColors.subtext),
-            ),
-          ],
-        );
-      }),
+
+    return AlertDialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+      ),
+      icon: const Icon(
+        Icons.local_hospital_outlined,
+        color: AppColors.warning,
+        size: AppSizes.iconXl,
+      ),
+      title: Text(
+        'Reaction Recorded',
+        style: textTheme.titleLarge,
+        textAlign: TextAlign.center,
+      ),
+      content: Text(
+        'A reaction has been logged for this allergen. '
+        'We recommend consulting your GP or paediatrician '
+        'before continuing exposure.',
+        style: textTheme.bodyMedium?.copyWith(color: AppColors.subtext),
+        textAlign: TextAlign.center,
+      ),
+      actions: [
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Understood'),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -522,10 +706,15 @@ class _WeeklyDots extends StatelessWidget {
 // ---------------------------------------------------------------------------
 
 class _TodayMealCard extends StatelessWidget {
-  const _TodayMealCard({required this.babyId, required this.state});
+  const _TodayMealCard({
+    required this.babyId,
+    required this.state,
+    this.flaggedAllergenKeys = const {},
+  });
 
   final String babyId;
   final HomeState state;
+  final Set<String> flaggedAllergenKeys;
 
   @override
   Widget build(BuildContext context) {
@@ -555,8 +744,23 @@ class _TodayMealCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSizes.sm),
-          if (state.todayRecipe != null)
-            _FilledMealCard(recipe: state.todayRecipe!)
+          if (state.todayRecipes.isNotEmpty)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children:
+                  state.todayRecipes
+                      .expand(
+                        (r) => [
+                          _FilledMealCard(
+                            recipe: r,
+                            flaggedAllergenKeys: flaggedAllergenKeys,
+                          ),
+                          const SizedBox(height: AppSizes.sm),
+                        ],
+                      )
+                      .toList()
+                    ..removeLast(),
+            )
           else
             _EmptyMealCard(),
         ],
@@ -566,57 +770,86 @@ class _TodayMealCard extends StatelessWidget {
 }
 
 class _FilledMealCard extends StatelessWidget {
-  const _FilledMealCard({required this.recipe});
+  const _FilledMealCard({
+    required this.recipe,
+    this.flaggedAllergenKeys = const {},
+  });
 
   final Recipe recipe;
+  final Set<String> flaggedAllergenKeys;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final flaggedTags = recipe.allergenTags
+        .where(flaggedAllergenKeys.contains)
+        .toList();
+    final isUnsafe = flaggedTags.isNotEmpty;
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                recipe.title,
-                style: textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
+    return GestureDetector(
+      onTap: () => context.pushNamed(
+        AppRoute.recipeDetail.name,
+        pathParameters: {'recipeId': recipe.id},
+      ),
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            recipe.title,
+            style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          if (recipe.allergenTags.isNotEmpty) ...[
+            const SizedBox(height: AppSizes.xs),
+            Wrap(
+              spacing: AppSizes.xs,
+              children: recipe.allergenTags.map((tag) {
+                final emoji = AllergenEmoji.get(tag);
+                final isFlagged = flaggedAllergenKeys.contains(tag);
+                return Chip(
+                  label: Text('$emoji $tag'),
+                  labelStyle: textTheme.labelSmall?.copyWith(
+                    color: isFlagged ? AppColors.allergenFlagged : null,
+                    fontWeight: isFlagged ? FontWeight.w700 : null,
+                  ),
+                  padding: EdgeInsets.zero,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  backgroundColor: isFlagged
+                      ? AppColors.allergenFlagged.withValues(alpha: 0.1)
+                      : AppColors.surfaceVariant,
+                  side: isFlagged
+                      ? BorderSide(
+                          color: AppColors.allergenFlagged.withValues(
+                            alpha: 0.4,
+                          ),
+                        )
+                      : BorderSide.none,
+                );
+              }).toList(),
+            ),
+          ],
+          if (isUnsafe) ...[
+            const SizedBox(height: AppSizes.xs),
+            Row(
+              children: [
+                const Icon(
+                  Icons.warning_amber_rounded,
+                  size: 14,
+                  color: AppColors.allergenFlagged,
                 ),
-              ),
-              if (recipe.allergenTags.isNotEmpty) ...[
-                const SizedBox(height: AppSizes.xs),
-                Wrap(
-                  spacing: AppSizes.xs,
-                  children: recipe.allergenTags.map((tag) {
-                    final emoji = AllergenEmoji.get(tag);
-                    return Chip(
-                      label: Text('$emoji $tag'),
-                      labelStyle: textTheme.labelSmall,
-                      padding: EdgeInsets.zero,
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      backgroundColor: AppColors.surfaceVariant,
-                      side: BorderSide.none,
-                    );
-                  }).toList(),
+                const SizedBox(width: AppSizes.xs),
+                Text(
+                  'Contains flagged allergen',
+                  style: textTheme.labelSmall?.copyWith(
+                    color: AppColors.allergenFlagged,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
-            ],
-          ),
-        ),
-        IconButton(
-          icon: const Icon(
-            Icons.add_shopping_cart_outlined,
-            size: AppSizes.iconMd,
-          ),
-          color: AppColors.primary,
-          tooltip: 'Add to shopping list',
-          onPressed: () => context.pushNamed(AppRoute.shoppingList.name),
-        ),
-      ],
+            ),
+          ],
+        ],
+      ),
     );
   }
 }
@@ -630,13 +863,13 @@ class _EmptyMealCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'No meal planned for today. Add one from the recipe library.',
+          'No meal planned for today. Add one to get started.',
           style: textTheme.bodyMedium?.copyWith(color: AppColors.subtext),
         ),
         const SizedBox(height: AppSizes.sm),
         TextButton(
-          onPressed: () => context.goNamed(AppRoute.recipeLibrary.name),
-          child: const Text('Browse Recipe Library'),
+          onPressed: () => context.goNamed(AppRoute.mealPlan.name),
+          child: const Text('Plan a Meal'),
         ),
       ],
     );
@@ -648,17 +881,25 @@ class _EmptyMealCard extends StatelessWidget {
 // ---------------------------------------------------------------------------
 
 class _RecommendationsStrip extends StatelessWidget {
-  const _RecommendationsStrip({required this.state});
+  const _RecommendationsStrip({
+    required this.state,
+    this.flaggedAllergenKeys = const {},
+  });
 
   final HomeState state;
+  final Set<String> flaggedAllergenKeys;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final allergenKey = state.programState.currentAllergenKey;
     final allergenEmoji = AllergenEmoji.get(allergenKey);
-    final allergenName = state.currentAllergenBoardItem?.allergen.name ??
+    final allergenName =
+        state.currentAllergenBoardItem?.allergen.name ??
         allergenKey.replaceAll('_', ' ');
+    final title = state.isGeneralRecommendations
+        ? 'Recipes for You 🍽️'
+        : 'Recommended for $allergenName $allergenEmoji';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -668,113 +909,38 @@ class _RecommendationsStrip extends StatelessWidget {
             horizontal: AppSizes.pagePaddingH,
           ),
           child: Text(
-            'Recommended for $allergenName $allergenEmoji',
+            title,
             style: textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
           ),
         ),
         const SizedBox(height: AppSizes.sm),
         SizedBox(
-          height: 160,
+          height: 226,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(
               horizontal: AppSizes.pagePaddingH,
+              vertical: AppSizes.xs,
             ),
             itemCount: state.recommendations.length,
             separatorBuilder: (_, __) => const SizedBox(width: AppSizes.sm),
             itemBuilder: (context, index) {
               final recipe = state.recommendations[index];
-              return _RecommendationCard(recipe: recipe);
+              return SizedBox(
+                width: 140,
+                child: RecipeGridCard(
+                  recipe: recipe,
+                  flaggedAllergenKeys: flaggedAllergenKeys,
+                  onTap: () => context.pushNamed(
+                    AppRoute.recipeDetail.name,
+                    pathParameters: {'recipeId': recipe.id},
+                  ),
+                ),
+              );
             },
           ),
         ),
       ],
-    );
-  }
-}
-
-class _RecommendationCard extends StatelessWidget {
-  const _RecommendationCard({required this.recipe});
-
-  final Recipe recipe;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
-    return GestureDetector(
-      onTap: () => context.pushNamed(
-        AppRoute.recipeDetail.name,
-        pathParameters: {'recipeId': recipe.id},
-      ),
-      child: Container(
-        width: 140,
-        padding: const EdgeInsets.all(AppSizes.sm),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              height: 72,
-              decoration: BoxDecoration(
-                color: AppColors.surfaceVariant,
-                borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-              ),
-              child: Center(
-                child: recipe.allergenTags.isNotEmpty
-                    ? Text(
-                        AllergenEmoji.get(recipe.allergenTags.first),
-                        style: const TextStyle(fontSize: 36),
-                      )
-                    : const Icon(
-                        Icons.restaurant,
-                        color: AppColors.hint,
-                        size: AppSizes.iconLg,
-                      ),
-              ),
-            ),
-            const SizedBox(height: AppSizes.xs),
-            Text(
-              recipe.title,
-              style: textTheme.labelMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            if (recipe.allergenTags.isNotEmpty) ...[
-              const SizedBox(height: AppSizes.xs),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSizes.xs,
-                  vertical: 2,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(AppSizes.radiusXs),
-                ),
-                child: Text(
-                  '${AllergenEmoji.get(recipe.allergenTags.first)}'
-                  ' ${recipe.allergenTags.first}',
-                  style: textTheme.labelSmall?.copyWith(
-                    color: AppColors.primary,
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
     );
   }
 }

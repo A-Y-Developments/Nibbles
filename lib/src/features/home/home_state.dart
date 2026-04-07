@@ -12,10 +12,12 @@ class HomeState with _$HomeState {
   const factory HomeState({
     required Baby baby,
     required AllergenProgramState programState,
-    required bool hasLoggedToday,
     required List<Recipe> recommendations,
     AllergenBoardItem? currentAllergenBoardItem,
-    MealPlanEntry? todayMeal,
-    Recipe? todayRecipe,
+    @Default([]) List<MealPlanEntry> todayMeals,
+    @Default([]) List<Recipe> todayRecipes,
+    @Default(false) bool isGeneralRecommendations,
+    @Default([]) List<Recipe> generalRecommendations,
+    @Default(<String>{}) Set<String> flaggedAllergenKeys,
   }) = _HomeState;
 }

@@ -16,15 +16,15 @@ extension BabyResponseMapper on BabyResponse {
 }
 
 Gender _parseGender(String value) => switch (value) {
-      'male' => Gender.male,
-      'female' => Gender.female,
-      _ => Gender.preferNotToSay,
-    };
+  'male' => Gender.male,
+  'female' => Gender.female,
+  _ => Gender.preferNotToSay,
+};
 
 extension GenderMapper on Gender {
   String toJson() => switch (this) {
-        Gender.male => 'male',
-        Gender.female => 'female',
-        Gender.preferNotToSay => 'prefer_not_to_say',
-      };
+    Gender.male => 'male',
+    Gender.female => 'female',
+    Gender.preferNotToSay => 'prefer_not_to_say',
+  };
 }

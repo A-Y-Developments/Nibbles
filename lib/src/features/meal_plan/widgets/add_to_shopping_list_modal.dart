@@ -6,16 +6,16 @@ import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/services/meal_plan_service.dart';
 import 'package:nibbles/src/common/services/shopping_list_service.dart';
 
-/// Bulk add-to-shopping-list modal for all ingredients in the current week.
+/// Bulk add-to-shopping-list modal for all ingredients on the selected day.
 class AddToShoppingListModal extends ConsumerStatefulWidget {
   const AddToShoppingListModal({
     required this.babyId,
-    required this.weekStart,
+    required this.date,
     super.key,
   });
 
   final String babyId;
-  final DateTime weekStart;
+  final DateTime date;
 
   @override
   ConsumerState<AddToShoppingListModal> createState() =>
@@ -39,7 +39,7 @@ class _AddToShoppingListModalState
   Future<void> _loadIngredients() async {
     final result = await ref
         .read(mealPlanServiceProvider)
-        .getWeekIngredientNames(widget.babyId, widget.weekStart);
+        .getDayIngredientNames(widget.babyId, widget.date);
     if (!mounted) return;
     if (result.isFailure) {
       setState(() {
@@ -193,7 +193,7 @@ class _AddToShoppingListModalState
         child: Padding(
           padding: const EdgeInsets.all(AppSizes.pagePaddingH),
           child: Text(
-            'No ingredients found for this week.',
+            'No ingredients found for this day.',
             style: textTheme.bodyMedium?.copyWith(color: AppColors.subtext),
             textAlign: TextAlign.center,
           ),

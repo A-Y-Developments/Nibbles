@@ -17,9 +17,8 @@ class ShoppingListScreen extends ConsumerWidget {
     final babyIdAsync = ref.watch(currentBabyIdProvider);
 
     return babyIdAsync.when(
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (_, __) => const Scaffold(
         body: Center(child: Text('Could not load baby profile.')),
       ),
@@ -103,17 +102,15 @@ class _ShoppingListBodyState extends ConsumerState<_ShoppingListBody>
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
-        SnackBar(
-          content: Text(message),
-          duration: const Duration(seconds: 3),
-        ),
+        SnackBar(content: Text(message), duration: const Duration(seconds: 3)),
       );
   }
 
   @override
   Widget build(BuildContext context) {
-    final controllerAsync =
-        ref.watch(shoppingListControllerProvider(widget.babyId));
+    final controllerAsync = ref.watch(
+      shoppingListControllerProvider(widget.babyId),
+    );
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -309,7 +306,11 @@ class _ListTabState extends ConsumerState<_ListTab> {
 
   Future<void> _deleteWithConfirm(String itemId) =>
       _confirmAndDeleteShoppingItem(
-        context, ref, widget.babyId, itemId, widget.onDeleteFailed,
+        context,
+        ref,
+        widget.babyId,
+        itemId,
+        widget.onDeleteFailed,
       );
 
   @override
@@ -333,10 +334,9 @@ class _ListTabState extends ConsumerState<_ListTab> {
                   textCapitalization: TextCapitalization.sentences,
                   decoration: InputDecoration(
                     hintText: 'Add an item...',
-                    hintStyle: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(color: AppColors.hint),
+                    hintStyle: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: AppColors.hint),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: AppSizes.md,
                       vertical: AppSizes.sm,
@@ -393,14 +393,11 @@ class _ListTabState extends ConsumerState<_ListTab> {
         Expanded(
           child: items.isEmpty
               ? _ListEmptyState(
-                  onBrowseRecipes: () => context.goNamed(
-                    AppRoute.recipeLibrary.name,
-                  ),
+                  onBrowseRecipes: () =>
+                      context.goNamed(AppRoute.recipeLibrary.name),
                 )
               : ListView.separated(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: AppSizes.sm,
-                  ),
+                  padding: const EdgeInsets.symmetric(vertical: AppSizes.sm),
                   itemCount: items.length,
                   separatorBuilder: (_, __) =>
                       const Divider(height: 1, color: AppColors.divider),
@@ -472,7 +469,11 @@ class _BoughtTab extends ConsumerWidget {
           onDeleteDirect: () =>
               _deleteShoppingItem(ref, babyId, item.id, onDeleteFailed),
           onDeleteWithConfirm: () => _confirmAndDeleteShoppingItem(
-            context, ref, babyId, item.id, onDeleteFailed,
+            context,
+            ref,
+            babyId,
+            item.id,
+            onDeleteFailed,
           ),
         );
       },
@@ -537,10 +538,9 @@ class _ShoppingItemTile extends StatelessWidget {
         title: Text(
           item.name,
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                decoration:
-                    item.isChecked ? TextDecoration.lineThrough : null,
-                color: item.isChecked ? AppColors.subtext : AppColors.text,
-              ),
+            decoration: item.isChecked ? TextDecoration.lineThrough : null,
+            color: item.isChecked ? AppColors.subtext : AppColors.text,
+          ),
         ),
         trailing: IconButton(
           icon: const Icon(Icons.delete_outline, size: AppSizes.iconMd),

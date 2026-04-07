@@ -39,10 +39,9 @@ class ReadinessQuestionCard extends StatelessWidget {
               child: Text(
                 label,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color:
-                          selected ? AppColors.onPrimary : AppColors.text,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  color: selected ? AppColors.onPrimary : AppColors.text,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
             if (selected)

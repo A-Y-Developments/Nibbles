@@ -18,6 +18,7 @@ final _privateConstructorUsedError = UnsupportedError(
 /// @nodoc
 mixin _$RecipeLibraryState {
   List<RecipeSection> get sections => throw _privateConstructorUsedError;
+  Set<String> get flaggedAllergenKeys => throw _privateConstructorUsedError;
 
   /// Create a copy of RecipeLibraryState
   /// with the given fields replaced by the non-null parameter values.
@@ -33,7 +34,7 @@ abstract class $RecipeLibraryStateCopyWith<$Res> {
     $Res Function(RecipeLibraryState) then,
   ) = _$RecipeLibraryStateCopyWithImpl<$Res, RecipeLibraryState>;
   @useResult
-  $Res call({List<RecipeSection> sections});
+  $Res call({List<RecipeSection> sections, Set<String> flaggedAllergenKeys});
 }
 
 /// @nodoc
@@ -50,13 +51,17 @@ class _$RecipeLibraryStateCopyWithImpl<$Res, $Val extends RecipeLibraryState>
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({Object? sections = null}) {
+  $Res call({Object? sections = null, Object? flaggedAllergenKeys = null}) {
     return _then(
       _value.copyWith(
             sections: null == sections
                 ? _value.sections
                 : sections // ignore: cast_nullable_to_non_nullable
                       as List<RecipeSection>,
+            flaggedAllergenKeys: null == flaggedAllergenKeys
+                ? _value.flaggedAllergenKeys
+                : flaggedAllergenKeys // ignore: cast_nullable_to_non_nullable
+                      as Set<String>,
           )
           as $Val,
     );
@@ -72,7 +77,7 @@ abstract class _$$RecipeLibraryStateImplCopyWith<$Res>
   ) = __$$RecipeLibraryStateImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({List<RecipeSection> sections});
+  $Res call({List<RecipeSection> sections, Set<String> flaggedAllergenKeys});
 }
 
 /// @nodoc
@@ -88,13 +93,17 @@ class __$$RecipeLibraryStateImplCopyWithImpl<$Res>
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({Object? sections = null}) {
+  $Res call({Object? sections = null, Object? flaggedAllergenKeys = null}) {
     return _then(
       _$RecipeLibraryStateImpl(
         sections: null == sections
             ? _value._sections
             : sections // ignore: cast_nullable_to_non_nullable
                   as List<RecipeSection>,
+        flaggedAllergenKeys: null == flaggedAllergenKeys
+            ? _value._flaggedAllergenKeys
+            : flaggedAllergenKeys // ignore: cast_nullable_to_non_nullable
+                  as Set<String>,
       ),
     );
   }
@@ -103,8 +112,11 @@ class __$$RecipeLibraryStateImplCopyWithImpl<$Res>
 /// @nodoc
 
 class _$RecipeLibraryStateImpl implements _RecipeLibraryState {
-  const _$RecipeLibraryStateImpl({required final List<RecipeSection> sections})
-    : _sections = sections;
+  const _$RecipeLibraryStateImpl({
+    required final List<RecipeSection> sections,
+    final Set<String> flaggedAllergenKeys = const <String>{},
+  }) : _sections = sections,
+       _flaggedAllergenKeys = flaggedAllergenKeys;
 
   final List<RecipeSection> _sections;
   @override
@@ -114,9 +126,19 @@ class _$RecipeLibraryStateImpl implements _RecipeLibraryState {
     return EqualUnmodifiableListView(_sections);
   }
 
+  final Set<String> _flaggedAllergenKeys;
+  @override
+  @JsonKey()
+  Set<String> get flaggedAllergenKeys {
+    if (_flaggedAllergenKeys is EqualUnmodifiableSetView)
+      return _flaggedAllergenKeys;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableSetView(_flaggedAllergenKeys);
+  }
+
   @override
   String toString() {
-    return 'RecipeLibraryState(sections: $sections)';
+    return 'RecipeLibraryState(sections: $sections, flaggedAllergenKeys: $flaggedAllergenKeys)';
   }
 
   @override
@@ -124,12 +146,19 @@ class _$RecipeLibraryStateImpl implements _RecipeLibraryState {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$RecipeLibraryStateImpl &&
-            const DeepCollectionEquality().equals(other._sections, _sections));
+            const DeepCollectionEquality().equals(other._sections, _sections) &&
+            const DeepCollectionEquality().equals(
+              other._flaggedAllergenKeys,
+              _flaggedAllergenKeys,
+            ));
   }
 
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, const DeepCollectionEquality().hash(_sections));
+  int get hashCode => Object.hash(
+    runtimeType,
+    const DeepCollectionEquality().hash(_sections),
+    const DeepCollectionEquality().hash(_flaggedAllergenKeys),
+  );
 
   /// Create a copy of RecipeLibraryState
   /// with the given fields replaced by the non-null parameter values.
@@ -146,10 +175,13 @@ class _$RecipeLibraryStateImpl implements _RecipeLibraryState {
 abstract class _RecipeLibraryState implements RecipeLibraryState {
   const factory _RecipeLibraryState({
     required final List<RecipeSection> sections,
+    final Set<String> flaggedAllergenKeys,
   }) = _$RecipeLibraryStateImpl;
 
   @override
   List<RecipeSection> get sections;
+  @override
+  Set<String> get flaggedAllergenKeys;
 
   /// Create a copy of RecipeLibraryState
   /// with the given fields replaced by the non-null parameter values.

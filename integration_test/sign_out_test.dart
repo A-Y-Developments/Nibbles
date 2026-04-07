@@ -78,65 +78,66 @@ void main() {
 
     when(() => mockAuthRepo.isLoggedIn).thenReturn(true);
     when(() => mockBabyService.getBaby()).thenAnswer((_) async => _fakeBaby);
-    when(() => mockAllergenService.getAllergenBoardSummary(_babyId))
-        .thenAnswer((_) async => const Result.success(<AllergenBoardItem>[]));
+    when(
+      () => mockAllergenService.getAllergenBoardSummary(_babyId),
+    ).thenAnswer((_) async => const Result.success(<AllergenBoardItem>[]));
     when(() => mockLocalFlagService.hasLaunched()).thenReturn(true);
-    when(() => mockLocalFlagService.isOnboardingReadinessDone())
-        .thenReturn(true);
-    when(() => mockLocalFlagService.isOnboardingBabySetupDone())
-        .thenReturn(true);
+    when(
+      () => mockLocalFlagService.isOnboardingReadinessDone(),
+    ).thenReturn(true);
+    when(
+      () => mockLocalFlagService.isOnboardingBabySetupDone(),
+    ).thenReturn(true);
   });
 
-  testWidgets(
-    'sign out clears session and navigates to /auth/login; '
-    'app_has_launched flag is not reset',
-    (tester) async {
-      when(() => mockAuthRepo.signOut())
-          .thenAnswer((_) async => const Result.success(null));
+  testWidgets('sign out clears session and navigates to /auth/login; '
+      'app_has_launched flag is not reset', (tester) async {
+    when(
+      () => mockAuthRepo.signOut(),
+    ).thenAnswer((_) async => const Result.success(null));
 
-      final router = GoRouter(
-        initialLocation: '/',
-        routes: [
-          GoRoute(path: '/', builder: (_, __) => const ProfileScreen()),
-          GoRoute(
-            path: AppRoute.profileEdit.path,
-            name: AppRoute.profileEdit.name,
-            builder: (_, __) => const Scaffold(body: Text('Edit')),
-          ),
-          GoRoute(
-            path: AppRoute.login.path,
-            name: AppRoute.login.name,
-            builder: (_, __) => const Scaffold(body: Text('Login')),
-          ),
-        ],
-      );
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            authRepositoryProvider.overrideWithValue(mockAuthRepo),
-            authServiceProvider.overrideWith(_FakeAuthService.new),
-            babyProfileServiceProvider.overrideWithValue(mockBabyService),
-            allergenServiceProvider.overrideWithValue(mockAllergenService),
-            localFlagServiceProvider.overrideWithValue(mockLocalFlagService),
-          ],
-          child: MaterialApp.router(routerConfig: router),
+    final router = GoRouter(
+      initialLocation: '/',
+      routes: [
+        GoRoute(path: '/', builder: (_, __) => const ProfileScreen()),
+        GoRoute(
+          path: AppRoute.profileEdit.path,
+          name: AppRoute.profileEdit.name,
+          builder: (_, __) => const Scaffold(body: Text('Edit')),
         ),
-      );
-      await tester.pumpAndSettle();
+        GoRoute(
+          path: AppRoute.login.path,
+          name: AppRoute.login.name,
+          builder: (_, __) => const Scaffold(body: Text('Login')),
+        ),
+      ],
+    );
 
-      expect(find.byKey(const Key('profile_sign_out_button')), findsOneWidget);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authRepositoryProvider.overrideWithValue(mockAuthRepo),
+          authServiceProvider.overrideWith(_FakeAuthService.new),
+          babyProfileServiceProvider.overrideWithValue(mockBabyService),
+          allergenServiceProvider.overrideWithValue(mockAllergenService),
+          localFlagServiceProvider.overrideWithValue(mockLocalFlagService),
+        ],
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+    await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('profile_sign_out_button')));
-      await tester.pumpAndSettle();
+    expect(find.byKey(const Key('profile_sign_out_button')), findsOneWidget);
 
-      expect(find.text('Are you sure you want to sign out?'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('profile_sign_out_button')));
+    await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Yes'));
-      await tester.pumpAndSettle();
+    expect(find.text('Are you sure you want to sign out?'), findsOneWidget);
 
-      verify(() => mockAuthRepo.signOut()).called(1);
-      verifyNever(() => mockLocalFlagService.setHasLaunched());
-    },
-  );
+    await tester.tap(find.text('Yes'));
+    await tester.pumpAndSettle();
+
+    verify(() => mockAuthRepo.signOut()).called(1);
+    verifyNever(() => mockLocalFlagService.setHasLaunched());
+  });
 }

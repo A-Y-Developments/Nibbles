@@ -61,6 +61,7 @@ class _RecipeDetailBody extends ConsumerWidget {
         backgroundColor: AppColors.surface,
         elevation: 0,
         leading: const BackButton(),
+        title: const Text('Recipe Detail'),
       ),
       body: detailAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -166,70 +167,109 @@ class _RecipeContent extends ConsumerWidget {
       children: [
         Expanded(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSizes.pagePaddingH),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Title
-                Text(
-                  recipe.title,
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.text,
+                // Thumbnail hero
+                if (recipe.thumbnailUrl != null)
+                  AspectRatio(
+                    aspectRatio: 16 / 9,
+                    child: Image.network(
+                      recipe.thumbnailUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const ColoredBox(
+                        color: AppColors.surfaceVariant,
+                        child: Center(
+                          child: Icon(
+                            Icons.restaurant,
+                            size: AppSizes.iconXl,
+                            color: AppColors.subtext,
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  Container(
+                    height: 180,
+                    color: AppColors.surfaceVariant,
+                    child: const Center(
+                      child: Icon(
+                        Icons.restaurant,
+                        size: AppSizes.iconXl,
+                        color: AppColors.subtext,
+                      ),
+                    ),
+                  ),
+
+                Padding(
+                  padding: const EdgeInsets.all(AppSizes.pagePaddingH),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Title
+                      Text(
+                        recipe.title,
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.text,
+                            ),
+                      ),
+                      const SizedBox(height: AppSizes.sm),
+
+                      // Age range chip
+                      _AgeRangeChip(ageRange: recipe.ageRange),
+                      const SizedBox(height: AppSizes.sm),
+
+                      // Allergen chips
+                      if (recipe.allergenTags.isNotEmpty) ...[
+                        _AllergenChipsRow(
+                          tags: recipe.allergenTags,
+                          currentKey: state.currentAllergenKey,
+                          statuses: state.allergenStatuses,
+                        ),
+                        const SizedBox(height: AppSizes.md),
+                      ],
+
+                      // Ingredients
+                      const _SectionHeader(title: 'Ingredients'),
+                      const SizedBox(height: AppSizes.sm),
+                      _IngredientsList(ingredients: recipe.ingredients),
+                      const SizedBox(height: AppSizes.lg),
+
+                      // Steps
+                      const _SectionHeader(title: 'Steps'),
+                      const SizedBox(height: AppSizes.sm),
+                      _StepsList(steps: recipe.steps),
+                      const SizedBox(height: AppSizes.lg),
+
+                      // How to Serve
+                      const _SectionHeader(title: 'How to Serve'),
+                      const SizedBox(height: AppSizes.sm),
+                      Text(
+                        recipe.howToServe,
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodyMedium?.copyWith(color: AppColors.text),
+                      ),
+
+                      // Notes (optional)
+                      if (recipe.notes != null && recipe.notes!.isNotEmpty) ...[
+                        const SizedBox(height: AppSizes.lg),
+                        const _SectionHeader(title: 'Notes'),
+                        const SizedBox(height: AppSizes.sm),
+                        Text(
+                          recipe.notes!,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: AppColors.subtext),
+                        ),
+                      ],
+
+                      const SizedBox(height: AppSizes.xl),
+                    ],
                   ),
                 ),
-                const SizedBox(height: AppSizes.sm),
-
-                // Age range chip
-                _AgeRangeChip(ageRange: recipe.ageRange),
-                const SizedBox(height: AppSizes.sm),
-
-                // Allergen chips
-                if (recipe.allergenTags.isNotEmpty) ...[
-                  _AllergenChipsRow(
-                    tags: recipe.allergenTags,
-                    currentKey: state.currentAllergenKey,
-                    statuses: state.allergenStatuses,
-                  ),
-                  const SizedBox(height: AppSizes.md),
-                ],
-
-                // Ingredients
-                const _SectionHeader(title: 'Ingredients'),
-                const SizedBox(height: AppSizes.sm),
-                _IngredientsList(ingredients: recipe.ingredients),
-                const SizedBox(height: AppSizes.lg),
-
-                // Steps
-                const _SectionHeader(title: 'Steps'),
-                const SizedBox(height: AppSizes.sm),
-                _StepsList(steps: recipe.steps),
-                const SizedBox(height: AppSizes.lg),
-
-                // How to Serve
-                const _SectionHeader(title: 'How to Serve'),
-                const SizedBox(height: AppSizes.sm),
-                Text(
-                  recipe.howToServe,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(color: AppColors.text),
-                ),
-
-                // Notes (optional)
-                if (recipe.notes != null && recipe.notes!.isNotEmpty) ...[
-                  const SizedBox(height: AppSizes.lg),
-                  const _SectionHeader(title: 'Notes'),
-                  const SizedBox(height: AppSizes.sm),
-                  Text(
-                    recipe.notes!,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodyMedium?.copyWith(color: AppColors.subtext),
-                  ),
-                ],
-
-                const SizedBox(height: AppSizes.xl),
               ],
             ),
           ),

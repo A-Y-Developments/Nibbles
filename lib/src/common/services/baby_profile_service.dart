@@ -38,8 +38,7 @@ class BabyProfileService {
     String name,
     DateTime dob,
     Gender gender,
-  ) =>
-      _repo.updateBaby(babyId, name, dob, gender);
+  ) => _repo.updateBaby(babyId, name, dob, gender);
 
   /// Always reads from DB — never cached in memory.
   Future<bool> get onboardingCompleted => _repo.isOnboardingCompleted();
@@ -49,9 +48,7 @@ class BabyProfileService {
 // Specific *Ref types are deprecated; will be Ref in riverpod_generator 3.0.
 // ignore: deprecated_member_use_from_same_package
 BabyProfileService babyProfileService(BabyProfileServiceRef ref) =>
-    BabyProfileService(
-      ref.watch(babyProfileRepositoryProvider),
-    );
+    BabyProfileService(ref.watch(babyProfileRepositoryProvider));
 
 /// Fetches the current baby's id. Returns null if no baby exists yet.
 @riverpod

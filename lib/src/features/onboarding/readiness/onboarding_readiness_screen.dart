@@ -79,9 +79,7 @@ class _OnboardingReadinessScreenState
             : null,
       ),
       body: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.pagePaddingH,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: AppSizes.pagePaddingH),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -95,10 +93,8 @@ class _OnboardingReadinessScreenState
                       right: i < _questions.length - 1 ? 4 : 0,
                     ),
                     decoration: BoxDecoration(
-                      color:
-                          filled ? AppColors.primary : AppColors.divider,
-                      borderRadius:
-                          BorderRadius.circular(AppSizes.radiusFull),
+                      color: filled ? AppColors.primary : AppColors.divider,
+                      borderRadius: BorderRadius.circular(AppSizes.radiusFull),
                     ),
                   ),
                 );
@@ -107,8 +103,7 @@ class _OnboardingReadinessScreenState
             const SizedBox(height: AppSizes.sm),
             Text(
               '${_currentIndex + 1} of ${_questions.length}',
-              style:
-                  textTheme.bodySmall?.copyWith(color: AppColors.subtext),
+              style: textTheme.bodySmall?.copyWith(color: AppColors.subtext),
             ),
             const SizedBox(height: AppSizes.xxl),
             Text(
@@ -121,15 +116,13 @@ class _OnboardingReadinessScreenState
             ReadinessQuestionCard(
               label: 'Yes',
               selected: currentAnswer ?? false,
-              onTap: () =>
-                  controller.answer(_currentIndex, isYes: true),
+              onTap: () => controller.answer(_currentIndex, isYes: true),
             ),
             const SizedBox(height: AppSizes.md),
             ReadinessQuestionCard(
               label: "I'm not sure",
               selected: !(currentAnswer ?? true),
-              onTap: () =>
-                  controller.answer(_currentIndex, isYes: false),
+              onTap: () => controller.answer(_currentIndex, isYes: false),
             ),
             const Spacer(),
             SizedBox(

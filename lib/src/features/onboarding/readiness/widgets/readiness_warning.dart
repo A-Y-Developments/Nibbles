@@ -52,9 +52,7 @@ class ReadinessWarning extends StatelessWidget {
                 const SizedBox(height: AppSizes.sm),
                 Text(
                   'We recommend consulting your GP before starting solids.',
-                  style: textTheme.bodyMedium?.copyWith(
-                    color: AppColors.text,
-                  ),
+                  style: textTheme.bodyMedium?.copyWith(color: AppColors.text),
                 ),
               ],
             ),
