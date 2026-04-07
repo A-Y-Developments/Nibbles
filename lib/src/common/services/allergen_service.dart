@@ -1,5 +1,7 @@
+import 'dart:io';
+
 import 'package:nibbles/src/common/data/repositories/allergen_repository.dart';
-import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
+import 'package:nibbles/src/common/data/repositories/storage_repository.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/domain/entities/allergen.dart';
 import 'package:nibbles/src/common/domain/entities/allergen_board_item.dart';
@@ -13,9 +15,12 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'allergen_service.g.dart';
 
 class AllergenService {
-  const AllergenService(this._repo);
+  const AllergenService(this._repo, this._storage);
 
   final AllergenRepository _repo;
+  final StorageRepository _storage;
+
+  static const _photoBucket = 'allergen-photos';
 
   /// Returns the allergen the baby is currently working through.
   Future<Result<Allergen>> getCurrentAllergen(String babyId) async {
@@ -57,46 +62,51 @@ class AllergenService {
     final allergens = allergensResult.dataOrNull!;
     final allLogs = logsResult.dataOrNull!;
 
-    final items = allergens
-        .map(
-          (allergen) {
-            final logs = allLogs
-                .where((l) => l.allergenKey == allergen.key)
-                .toList();
-            return AllergenBoardItem(
-              allergen: allergen,
-              logs: logs,
-              status: deriveStatus(logs),
-            );
-          },
-        )
-        .toList();
+    final items =
+        allergens.map((allergen) {
+          final logs = allLogs
+              .where((l) => l.allergenKey == allergen.key)
+              .toList();
+          return AllergenBoardItem(
+            allergen: allergen,
+            logs: logs,
+            status: deriveStatus(logs),
+          );
+        }).toList()..sort(
+          (a, b) =>
+              a.allergen.sequenceOrder.compareTo(b.allergen.sequenceOrder),
+        );
 
     return Result.success(items);
   }
 
-  /// Saves a daily allergen log.
-  ///
-  /// Returns [DuplicateLogException] if a log already exists for the same
-  /// allergen on the same calendar day — never inserts a duplicate.
+  /// Saves an allergen log. Multiple logs per day are allowed.
+  /// If [photo] is provided, uploads it first; photo upload failure is P2
+  /// (log saves without photo, caller should show a toast).
   Future<Result<AllergenLog>> saveAllergenLog({
     required String babyId,
     required String allergenKey,
     required EmojiTaste emojiTaste,
     required bool hadReaction,
     ReactionDetail? reactionDetail,
+    File? photo,
   }) async {
     final today = DateTime.now();
 
-    final duplicateCheck =
-        await _repo.hasLogForToday(babyId, allergenKey, today);
-    if (duplicateCheck.isFailure) {
-      return Result.failure(duplicateCheck.errorOrNull!);
-    }
-
-    if (duplicateCheck.dataOrNull!) {
-      final name = await _resolveAllergenName(allergenKey);
-      return Result.failure(DuplicateLogException(name));
+    // Upload photo if provided (P2 — failure is non-blocking).
+    String? photoPath;
+    if (photo != null) {
+      final ts = today.millisecondsSinceEpoch;
+      final uploadPath = '$babyId/${ts}_$allergenKey.jpg';
+      final uploadResult = await _storage.uploadFile(
+        _photoBucket,
+        uploadPath,
+        photo,
+      );
+      if (uploadResult.isSuccess) {
+        photoPath = uploadPath;
+      }
+      // On failure: photoPath stays null, log saves without photo.
     }
 
     final logResult = await _repo.saveLog(
@@ -108,6 +118,7 @@ class AllergenService {
         hadReaction: hadReaction,
         logDate: today,
         createdAt: today,
+        photoUrl: photoPath,
       ),
     );
     if (logResult.isFailure) return Result.failure(logResult.errorOrNull!);
@@ -125,6 +136,10 @@ class AllergenService {
 
     return Result.success(savedLog);
   }
+
+  /// Returns a signed URL for a photo stored in the allergen-photos bucket.
+  Future<Result<String>> getSignedPhotoUrl(String photoPath) =>
+      _storage.getSignedUrl(_photoBucket, photoPath);
 
   /// Advances the program to the next allergen in sequence.
   /// Completes the program automatically if the current allergen is last.
@@ -188,31 +203,7 @@ class AllergenService {
   Future<Result<List<AllergenLog>>> getLogs(
     String babyId, {
     String? allergenKey,
-  }) =>
-      _repo.getLogs(babyId, allergenKey: allergenKey);
-
-  /// Returns true if a log already exists for this allergen today.
-  Future<Result<bool>> hasLoggedToday(
-    String babyId,
-    String allergenKey,
-  ) =>
-      _repo.hasLogForToday(babyId, allergenKey, DateTime.now());
-
-  Future<String> _resolveAllergenName(String allergenKey) async {
-    final result = await _repo.getAllergens();
-    if (result.isFailure) return 'this allergen';
-    return result.dataOrNull!
-        .firstWhere(
-          (a) => a.key == allergenKey,
-          orElse: () => const Allergen(
-            key: '',
-            name: 'this allergen',
-            sequenceOrder: 0,
-            emoji: '',
-          ),
-        )
-        .name;
-  }
+  }) => _repo.getLogs(babyId, allergenKey: allergenKey);
 }
 
 @Riverpod(keepAlive: true)
@@ -220,5 +211,7 @@ AllergenService allergenService(
   // Specific *Ref types are deprecated; will be Ref in riverpod_generator 3.0.
   // ignore: deprecated_member_use_from_same_package
   AllergenServiceRef ref,
-) =>
-    AllergenService(ref.watch(allergenRepositoryProvider));
+) => AllergenService(
+  ref.watch(allergenRepositoryProvider),
+  ref.watch(storageRepositoryProvider),
+);

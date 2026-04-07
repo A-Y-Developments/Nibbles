@@ -11,12 +11,14 @@ class LogEntryCard extends StatefulWidget {
     required this.log,
     required this.dayNumber,
     this.reactionDetail,
+    this.signedPhotoUrl,
     super.key,
   });
 
   final AllergenLog log;
   final int dayNumber;
   final ReactionDetail? reactionDetail;
+  final String? signedPhotoUrl;
 
   @override
   State<LogEntryCard> createState() => _LogEntryCardState();
@@ -25,15 +27,7 @@ class LogEntryCard extends StatefulWidget {
 class _LogEntryCardState extends State<LogEntryCard> {
   bool _expanded = false;
 
-  static const _weekdays = [
-    'Mon',
-    'Tue',
-    'Wed',
-    'Thu',
-    'Fri',
-    'Sat',
-    'Sun',
-  ];
+  static const _weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
   static const _months = [
     'Jan',
@@ -85,8 +79,7 @@ class _LogEntryCardState extends State<LogEntryCard> {
                     height: 32,
                     decoration: BoxDecoration(
                       color: AppColors.surfaceVariant,
-                      borderRadius:
-                          BorderRadius.circular(AppSizes.radiusFull),
+                      borderRadius: BorderRadius.circular(AppSizes.radiusFull),
                     ),
                     alignment: Alignment.center,
                     child: Text(
@@ -111,8 +104,9 @@ class _LogEntryCardState extends State<LogEntryCard> {
                         const SizedBox(height: 2),
                         Text(
                           _tasteLabel(widget.log.emojiTaste),
-                          style: textTheme.bodySmall
-                              ?.copyWith(color: AppColors.subtext),
+                          style: textTheme.bodySmall?.copyWith(
+                            color: AppColors.subtext,
+                          ),
                         ),
                       ],
                     ),
@@ -144,16 +138,18 @@ class _LogEntryCardState extends State<LogEntryCard> {
           ),
           if (_expanded && widget.reactionDetail != null)
             _ReactionDetailExpanded(detail: widget.reactionDetail!),
+          if (widget.signedPhotoUrl != null)
+            _PhotoThumbnail(url: widget.signedPhotoUrl!),
         ],
       ),
     );
   }
 
   String _tasteLabel(EmojiTaste taste) => switch (taste) {
-        EmojiTaste.love => 'Love it 😍',
-        EmojiTaste.neutral => 'Neutral 😐',
-        EmojiTaste.dislike => 'Dislike 😣',
-      };
+    EmojiTaste.love => 'Love it 😍',
+    EmojiTaste.neutral => 'Neutral 😐',
+    EmojiTaste.dislike => 'Dislike 😣',
+  };
 }
 
 class _ReactionDetailExpanded extends StatelessWidget {
@@ -172,9 +168,7 @@ class _ReactionDetailExpanded extends StatelessWidget {
         AppSizes.cardPadding,
       ),
       decoration: const BoxDecoration(
-        border: Border(
-          top: BorderSide(color: AppColors.divider),
-        ),
+        border: Border(top: BorderSide(color: AppColors.divider)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -190,8 +184,9 @@ class _ReactionDetailExpanded extends StatelessWidget {
               const SizedBox(width: AppSizes.xs),
               Text(
                 'Reaction — ${_severityLabel(detail.severity)}',
-                style: textTheme.labelMedium
-                    ?.copyWith(color: AppColors.allergenFlagged),
+                style: textTheme.labelMedium?.copyWith(
+                  color: AppColors.allergenFlagged,
+                ),
               ),
             ],
           ),
@@ -228,8 +223,7 @@ class _ReactionDetailExpanded extends StatelessWidget {
             const SizedBox(height: AppSizes.xs),
             Text(
               detail.notes!,
-              style: textTheme.bodySmall
-                  ?.copyWith(color: AppColors.subtext),
+              style: textTheme.bodySmall?.copyWith(color: AppColors.subtext),
             ),
           ],
         ],
@@ -238,8 +232,63 @@ class _ReactionDetailExpanded extends StatelessWidget {
   }
 
   String _severityLabel(ReactionSeverity s) => switch (s) {
-        ReactionSeverity.mild => 'Mild',
-        ReactionSeverity.moderate => 'Moderate',
-        ReactionSeverity.severe => 'Severe',
-      };
+    ReactionSeverity.mild => 'Mild',
+    ReactionSeverity.moderate => 'Moderate',
+    ReactionSeverity.severe => 'Severe',
+  };
+}
+
+class _PhotoThumbnail extends StatelessWidget {
+  const _PhotoThumbnail({required this.url});
+  final String url;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSizes.cardPadding,
+        0,
+        AppSizes.cardPadding,
+        AppSizes.cardPadding,
+      ),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: GestureDetector(
+          onTap: () => _showFullScreen(context),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+            child: Image.network(
+              url,
+              width: 64,
+              height: 64,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showFullScreen(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (_) => Dialog.fullscreen(
+        backgroundColor: Colors.black,
+        child: Stack(
+          children: [
+            Center(child: InteractiveViewer(child: Image.network(url))),
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 8,
+              right: 8,
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white, size: 28),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

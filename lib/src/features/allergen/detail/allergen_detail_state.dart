@@ -13,9 +13,9 @@ class AllergenDetailState with _$AllergenDetailState {
     required Allergen allergen,
     required List<AllergenLog> logs,
     required AllergenProgramState programState,
-    required bool hasLoggedToday,
     required AllergenStatus status,
     @Default(<String, ReactionDetail>{})
     Map<String, ReactionDetail> reactionDetails,
+    @Default(<String, String>{}) Map<String, String> signedPhotoUrls,
   }) = _AllergenDetailState;
 }

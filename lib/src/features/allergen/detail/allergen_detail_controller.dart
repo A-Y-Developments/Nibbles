@@ -25,24 +25,20 @@ class AllergenDetailController extends _$AllergenDetailController {
     final allergensResult = await service.getAllergens();
     _throwIfFailure(allergensResult);
     final allergenList = allergensResult.dataOrNull!;
-    final allergenMatches =
-        allergenList.where((Allergen a) => a.key == allergenKey);
+    final allergenMatches = allergenList.where(
+      (Allergen a) => a.key == allergenKey,
+    );
     if (allergenMatches.isEmpty) {
       throw StateError('Allergen "$allergenKey" not found.');
     }
     final allergen = allergenMatches.first;
 
-    final logsResult =
-        await service.getLogs(babyId, allergenKey: allergenKey);
+    final logsResult = await service.getLogs(babyId, allergenKey: allergenKey);
     _throwIfFailure(logsResult);
     final logs = logsResult.dataOrNull!;
 
     final programStateResult = await service.getProgramState(babyId);
     _throwIfFailure(programStateResult);
-
-    final hasTodayResult =
-        await service.hasLoggedToday(babyId, allergenKey);
-    _throwIfFailure(hasTodayResult);
 
     final status = service.deriveStatus(logs);
 
@@ -55,13 +51,23 @@ class AllergenDetailController extends _$AllergenDetailController {
       }
     }
 
+    // Fetch signed URLs for logs that have photos.
+    final signedPhotoUrls = <String, String>{};
+    final logsWithPhotos = logs.where((l) => l.photoUrl != null);
+    for (final log in logsWithPhotos) {
+      final urlResult = await service.getSignedPhotoUrl(log.photoUrl!);
+      if (urlResult.isSuccess) {
+        signedPhotoUrls[log.id] = urlResult.dataOrNull!;
+      }
+    }
+
     return AllergenDetailState(
       allergen: allergen,
       logs: logs,
       programState: programStateResult.dataOrNull!,
-      hasLoggedToday: hasTodayResult.dataOrNull!,
       status: status,
       reactionDetails: reactionDetails,
+      signedPhotoUrls: signedPhotoUrls,
     );
   }
 
@@ -78,8 +84,7 @@ class AllergenDetailController extends _$AllergenDetailController {
     final babyId = current.programState.babyId;
     final service = ref.read(allergenServiceProvider);
 
-    final advanceResult =
-        await service.advanceToNextAllergen(babyId);
+    final advanceResult = await service.advanceToNextAllergen(babyId);
     if (advanceResult.isFailure) {
       return Result.failure(advanceResult.errorOrNull!);
     }

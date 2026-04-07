@@ -53,6 +53,10 @@
 			</array>
 		</dict>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>Nibbles uses your camera to take photos of allergen exposures.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Nibbles accesses your photo library to attach photos to allergen logs.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>

@@ -8,13 +8,14 @@ part 'allergen_log_state.freezed.dart';
 class AllergenLogState with _$AllergenLogState {
   const factory AllergenLogState({
     EmojiTaste? taste,
-    bool? hadReaction,
+    @Default(false) bool hadReaction,
     @Default([]) List<String> symptoms,
     ReactionSeverity? severity,
     String? notes,
+    String? photoPath,
     @Default(false) bool isLoading,
     @Default(false) bool isSaved,
-    @Default(false) bool isDuplicateLog,
+    @Default(false) bool photoUploadFailed,
     String? errorMessage,
   }) = _AllergenLogState;
 }

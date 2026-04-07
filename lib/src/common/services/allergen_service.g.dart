@@ -6,7 +6,7 @@ part of 'allergen_service.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$allergenServiceHash() => r'12c206067f050a06765e4d29f290b908305c1b90';
+String _$allergenServiceHash() => r'da420de05479359fe3d6c20f61915e7470226d5e';
 
 /// See also [allergenService].
 @ProviderFor(allergenService)

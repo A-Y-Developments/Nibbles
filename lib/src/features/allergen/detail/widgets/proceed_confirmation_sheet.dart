@@ -63,8 +63,18 @@ class _ProceedConfirmationSheetState
 
   String _formatDate(DateTime d) {
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return '${months[d.month - 1]} ${d.day}';
   }
@@ -95,10 +105,7 @@ class _ProceedConfirmationSheetState
             ),
             const SizedBox(height: AppSizes.lg),
             Center(
-              child: Text(
-                allergen.emoji,
-                style: const TextStyle(fontSize: 48),
-              ),
+              child: Text(allergen.emoji, style: const TextStyle(fontSize: 48)),
             ),
             const SizedBox(height: AppSizes.sm),
             Center(

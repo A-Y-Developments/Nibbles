@@ -20,10 +20,10 @@ mixin _$AllergenDetailState {
   Allergen get allergen => throw _privateConstructorUsedError;
   List<AllergenLog> get logs => throw _privateConstructorUsedError;
   AllergenProgramState get programState => throw _privateConstructorUsedError;
-  bool get hasLoggedToday => throw _privateConstructorUsedError;
   AllergenStatus get status => throw _privateConstructorUsedError;
   Map<String, ReactionDetail> get reactionDetails =>
       throw _privateConstructorUsedError;
+  Map<String, String> get signedPhotoUrls => throw _privateConstructorUsedError;
 
   /// Create a copy of AllergenDetailState
   /// with the given fields replaced by the non-null parameter values.
@@ -43,9 +43,9 @@ abstract class $AllergenDetailStateCopyWith<$Res> {
     Allergen allergen,
     List<AllergenLog> logs,
     AllergenProgramState programState,
-    bool hasLoggedToday,
     AllergenStatus status,
     Map<String, ReactionDetail> reactionDetails,
+    Map<String, String> signedPhotoUrls,
   });
 
   $AllergenCopyWith<$Res> get allergen;
@@ -70,9 +70,9 @@ class _$AllergenDetailStateCopyWithImpl<$Res, $Val extends AllergenDetailState>
     Object? allergen = null,
     Object? logs = null,
     Object? programState = null,
-    Object? hasLoggedToday = null,
     Object? status = null,
     Object? reactionDetails = null,
+    Object? signedPhotoUrls = null,
   }) {
     return _then(
       _value.copyWith(
@@ -88,10 +88,6 @@ class _$AllergenDetailStateCopyWithImpl<$Res, $Val extends AllergenDetailState>
                 ? _value.programState
                 : programState // ignore: cast_nullable_to_non_nullable
                       as AllergenProgramState,
-            hasLoggedToday: null == hasLoggedToday
-                ? _value.hasLoggedToday
-                : hasLoggedToday // ignore: cast_nullable_to_non_nullable
-                      as bool,
             status: null == status
                 ? _value.status
                 : status // ignore: cast_nullable_to_non_nullable
@@ -100,6 +96,10 @@ class _$AllergenDetailStateCopyWithImpl<$Res, $Val extends AllergenDetailState>
                 ? _value.reactionDetails
                 : reactionDetails // ignore: cast_nullable_to_non_nullable
                       as Map<String, ReactionDetail>,
+            signedPhotoUrls: null == signedPhotoUrls
+                ? _value.signedPhotoUrls
+                : signedPhotoUrls // ignore: cast_nullable_to_non_nullable
+                      as Map<String, String>,
           )
           as $Val,
     );
@@ -139,9 +139,9 @@ abstract class _$$AllergenDetailStateImplCopyWith<$Res>
     Allergen allergen,
     List<AllergenLog> logs,
     AllergenProgramState programState,
-    bool hasLoggedToday,
     AllergenStatus status,
     Map<String, ReactionDetail> reactionDetails,
+    Map<String, String> signedPhotoUrls,
   });
 
   @override
@@ -167,9 +167,9 @@ class __$$AllergenDetailStateImplCopyWithImpl<$Res>
     Object? allergen = null,
     Object? logs = null,
     Object? programState = null,
-    Object? hasLoggedToday = null,
     Object? status = null,
     Object? reactionDetails = null,
+    Object? signedPhotoUrls = null,
   }) {
     return _then(
       _$AllergenDetailStateImpl(
@@ -185,10 +185,6 @@ class __$$AllergenDetailStateImplCopyWithImpl<$Res>
             ? _value.programState
             : programState // ignore: cast_nullable_to_non_nullable
                   as AllergenProgramState,
-        hasLoggedToday: null == hasLoggedToday
-            ? _value.hasLoggedToday
-            : hasLoggedToday // ignore: cast_nullable_to_non_nullable
-                  as bool,
         status: null == status
             ? _value.status
             : status // ignore: cast_nullable_to_non_nullable
@@ -197,6 +193,10 @@ class __$$AllergenDetailStateImplCopyWithImpl<$Res>
             ? _value._reactionDetails
             : reactionDetails // ignore: cast_nullable_to_non_nullable
                   as Map<String, ReactionDetail>,
+        signedPhotoUrls: null == signedPhotoUrls
+            ? _value._signedPhotoUrls
+            : signedPhotoUrls // ignore: cast_nullable_to_non_nullable
+                  as Map<String, String>,
       ),
     );
   }
@@ -209,12 +209,13 @@ class _$AllergenDetailStateImpl implements _AllergenDetailState {
     required this.allergen,
     required final List<AllergenLog> logs,
     required this.programState,
-    required this.hasLoggedToday,
     required this.status,
     final Map<String, ReactionDetail> reactionDetails =
         const <String, ReactionDetail>{},
+    final Map<String, String> signedPhotoUrls = const <String, String>{},
   }) : _logs = logs,
-       _reactionDetails = reactionDetails;
+       _reactionDetails = reactionDetails,
+       _signedPhotoUrls = signedPhotoUrls;
 
   @override
   final Allergen allergen;
@@ -229,8 +230,6 @@ class _$AllergenDetailStateImpl implements _AllergenDetailState {
   @override
   final AllergenProgramState programState;
   @override
-  final bool hasLoggedToday;
-  @override
   final AllergenStatus status;
   final Map<String, ReactionDetail> _reactionDetails;
   @override
@@ -241,9 +240,18 @@ class _$AllergenDetailStateImpl implements _AllergenDetailState {
     return EqualUnmodifiableMapView(_reactionDetails);
   }
 
+  final Map<String, String> _signedPhotoUrls;
+  @override
+  @JsonKey()
+  Map<String, String> get signedPhotoUrls {
+    if (_signedPhotoUrls is EqualUnmodifiableMapView) return _signedPhotoUrls;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(_signedPhotoUrls);
+  }
+
   @override
   String toString() {
-    return 'AllergenDetailState(allergen: $allergen, logs: $logs, programState: $programState, hasLoggedToday: $hasLoggedToday, status: $status, reactionDetails: $reactionDetails)';
+    return 'AllergenDetailState(allergen: $allergen, logs: $logs, programState: $programState, status: $status, reactionDetails: $reactionDetails, signedPhotoUrls: $signedPhotoUrls)';
   }
 
   @override
@@ -256,12 +264,14 @@ class _$AllergenDetailStateImpl implements _AllergenDetailState {
             const DeepCollectionEquality().equals(other._logs, _logs) &&
             (identical(other.programState, programState) ||
                 other.programState == programState) &&
-            (identical(other.hasLoggedToday, hasLoggedToday) ||
-                other.hasLoggedToday == hasLoggedToday) &&
             (identical(other.status, status) || other.status == status) &&
             const DeepCollectionEquality().equals(
               other._reactionDetails,
               _reactionDetails,
+            ) &&
+            const DeepCollectionEquality().equals(
+              other._signedPhotoUrls,
+              _signedPhotoUrls,
             ));
   }
 
@@ -271,9 +281,9 @@ class _$AllergenDetailStateImpl implements _AllergenDetailState {
     allergen,
     const DeepCollectionEquality().hash(_logs),
     programState,
-    hasLoggedToday,
     status,
     const DeepCollectionEquality().hash(_reactionDetails),
+    const DeepCollectionEquality().hash(_signedPhotoUrls),
   );
 
   /// Create a copy of AllergenDetailState
@@ -293,9 +303,9 @@ abstract class _AllergenDetailState implements AllergenDetailState {
     required final Allergen allergen,
     required final List<AllergenLog> logs,
     required final AllergenProgramState programState,
-    required final bool hasLoggedToday,
     required final AllergenStatus status,
     final Map<String, ReactionDetail> reactionDetails,
+    final Map<String, String> signedPhotoUrls,
   }) = _$AllergenDetailStateImpl;
 
   @override
@@ -305,11 +315,11 @@ abstract class _AllergenDetailState implements AllergenDetailState {
   @override
   AllergenProgramState get programState;
   @override
-  bool get hasLoggedToday;
-  @override
   AllergenStatus get status;
   @override
   Map<String, ReactionDetail> get reactionDetails;
+  @override
+  Map<String, String> get signedPhotoUrls;
 
   /// Create a copy of AllergenDetailState
   /// with the given fields replaced by the non-null parameter values.

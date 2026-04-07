@@ -13,5 +13,6 @@ class AllergenLog with _$AllergenLog {
     required bool hadReaction,
     required DateTime logDate,
     required DateTime createdAt,
+    String? photoUrl,
   }) = _AllergenLog;
 }

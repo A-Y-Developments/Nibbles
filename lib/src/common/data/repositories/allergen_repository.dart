@@ -34,14 +34,6 @@ abstract interface class AllergenRepository {
     String? allergenKey,
   });
 
-  /// ALLRG-04: Check if a log exists for (baby_id, allergen_key, log_date)
-  /// by calendar day — not timestamp.
-  Future<Result<bool>> hasLogForToday(
-    String babyId,
-    String allergenKey,
-    DateTime date,
-  );
-
   /// ALLRG-05: Insert allergen_log row.
   Future<Result<AllergenLog>> saveLog(AllergenLog log);
 
@@ -66,8 +58,8 @@ class AllergenRepositoryImpl implements AllergenRepository {
   AllergenRepositoryImpl({
     SupabaseClient? supabaseClient,
     HiveService? hiveService,
-  })  : _supabase = supabaseClient ?? Supabase.instance.client,
-        _hive = hiveService ?? HiveService();
+  }) : _supabase = supabaseClient ?? Supabase.instance.client,
+       _hive = hiveService ?? HiveService();
 
   final SupabaseClient _supabase;
   final HiveService _hive;
@@ -162,30 +154,6 @@ class AllergenRepositoryImpl implements AllergenRepository {
   }
 
   @override
-  Future<Result<bool>> hasLogForToday(
-    String babyId,
-    String allergenKey,
-    DateTime date,
-  ) async {
-    try {
-      final dateStr = _formatDate(date);
-      final data = await _supabase
-          .from('allergen_logs')
-          .select('id')
-          .eq('baby_id', babyId)
-          .eq('allergen_key', allergenKey)
-          .eq('log_date', dateStr)
-          .limit(1);
-
-      return Result.success((data as List<dynamic>).isNotEmpty);
-    } on PostgrestException catch (e) {
-      return Result.failure(ServerException(e.message));
-    } on Object {
-      return const Result.failure(UnknownException());
-    }
-  }
-
-  @override
   Future<Result<AllergenLog>> saveLog(AllergenLog log) async {
     try {
       final data = await _supabase
@@ -196,6 +164,7 @@ class AllergenRepositoryImpl implements AllergenRepository {
             'emoji_taste': log.emojiTaste.toJson(),
             'had_reaction': log.hadReaction,
             'log_date': _formatDate(log.logDate),
+            if (log.photoUrl != null) 'photo_url': log.photoUrl,
           })
           .select()
           .single();
@@ -260,9 +229,7 @@ class AllergenRepositoryImpl implements AllergenRepository {
     try {
       await _supabase
           .from('allergen_program_state')
-          .update({
-            'status': AllergenProgramStatus.completed.toJson(),
-          })
+          .update({'status': AllergenProgramStatus.completed.toJson()})
           .eq('baby_id', babyId);
 
       return const Result.success(null);
@@ -305,14 +272,15 @@ class AllergenRepositoryImpl implements AllergenRepository {
   }
 
   AllergenLog _logFromRow(Map<String, dynamic> row) => AllergenLog(
-        id: row['id'] as String,
-        babyId: row['baby_id'] as String,
-        allergenKey: row['allergen_key'] as String,
-        emojiTaste: EmojiTasteX.fromJson(row['emoji_taste'] as String),
-        hadReaction: row['had_reaction'] as bool,
-        logDate: DateTime.parse(row['log_date'] as String),
-        createdAt: DateTime.parse(row['created_at'] as String),
-      );
+    id: row['id'] as String,
+    babyId: row['baby_id'] as String,
+    allergenKey: row['allergen_key'] as String,
+    emojiTaste: EmojiTasteX.fromJson(row['emoji_taste'] as String),
+    hadReaction: row['had_reaction'] as bool,
+    logDate: DateTime.parse(row['log_date'] as String),
+    createdAt: DateTime.parse(row['created_at'] as String),
+    photoUrl: row['photo_url'] as String?,
+  );
 
   AllergenProgramState _programStateFromRow(Map<String, dynamic> row) =>
       AllergenProgramState(
@@ -346,5 +314,4 @@ AllergenRepository allergenRepository(
   // Specific *Ref types are deprecated; will be Ref in riverpod_generator 3.0.
   // ignore: deprecated_member_use_from_same_package
   AllergenRepositoryRef ref,
-) =>
-    AllergenRepositoryImpl();
+) => AllergenRepositoryImpl();
