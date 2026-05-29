@@ -43,6 +43,7 @@ dev_dependencies:
   build_runner: ^2.4.0
   custom_lint: ^0.7.0
   flutter_gen_runner: ^5.2.0
+  flutter_native_splash: ^2.4.0
   flutter_test:
     sdk: flutter
   freezed: ^2.5.0
@@ -113,3 +114,22 @@ flutter:
           weight: 700
         - asset: assets/fonts/Parkinsans-ExtraBold.ttf
           weight: 800
+
+# Native OS launch screen (shown before Flutter boots). Flat cream (#FFFDF8)
+# matches the Flutter splash background exactly so there is no color flash on
+# handoff. The quatrefoil mark (transparent background) floats centered on
+# cream. Regenerate native assets with:
+#   dart run flutter_native_splash:create
+# Shared ios/Runner + android/app/src/main assets cover both dev and prod
+# flavors (flavors differ only by bundle id / app name).
+flutter_native_splash:
+  color: "#FFFDF8"
+  image: assets/images/launch_quatrefoil.png
+  android: true
+  ios: true
+  android_gravity: center
+  ios_content_mode: center
+  # Android 12+ uses the system splash API: flat cream window + centered icon.
+  android_12:
+    color: "#FFFDF8"
+    image: assets/images/launch_quatrefoil.png
