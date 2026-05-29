@@ -1,8 +1,10 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:nibbles/firebase_options.dart';
 import 'package:nibbles/src/app.dart';
@@ -13,6 +15,14 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// Bootstrap order is strict — do not reorder.
 Future<void> bootstrap({required Flavor flavor}) async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Figtree (body font) is bundled under google_fonts/ — resolve from assets,
+  // never fetch over HTTP, so first paint never depends on the network.
+  GoogleFonts.config.allowRuntimeFetching = false;
+  LicenseRegistry.addLicense(() async* {
+    final license = await rootBundle.loadString('google_fonts/OFL.txt');
+    yield LicenseEntryWithLineBreaks(<String>['google_fonts'], license);
+  });
 
   // 1. Load env file for this flavor
   final envFile = flavor == Flavor.dev ? '.env.dev' : '.env.prod';
