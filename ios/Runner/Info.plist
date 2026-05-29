@@ -52,6 +52,19 @@
 				<string>com.aydev.nibbles.dev</string>
 			</array>
 		</dict>
+		<!-- Google OAuth callback (NIB-117). The scheme is the REVERSED Google OAuth
+		     iOS client ID from GCP, e.g. com.googleusercontent.apps.123456789-abcdef.
+		     TODO: replace REPLACE_WITH_REVERSED_GOOGLE_OAUTH_CLIENT_ID with the real
+		     reversed client ID from the GCP OAuth 2.0 iOS client (dev + prod share
+		     one entry; if dev and prod use separate GCP clients, add a second dict). -->
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>REPLACE_WITH_REVERSED_GOOGLE_OAUTH_CLIENT_ID</string>
+			</array>
+		</dict>
 	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>Nibbles uses your camera to take photos of allergen exposures.</string>

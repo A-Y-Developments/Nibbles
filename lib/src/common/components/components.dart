@@ -2,6 +2,7 @@
 /// every redesigned feature. See NIB-49.
 library;
 
+export 'brand/brand_logo.dart';
 export 'brand/quatrefoil.dart';
 export 'buttons/app_pill_button.dart';
 export 'buttons/app_round_button.dart';
