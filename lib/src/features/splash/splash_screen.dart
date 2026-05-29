@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
+import 'package:nibbles/src/app/themes/app_typography.dart';
+import 'package:nibbles/src/common/components/brand/quatrefoil.dart';
 import 'package:nibbles/src/features/splash/splash_controller.dart';
 
 class SplashScreen extends ConsumerWidget {
@@ -18,7 +20,7 @@ class SplashScreen extends ConsumerWidget {
     final state = ref.watch(splashControllerProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.cream,
       body: SafeArea(
         child: Center(
           child: state.hasError
@@ -33,25 +35,18 @@ class SplashScreen extends ConsumerWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          width: 80,
-          height: 80,
-          decoration: BoxDecoration(
-            color: AppColors.primary,
-            borderRadius: BorderRadius.circular(AppSizes.radiusXl),
-          ),
-          child: const Icon(
-            Icons.child_care_rounded,
-            color: AppColors.onPrimary,
-            size: AppSizes.iconXl,
-          ),
-        ),
-        const SizedBox(height: AppSizes.lg),
-        Text(
-          'Nibbles',
-          style: Theme.of(context).textTheme.displaySmall?.copyWith(
-            color: AppColors.primary,
-            fontWeight: FontWeight.w800,
+        const Quatrefoil(size: AppSizes.avatarXl),
+        const SizedBox(height: AppSizes.md),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            'nibbles',
+            style: AppTypography.textTheme.displayMedium?.copyWith(
+              fontSize: 42,
+              fontWeight: FontWeight.w800,
+              color: AppColors.greenDeep,
+              letterSpacing: -0.02,
+            ),
           ),
         ),
       ],
