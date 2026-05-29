@@ -1,4 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -53,6 +54,15 @@ Future<void> bootstrap({required Flavor flavor}) async {
 
   // 4. Firebase init (firebase options wired in NIB-3)
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Route uncaught Flutter framework + platform errors to Crashlytics. Wired
+  // immediately after Firebase init so any subsequent boot crash is captured.
+  // No PII is recorded — only the framework error/stack.
+  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+  WidgetsBinding.instance.platformDispatcher.onError = (error, stack) {
+    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    return true;
+  };
 
   // 5. Supabase init
   await Supabase.initialize(

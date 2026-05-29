@@ -1,6 +1,10 @@
+import 'dart:async';
+
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:nibbles/src/common/services/auth_service.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/common/services/local_flag_service.dart';
+import 'package:nibbles/src/logging/analytics.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'splash_controller.g.dart';
@@ -31,6 +35,10 @@ class SplashController extends _$SplashController {
 
   @override
   Future<String> build() async {
+    // Fire-and-forget app-open event. Guarded so an uninitialised Firebase or
+    // analytics hiccup never throws into — or blocks — boot/navigation.
+    unawaited(_logAppOpen());
+
     // Start the brand floor at the top so it overlaps boot work; awaited in
     // the finally below. Net effect is max(brandFloor, bootWork) on BOTH the
     // success and the error path — keeping NIB-57's retry window intact.
@@ -115,11 +123,48 @@ class SplashController extends _$SplashController {
 
   /// Runs a boot-critical remote read, rewrapping any throw as a
   /// [SplashBootException] so the AsyncNotifier error state is discriminable.
+  ///
+  /// The original error is recorded to Crashlytics (non-fatal, no PII) so the
+  /// P0 retry UI is backed by a background diagnostic record. The record is
+  /// fire-and-forget — it never blocks or alters the error path.
   Future<T> _guardBoot<T>(Future<T> Function() read) async {
     try {
       return await read();
-    } on Object catch (e) {
+    } on Object catch (e, st) {
+      unawaited(_recordBootFailure(e, st));
       throw SplashBootException(e);
+    }
+  }
+
+  /// Logs `app_open` via the existing [Analytics] wrapper. That wrapper (and
+  /// the `FirebaseAnalytics.instance` access inside it) can throw synchronously
+  /// when Firebase is uninitialised, so the whole body is guarded: the returned
+  /// future always completes normally and the `unawaited` caller never
+  /// escalates a stray analytics failure to the root error zone.
+  Future<void> _logAppOpen() async {
+    try {
+      await Analytics.instance.logAppOpen();
+    } on Object catch (_) {
+      // Analytics is best-effort; swallow so boot/navigation is never blocked.
+    }
+  }
+
+  /// Records a boot failure to Crashlytics as a non-fatal diagnostic. No PII is
+  /// passed: only the raw error/stack and a static reason string. Guarded so a
+  /// Crashlytics failure (e.g. uninitialised Firebase in tests) never escapes.
+  Future<void> _recordBootFailure(Object error, StackTrace stack) async {
+    try {
+      await FirebaseCrashlytics.instance.recordError(
+        error,
+        stack,
+        reason: 'splash_boot_failed',
+        // Explicit: this is a non-fatal diagnostic backing the P0 retry UI,
+        // distinct from the global fatal handler in runner.dart.
+        // ignore: avoid_redundant_argument_values
+        fatal: false,
+      );
+    } on Object catch (_) {
+      // Best-effort background record; never block or alter the P0 path.
     }
   }
 }
