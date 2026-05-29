@@ -145,8 +145,8 @@
   --sp-12: 48px;
 
   /* ─── Type tokens ──────────────────────────────────────── */
-  --font-display: "Parkinsans", "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-body:    "Parkinsans", "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Parkinsans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-body:    "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-system:  -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", system-ui, sans-serif;
 
   /* Type ramp (matches Figma /Typography frames) */
