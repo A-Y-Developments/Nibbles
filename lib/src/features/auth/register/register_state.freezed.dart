@@ -17,9 +17,9 @@ final _privateConstructorUsedError = UnsupportedError(
 
 /// @nodoc
 mixin _$RegisterState {
-  String get name => throw _privateConstructorUsedError;
   EmailInput get email => throw _privateConstructorUsedError;
   PasswordInput get password => throw _privateConstructorUsedError;
+  bool get obscure => throw _privateConstructorUsedError;
   bool get isLoading => throw _privateConstructorUsedError;
   String? get errorMessage => throw _privateConstructorUsedError;
 
@@ -38,9 +38,9 @@ abstract class $RegisterStateCopyWith<$Res> {
   ) = _$RegisterStateCopyWithImpl<$Res, RegisterState>;
   @useResult
   $Res call({
-    String name,
     EmailInput email,
     PasswordInput password,
+    bool obscure,
     bool isLoading,
     String? errorMessage,
   });
@@ -61,18 +61,14 @@ class _$RegisterStateCopyWithImpl<$Res, $Val extends RegisterState>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? name = null,
     Object? email = null,
     Object? password = null,
+    Object? obscure = null,
     Object? isLoading = null,
     Object? errorMessage = freezed,
   }) {
     return _then(
       _value.copyWith(
-            name: null == name
-                ? _value.name
-                : name // ignore: cast_nullable_to_non_nullable
-                      as String,
             email: null == email
                 ? _value.email
                 : email // ignore: cast_nullable_to_non_nullable
@@ -81,6 +77,10 @@ class _$RegisterStateCopyWithImpl<$Res, $Val extends RegisterState>
                 ? _value.password
                 : password // ignore: cast_nullable_to_non_nullable
                       as PasswordInput,
+            obscure: null == obscure
+                ? _value.obscure
+                : obscure // ignore: cast_nullable_to_non_nullable
+                      as bool,
             isLoading: null == isLoading
                 ? _value.isLoading
                 : isLoading // ignore: cast_nullable_to_non_nullable
@@ -105,9 +105,9 @@ abstract class _$$RegisterStateImplCopyWith<$Res>
   @override
   @useResult
   $Res call({
-    String name,
     EmailInput email,
     PasswordInput password,
+    bool obscure,
     bool isLoading,
     String? errorMessage,
   });
@@ -127,18 +127,14 @@ class __$$RegisterStateImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? name = null,
     Object? email = null,
     Object? password = null,
+    Object? obscure = null,
     Object? isLoading = null,
     Object? errorMessage = freezed,
   }) {
     return _then(
       _$RegisterStateImpl(
-        name: null == name
-            ? _value.name
-            : name // ignore: cast_nullable_to_non_nullable
-                  as String,
         email: null == email
             ? _value.email
             : email // ignore: cast_nullable_to_non_nullable
@@ -147,6 +143,10 @@ class __$$RegisterStateImplCopyWithImpl<$Res>
             ? _value.password
             : password // ignore: cast_nullable_to_non_nullable
                   as PasswordInput,
+        obscure: null == obscure
+            ? _value.obscure
+            : obscure // ignore: cast_nullable_to_non_nullable
+                  as bool,
         isLoading: null == isLoading
             ? _value.isLoading
             : isLoading // ignore: cast_nullable_to_non_nullable
@@ -164,16 +164,13 @@ class __$$RegisterStateImplCopyWithImpl<$Res>
 
 class _$RegisterStateImpl extends _RegisterState {
   const _$RegisterStateImpl({
-    this.name = '',
     this.email = const EmailInput.pure(),
     this.password = const PasswordInput.pure(),
+    this.obscure = true,
     this.isLoading = false,
     this.errorMessage,
   }) : super._();
 
-  @override
-  @JsonKey()
-  final String name;
   @override
   @JsonKey()
   final EmailInput email;
@@ -182,13 +179,16 @@ class _$RegisterStateImpl extends _RegisterState {
   final PasswordInput password;
   @override
   @JsonKey()
+  final bool obscure;
+  @override
+  @JsonKey()
   final bool isLoading;
   @override
   final String? errorMessage;
 
   @override
   String toString() {
-    return 'RegisterState(name: $name, email: $email, password: $password, isLoading: $isLoading, errorMessage: $errorMessage)';
+    return 'RegisterState(email: $email, password: $password, obscure: $obscure, isLoading: $isLoading, errorMessage: $errorMessage)';
   }
 
   @override
@@ -196,10 +196,10 @@ class _$RegisterStateImpl extends _RegisterState {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$RegisterStateImpl &&
-            (identical(other.name, name) || other.name == name) &&
             (identical(other.email, email) || other.email == email) &&
             (identical(other.password, password) ||
                 other.password == password) &&
+            (identical(other.obscure, obscure) || other.obscure == obscure) &&
             (identical(other.isLoading, isLoading) ||
                 other.isLoading == isLoading) &&
             (identical(other.errorMessage, errorMessage) ||
@@ -207,8 +207,14 @@ class _$RegisterStateImpl extends _RegisterState {
   }
 
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, name, email, password, isLoading, errorMessage);
+  int get hashCode => Object.hash(
+    runtimeType,
+    email,
+    password,
+    obscure,
+    isLoading,
+    errorMessage,
+  );
 
   /// Create a copy of RegisterState
   /// with the given fields replaced by the non-null parameter values.
@@ -221,20 +227,20 @@ class _$RegisterStateImpl extends _RegisterState {
 
 abstract class _RegisterState extends RegisterState {
   const factory _RegisterState({
-    final String name,
     final EmailInput email,
     final PasswordInput password,
+    final bool obscure,
     final bool isLoading,
     final String? errorMessage,
   }) = _$RegisterStateImpl;
   const _RegisterState._() : super._();
 
   @override
-  String get name;
-  @override
   EmailInput get email;
   @override
   PasswordInput get password;
+  @override
+  bool get obscure;
   @override
   bool get isLoading;
   @override

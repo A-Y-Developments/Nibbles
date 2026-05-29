@@ -12,10 +12,6 @@ class RegisterController extends _$RegisterController {
   @override
   RegisterState build() => const RegisterState();
 
-  void updateName(String value) {
-    state = state.copyWith(name: value, errorMessage: null);
-  }
-
   void updateEmail(String value) {
     state = state.copyWith(email: EmailInput.dirty(value), errorMessage: null);
   }
@@ -25,6 +21,10 @@ class RegisterController extends _$RegisterController {
       password: PasswordInput.dirty(value),
       errorMessage: null,
     );
+  }
+
+  void toggleObscure() {
+    state = state.copyWith(obscure: !state.obscure);
   }
 
   Future<bool> submit() async {

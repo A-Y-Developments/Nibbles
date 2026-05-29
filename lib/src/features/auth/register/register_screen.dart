@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
+import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/features/auth/register/register_controller.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 
@@ -12,7 +13,13 @@ class RegisterScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(registerControllerProvider);
+    final controller = ref.read(registerControllerProvider.notifier);
     final textTheme = Theme.of(context).textTheme;
+
+    final emailShowError =
+        state.email.isNotValid && state.email.value.isNotEmpty;
+    final passwordShowError =
+        state.password.isNotValid && state.password.value.isNotEmpty;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -25,51 +32,54 @@ class RegisterScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              const SizedBox(height: AppSizes.lg),
+              const Center(child: BrandLogo(size: 72)),
               const SizedBox(height: AppSizes.xl),
-              Text('Create your account', style: textTheme.headlineLarge),
+              Text(
+                'Start Your Journey',
+                textAlign: TextAlign.center,
+                style: textTheme.displaySmall,
+              ),
               const SizedBox(height: AppSizes.sm),
               Text(
-                "Let's get you started.",
-                style: textTheme.bodyLarge?.copyWith(color: AppColors.subtext),
+                'Create an account to begin guiding your '
+                'little one through solids.',
+                textAlign: TextAlign.center,
+                style: textTheme.bodyLarge?.copyWith(color: AppColors.fgMuted),
               ),
               const SizedBox(height: AppSizes.xl),
-              TextField(
-                key: const Key('register_name_field'),
-                onChanged: ref
-                    .read(registerControllerProvider.notifier)
-                    .updateName,
-                textCapitalization: TextCapitalization.words,
-                decoration: const InputDecoration(labelText: 'Your name'),
-              ),
-              const SizedBox(height: AppSizes.md),
-              TextField(
+              AppTextField(
                 key: const Key('register_email_field'),
-                onChanged: ref
-                    .read(registerControllerProvider.notifier)
-                    .updateEmail,
+                label: 'Email',
+                hintText: 'you@example.com',
                 keyboardType: TextInputType.emailAddress,
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                  errorText:
-                      state.email.isNotValid && state.email.value.isNotEmpty
-                      ? 'Please enter a valid email.'
-                      : null,
-                ),
+                textInputAction: TextInputAction.next,
+                onChanged: controller.updateEmail,
+                errorText: emailShowError
+                    ? 'Please enter a valid email.'
+                    : null,
+                suffixIcon: state.email.isValid
+                    ? const Icon(
+                        Icons.check_circle_rounded,
+                        color: AppColors.success,
+                        size: AppSizes.iconMd,
+                      )
+                    : null,
               ),
               const SizedBox(height: AppSizes.md),
-              TextField(
+              AppTextField(
                 key: const Key('register_password_field'),
-                onChanged: ref
-                    .read(registerControllerProvider.notifier)
-                    .updatePassword,
-                obscureText: true,
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  errorText:
-                      state.password.isNotValid &&
-                          state.password.value.isNotEmpty
-                      ? 'Password must be at least 8 characters.'
-                      : null,
+                label: 'Password',
+                hintText: 'At least 8 characters',
+                obscureText: state.obscure,
+                textInputAction: TextInputAction.done,
+                onChanged: controller.updatePassword,
+                errorText: passwordShowError
+                    ? 'Password must be at least 8 characters.'
+                    : null,
+                suffixIcon: _ObscureToggle(
+                  obscure: state.obscure,
+                  onTap: controller.toggleObscure,
                 ),
               ),
               if (state.errorMessage != null) ...[
@@ -80,47 +90,149 @@ class RegisterScreen extends ConsumerWidget {
                 ),
               ],
               const SizedBox(height: AppSizes.xl),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  key: const Key('register_submit_button'),
-                  onPressed: (!state.isValid || state.isLoading)
-                      ? null
-                      : () async {
-                          final ok = await ref
-                              .read(registerControllerProvider.notifier)
-                              .submit();
-                          if (ok && context.mounted) {
-                            context.goNamed(AppRoute.onboardingBabySetup.name);
-                          }
-                        },
-                  child: state.isLoading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.onPrimary,
-                          ),
-                        )
-                      : const Text('Sign Up'),
-                ),
+              AppPillButton(
+                key: const Key('register_submit_button'),
+                label: state.isLoading ? 'Signing up…' : 'Sign Up',
+                onPressed: (!state.isValid || state.isLoading)
+                    ? null
+                    : () async {
+                        final ok = await controller.submit();
+                        if (ok && context.mounted) {
+                          context.goNamed(AppRoute.onboardingBabySetup.name);
+                        }
+                      },
               ),
-              const SizedBox(height: AppSizes.md),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('Already have an account?', style: textTheme.bodySmall),
-                  TextButton(
-                    onPressed: () => context.goNamed(AppRoute.login.name),
-                    child: const Text('Log In'),
-                  ),
-                ],
+              const SizedBox(height: AppSizes.lg),
+              const _OrDivider(),
+              const SizedBox(height: AppSizes.lg),
+              _SocialButtons(
+                isLoading: state.isLoading,
+                onGoogle: () async {
+                  final ok = await controller.signInWithGoogle();
+                  if (ok && context.mounted) {
+                    context.goNamed(AppRoute.onboardingBabySetup.name);
+                  }
+                },
+                onApple: () async {
+                  final ok = await controller.signInWithApple();
+                  if (ok && context.mounted) {
+                    context.goNamed(AppRoute.onboardingBabySetup.name);
+                  }
+                },
               ),
+              const SizedBox(height: AppSizes.xl),
+              _LoginFooter(),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class _ObscureToggle extends StatelessWidget {
+  const _ObscureToggle({required this.obscure, required this.onTap});
+
+  final bool obscure;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkResponse(
+      onTap: onTap,
+      radius: AppSizes.iconMd,
+      child: Icon(
+        obscure
+            ? Icons.visibility_off_outlined
+            : Icons.visibility_outlined,
+        color: AppColors.fgMuted,
+        size: AppSizes.iconMd,
+      ),
+    );
+  }
+}
+
+class _OrDivider extends StatelessWidget {
+  const _OrDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    return Row(
+      children: [
+        const Expanded(child: Divider(color: AppColors.borderSoft)),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSizes.md),
+          child: Text(
+            'Or sign up with',
+            style: textTheme.bodySmall?.copyWith(color: AppColors.fgMuted),
+          ),
+        ),
+        const Expanded(child: Divider(color: AppColors.borderSoft)),
+      ],
+    );
+  }
+}
+
+class _SocialButtons extends StatelessWidget {
+  const _SocialButtons({
+    required this.isLoading,
+    required this.onGoogle,
+    required this.onApple,
+  });
+
+  final bool isLoading;
+  final VoidCallback onGoogle;
+  final VoidCallback onApple;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: AppPillButton(
+            key: const Key('register_google_button'),
+            label: 'Google',
+            variant: AppPillButtonVariant.secondary,
+            onPressed: isLoading ? null : onGoogle,
+            // TODO(infra): swap Material icon for brand Google glyph when
+            // design/assets/google.svg ships.
+            leading: const Icon(Icons.g_mobiledata_rounded),
+          ),
+        ),
+        const SizedBox(width: AppSizes.md),
+        Expanded(
+          child: AppPillButton(
+            key: const Key('register_apple_button'),
+            label: 'Apple',
+            variant: AppPillButtonVariant.secondary,
+            onPressed: isLoading ? null : onApple,
+            // TODO(infra): swap Material icon for brand Apple glyph when
+            // design/assets/apple.svg ships.
+            leading: const Icon(Icons.apple_rounded),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _LoginFooter extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          'Already have an account?',
+          style: textTheme.bodyMedium?.copyWith(color: AppColors.fgMuted),
+        ),
+        TextButton(
+          onPressed: () => context.goNamed(AppRoute.login.name),
+          child: const Text('Login'),
+        ),
+      ],
     );
   }
 }

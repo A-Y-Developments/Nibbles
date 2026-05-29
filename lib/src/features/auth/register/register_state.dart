@@ -7,9 +7,9 @@ part 'register_state.freezed.dart';
 @freezed
 class RegisterState with _$RegisterState {
   const factory RegisterState({
-    @Default('') String name,
     @Default(EmailInput.pure()) EmailInput email,
     @Default(PasswordInput.pure()) PasswordInput password,
+    @Default(true) bool obscure,
     @Default(false) bool isLoading,
     String? errorMessage,
   }) = _RegisterState;
