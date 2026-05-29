@@ -250,6 +250,7 @@ void main() {
       // Never reached the flag-seeding (onboarding not complete).
       verifyNever(flags.setOnboardingReadinessDone);
       verifyNever(flags.setOnboardingBabySetupDone);
+      verifyNever(flags.setOnboardingDone);
     },
   );
 
@@ -272,6 +273,7 @@ void main() {
       );
       verifyNever(flags.setOnboardingReadinessDone);
       verifyNever(flags.setOnboardingBabySetupDone);
+      verifyNever(flags.setOnboardingDone);
     },
   );
 
@@ -291,8 +293,13 @@ void main() {
         '/home',
       );
       // Supabase truth seeds local flags so reinstalls skip onboarding.
+      // NIB-51: all three onboarding flags are seeded (onboarding_done is the
+      // new final gate added with the name->DOB->readiness->result->consent
+      // flow); without it, an already-onboarded reinstaller would be bounced
+      // into /onboarding/consent by the new redirect.
       verify(flags.setOnboardingReadinessDone).called(1);
       verify(flags.setOnboardingBabySetupDone).called(1);
+      verify(flags.setOnboardingDone).called(1);
     },
   );
 
@@ -318,6 +325,7 @@ void main() {
       verify(flags.setHasLaunched).called(1);
       verify(flags.setOnboardingReadinessDone).called(1);
       verify(flags.setOnboardingBabySetupDone).called(1);
+      verify(flags.setOnboardingDone).called(1);
     },
   );
 

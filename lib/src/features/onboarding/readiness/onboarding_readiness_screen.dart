@@ -58,7 +58,7 @@ class _OnboardingReadinessScreenState
           },
           onContinue: () {
             ref.read(localFlagServiceProvider).setOnboardingReadinessDone();
-            context.goNamed(AppRoute.onboardingBabySetup.name);
+            context.goNamed(AppRoute.onboardingResult.name);
           },
         ),
       );
@@ -153,7 +153,7 @@ class _OnboardingReadinessScreenState
       final updatedState = ref.read(readinessControllerProvider);
       if (!updatedState.showWarning) {
         ref.read(localFlagServiceProvider).setOnboardingReadinessDone();
-        context.goNamed(AppRoute.onboardingBabySetup.name);
+        context.goNamed(AppRoute.onboardingResult.name);
       }
     }
   }

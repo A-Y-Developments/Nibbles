@@ -41,6 +41,13 @@ class LocalFlagService {
   void setOnboardingBabySetupDone() =>
       _box.put('onboarding_baby_setup_done', true);
 
+  /// Flips true after consent submit + createBaby success. Final gate before
+  /// /home; consent itself is NOT persisted (NIB-120 — ephemeral UI gate).
+  bool isOnboardingDone() =>
+      _box.get('onboarding_done', defaultValue: false) as bool;
+
+  void setOnboardingDone() => _box.put('onboarding_done', true);
+
   // ---------------------------------------------------------------------------
   // Per-baby allergen program completion flag
   // ---------------------------------------------------------------------------

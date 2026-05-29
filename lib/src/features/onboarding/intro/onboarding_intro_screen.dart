@@ -43,7 +43,7 @@ class _OnboardingIntroScreenState extends ConsumerState<OnboardingIntroScreen> {
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeInOut,
               ),
-              onNext: () => context.goNamed(AppRoute.onboardingReadiness.name),
+              onNext: () => context.goNamed(AppRoute.onboardingName.name),
             ),
           ],
         ),
