@@ -7,10 +7,14 @@ import 'package:flutter/widgets.dart';
 enum AppRoute {
   splash(path: '/', name: 'splash'),
   onboardingIntro(path: '/onboarding/intro', name: 'onboarding-intro'),
+  onboardingName(path: '/onboarding/name', name: 'onboarding-name'),
+  onboardingDob(path: '/onboarding/dob', name: 'onboarding-dob'),
   onboardingReadiness(
     path: '/onboarding/readiness',
     name: 'onboarding-readiness',
   ),
+  onboardingResult(path: '/onboarding/result', name: 'onboarding-result'),
+  onboardingConsent(path: '/onboarding/consent', name: 'onboarding-consent'),
   onboardingBabySetup(
     path: '/onboarding/baby-setup',
     name: 'onboarding-baby-setup',

@@ -72,10 +72,13 @@ class SplashController extends _$SplashController {
       if (!onboardingDone) return '/onboarding/intro';
 
       // Seed local flags from Supabase so reinstalls don't re-trigger
-      // onboarding.
+      // onboarding. All three onboarding flags map to a single source of truth
+      // (baby.onboarding_completed) — seeding all of them is what keeps an
+      // already-onboarded reinstaller out of the new consent stage.
       flags
         ..setOnboardingReadinessDone()
-        ..setOnboardingBabySetupDone();
+        ..setOnboardingBabySetupDone()
+        ..setOnboardingDone();
 
       // TODO(nibbles-backend): uncomment when subscriptionServiceProvider ships
       // if (!ref.read(subscriptionServiceProvider)) {

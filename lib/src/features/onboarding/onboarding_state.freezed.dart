@@ -1,0 +1,312 @@
+// coverage:ignore-file
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint
+// ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
+
+part of 'onboarding_state.dart';
+
+// **************************************************************************
+// FreezedGenerator
+// **************************************************************************
+
+T _$identity<T>(T value) => value;
+
+final _privateConstructorUsedError = UnsupportedError(
+  'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
+);
+
+/// @nodoc
+mixin _$OnboardingState {
+  BabyNameInput get babyName => throw _privateConstructorUsedError;
+  DateTime? get dob => throw _privateConstructorUsedError;
+  List<bool?> get readinessAnswers => throw _privateConstructorUsedError;
+  bool get readinessReady => throw _privateConstructorUsedError;
+  bool get consentAccepted => throw _privateConstructorUsedError;
+  bool get isSubmitting => throw _privateConstructorUsedError;
+  String? get submitErrorMessage => throw _privateConstructorUsedError;
+
+  /// Create a copy of OnboardingState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $OnboardingStateCopyWith<OnboardingState> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $OnboardingStateCopyWith<$Res> {
+  factory $OnboardingStateCopyWith(
+    OnboardingState value,
+    $Res Function(OnboardingState) then,
+  ) = _$OnboardingStateCopyWithImpl<$Res, OnboardingState>;
+  @useResult
+  $Res call({
+    BabyNameInput babyName,
+    DateTime? dob,
+    List<bool?> readinessAnswers,
+    bool readinessReady,
+    bool consentAccepted,
+    bool isSubmitting,
+    String? submitErrorMessage,
+  });
+}
+
+/// @nodoc
+class _$OnboardingStateCopyWithImpl<$Res, $Val extends OnboardingState>
+    implements $OnboardingStateCopyWith<$Res> {
+  _$OnboardingStateCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of OnboardingState
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? babyName = null,
+    Object? dob = freezed,
+    Object? readinessAnswers = null,
+    Object? readinessReady = null,
+    Object? consentAccepted = null,
+    Object? isSubmitting = null,
+    Object? submitErrorMessage = freezed,
+  }) {
+    return _then(
+      _value.copyWith(
+            babyName: null == babyName
+                ? _value.babyName
+                : babyName // ignore: cast_nullable_to_non_nullable
+                      as BabyNameInput,
+            dob: freezed == dob
+                ? _value.dob
+                : dob // ignore: cast_nullable_to_non_nullable
+                      as DateTime?,
+            readinessAnswers: null == readinessAnswers
+                ? _value.readinessAnswers
+                : readinessAnswers // ignore: cast_nullable_to_non_nullable
+                      as List<bool?>,
+            readinessReady: null == readinessReady
+                ? _value.readinessReady
+                : readinessReady // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            consentAccepted: null == consentAccepted
+                ? _value.consentAccepted
+                : consentAccepted // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            isSubmitting: null == isSubmitting
+                ? _value.isSubmitting
+                : isSubmitting // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            submitErrorMessage: freezed == submitErrorMessage
+                ? _value.submitErrorMessage
+                : submitErrorMessage // ignore: cast_nullable_to_non_nullable
+                      as String?,
+          )
+          as $Val,
+    );
+  }
+}
+
+/// @nodoc
+abstract class _$$OnboardingStateImplCopyWith<$Res>
+    implements $OnboardingStateCopyWith<$Res> {
+  factory _$$OnboardingStateImplCopyWith(
+    _$OnboardingStateImpl value,
+    $Res Function(_$OnboardingStateImpl) then,
+  ) = __$$OnboardingStateImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({
+    BabyNameInput babyName,
+    DateTime? dob,
+    List<bool?> readinessAnswers,
+    bool readinessReady,
+    bool consentAccepted,
+    bool isSubmitting,
+    String? submitErrorMessage,
+  });
+}
+
+/// @nodoc
+class __$$OnboardingStateImplCopyWithImpl<$Res>
+    extends _$OnboardingStateCopyWithImpl<$Res, _$OnboardingStateImpl>
+    implements _$$OnboardingStateImplCopyWith<$Res> {
+  __$$OnboardingStateImplCopyWithImpl(
+    _$OnboardingStateImpl _value,
+    $Res Function(_$OnboardingStateImpl) _then,
+  ) : super(_value, _then);
+
+  /// Create a copy of OnboardingState
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? babyName = null,
+    Object? dob = freezed,
+    Object? readinessAnswers = null,
+    Object? readinessReady = null,
+    Object? consentAccepted = null,
+    Object? isSubmitting = null,
+    Object? submitErrorMessage = freezed,
+  }) {
+    return _then(
+      _$OnboardingStateImpl(
+        babyName: null == babyName
+            ? _value.babyName
+            : babyName // ignore: cast_nullable_to_non_nullable
+                  as BabyNameInput,
+        dob: freezed == dob
+            ? _value.dob
+            : dob // ignore: cast_nullable_to_non_nullable
+                  as DateTime?,
+        readinessAnswers: null == readinessAnswers
+            ? _value._readinessAnswers
+            : readinessAnswers // ignore: cast_nullable_to_non_nullable
+                  as List<bool?>,
+        readinessReady: null == readinessReady
+            ? _value.readinessReady
+            : readinessReady // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        consentAccepted: null == consentAccepted
+            ? _value.consentAccepted
+            : consentAccepted // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        isSubmitting: null == isSubmitting
+            ? _value.isSubmitting
+            : isSubmitting // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        submitErrorMessage: freezed == submitErrorMessage
+            ? _value.submitErrorMessage
+            : submitErrorMessage // ignore: cast_nullable_to_non_nullable
+                  as String?,
+      ),
+    );
+  }
+}
+
+/// @nodoc
+
+class _$OnboardingStateImpl implements _OnboardingState {
+  const _$OnboardingStateImpl({
+    this.babyName = const BabyNameInput.pure(),
+    this.dob,
+    final List<bool?> readinessAnswers = const <bool?>[],
+    this.readinessReady = false,
+    this.consentAccepted = false,
+    this.isSubmitting = false,
+    this.submitErrorMessage,
+  }) : _readinessAnswers = readinessAnswers;
+
+  @override
+  @JsonKey()
+  final BabyNameInput babyName;
+  @override
+  final DateTime? dob;
+  final List<bool?> _readinessAnswers;
+  @override
+  @JsonKey()
+  List<bool?> get readinessAnswers {
+    if (_readinessAnswers is EqualUnmodifiableListView)
+      return _readinessAnswers;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_readinessAnswers);
+  }
+
+  @override
+  @JsonKey()
+  final bool readinessReady;
+  @override
+  @JsonKey()
+  final bool consentAccepted;
+  @override
+  @JsonKey()
+  final bool isSubmitting;
+  @override
+  final String? submitErrorMessage;
+
+  @override
+  String toString() {
+    return 'OnboardingState(babyName: $babyName, dob: $dob, readinessAnswers: $readinessAnswers, readinessReady: $readinessReady, consentAccepted: $consentAccepted, isSubmitting: $isSubmitting, submitErrorMessage: $submitErrorMessage)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$OnboardingStateImpl &&
+            (identical(other.babyName, babyName) ||
+                other.babyName == babyName) &&
+            (identical(other.dob, dob) || other.dob == dob) &&
+            const DeepCollectionEquality().equals(
+              other._readinessAnswers,
+              _readinessAnswers,
+            ) &&
+            (identical(other.readinessReady, readinessReady) ||
+                other.readinessReady == readinessReady) &&
+            (identical(other.consentAccepted, consentAccepted) ||
+                other.consentAccepted == consentAccepted) &&
+            (identical(other.isSubmitting, isSubmitting) ||
+                other.isSubmitting == isSubmitting) &&
+            (identical(other.submitErrorMessage, submitErrorMessage) ||
+                other.submitErrorMessage == submitErrorMessage));
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    runtimeType,
+    babyName,
+    dob,
+    const DeepCollectionEquality().hash(_readinessAnswers),
+    readinessReady,
+    consentAccepted,
+    isSubmitting,
+    submitErrorMessage,
+  );
+
+  /// Create a copy of OnboardingState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$OnboardingStateImplCopyWith<_$OnboardingStateImpl> get copyWith =>
+      __$$OnboardingStateImplCopyWithImpl<_$OnboardingStateImpl>(
+        this,
+        _$identity,
+      );
+}
+
+abstract class _OnboardingState implements OnboardingState {
+  const factory _OnboardingState({
+    final BabyNameInput babyName,
+    final DateTime? dob,
+    final List<bool?> readinessAnswers,
+    final bool readinessReady,
+    final bool consentAccepted,
+    final bool isSubmitting,
+    final String? submitErrorMessage,
+  }) = _$OnboardingStateImpl;
+
+  @override
+  BabyNameInput get babyName;
+  @override
+  DateTime? get dob;
+  @override
+  List<bool?> get readinessAnswers;
+  @override
+  bool get readinessReady;
+  @override
+  bool get consentAccepted;
+  @override
+  bool get isSubmitting;
+  @override
+  String? get submitErrorMessage;
+
+  /// Create a copy of OnboardingState
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$OnboardingStateImplCopyWith<_$OnboardingStateImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
