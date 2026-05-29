@@ -31,7 +31,7 @@ class RegisterController extends _$RegisterController {
 
     final result = await ref
         .read(authServiceProvider.notifier)
-        .signUp(state.name, state.email.value, state.password.value);
+        .signUp(state.email.value, state.password.value);
 
     return result.when(
       success: (_) {

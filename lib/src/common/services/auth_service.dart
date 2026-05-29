@@ -31,12 +31,8 @@ class AuthService extends _$AuthService {
 
   Stream<AuthState> get authStateStream => _repo.authStateStream;
 
-  Future<Result<void>> signUp(
-    String name,
-    String email,
-    String password,
-  ) async {
-    final result = await _repo.signUp(name, email, password);
+  Future<Result<void>> signUp(String email, String password) async {
+    final result = await _repo.signUp(email, password);
     if (result.isSuccess) state = true;
     return result;
   }
