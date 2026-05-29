@@ -48,6 +48,19 @@ class LocalFlagService {
 
   void setOnboardingDone() => _box.put('onboarding_done', true);
 
+  /// Clears all three onboarding progress flags. Called by splash when a
+  /// logged-in user has no baby row yet — the in-memory hoisted state from a
+  /// previous run is gone after process death, so stale `*_done` flags must be
+  /// reset to replay the flow from /onboarding/name. Resetting ALL three (not
+  /// just baby-setup) keeps a kill-after-readiness path from skipping the
+  /// readiness step on resume.
+  void resetOnboardingProgress() {
+    _box
+      ..put('onboarding_baby_setup_done', false)
+      ..put('onboarding_readiness_done', false)
+      ..put('onboarding_done', false);
+  }
+
   // ---------------------------------------------------------------------------
   // Per-baby allergen program completion flag
   // ---------------------------------------------------------------------------

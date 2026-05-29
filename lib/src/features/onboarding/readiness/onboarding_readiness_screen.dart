@@ -4,7 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/services/local_flag_service.dart';
-import 'package:nibbles/src/features/onboarding/readiness/readiness_controller.dart';
+import 'package:nibbles/src/features/onboarding/onboarding_controller.dart';
+import 'package:nibbles/src/features/onboarding/onboarding_state.dart';
 import 'package:nibbles/src/features/onboarding/readiness/widgets/readiness_question_card.dart';
 import 'package:nibbles/src/features/onboarding/readiness/widgets/readiness_warning.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
@@ -18,6 +19,9 @@ const _questions = [
   'Can your baby bring objects to their mouth?',
 ];
 
+/// Readiness 5-step screen. Answers are owned by the hoisted, keepAlive
+/// `OnboardingController` so back-nav from consent/result preserves them
+/// (NIB-51 spec §5). `_currentIndex` and `_showWarning` are pure view state.
 class OnboardingReadinessScreen extends ConsumerStatefulWidget {
   const OnboardingReadinessScreen({super.key});
 
@@ -29,14 +33,25 @@ class OnboardingReadinessScreen extends ConsumerStatefulWidget {
 class _OnboardingReadinessScreenState
     extends ConsumerState<OnboardingReadinessScreen> {
   int _currentIndex = 0;
+  bool _showWarning = false;
 
   @override
   Widget build(BuildContext context) {
-    final readinessState = ref.watch(readinessControllerProvider);
-    final controller = ref.read(readinessControllerProvider.notifier);
+    // Defensive: the screen depends on a fixed-length answer list. The state
+    // default seeds 6 nulls (matches `readinessQuestionCount`) — assert in
+    // debug so a future spec change in either place fails loudly.
+    assert(
+      _questions.length == readinessQuestionCount,
+      'Readiness question count drifted from OnboardingState seed',
+    );
+
+    final answers = ref.watch(
+      onboardingControllerProvider.select((s) => s.readinessAnswers),
+    );
+    final controller = ref.read(onboardingControllerProvider.notifier);
     final textTheme = Theme.of(context).textTheme;
 
-    if (readinessState.showWarning) {
+    if (_showWarning) {
       return Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(
@@ -44,19 +59,20 @@ class _OnboardingReadinessScreenState
           elevation: 0,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_rounded),
-            onPressed: () {
-              controller.goBack();
-              setState(() => _currentIndex = _questions.length - 1);
-            },
+            onPressed: () => setState(() {
+              _showWarning = false;
+              _currentIndex = _questions.length - 1;
+            }),
           ),
           title: Text('One more thing', style: textTheme.titleMedium),
         ),
         body: ReadinessWarning(
-          onGoBack: () {
-            controller.goBack();
-            setState(() => _currentIndex = _questions.length - 1);
-          },
+          onGoBack: () => setState(() {
+            _showWarning = false;
+            _currentIndex = _questions.length - 1;
+          }),
           onContinue: () {
+            controller.setReadinessReady(ready: false);
             ref.read(localFlagServiceProvider).setOnboardingReadinessDone();
             context.goNamed(AppRoute.onboardingResult.name);
           },
@@ -64,7 +80,7 @@ class _OnboardingReadinessScreenState
       );
     }
 
-    final currentAnswer = readinessState.answers[_currentIndex];
+    final currentAnswer = answers[_currentIndex];
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -116,21 +132,25 @@ class _OnboardingReadinessScreenState
             ReadinessQuestionCard(
               label: 'Yes',
               selected: currentAnswer ?? false,
-              onTap: () => controller.answer(_currentIndex, isYes: true),
+              onTap: () => controller.answerReadinessQuestion(
+                _currentIndex,
+                isYes: true,
+              ),
             ),
             const SizedBox(height: AppSizes.md),
             ReadinessQuestionCard(
               label: "I'm not sure",
               selected: !(currentAnswer ?? true),
-              onTap: () => controller.answer(_currentIndex, isYes: false),
+              onTap: () => controller.answerReadinessQuestion(
+                _currentIndex,
+                isYes: false,
+              ),
             ),
             const Spacer(),
             SizedBox(
               width: double.infinity,
               child: FilledButton(
-                onPressed: currentAnswer == null
-                    ? null
-                    : () => _onNext(controller),
+                onPressed: currentAnswer == null ? null : _onNext,
                 child: Text(
                   _currentIndex < _questions.length - 1
                       ? 'Next'
@@ -145,16 +165,22 @@ class _OnboardingReadinessScreenState
     );
   }
 
-  void _onNext(ReadinessController controller) {
+  void _onNext() {
     if (_currentIndex < _questions.length - 1) {
       setState(() => _currentIndex++);
-    } else {
-      controller.finish();
-      final updatedState = ref.read(readinessControllerProvider);
-      if (!updatedState.showWarning) {
-        ref.read(localFlagServiceProvider).setOnboardingReadinessDone();
-        context.goNamed(AppRoute.onboardingResult.name);
-      }
+      return;
     }
+    // Last question answered: any "I'm not sure" -> warning interstitial.
+    final answers = ref.read(onboardingControllerProvider).readinessAnswers;
+    final hasAnyUnsure = answers.any((a) => a == false);
+    final controller = ref.read(onboardingControllerProvider.notifier);
+    if (hasAnyUnsure) {
+      controller.setReadinessReady(ready: false);
+      setState(() => _showWarning = true);
+      return;
+    }
+    controller.setReadinessReady(ready: true);
+    ref.read(localFlagServiceProvider).setOnboardingReadinessDone();
+    context.goNamed(AppRoute.onboardingResult.name);
   }
 }

@@ -7,7 +7,7 @@ part of 'onboarding_controller.dart';
 // **************************************************************************
 
 String _$onboardingControllerHash() =>
-    r'677d523ad1fb7445249e0ff734f18965cd243de3';
+    r'60d0c444e4ae1e8efbbee4d702aa36143169b459';
 
 /// Single hoisted controller for the new onboarding flow.
 ///

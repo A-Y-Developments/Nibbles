@@ -232,7 +232,8 @@ void main() {
   // ---------------------------------------------------------------------------
 
   test(
-    'logged in but no baby yet routes to /onboarding/intro',
+    'logged in but no baby yet routes to /onboarding/intro AND resets the '
+    'stale onboarding progress flags (NIB-51 kill-mid-flow recovery)',
     () async {
       // Returning, logged-in user whose remote profile has no baby row.
       when(() => babyProfile.getBaby()).thenAnswer((_) async => null);
@@ -251,11 +252,16 @@ void main() {
       verifyNever(flags.setOnboardingReadinessDone);
       verifyNever(flags.setOnboardingBabySetupDone);
       verifyNever(flags.setOnboardingDone);
+      // NIB-51: process death after the DOB screen flipped baby_setup_done
+      // would otherwise route the user past name/DOB recapture and strand
+      // them at consent. Splash must reset the progress flags here.
+      verify(flags.resetOnboardingProgress).called(1);
     },
   );
 
   test(
-    'baby exists but onboarding incomplete routes to /onboarding/intro',
+    'baby exists but onboarding incomplete routes to /onboarding/intro AND '
+    'resets stale onboarding progress flags',
     () async {
       when(
         () => babyProfile.onboardingCompleted,
@@ -274,6 +280,7 @@ void main() {
       verifyNever(flags.setOnboardingReadinessDone);
       verifyNever(flags.setOnboardingBabySetupDone);
       verifyNever(flags.setOnboardingDone);
+      verify(flags.resetOnboardingProgress).called(1);
     },
   );
 
