@@ -10,7 +10,13 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 part 'baby_profile_repository.g.dart';
 
 abstract interface class BabyProfileRepository {
-  Future<Result<Baby>> createBaby(String name, DateTime dob, Gender gender);
+  /// Gender is optional — the redesigned onboarding (NIB-120) drops the
+  /// selector. Defaults to [Gender.preferNotToSay] when omitted.
+  Future<Result<Baby>> createBaby(
+    String name,
+    DateTime dob, [
+    Gender gender = Gender.preferNotToSay,
+  ]);
   Future<Baby?> getBaby();
   Future<Result<Baby>> updateBaby(
     String babyId,
@@ -37,9 +43,9 @@ class BabyProfileRepositoryImpl implements BabyProfileRepository {
   @override
   Future<Result<Baby>> createBaby(
     String name,
-    DateTime dob,
-    Gender gender,
-  ) async {
+    DateTime dob, [
+    Gender gender = Gender.preferNotToSay,
+  ]) async {
     try {
       final data = await _supabase
           .from('babies')
