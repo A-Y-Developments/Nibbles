@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,12 +9,37 @@ import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/brand/quatrefoil.dart';
 import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
 import 'package:nibbles/src/features/splash/splash_controller.dart';
+import 'package:nibbles/src/logging/analytics.dart';
 
-class SplashScreen extends ConsumerWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends ConsumerState<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Emit screen_view('splash') once on the first frame. Guarded + unawaited
+    // so an uninitialised Firebase / analytics hiccup never throws into the
+    // frame callback or blocks the splash.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(_logScreenView());
+    });
+  }
+
+  Future<void> _logScreenView() async {
+    try {
+      await Analytics.instance.logScreenView(screenName: 'splash');
+    } on Object catch (_) {
+      // Analytics is best-effort; never surface to the UI.
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     // whenData fires only on the success (data) state — never on loading or
     // error — so navigation runs once and never double-fires on a P0.
     ref.listen<AsyncValue<String>>(
@@ -27,7 +54,7 @@ class SplashScreen extends ConsumerWidget {
       body: SafeArea(
         child: Center(
           child: state.hasError
-              ? _buildError(context, ref, isReloading: state.isLoading)
+              ? _buildError(context, isReloading: state.isLoading)
               : _buildBranding(context),
         ),
       ),
@@ -58,8 +85,7 @@ class SplashScreen extends ConsumerWidget {
   /// during the brand-minimum delay), the CTA is disabled so rapid taps can't
   /// keep restarting boot — guards against a tight retry loop when offline.
   Widget _buildError(
-    BuildContext context,
-    WidgetRef ref, {
+    BuildContext context, {
     required bool isReloading,
   }) {
     return Padding(
