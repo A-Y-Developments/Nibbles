@@ -23,6 +23,10 @@ class LoginController extends _$LoginController {
     );
   }
 
+  void toggleObscure() {
+    state = state.copyWith(obscure: !state.obscure);
+  }
+
   Future<void> submit() async {
     state = state.copyWith(isLoading: true, errorMessage: null);
 

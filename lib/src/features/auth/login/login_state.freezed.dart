@@ -19,6 +19,7 @@ final _privateConstructorUsedError = UnsupportedError(
 mixin _$LoginState {
   EmailInput get email => throw _privateConstructorUsedError;
   PasswordInput get password => throw _privateConstructorUsedError;
+  bool get obscure => throw _privateConstructorUsedError;
   bool get isLoading => throw _privateConstructorUsedError;
   String? get errorMessage => throw _privateConstructorUsedError;
 
@@ -39,6 +40,7 @@ abstract class $LoginStateCopyWith<$Res> {
   $Res call({
     EmailInput email,
     PasswordInput password,
+    bool obscure,
     bool isLoading,
     String? errorMessage,
   });
@@ -61,6 +63,7 @@ class _$LoginStateCopyWithImpl<$Res, $Val extends LoginState>
   $Res call({
     Object? email = null,
     Object? password = null,
+    Object? obscure = null,
     Object? isLoading = null,
     Object? errorMessage = freezed,
   }) {
@@ -74,6 +77,10 @@ class _$LoginStateCopyWithImpl<$Res, $Val extends LoginState>
                 ? _value.password
                 : password // ignore: cast_nullable_to_non_nullable
                       as PasswordInput,
+            obscure: null == obscure
+                ? _value.obscure
+                : obscure // ignore: cast_nullable_to_non_nullable
+                      as bool,
             isLoading: null == isLoading
                 ? _value.isLoading
                 : isLoading // ignore: cast_nullable_to_non_nullable
@@ -100,6 +107,7 @@ abstract class _$$LoginStateImplCopyWith<$Res>
   $Res call({
     EmailInput email,
     PasswordInput password,
+    bool obscure,
     bool isLoading,
     String? errorMessage,
   });
@@ -121,6 +129,7 @@ class __$$LoginStateImplCopyWithImpl<$Res>
   $Res call({
     Object? email = null,
     Object? password = null,
+    Object? obscure = null,
     Object? isLoading = null,
     Object? errorMessage = freezed,
   }) {
@@ -134,6 +143,10 @@ class __$$LoginStateImplCopyWithImpl<$Res>
             ? _value.password
             : password // ignore: cast_nullable_to_non_nullable
                   as PasswordInput,
+        obscure: null == obscure
+            ? _value.obscure
+            : obscure // ignore: cast_nullable_to_non_nullable
+                  as bool,
         isLoading: null == isLoading
             ? _value.isLoading
             : isLoading // ignore: cast_nullable_to_non_nullable
@@ -153,6 +166,7 @@ class _$LoginStateImpl implements _LoginState {
   const _$LoginStateImpl({
     this.email = const EmailInput.pure(),
     this.password = const PasswordInput.pure(),
+    this.obscure = true,
     this.isLoading = false,
     this.errorMessage,
   });
@@ -165,13 +179,16 @@ class _$LoginStateImpl implements _LoginState {
   final PasswordInput password;
   @override
   @JsonKey()
+  final bool obscure;
+  @override
+  @JsonKey()
   final bool isLoading;
   @override
   final String? errorMessage;
 
   @override
   String toString() {
-    return 'LoginState(email: $email, password: $password, isLoading: $isLoading, errorMessage: $errorMessage)';
+    return 'LoginState(email: $email, password: $password, obscure: $obscure, isLoading: $isLoading, errorMessage: $errorMessage)';
   }
 
   @override
@@ -182,6 +199,7 @@ class _$LoginStateImpl implements _LoginState {
             (identical(other.email, email) || other.email == email) &&
             (identical(other.password, password) ||
                 other.password == password) &&
+            (identical(other.obscure, obscure) || other.obscure == obscure) &&
             (identical(other.isLoading, isLoading) ||
                 other.isLoading == isLoading) &&
             (identical(other.errorMessage, errorMessage) ||
@@ -189,8 +207,14 @@ class _$LoginStateImpl implements _LoginState {
   }
 
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, email, password, isLoading, errorMessage);
+  int get hashCode => Object.hash(
+    runtimeType,
+    email,
+    password,
+    obscure,
+    isLoading,
+    errorMessage,
+  );
 
   /// Create a copy of LoginState
   /// with the given fields replaced by the non-null parameter values.
@@ -205,6 +229,7 @@ abstract class _LoginState implements LoginState {
   const factory _LoginState({
     final EmailInput email,
     final PasswordInput password,
+    final bool obscure,
     final bool isLoading,
     final String? errorMessage,
   }) = _$LoginStateImpl;
@@ -213,6 +238,8 @@ abstract class _LoginState implements LoginState {
   EmailInput get email;
   @override
   PasswordInput get password;
+  @override
+  bool get obscure;
   @override
   bool get isLoading;
   @override
