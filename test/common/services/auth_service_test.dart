@@ -41,14 +41,10 @@ void main() {
   group('AuthService.signUp', () {
     test('returns Result.success on success', () async {
       when(
-        () => mockRepo.signUp(any(), any(), any()),
+        () => mockRepo.signUp(any(), any()),
       ).thenAnswer((_) async => const Result.success(null));
 
-      final result = await sut.signUp(
-        'Alice',
-        'alice@example.com',
-        'password123',
-      );
+      final result = await sut.signUp('alice@example.com', 'password123');
 
       expect(result.isSuccess, isTrue);
     });
@@ -56,16 +52,12 @@ void main() {
     test(
       'returns Result.failure with error message on duplicate email',
       () async {
-        when(() => mockRepo.signUp(any(), any(), any())).thenAnswer(
+        when(() => mockRepo.signUp(any(), any())).thenAnswer(
           (_) async =>
               const Result.failure(ServerException('Email already in use.')),
         );
 
-        final result = await sut.signUp(
-          'Alice',
-          'alice@example.com',
-          'password123',
-        );
+        final result = await sut.signUp('alice@example.com', 'password123');
 
         expect(result.isFailure, isTrue);
         expect(result.errorOrNull!.message, 'Email already in use.');

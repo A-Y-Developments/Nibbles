@@ -7,7 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 part 'auth_repository.g.dart';
 
 abstract interface class AuthRepository {
-  Future<Result<void>> signUp(String name, String email, String password);
+  Future<Result<void>> signUp(String email, String password);
   Future<Result<void>> signIn(String email, String password);
   Future<Result<void>> signOut();
   Future<Result<void>> resetPassword(String email);
@@ -29,16 +29,11 @@ class AuthRepositoryImpl implements AuthRepository {
   Stream<AuthState> get authStateStream => _supabase.auth.onAuthStateChange;
 
   @override
-  Future<Result<void>> signUp(
-    String name,
-    String email,
-    String password,
-  ) async {
+  Future<Result<void>> signUp(String email, String password) async {
     try {
       final response = await _supabase.auth.signUp(
         email: email,
         password: password,
-        data: {'full_name': name},
       );
       if (response.session == null) {
         return const Result.failure(
