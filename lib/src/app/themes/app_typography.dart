@@ -128,6 +128,18 @@ abstract final class AppTypography {
     ),
   );
 
+  // brandWordmark — logo lockup wordmark (kit: 800 42px/1 Parkinsans,
+  // green-deep, ls -0.02em). letterSpacing in logical px = 42 * -0.02 = -0.84
+  // (same em→px convention as displaySmall's -0.28). height 1.0 per kit '/1'.
+  static const TextStyle brandWordmark = TextStyle(
+    fontFamily: FontFamily.parkinsans,
+    fontSize: 42,
+    fontWeight: FontWeight.w800,
+    height: 1,
+    color: AppColors.greenDeep,
+    letterSpacing: -0.84,
+  );
+
   // sectionTitle — title3 (20/700 h1.30). Parkinsans display slot.
   static const TextStyle sectionTitle = TextStyle(
     fontFamily: FontFamily.parkinsans,
