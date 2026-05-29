@@ -110,8 +110,9 @@ abstract final class AppTypography {
       height: 1.294,
       color: AppColors.text,
     ),
-    // subhead — 13/600 h1.538.
-    labelMedium: GoogleFonts.figtree(
+    // subhead — 13/600 h1.538. Parkinsans display family per kit (--font-display).
+    labelMedium: const TextStyle(
+      fontFamily: FontFamily.parkinsans,
       fontSize: 13,
       fontWeight: FontWeight.w600,
       height: 1.538,

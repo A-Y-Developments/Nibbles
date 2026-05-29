@@ -22,6 +22,8 @@ void main() {
         'titleLarge': textTheme.titleLarge,
         'titleMedium': textTheme.titleMedium,
         'titleSmall': textTheme.titleSmall,
+        // subhead — display family per kit (--t-subhead uses --font-display).
+        'labelMedium': textTheme.labelMedium,
       };
 
       for (final entry in parkinsansSlots.entries) {
@@ -39,7 +41,6 @@ void main() {
         'bodyMedium': textTheme.bodyMedium,
         'bodySmall': textTheme.bodySmall,
         'labelLarge': textTheme.labelLarge,
-        'labelMedium': textTheme.labelMedium,
         'labelSmall': textTheme.labelSmall,
       };
 
