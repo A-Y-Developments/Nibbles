@@ -12,6 +12,7 @@ dependencies:
   auto_size_text: ^3.0.0
   cached_network_image: ^3.2.3
   collection: ^1.19.1
+  crypto: ^3.0.0
   dio: ^5.8.0+1
   easy_localization: ^3.0.1
   firebase_analytics: ^11.4.0

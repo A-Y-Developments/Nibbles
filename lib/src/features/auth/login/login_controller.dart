@@ -1,3 +1,4 @@
+import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/domain/formz/email_input.dart';
 import 'package:nibbles/src/common/domain/formz/password_input.dart';
 import 'package:nibbles/src/common/services/auth_service.dart';
@@ -35,5 +36,27 @@ class LoginController extends _$LoginController {
           state = state.copyWith(isLoading: false, errorMessage: error.message),
     );
     // On success: GoRouter redirect picks up authServiceProvider state change
+  }
+
+  Future<void> signInWithGoogle() => _runSocial(
+    () => ref.read(authServiceProvider.notifier).signInWithGoogle(),
+  );
+
+  Future<void> signInWithApple() => _runSocial(
+    () => ref.read(authServiceProvider.notifier).signInWithApple(),
+  );
+
+  Future<void> _runSocial(Future<Result<bool>> Function() call) async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+
+    final result = await call();
+
+    result.when(
+      // Success(false) = user-cancel: clear loading silently, no error UI.
+      // Success(true)  = signed in: router redirect picks up the state flip.
+      success: (_) => state = state.copyWith(isLoading: false),
+      failure: (error) =>
+          state = state.copyWith(isLoading: false, errorMessage: error.message),
+    );
   }
 }
