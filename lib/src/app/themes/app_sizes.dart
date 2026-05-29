@@ -40,6 +40,18 @@ abstract final class AppSizes {
   static const double roundButton = 44;
   static const double roundButtonSm = 32;
   static const double inputHeight = 52;
+  // Kit .field is 48px (inputHeight=52 is a deferred decision; do not mutate).
+  static const double fieldHeight = 48;
+  // Segmented control track height (controls/segmented preview).
+  static const double segmentedHeight = 42;
+  // Switch track / thumb (controls preview: 44x24 track, 20px thumb).
+  static const double switchTrackW = 44;
+  static const double switchTrackH = 24;
+  static const double switchThumb = 20;
+  // Checkbox (.cb controls preview: 24/radius8).
+  static const double checkbox = 24;
+  // Tip-card glyph circle (cards preview: 28px).
+  static const double tipGlyph = 28;
   static const double appBarHeight = 56;
   static const double bottomNavHeight = 64;
   static const double bottomNavRadius = 28;

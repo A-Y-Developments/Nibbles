@@ -74,6 +74,18 @@ abstract final class AppColors {
   static const Color bgCardTint = Color(0xFFFFFCD5);
   static const Color bgInput = Color(0xFFF2F2F2);
 
+  // ── Chip / status foreground tokens (kit components-chips) ────
+  // Deepened text colors for tinted status chips — no existing token.
+  static const Color safeFg = Color(0xFF1F6E47);
+  static const Color warnFg = Color(0xFF8A5E14);
+  static const Color flagFg = Color(0xFFB92020);
+
+  // ── Control / progress tokens ─────────────────────────────────
+  // Switch off-track grey (controls preview .switch).
+  static const Color switchTrackOff = Color(0xFFC0C0C0);
+  // Butter linear-progress fill — darkened butter (progress .bar.butter).
+  static const Color progressButterFill = Color(0xFFB7B82E);
+
   // ── Tan / wheat scale ─────────────────────────────────────────
   static const Color tanBase = Color(0xFFFFE0A9);
   static const Color tan10 = Color(0xFFFFF9EE);
