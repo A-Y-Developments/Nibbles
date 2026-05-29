@@ -48,6 +48,30 @@ class AuthService extends _$AuthService {
     return result;
   }
 
+  /// `Success(true)` = authenticated, `Success(false)` = user cancelled
+  /// (silent no-op, no state change), `Failure` = surfaced as P1 by the
+  /// controller.
+  Future<Result<bool>> signInWithGoogle() => _completeSocial(
+    _repo.signInWithGoogle(),
+  );
+
+  /// `Success(true)` = authenticated, `Success(false)` = user cancelled
+  /// (silent no-op, no state change), `Failure` = surfaced as P1 by the
+  /// controller.
+  Future<Result<bool>> signInWithApple() =>
+      _completeSocial(_repo.signInWithApple());
+
+  Future<Result<bool>> _completeSocial(Future<Result<bool>> future) async {
+    final result = await future;
+    // Guard on the bool data: Success(false) is a cancel — must NOT flip
+    // auth state. Only Success(true) means a real sign-in.
+    if (result.dataOrNull ?? false) {
+      await _backfillOnboardingFlagsIfNeeded();
+      state = true;
+    }
+    return result;
+  }
+
   Future<void> _backfillOnboardingFlagsIfNeeded() async {
     final flags = ref.read(localFlagServiceProvider);
     if (flags.isOnboardingBabySetupDone()) return;

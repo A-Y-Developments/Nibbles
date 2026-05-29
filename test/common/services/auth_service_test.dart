@@ -148,4 +148,82 @@ void main() {
       expect(result.errorOrNull!.message, 'Password too weak.');
     });
   });
+
+  group('AuthService.signInWithGoogle', () {
+    test('isLoggedIn becomes true on Success(true)', () async {
+      when(
+        () => mockRepo.signInWithGoogle(),
+      ).thenAnswer((_) async => const Result.success(true));
+
+      final result = await sut.signInWithGoogle();
+
+      expect(result.isSuccess, isTrue);
+      expect(container.read(authServiceProvider), isTrue);
+    });
+
+    test(
+      'isLoggedIn stays false on Success(false) (cancel is silent no-op)',
+      () async {
+        when(
+          () => mockRepo.signInWithGoogle(),
+        ).thenAnswer((_) async => const Result.success(false));
+
+        final result = await sut.signInWithGoogle();
+
+        // Result still surfaces success so the controller can clear loading
+        // without showing an error — but auth state must NOT flip on cancel.
+        expect(result.isSuccess, isTrue);
+        expect(container.read(authServiceProvider), isFalse);
+      },
+    );
+
+    test('isLoggedIn stays false on Failure', () async {
+      when(() => mockRepo.signInWithGoogle()).thenAnswer(
+        (_) async => const Result.failure(ServerException('provider error')),
+      );
+
+      final result = await sut.signInWithGoogle();
+
+      expect(result.isFailure, isTrue);
+      expect(container.read(authServiceProvider), isFalse);
+    });
+  });
+
+  group('AuthService.signInWithApple', () {
+    test('isLoggedIn becomes true on Success(true)', () async {
+      when(
+        () => mockRepo.signInWithApple(),
+      ).thenAnswer((_) async => const Result.success(true));
+
+      final result = await sut.signInWithApple();
+
+      expect(result.isSuccess, isTrue);
+      expect(container.read(authServiceProvider), isTrue);
+    });
+
+    test(
+      'isLoggedIn stays false on Success(false) (cancel is silent no-op)',
+      () async {
+        when(
+          () => mockRepo.signInWithApple(),
+        ).thenAnswer((_) async => const Result.success(false));
+
+        final result = await sut.signInWithApple();
+
+        expect(result.isSuccess, isTrue);
+        expect(container.read(authServiceProvider), isFalse);
+      },
+    );
+
+    test('isLoggedIn stays false on Failure', () async {
+      when(() => mockRepo.signInWithApple()).thenAnswer(
+        (_) async => const Result.failure(ServerException('Apple error')),
+      );
+
+      final result = await sut.signInWithApple();
+
+      expect(result.isFailure, isTrue);
+      expect(container.read(authServiceProvider), isFalse);
+    });
+  });
 }
