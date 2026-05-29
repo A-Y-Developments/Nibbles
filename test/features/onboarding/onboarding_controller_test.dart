@@ -35,16 +35,25 @@ void main() {
       babyProfile = _MockBabyProfileService();
     });
 
-    test('returns false and is a no-op when name + dob are not captured yet',
-        () async {
-      final container = _makeContainer(babyProfile);
-      final controller = container.read(onboardingControllerProvider.notifier);
+    test(
+      'returns false, sets inline error, and is a no-op when name + dob are '
+      'not captured yet (defensive guard — splash reset should make this '
+      'unreachable but it must NOT silently no-op if hit)',
+      () async {
+        final container = _makeContainer(babyProfile);
+        final controller = container.read(
+          onboardingControllerProvider.notifier,
+        );
 
-      final ok = await controller.submit();
+        final ok = await controller.submit();
 
-      expect(ok, isFalse);
-      verifyNever(() => babyProfile.createBaby(any(), any()));
-    });
+        expect(ok, isFalse);
+        verifyNever(() => babyProfile.createBaby(any(), any()));
+        final state = container.read(onboardingControllerProvider);
+        expect(state.submitErrorMessage, isNotNull);
+        expect(state.submitErrorMessage, contains('name'));
+      },
+    );
 
     test('success path returns true and clears error', () async {
       when(
@@ -112,6 +121,32 @@ void main() {
       expect(state.readinessAnswers, [true, false, null]);
       expect(state.readinessReady, isTrue);
     });
+
+    test(
+      'answerReadinessQuestion writes a single answer in place and preserves '
+      'the seeded length-6 list (back-nav contract)',
+      () {
+        final container = _makeContainer(_MockBabyProfileService());
+        final notifier = container.read(
+          onboardingControllerProvider.notifier,
+        )
+          ..answerReadinessQuestion(0, isYes: true)
+          ..answerReadinessQuestion(3, isYes: false);
+
+        final state = container.read(onboardingControllerProvider);
+        expect(state.readinessAnswers.length, 6);
+        expect(state.readinessAnswers[0], isTrue);
+        expect(state.readinessAnswers[3], isFalse);
+        expect(state.readinessAnswers[5], isNull);
+
+        // Out-of-range indices are a no-op (defensive).
+        notifier.answerReadinessQuestion(99, isYes: true);
+        expect(
+          container.read(onboardingControllerProvider).readinessAnswers.length,
+          6,
+        );
+      },
+    );
 
     test('setConsentAccepted toggles consent flag and clears submit error', () {
       final container = _makeContainer(_MockBabyProfileService());

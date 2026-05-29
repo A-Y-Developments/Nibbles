@@ -64,12 +64,29 @@ class SplashController extends _$SplashController {
       final baby = await _guardBoot(
         () => ref.read(babyProfileServiceProvider).getBaby(),
       );
-      if (baby == null) return '/onboarding/intro';
+      if (baby == null) {
+        // Process-death recovery: name + DOB live only in keepAlive memory
+        // until consent submit creates the baby. If the user killed mid-flow,
+        // memory is gone but `*_done` flags may have been written. Without
+        // this reset the redirect would skip name/DOB recapture and strand
+        // the user at consent (submit short-circuits on missing in-memory
+        // name/DOB). Baby-row absence is the durable signal that onboarding
+        // is genuinely unfinished — reconcile flags against it here so the
+        // redirect replays the flow cleanly from /onboarding/name.
+        flags.resetOnboardingProgress();
+        return '/onboarding/intro';
+      }
 
       final onboardingDone = await _guardBoot(
         () => ref.read(babyProfileServiceProvider).onboardingCompleted,
       );
-      if (!onboardingDone) return '/onboarding/intro';
+      if (!onboardingDone) {
+        // Same reasoning as above: baby row exists but onboarding is not
+        // marked complete remotely — a stale local-flag state would skip
+        // re-capture. Reset so the redirect routes to the correct stage.
+        flags.resetOnboardingProgress();
+        return '/onboarding/intro';
+      }
 
       // Seed local flags from Supabase so reinstalls don't re-trigger
       // onboarding. All three onboarding flags map to a single source of truth
