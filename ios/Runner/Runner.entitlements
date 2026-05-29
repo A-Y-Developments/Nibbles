@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- NIB-117: Sign in with Apple capability.
+	     The Apple Developer account associated with this app's bundle ids
+	     (com.aydev.nibbles + com.aydev.nibbles.dev) MUST have the
+	     "Sign in with Apple" capability enabled on its App ID for this
+	     entitlement to be honored at signing time. -->
+	<key>com.apple.developer.applesignin</key>
+	<array>
+		<string>Default</string>
+	</array>
+</dict>
+</plist>
