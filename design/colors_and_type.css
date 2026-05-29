@@ -53,6 +53,7 @@
   /* Butter yellow — accent surfaces, "active" pills, brand circles */
   --color-butter:         #EAEC8C;  /* rgb(234,236,140) — wordmark sticker, active tab */
   --color-butter-soft:    #FFFCD5;  /* rgb(255,252,213) — top header wash, hint cards */
+  --color-butter-dark:    #C8CA5A;  /* derived — darker butter, pressed/active emphasis */
   --color-cream:          #FFFDF8;  /* rgb(255,253,248) — surface base */
 
   /* Coral / peach — illustration, progress, avatars, food */
