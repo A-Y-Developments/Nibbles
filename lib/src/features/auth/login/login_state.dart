@@ -9,6 +9,7 @@ class LoginState with _$LoginState {
   const factory LoginState({
     @Default(EmailInput.pure()) EmailInput email,
     @Default(PasswordInput.pure()) PasswordInput password,
+    @Default(true) bool obscure,
     @Default(false) bool isLoading,
     String? errorMessage,
   }) = _LoginState;
