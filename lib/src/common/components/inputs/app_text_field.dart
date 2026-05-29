@@ -18,6 +18,7 @@ class AppTextField extends StatefulWidget {
     this.onSubmitted,
     this.enabled = true,
     this.focusNode,
+    this.suffixIcon,
     super.key,
   });
 
@@ -34,6 +35,10 @@ class AppTextField extends StatefulWidget {
   final ValueChanged<String>? onSubmitted;
   final bool enabled;
   final FocusNode? focusNode;
+
+  /// Optional trailing widget rendered inside the field (e.g. a valid-email
+  /// checkmark or a password visibility toggle).
+  final Widget? suffixIcon;
 
   @override
   State<AppTextField> createState() => _AppTextFieldState();
@@ -111,27 +116,37 @@ class _AppTextFieldState extends State<AppTextField> {
           ),
           alignment: Alignment.center,
           padding: const EdgeInsets.symmetric(horizontal: AppSizes.md - 2),
-          child: TextField(
-            controller: widget.controller,
-            focusNode: _focusNode,
-            enabled: widget.enabled,
-            obscureText: widget.obscureText,
-            keyboardType: widget.keyboardType,
-            textInputAction: widget.textInputAction,
-            onChanged: widget.onChanged,
-            onSubmitted: widget.onSubmitted,
-            style: theme.textTheme.bodyLarge?.copyWith(
-              color: AppColors.fgStrong,
-            ),
-            cursorColor: AppColors.greenDeep,
-            decoration: InputDecoration(
-              isCollapsed: true,
-              border: InputBorder.none,
-              hintText: widget.hintText,
-              hintStyle: theme.textTheme.bodyLarge?.copyWith(
-                color: AppColors.greenSoft,
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: widget.controller,
+                  focusNode: _focusNode,
+                  enabled: widget.enabled,
+                  obscureText: widget.obscureText,
+                  keyboardType: widget.keyboardType,
+                  textInputAction: widget.textInputAction,
+                  onChanged: widget.onChanged,
+                  onSubmitted: widget.onSubmitted,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: AppColors.fgStrong,
+                  ),
+                  cursorColor: AppColors.greenDeep,
+                  decoration: InputDecoration(
+                    isCollapsed: true,
+                    border: InputBorder.none,
+                    hintText: widget.hintText,
+                    hintStyle: theme.textTheme.bodyLarge?.copyWith(
+                      color: AppColors.greenSoft,
+                    ),
+                  ),
+                ),
               ),
-            ),
+              if (widget.suffixIcon != null) ...[
+                const SizedBox(width: AppSizes.sm),
+                widget.suffixIcon!,
+              ],
+            ],
           ),
         ),
         if (hasError) ...[
