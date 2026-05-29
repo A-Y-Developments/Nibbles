@@ -88,6 +88,7 @@ void main() {
     GoogleAuthorizeFn? googleAuthorize,
     AppleCredentialFn? appleCredential,
     String? Function()? generateRawNonce,
+    AuthCrashRecorderFn? crashRecorder,
   }) {
     return AuthRepositoryImpl(
       supabaseClient: mockClient,
@@ -97,6 +98,8 @@ void main() {
       googleAuthorize: googleAuthorize,
       appleCredential: appleCredential,
       generateRawNonce: generateRawNonce,
+      // Default: swallow so tests don't touch real Crashlytics.
+      crashRecorder: crashRecorder ?? (_, __) async {},
     );
   }
 
@@ -324,6 +327,52 @@ void main() {
 
       expect(result, isA<Failure<bool>>());
       expect((result as Failure<bool>).error.message, 'nonce mismatch');
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Crashlytics non-fatal on UnknownException path
+  // -------------------------------------------------------------------------
+
+  group('Crashlytics non-fatal', () {
+    test('records the original error on signIn UnknownException', () async {
+      Object? recordedError;
+      final sut = buildSut(
+        crashRecorder: (error, _) async {
+          recordedError = error;
+        },
+      );
+      final boom = Exception('boom');
+      when(
+        () => mockAuth.signInWithPassword(
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+        ),
+      ).thenThrow(boom);
+
+      final result = await sut.signIn('e@e.com', 'pw');
+
+      expect(result, isA<Failure<void>>());
+      expect((result as Failure<void>).error, isA<UnknownException>());
+      expect(recordedError, same(boom));
+    });
+
+    test('crash recorder throwing does NOT escalate', () async {
+      final sut = buildSut(
+        crashRecorder: (_, __) => throw Exception('crashlytics down'),
+      );
+      when(
+        () => mockAuth.signInWithPassword(
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+        ),
+      ).thenThrow(Exception('boom'));
+
+      // Must complete normally with a Failure — Crashlytics must not bubble.
+      final result = await sut.signIn('e@e.com', 'pw');
+
+      expect(result, isA<Failure<void>>());
+      expect((result as Failure<void>).error, isA<UnknownException>());
     });
   });
 }

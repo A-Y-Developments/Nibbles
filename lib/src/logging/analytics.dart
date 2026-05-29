@@ -1,4 +1,47 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'analytics.g.dart';
+
+/// Provider for the [Analytics] wrapper. Defaults to the real singleton; tests
+/// override it with a fake recorder to assert calls without touching Firebase.
+@Riverpod(keepAlive: true)
+// Specific *Ref types are deprecated; will be Ref in riverpod_generator 3.0.
+// ignore: deprecated_member_use_from_same_package
+Analytics analytics(AnalyticsRef ref) => Analytics.instance;
+
+/// Auth methods surfaced in analytics events. Mirrors the values listed in
+/// NIB-118: 'email', 'google', 'apple'.
+enum AuthMethod {
+  email,
+  google,
+  apple;
+
+  String get value => name;
+}
+
+/// Social providers surfaced in `social_login_cancelled`. Distinct from
+/// [AuthMethod] because email is never a "social" provider.
+enum SocialProvider {
+  google,
+  apple;
+
+  String get value => name;
+}
+
+/// Maps an [AppException] subtype to a stable, non-PII analytics error code.
+///
+/// Codes are derived from the exception TYPE only — the raw message (which can
+/// contain Supabase or provider strings) is never used. Keep the set small and
+/// stable so downstream dashboards stay consistent.
+String authErrorCode(AppException error) => switch (error) {
+  NetworkException() => 'network',
+  ServerException() => 'server_exception',
+  UnauthorizedException() => 'unauthorized',
+  NotFoundException() => 'not_found',
+  UnknownException() => 'unknown',
+};
 
 /// Thin wrapper around [FirebaseAnalytics] that enforces no-PII policy.
 ///
@@ -6,7 +49,7 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 /// - Never log user IDs, email addresses, names, or any PII.
 /// - Event names must be snake_case and <= 40 characters.
 /// - Parameter values must be non-PII primitives (String, num, bool).
-final class Analytics {
+class Analytics {
   Analytics._();
 
   static final Analytics instance = Analytics._();
@@ -38,15 +81,70 @@ final class Analytics {
   }
 
   // ---------------------------------------------------------------------------
-  // Auth
+  // Auth — login
   // ---------------------------------------------------------------------------
 
-  Future<void> logSignUp() async {
-    await _analytics.logSignUp(signUpMethod: 'email');
+  Future<void> logLoginMethodSelected({required AuthMethod method}) async {
+    await _logEvent(
+      'login_method_selected',
+      parameters: {'method': method.value},
+    );
   }
 
-  Future<void> logLogin() async {
-    await _analytics.logLogin(loginMethod: 'email');
+  Future<void> logLoginSuccess({required AuthMethod method}) async {
+    await _logEvent('login_success', parameters: {'method': method.value});
+  }
+
+  Future<void> logLoginFailure({
+    required AuthMethod method,
+    required String errorCode,
+  }) async {
+    await _logEvent(
+      'login_failure',
+      parameters: {'method': method.value, 'error_code': errorCode},
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Auth — sign up
+  // ---------------------------------------------------------------------------
+
+  Future<void> logSignUpMethodSelected({required AuthMethod method}) async {
+    await _logEvent(
+      'sign_up_method_selected',
+      parameters: {'method': method.value},
+    );
+  }
+
+  Future<void> logSignUpSuccess({required AuthMethod method}) async {
+    await _logEvent('sign_up_success', parameters: {'method': method.value});
+  }
+
+  Future<void> logSignUpFailure({
+    required AuthMethod method,
+    required String errorCode,
+  }) async {
+    await _logEvent(
+      'sign_up_failure',
+      parameters: {'method': method.value, 'error_code': errorCode},
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Auth — password reset + social cancel + logout
+  // ---------------------------------------------------------------------------
+
+  Future<void> logPasswordResetRequested() async {
+    await _logEvent('password_reset_requested');
+  }
+
+  Future<void> logSocialLoginCancelled({
+    required SocialProvider provider,
+  }) async {
+    await _logEvent(
+      'social_login_cancelled',
+      parameters: {'provider': provider.value},
+    );
   }
 
   Future<void> logLogout() async {

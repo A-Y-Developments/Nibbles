@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:nibbles/src/app/config/flavor_config.dart';
@@ -28,6 +29,11 @@ typedef AppleCredentialFn =
 /// in tests (the real `GoogleSignIn.instance.initialize` throws on a missing
 /// platform plugin under the test runner).
 typedef GoogleInitializeFn = Future<void> Function();
+
+/// Function injected so unit tests don't touch real Crashlytics. Records a
+/// non-fatal diagnostic for an unrecognised auth exception path.
+typedef AuthCrashRecorderFn =
+    Future<void> Function(Object error, StackTrace stack);
 
 abstract interface class AuthRepository {
   Future<Result<void>> signUp(String email, String password);
@@ -58,12 +64,14 @@ class AuthRepositoryImpl implements AuthRepository {
     GoogleAuthorizeFn? googleAuthorize,
     AppleCredentialFn? appleCredential,
     String? Function()? generateRawNonce,
+    AuthCrashRecorderFn? crashRecorder,
   }) : _supabase = supabaseClient ?? Supabase.instance.client,
        _googleInitialize = googleInitialize ?? _defaultGoogleInitialize,
        _googleAuthenticate = googleAuthenticate ?? _defaultGoogleAuthenticate,
        _googleAuthorize = googleAuthorize ?? _defaultGoogleAuthorize,
        _appleCredential = appleCredential ?? _defaultAppleCredential,
-       _generateRawNonce = generateRawNonce;
+       _generateRawNonce = generateRawNonce,
+       _crashRecorder = crashRecorder ?? _defaultCrashRecorder;
 
   final SupabaseClient _supabase;
   final GoogleInitializeFn _googleInitialize;
@@ -71,6 +79,7 @@ class AuthRepositoryImpl implements AuthRepository {
   final GoogleAuthorizeFn _googleAuthorize;
   final AppleCredentialFn _appleCredential;
   final String? Function()? _generateRawNonce;
+  final AuthCrashRecorderFn _crashRecorder;
 
   /// One-shot guard. `GoogleSignIn.initialize()` must run exactly once per
   /// process — calling it twice is undefined behavior per the 7.x docs.
@@ -97,7 +106,8 @@ class AuthRepositoryImpl implements AuthRepository {
       return const Result.success(null);
     } on AuthException catch (e) {
       return Result.failure(ServerException(e.message));
-    } on Object {
+    } on Object catch (e, st) {
+      await _recordAuthUnknown(e, st);
       return const Result.failure(UnknownException());
     }
   }
@@ -109,7 +119,8 @@ class AuthRepositoryImpl implements AuthRepository {
       return const Result.success(null);
     } on AuthException catch (e) {
       return Result.failure(ServerException(e.message));
-    } on Object {
+    } on Object catch (e, st) {
+      await _recordAuthUnknown(e, st);
       return const Result.failure(UnknownException());
     }
   }
@@ -150,7 +161,8 @@ class AuthRepositoryImpl implements AuthRepository {
       return const Result.success(true);
     } on AuthException catch (e) {
       return Result.failure(ServerException(e.message));
-    } on Object {
+    } on Object catch (e, st) {
+      await _recordAuthUnknown(e, st);
       return const Result.failure(UnknownException());
     }
   }
@@ -191,7 +203,8 @@ class AuthRepositoryImpl implements AuthRepository {
       return const Result.success(true);
     } on AuthException catch (e) {
       return Result.failure(ServerException(e.message));
-    } on Object {
+    } on Object catch (e, st) {
+      await _recordAuthUnknown(e, st);
       return const Result.failure(UnknownException());
     }
   }
@@ -203,7 +216,8 @@ class AuthRepositoryImpl implements AuthRepository {
       return const Result.success(null);
     } on AuthException catch (e) {
       return Result.failure(ServerException(e.message));
-    } on Object {
+    } on Object catch (e, st) {
+      await _recordAuthUnknown(e, st);
       return const Result.failure(UnknownException());
     }
   }
@@ -218,7 +232,8 @@ class AuthRepositoryImpl implements AuthRepository {
       return const Result.success(null);
     } on AuthException catch (e) {
       return Result.failure(ServerException(e.message));
-    } on Object {
+    } on Object catch (e, st) {
+      await _recordAuthUnknown(e, st);
       return const Result.failure(UnknownException());
     }
   }
@@ -230,7 +245,8 @@ class AuthRepositoryImpl implements AuthRepository {
       return const Result.success(null);
     } on AuthException catch (e) {
       return Result.failure(ServerException(e.message));
-    } on Object {
+    } on Object catch (e, st) {
+      await _recordAuthUnknown(e, st);
       return const Result.failure(UnknownException());
     }
   }
@@ -239,6 +255,18 @@ class AuthRepositoryImpl implements AuthRepository {
   /// after the first reuse the same Future.
   Future<void> _ensureGoogleInitialized() =>
       _googleInitFuture ??= _googleInitialize();
+
+  /// Records an unrecognised auth-path exception to Crashlytics as a
+  /// non-fatal. Guarded so a Crashlytics failure (e.g. uninitialised Firebase
+  /// in tests) never escalates the original failure path. No PII passed —
+  /// only the raw error/stack and a static reason string.
+  Future<void> _recordAuthUnknown(Object error, StackTrace stack) async {
+    try {
+      await _crashRecorder(error, stack);
+    } on Object {
+      // Crashlytics is best-effort; never let it escalate the auth failure.
+    }
+  }
 }
 
 String? _readServerClientId() {
@@ -280,6 +308,13 @@ Future<AuthorizationCredentialAppleID> _defaultAppleCredential(
     nonce: hashedNonce,
   );
 }
+
+Future<void> _defaultCrashRecorder(Object error, StackTrace stack) =>
+    FirebaseCrashlytics.instance.recordError(
+      error,
+      stack,
+      reason: 'auth_unknown',
+    );
 
 @Riverpod(keepAlive: true)
 // Specific *Ref types are deprecated; will be Ref in riverpod_generator 3.0.
