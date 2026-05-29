@@ -169,45 +169,38 @@ class _IntroSlide extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSizes.pagePaddingH,
-            vertical: AppSizes.lg,
-          ),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: constraints.maxHeight),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: Center(
-                    child: _DeviceMockupPlaceholder(slideIndex: slideIndex),
-                  ),
-                ),
-                const SizedBox(height: AppSizes.xl),
-                Text(
-                  data.title,
-                  textAlign: TextAlign.center,
-                  style: textTheme.headlineSmall?.copyWith(
-                    color: AppColors.greenDeep,
-                  ),
-                ),
-                const SizedBox(height: AppSizes.sp12),
-                Text(
-                  data.subtitle,
-                  textAlign: TextAlign.center,
-                  style: textTheme.bodyLarge?.copyWith(
-                    color: AppColors.fgDefault,
-                  ),
-                ),
-                const SizedBox(height: AppSizes.md),
-              ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSizes.pagePaddingH,
+        vertical: AppSizes.lg,
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Center(
+              child: _DeviceMockupPlaceholder(slideIndex: slideIndex),
             ),
           ),
-        );
-      },
+          const SizedBox(height: AppSizes.xl),
+          Text(
+            data.title,
+            textAlign: TextAlign.center,
+            style: textTheme.headlineSmall?.copyWith(
+              color: AppColors.greenDeep,
+            ),
+          ),
+          const SizedBox(height: AppSizes.sp12),
+          Text(
+            data.subtitle,
+            textAlign: TextAlign.center,
+            style: textTheme.bodyLarge?.copyWith(
+              color: AppColors.fgDefault,
+            ),
+          ),
+          const SizedBox(height: AppSizes.md),
+        ],
+      ),
     );
   }
 }
