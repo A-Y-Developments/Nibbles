@@ -44,6 +44,7 @@ class ForgotPasswordScreen extends ConsumerWidget {
                 child: AppRoundButton(
                   icon: const Icon(Icons.arrow_back_rounded),
                   onPressed: goBack,
+                  tone: AppRoundButtonTone.butter,
                   semanticLabel: 'Back',
                 ),
               ),
