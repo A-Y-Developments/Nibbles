@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Nibbles · Logo lockup</title>
+  <link rel="stylesheet" href="../colors_and_type.css" />
+  <style>
+    body { margin: 0; background: var(--color-cream); display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; }
+    .card { display: grid; grid-template-columns: 120px 1fr 1fr; align-items: center; gap: 32px; width: 660px; background: var(--bg-card); border-radius: var(--r-xl); padding: 20px 24px; box-shadow: var(--shadow-card); }
+    .card img { width: 96px; height: 96px; border-radius: var(--r-lg); display: block; }
+    .word { font: 800 44px/1 var(--font-display); color: var(--color-green-deep); letter-spacing: -0.02em; }
+    .sub  { font: var(--t-caption); color: var(--fg-faint); margin-top: 4px; }
+    .swatch-row { display: flex; gap: 6px; align-items: center; }
+    .sw { width: 22px; height: 22px; border-radius: 999px; border: 1px solid rgba(0,0,0,0.05); }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <img src="../assets/logo-mark.png" alt="Nibbles quatrefoil mark" />
+    <div>
+      <div class="word">nibbles</div>
+      <div class="sub">Quatrefoil mark · Parkinsans ExtraBold wordmark</div>
+    </div>
+    <div class="swatch-row">
+      <div class="sw" style="background:var(--color-green-deep)"></div>
+      <div class="sw" style="background:var(--color-green)"></div>
+      <div class="sw" style="background:var(--color-butter)"></div>
+      <div class="sw" style="background:var(--color-butter-soft)"></div>
+      <div class="sw" style="background:var(--color-coral)"></div>
+    </div>
+  </div>
+</body>
+</html>

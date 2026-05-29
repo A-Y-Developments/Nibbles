@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="../colors_and_type.css" />
+  <style>
+    body { margin: 0; background: var(--bg-card); padding: 30px 22px; }
+    .nav { background: var(--bg-card); border-radius: 28px; box-shadow: var(--shadow-card); padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; max-width: 380px; margin: 0 auto; }
+    .tab { display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--fg-faint); padding: 8px 14px; border-radius: 999px; cursor: pointer; }
+    .tab.active { background: var(--color-butter); color: var(--color-green-deep); }
+    .tab svg { width: 22px; height: 22px; }
+    .lbl { font: 700 10px/1 var(--font-display); }
+    h5 { font: 700 11px/1 var(--font-display); color: var(--fg-faint); margin: 0 0 14px; text-transform: uppercase; letter-spacing: 0.06em; text-align: center; }
+  </style>
+</head>
+<body>
+  <h5>4-tab bottom nav · active state is a butter-yellow pill</h5>
+  <div class="nav">
+    <div class="tab active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 3l9 8"/><path d="M5 10v10h14V10"/></svg>
+      <span class="lbl">Home</span>
+    </div>
+    <div class="tab">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 12c0-4 4-7 8-7s8 3 8 7"/><path d="M2 12h20"/><path d="M5 12v5a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3v-5"/></svg>
+      <span class="lbl">Meals</span>
+    </div>
+    <div class="tab">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M3 4h2l3 11h11l2-8H6"/></svg>
+      <span class="lbl">Grocery</span>
+    </div>
+    <div class="tab">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h12a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3V4z"/><path d="M4 17a3 3 0 0 1 3-3h12"/></svg>
+      <span class="lbl">Recipes</span>
+    </div>
+  </div>
+</body>
+</html>

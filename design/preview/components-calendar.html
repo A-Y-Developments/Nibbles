@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="../colors_and_type.css" />
+  <style>
+    body { margin: 0; background: var(--color-cream); padding: 24px; }
+    .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .day { width: 64px; height: 86px; border-radius: var(--r-md); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; box-sizing: border-box; }
+    .day .dow { font: 700 13px/1 var(--font-display); }
+    .day .date { font: 700 13px/1 var(--font-system); }
+    .day.selected { background: var(--color-green-deep); color: var(--color-butter-soft); }
+    .day.idle { background: var(--bg-card); color: var(--color-green-deep); border: 1px solid var(--border-soft); }
+    .day.filled { background: var(--color-butter-soft); color: var(--color-green-deep); border: 1px solid var(--color-green); }
+    .day.filled .check { color: var(--color-green); font-size: 18px; line-height: 1; }
+    h5 { font: 700 11px/1 var(--font-display); color: var(--fg-faint); margin: 0 0 10px; text-transform: uppercase; letter-spacing: 0.06em; }
+  </style>
+</head>
+<body>
+  <h5>Per-day chips · selected · idle · filled with check</h5>
+  <div class="row">
+    <div class="day selected"><span class="dow">Mon</span><span class="date">18 Apr</span></div>
+    <div class="day idle"><span class="dow">Tue</span><span class="date">19 Apr</span></div>
+    <div class="day idle"><span class="dow">Wed</span><span class="date">20 Apr</span></div>
+    <div class="day filled"><span class="check">✓</span><span class="dow">Thu</span><span class="date">21 Apr</span></div>
+    <div class="day idle"><span class="dow">Fri</span><span class="date">22 Apr</span></div>
+    <div class="day filled"><span class="check">✓</span><span class="dow">Sat</span><span class="date">23 Apr</span></div>
+    <div class="day idle"><span class="dow">Sun</span><span class="date">24 Apr</span></div>
+  </div>
+</body>
+</html>

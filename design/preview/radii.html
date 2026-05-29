@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="../colors_and_type.css" />
+  <style>
+    body { margin: 0; background: var(--bg-card); padding: 22px 26px; }
+    .row { display: flex; gap: 16px; align-items: flex-end; }
+    .it { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .box { width: 78px; height: 78px; background: var(--color-butter-soft); border: 1px solid var(--color-green); }
+    .lbl { font: 700 11px/1.2 var(--font-display); color: var(--fg-strong); }
+    .hex { font: 400 10px/1.2 var(--font-system); color: var(--fg-faint); }
+    h4 { font: var(--t-subhead); margin: 0 0 12px; color: var(--color-green-deep); }
+  </style>
+</head>
+<body>
+  <h4>Radius scale — generously rounded, pill CTAs</h4>
+  <div class="row">
+    <div class="it"><div class="box" style="border-radius:4px"></div><div class="lbl">xs · 4</div><div class="hex">--r-xs</div></div>
+    <div class="it"><div class="box" style="border-radius:8px"></div><div class="lbl">sm · 8</div><div class="hex">--r-sm</div></div>
+    <div class="it"><div class="box" style="border-radius:10px"></div><div class="lbl">md · 10</div><div class="hex">--r-md (buttons, chips inner)</div></div>
+    <div class="it"><div class="box" style="border-radius:16px"></div><div class="lbl">lg · 16</div><div class="hex">--r-lg</div></div>
+    <div class="it"><div class="box" style="border-radius:20px"></div><div class="lbl">xl · 20</div><div class="hex">--r-xl (hero cards)</div></div>
+    <div class="it"><div class="box" style="border-radius:24px"></div><div class="lbl">2xl · 24</div><div class="hex">--r-2xl (top header)</div></div>
+    <div class="it"><div class="box" style="border-radius:999px"></div><div class="lbl">full · 999</div><div class="hex">--r-full (CTAs, tabs)</div></div>
+  </div>
+</body>
+</html>

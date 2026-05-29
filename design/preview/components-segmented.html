@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="../colors_and_type.css" />
+  <style>
+    body { margin: 0; background: var(--bg-card); padding: 24px; display: grid; gap: 18px; }
+    .seg { width: 340px; height: 42px; background: #EAEAEA; border-radius: var(--r-md); display: grid; grid-template-columns: 1fr 1fr; padding: 1px; box-sizing: border-box; position: relative; }
+    .seg > div { display: flex; align-items: center; justify-content: center; font: 700 15px/1 var(--font-display); color: var(--color-green-deep); border-radius: var(--r-md); cursor: pointer; }
+    .seg > .on { background: var(--color-green-deep); color: var(--color-cream); }
+    .label { font: 700 11px/1 var(--font-display); color: var(--fg-faint); text-transform: uppercase; letter-spacing: 0.06em; }
+    .group { display: flex; align-items: center; gap: 22px; }
+  </style>
+</head>
+<body>
+  <div class="group"><span class="label">First on</span><div class="seg"><div class="on">List</div><div>Bought</div></div></div>
+  <div class="group"><span class="label">Second on</span><div class="seg"><div>List</div><div class="on">Bought</div></div></div>
+</body>
+</html>

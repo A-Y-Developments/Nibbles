@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="../colors_and_type.css" />
+  <style>
+    body { margin: 0; background: var(--bg-card); padding: 18px 22px; font-family: var(--font-body); }
+    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+    h4 { font: var(--t-subhead); margin: 0 0 8px; color: var(--color-green-deep); }
+    .col h5 { font: 700 11px/1.2 var(--font-display); color: var(--fg-faint); margin: 0 0 8px; text-transform: uppercase; letter-spacing: 0.06em; }
+    .row { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
+    .dot { width: 24px; height: 24px; border-radius: 999px; border: 1px solid rgba(0,0,0,0.05); flex: none; }
+    .role { font: 700 12px/1.2 var(--font-display); color: var(--fg-strong); }
+    .hex  { font: 400 11px/1.2 var(--font-system); color: var(--fg-faint); margin-left: auto; }
+  </style>
+</head>
+<body>
+  <h4>Semantic &amp; state colors</h4>
+  <div class="grid">
+    <div class="col">
+      <h5>Allergen states</h5>
+      <div class="row"><div class="dot" style="background:#38A169"></div><div class="role">Safe / introduced</div><div class="hex">#38A169</div></div>
+      <div class="row"><div class="dot" style="background:#D69E2E"></div><div class="role">In progress</div><div class="hex">#D69E2E</div></div>
+      <div class="row"><div class="dot" style="background:#E53E3E"></div><div class="role">Flagged / reaction</div><div class="hex">#E53E3E</div></div>
+      <div class="row"><div class="dot" style="background:#B0B8C1"></div><div class="role">Not started</div><div class="hex">#B0B8C1</div></div>
+    </div>
+    <div class="col">
+      <h5>UI feedback</h5>
+      <div class="row"><div class="dot" style="background:#3D5236"></div><div class="role">Primary action</div><div class="hex">#3D5236</div></div>
+      <div class="row"><div class="dot" style="background:#EAEC8C"></div><div class="role">Selected / active</div><div class="hex">#EAEC8C</div></div>
+      <div class="row"><div class="dot" style="background:#FFFCD5"></div><div class="role">Tip / hint surface</div><div class="hex">#FFFCD5</div></div>
+      <div class="row"><div class="dot" style="background:#851E1E"></div><div class="role">Destructive</div><div class="hex">#851E1E</div></div>
+    </div>
+  </div>
+</body>
+</html>

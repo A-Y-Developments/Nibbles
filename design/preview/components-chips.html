@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="../colors_and_type.css" />
+  <style>
+    body { margin: 0; background: var(--bg-card); padding: 22px; }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+    .chip { display:inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 12px; border-radius: var(--r-full); font: 700 12px/1 var(--font-display); }
+    .chip.safe { background: rgba(56,161,105,0.12); color: #1F6E47; }
+    .chip.warn { background: rgba(214,158,46,0.15); color: #8A5E14; }
+    .chip.flag { background: rgba(229,62,62,0.12); color: #B92020; }
+    .chip.neutral { background: var(--color-butter-soft); color: var(--color-green-deep); }
+    .chip.coral { background: var(--color-coral-soft); color: var(--color-coral-deep); }
+    .chip.green { background: var(--color-green-deep); color: var(--color-cream); }
+    h5 { font: 700 11px/1 var(--font-display); color: var(--fg-faint); margin: 0 0 6px; text-transform: uppercase; letter-spacing: 0.06em; }
+  </style>
+</head>
+<body>
+  <h5>Allergen / tag chips</h5>
+  <div class="row">
+    <span class="chip safe">✓ Iron Rich</span>
+    <span class="chip safe">✓ Active Program Allergens</span>
+    <span class="chip coral">🍎 Fruit</span>
+    <span class="chip coral">⚡ Iron Rich</span>
+    <span class="chip neutral">+2</span>
+  </div>
+  <h5>Allergen state</h5>
+  <div class="row">
+    <span class="chip safe">Peanut · Introduced</span>
+    <span class="chip warn">Egg · In progress</span>
+    <span class="chip flag">Dairy · Reaction</span>
+    <span class="chip" style="background:#F2F4F3;color:#6B7280">Sesame · Not started</span>
+  </div>
+  <h5>Selected vs idle (tab/filter pill)</h5>
+  <div class="row">
+    <span class="chip green">Today</span>
+    <span class="chip neutral">Fri, May 10</span>
+    <span class="chip neutral">Fri, May 10</span>
+    <span class="chip" style="background:var(--color-butter);color:var(--color-green-deep)">Fri, May 10</span>
+  </div>
+</body>
+</html>

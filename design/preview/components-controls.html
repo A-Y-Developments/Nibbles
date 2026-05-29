@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="../colors_and_type.css" />
+  <style>
+    body { margin: 0; background: var(--bg-card); padding: 24px; display: grid; gap: 22px; }
+    .row { display: flex; gap: 18px; align-items: center; }
+    .switch { width: 44px; height: 24px; border-radius: 100px; background: #C0C0C0; position: relative; }
+    .switch .thumb { width: 20px; height: 20px; border-radius: 999px; background: var(--color-green-deep); position: absolute; top: 2px; left: 2px; box-shadow: var(--shadow-switch); }
+    .switch.on { background: var(--color-butter); }
+    .switch.on .thumb { left: 22px; }
+    .cb { width: 24px; height: 24px; border-radius: 8px; border: 1.5px solid var(--color-green-deep); background: var(--bg-card); display: grid; place-items: center; }
+    .cb.on { background: var(--color-green-deep); }
+    .cb.on::after { content: "✓"; color: var(--color-cream); font: 700 14px/1 var(--font-system); }
+    .lbl { font: 700 12px/1 var(--font-display); color: var(--fg-faint); text-transform: uppercase; letter-spacing: 0.06em; }
+  </style>
+</head>
+<body>
+  <div class="row"><span class="lbl" style="width:90px">Switch</span><div class="switch"><div class="thumb"></div></div><div class="switch on"><div class="thumb"></div></div></div>
+  <div class="row"><span class="lbl" style="width:90px">Checkbox</span><div class="cb"></div><div class="cb on"></div></div>
+  <div class="row" style="gap:10px">
+    <span class="lbl" style="width:90px">Radio (pill)</span>
+    <button style="height:36px;padding:0 14px;border-radius:999px;border:0;background:var(--color-green-deep);color:var(--color-cream);font:700 13px/1 var(--font-display)">Yes</button>
+    <button style="height:36px;padding:0 14px;border-radius:999px;border:1.5px solid var(--color-green-deep);background:transparent;color:var(--color-green-deep);font:700 13px/1 var(--font-display)">No</button>
+  </div>
+</body>
+</html>

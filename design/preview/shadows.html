@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="../colors_and_type.css" />
+  <style>
+    body { margin: 0; background: var(--color-cream); padding: 26px; }
+    .row { display: flex; gap: 22px; }
+    .card { width: 200px; height: 90px; background: var(--bg-card); border-radius: var(--r-xl); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+    .lbl { font: 700 13px/1 var(--font-display); color: var(--fg-strong); }
+    .hex { font: 400 11px/1.2 var(--font-system); color: var(--fg-faint); }
+    h4 { font: var(--t-subhead); margin: 0 0 12px; color: var(--color-green-deep); }
+  </style>
+</head>
+<body>
+  <h4>Shadow tokens — soft, rarely dramatic</h4>
+  <div class="row">
+    <div class="card"><span class="lbl">No shadow</span><span class="hex">flat on cream</span></div>
+    <div class="card" style="box-shadow: var(--shadow-card)"><span class="lbl">card</span><span class="hex">0 2 8 rgba(0,0,0,.06)</span></div>
+    <div class="card" style="box-shadow: var(--shadow-card-lifted)"><span class="lbl">card lifted</span><span class="hex">0 6 24 rgba(0,0,0,.10)</span></div>
+  </div>
+</body>
+</html>

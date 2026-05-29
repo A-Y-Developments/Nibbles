@@ -1,0 +1,184 @@
+/* ─────────────────────────────────────────────────────────────
+   Nibbles Design System — Color & Typography tokens
+   Source of truth: Figma "Baby's Nutrition App" + lib/src/app/themes/
+   ───────────────────────────────────────────────────────────── */
+
+/* ---- Fonts -------------------------------------------------- */
+@font-face {
+  font-family: "Parkinsans";
+  src: url("./fonts/Parkinsans-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Parkinsans";
+  src: url("./fonts/Parkinsans-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Parkinsans";
+  src: url("./fonts/Parkinsans-SemiBold.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Parkinsans";
+  src: url("./fonts/Parkinsans-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Parkinsans";
+  src: url("./fonts/Parkinsans-ExtraBold.ttf") format("truetype");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* ─── Brand colors ─────────────────────────────────────── */
+
+  /* Sage green — primary CTA / nav / accents */
+  /* (Parkinsans wordmark green, dark text on pale UI) */
+  --color-green-deep:     #3D5236;  /* rgb(61,82,54)   — primary dark, button bg */
+  --color-green:          #5C7852;  /* rgb(92,120,82)  — primary, headings on cream */
+  --color-green-soft:     #67835B;  /* rgb(103,131,91) — hover / secondary fill */
+  --color-green-tint:     #E8EEE5;  /* derived — quiet bg, dividers on cream */
+
+  /* Butter yellow — accent surfaces, "active" pills, brand circles */
+  --color-butter:         #EAEC8C;  /* rgb(234,236,140) — wordmark sticker, active tab */
+  --color-butter-soft:    #FFFCD5;  /* rgb(255,252,213) — top header wash, hint cards */
+  --color-cream:          #FFFDF8;  /* rgb(255,253,248) — surface base */
+
+  /* Coral / peach — illustration, progress, avatars, food */
+  --color-coral:          #F8A175;  /* rgb(248,161,117) — progress ring, avatar bg */
+  --color-coral-soft:     #FDF2EC;  /* rgb(253,242,236) — peach background tint */
+  --color-coral-deep:     #C97850;  /* rgb(201,120,80)  — filled progress, food icon stroke */
+
+  /* Warm red — destructive, allergen flagged */
+  --color-red:            #851E1E;  /* roughly maroon, destructive CTA in Figma */
+  --color-red-soft:       #FFE8E8;
+
+  /* Tan / wheat scale — long ramp from cream to dark olive */
+  --tan-base:             #FFE0A9;
+  --tan-10:               #FFF9EE;
+  --tan-20:               #FFF5E2;
+  --tan-30:               #FFF0D4;
+  --tan-40:               #FFEAC6;
+  --tan-50:               #FFE5B7;
+  --tan-60:               #D5BB8D;
+  --tan-70:               #AA9571;
+  --tan-80:               #807055;
+  --tan-90:               #554B38;
+  --tan-100:              #332D22;
+
+  /* Orange scale — secondary warm, used in food / allergen iconography */
+  --orange-base:          #FF6D0F;
+  --orange-10:            #FFE2CF;
+  --orange-20:            #FFCEAF;
+  --orange-30:            #FFB687;
+  --orange-40:            #FF9E5F;
+  --orange-50:            #FF8537;
+  --orange-60:            #D55B0D;
+  --orange-70:            #AA490A;
+  --orange-80:            #803708;
+  --orange-90:            #552405;
+  --orange-100:           #331603;
+
+  /* ─── Semantic surfaces ────────────────────────────────── */
+  --bg-app:               #FFFDF8;          /* default scaffold */
+  --bg-header-wash:       #EAEC8C;          /* top-of-screen butter wash */
+  --bg-header-soft:       #FFFCD5;          /* lighter top tint */
+  --bg-card:              #FFFFFF;          /* card surface */
+  --bg-card-tint:         #FFFCD5;          /* hint / tip card */
+  --bg-input:             #F2F2F2;          /* filled input fill */
+  --bg-overlay-scrim:     rgba(0,0,0,0.4);
+  --border-soft:          #EAEAEA;          /* rgb(234,234,234) — most dividers */
+  --border-muted:         #D9D9D9;
+  --shadow-card:          0 2px 8px rgba(39,39,39,0.06);
+  --shadow-card-lifted:   0 6px 24px rgba(39,39,39,0.10);
+  --shadow-switch:        0 2px 4px rgba(39,39,39,0.10);
+
+  /* ─── Semantic foregrounds ─────────────────────────────── */
+  --fg-strong:            #2C2C2C;     /* rgb(44,44,44)  — primary text */
+  --fg-default:           #2D1F17;     /* rgb(45,31,23)  — body, on cream */
+  --fg-muted:             #6B7280;
+  --fg-faint:             #969696;     /* rgb(150,150,150) — captions */
+  --fg-on-green:          #FFFDF8;
+  --fg-on-butter:         #2C2C2C;
+
+  --fg-link:              var(--color-green-deep);
+  --fg-success:           #38A169;
+  --fg-warning:           #D69E2E;
+  --fg-danger:            #851E1E;
+
+  /* Allergen chip semantics — from app_colors.dart */
+  --allergen-safe:        #38A169;
+  --allergen-flagged:     #E53E3E;
+  --allergen-in-progress: #D69E2E;
+  --allergen-not-started: #B0B8C1;
+
+  /* ─── Radius scale ─────────────────────────────────────── */
+  --r-xs:    4px;
+  --r-sm:    8px;
+  --r-md:    10px;   /* most buttons + chips inner */
+  --r-lg:    16px;
+  --r-xl:    20px;   /* hero cards */
+  --r-2xl:   24px;   /* pill-ish, top-card */
+  --r-full:  999px;  /* CTAs, tabs */
+
+  /* ─── Spacing scale (8pt) ──────────────────────────────── */
+  --sp-1:  4px;
+  --sp-2:  8px;
+  --sp-3:  12px;
+  --sp-4:  16px;
+  --sp-5:  20px;
+  --sp-6:  24px;
+  --sp-8:  32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+
+  /* ─── Type tokens ──────────────────────────────────────── */
+  --font-display: "Parkinsans", "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-body:    "Parkinsans", "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-system:  -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", system-ui, sans-serif;
+
+  /* Type ramp (matches Figma /Typography frames) */
+  --t-title-1:    700 28px/34px var(--font-display);   /* Parkinsans Bold */
+  --t-title-2:    700 22px/28px var(--font-display);
+  --t-title-3:    700 20px/26px var(--font-display);
+  --t-headline:   600 17px/22px var(--font-display);   /* Parkinsans SemiBold */
+  --t-body:       400 15px/22px var(--font-body);
+  --t-body-bold:  700 15px/22px var(--font-body);
+  --t-callout:    400 14px/21px var(--font-body);
+  --t-subhead:    600 13px/20px var(--font-display);
+  --t-caption:    400 12px/16px var(--font-body);
+  --t-overline:   700 10px/12px var(--font-body);      /* "TODAY MEALS", "ALLERGEN" */
+}
+
+/* ──────────────────────────────────────────────────────────────
+   Base + utility classes — apply on any HTML doc using this CSS
+   ────────────────────────────────────────────────────────────── */
+html, body {
+  background: var(--bg-app);
+  color: var(--fg-strong);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, .t-title-1 { font: var(--t-title-1); color: var(--fg-strong); margin: 0; letter-spacing: -0.01em; }
+h2, .t-title-2 { font: var(--t-title-2); color: var(--fg-strong); margin: 0; }
+h3, .t-title-3 { font: var(--t-title-3); color: var(--fg-strong); margin: 0; }
+.t-headline    { font: var(--t-headline); color: var(--fg-strong); }
+.t-body        { font: var(--t-body);     color: var(--fg-default); }
+.t-body-bold   { font: var(--t-body-bold);color: var(--fg-default); }
+.t-callout     { font: var(--t-callout);  color: var(--fg-default); }
+.t-subhead     { font: var(--t-subhead);  color: var(--fg-default); }
+.t-caption     { font: var(--t-caption);  color: var(--fg-faint); }
+.t-overline    { font: var(--t-overline); color: var(--fg-faint); text-transform: uppercase; letter-spacing: 0.06em; }

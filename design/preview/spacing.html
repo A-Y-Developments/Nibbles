@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="../colors_and_type.css" />
+  <style>
+    body { margin: 0; background: var(--bg-card); padding: 22px 26px; }
+    .row { display: flex; align-items: center; gap: 14px; padding: 6px 0; }
+    .bar { background: var(--color-green); height: 16px; border-radius: 4px; }
+    .lbl { font: 700 12px/1.2 var(--font-display); color: var(--fg-strong); min-width: 56px; }
+    .hex { font: 400 11px/1.2 var(--font-system); color: var(--fg-faint); }
+    h4 { font: var(--t-subhead); margin: 0 0 10px; color: var(--color-green-deep); }
+  </style>
+</head>
+<body>
+  <h4>Spacing scale (8pt grid)</h4>
+  <div class="row"><span class="lbl">sp-1 · 4</span><div class="bar" style="width:4px"></div><span class="hex">tight grouping inside chips</span></div>
+  <div class="row"><span class="lbl">sp-2 · 8</span><div class="bar" style="width:8px"></div><span class="hex">icon ↔ label</span></div>
+  <div class="row"><span class="lbl">sp-3 · 12</span><div class="bar" style="width:12px"></div><span class="hex">card inner padding</span></div>
+  <div class="row"><span class="lbl">sp-4 · 16</span><div class="bar" style="width:16px"></div><span class="hex">default gap between rows</span></div>
+  <div class="row"><span class="lbl">sp-5 · 20</span><div class="bar" style="width:20px"></div><span class="hex">screen edge padding</span></div>
+  <div class="row"><span class="lbl">sp-6 · 24</span><div class="bar" style="width:24px"></div><span class="hex">between sections</span></div>
+  <div class="row"><span class="lbl">sp-8 · 32</span><div class="bar" style="width:32px"></div><span class="hex">top of screen, big gaps</span></div>
+  <div class="row"><span class="lbl">sp-10 · 40</span><div class="bar" style="width:40px"></div><span class="hex">empty-state breathing room</span></div>
+</body>
+</html>

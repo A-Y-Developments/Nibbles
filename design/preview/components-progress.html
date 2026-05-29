@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="../colors_and_type.css" />
+  <style>
+    body { margin: 0; background: var(--bg-card); padding: 22px; display: flex; gap: 28px; align-items: center; }
+    .ring { width: 110px; height: 110px; border-radius: 999px; display: grid; place-items: center; background:
+      conic-gradient(var(--color-coral-deep) 0 25%, rgba(248,161,117,0.2) 25% 100%); }
+    .ring .inner { width: 80px; height: 80px; border-radius: 999px; background: var(--bg-card); display: grid; place-items: center; font: 700 22px/1 var(--font-display); color: var(--color-coral-deep); }
+    .bars { display: grid; gap: 12px; flex: 1; }
+    .bar { display: flex; align-items: center; gap: 12px; }
+    .bar .track { flex: 1; height: 8px; border-radius: 999px; background: var(--color-coral-soft); position: relative; overflow: hidden; }
+    .bar .fill { height: 100%; border-radius: 999px; background: var(--color-coral-deep); }
+    .bar.green .track { background: rgba(92,120,82,0.18); }
+    .bar.green .fill { background: var(--color-green); }
+    .bar.butter .track { background: rgba(234,236,140,0.5); }
+    .bar.butter .fill { background: #B7B82E; }
+    .lab { font: 700 12px/1 var(--font-display); color: var(--fg-strong); min-width: 70px; }
+    .val { font: 700 12px/1 var(--font-display); color: var(--fg-faint); min-width: 32px; text-align: right; }
+    h5 { font: 700 11px/1 var(--font-display); color: var(--fg-faint); margin: 0 0 6px; text-transform: uppercase; letter-spacing: 0.06em; }
+  </style>
+</head>
+<body>
+  <div>
+    <h5>Allergen ring</h5>
+    <div class="ring"><div class="inner">1<span style="font:400 10px/1 var(--font-system);color:var(--fg-faint)">/11</span></div></div>
+  </div>
+  <div class="bars">
+    <h5 style="margin-bottom:0">Linear progress (3 variants)</h5>
+    <div class="bar"><span class="lab">Milk</span><div class="track"><div class="fill" style="width:66%"></div></div><span class="val">2/3</span></div>
+    <div class="bar green"><span class="lab">Goal</span><div class="track"><div class="fill" style="width:42%"></div></div><span class="val">42%</span></div>
+    <div class="bar butter"><span class="lab">Meals</span><div class="track"><div class="fill" style="width:80%"></div></div><span class="val">8/10</span></div>
+  </div>
+</body>
+</html>
