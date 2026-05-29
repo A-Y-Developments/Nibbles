@@ -3,9 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
+import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
+import 'package:nibbles/src/common/components/buttons/app_round_button.dart';
+import 'package:nibbles/src/common/components/inputs/app_text_field.dart';
 import 'package:nibbles/src/features/auth/forgot_password/forgot_password_controller.dart';
 import 'package:nibbles/src/features/auth/forgot_password/forgot_password_state.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
+
+/// Generic, enumeration-safe error caption shown for any submit failure.
+/// Never leaks whether the email exists.
+const String _genericErrorMessage =
+    "Couldn't send the reset link. Please try again.";
 
 class ForgotPasswordScreen extends ConsumerWidget {
   const ForgotPasswordScreen({super.key});
@@ -14,37 +22,47 @@ class ForgotPasswordScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(forgotPasswordControllerProvider);
 
+    void goBack() => context.canPop()
+        ? context.pop()
+        : context.goNamed(AppRoute.login.name);
+
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => context.canPop()
-              ? context.pop()
-              : context.goNamed(AppRoute.login.name),
-        ),
-        title: const Text('Forgot Password'),
-      ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSizes.pagePaddingH,
+          padding: const EdgeInsets.fromLTRB(
+            AppSizes.pagePaddingH,
+            AppSizes.md,
+            AppSizes.pagePaddingH,
+            AppSizes.lg,
           ),
-          child: state.sent
-              ? _ConfirmationView(
-                  onBackToLogin: () => context.goNamed(AppRoute.login.name),
-                )
-              : _InputView(
-                  state: state,
-                  onEmailChanged: ref
-                      .read(forgotPasswordControllerProvider.notifier)
-                      .updateEmail,
-                  onSubmit: ref
-                      .read(forgotPasswordControllerProvider.notifier)
-                      .submit,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Align(
+                alignment: Alignment.centerLeft,
+                child: AppRoundButton(
+                  icon: const Icon(Icons.arrow_back_rounded),
+                  onPressed: goBack,
+                  semanticLabel: 'Back',
                 ),
+              ),
+              const SizedBox(height: AppSizes.lg),
+              Expanded(
+                child: state.sent
+                    ? _ConfirmationView(onBackToLogin: goBack)
+                    : _InputView(
+                        state: state,
+                        onEmailChanged: ref
+                            .read(forgotPasswordControllerProvider.notifier)
+                            .updateEmail,
+                        onSubmit: ref
+                            .read(forgotPasswordControllerProvider.notifier)
+                            .submit,
+                      ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -65,52 +83,43 @@ class _InputView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+
+    final inlineError = state.errorMessage != null
+        ? _genericErrorMessage
+        : (state.email.isNotValid && state.email.value.isNotEmpty
+            ? 'Please enter a valid email.'
+            : null);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SizedBox(height: AppSizes.xxl),
-        Text('Reset your password', style: textTheme.headlineLarge),
+        Text(
+          'Forgot your password?',
+          style: textTheme.headlineLarge,
+          textAlign: TextAlign.left,
+        ),
         const SizedBox(height: AppSizes.sm),
         Text(
           "Enter your email and we'll send you a reset link.",
           style: textTheme.bodyLarge?.copyWith(color: AppColors.subtext),
+          textAlign: TextAlign.left,
         ),
         const SizedBox(height: AppSizes.xl),
-        TextField(
+        AppTextField(
           key: const Key('forgot_email_field'),
-          onChanged: onEmailChanged,
+          label: 'Email',
+          hintText: 'you@example.com',
           keyboardType: TextInputType.emailAddress,
-          decoration: InputDecoration(
-            labelText: 'Email',
-            errorText: state.email.isNotValid && state.email.value.isNotEmpty
-                ? 'Please enter a valid email.'
-                : null,
-          ),
+          textInputAction: TextInputAction.done,
+          onChanged: onEmailChanged,
+          onSubmitted: (_) => state.isLoading ? null : onSubmit(),
+          errorText: inlineError,
         ),
-        if (state.errorMessage != null) ...[
-          const SizedBox(height: AppSizes.sm),
-          Text(
-            state.errorMessage!,
-            style: textTheme.bodySmall?.copyWith(color: AppColors.error),
-          ),
-        ],
-        const SizedBox(height: AppSizes.xl),
-        SizedBox(
-          width: double.infinity,
-          child: FilledButton(
-            key: const Key('forgot_submit_button'),
-            onPressed: state.isLoading ? null : onSubmit,
-            child: state.isLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppColors.onPrimary,
-                    ),
-                  )
-                : const Text('Send Reset Link'),
-          ),
+        const Spacer(),
+        AppPillButton(
+          key: const Key('forgot_submit_button'),
+          label: state.isLoading ? 'Sending…' : 'Confirm',
+          onPressed: state.isLoading ? null : onSubmit,
         ),
       ],
     );
@@ -128,26 +137,37 @@ class _ConfirmationView extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SizedBox(height: AppSizes.xxl),
-        const Icon(
-          Icons.mark_email_read_outlined,
-          size: AppSizes.iconXl,
-          color: AppColors.primary,
+        Container(
+          width: AppSizes.iconXl + AppSizes.md,
+          height: AppSizes.iconXl + AppSizes.md,
+          decoration: const BoxDecoration(
+            color: AppColors.butter,
+            shape: BoxShape.circle,
+          ),
+          alignment: Alignment.center,
+          child: const Icon(
+            Icons.mark_email_read_outlined,
+            size: AppSizes.iconLg,
+            color: AppColors.greenDeep,
+          ),
         ),
         const SizedBox(height: AppSizes.lg),
-        Text('Check your email', style: textTheme.headlineLarge),
+        Text(
+          'Check your email',
+          style: textTheme.headlineLarge,
+          textAlign: TextAlign.left,
+        ),
         const SizedBox(height: AppSizes.sm),
         Text(
-          'Check your email for a reset link.',
+          "We've sent you a reset link. Follow it to set a new password.",
           style: textTheme.bodyLarge?.copyWith(color: AppColors.subtext),
+          textAlign: TextAlign.left,
         ),
-        const SizedBox(height: AppSizes.xl),
-        Center(
-          child: TextButton(
-            key: const Key('forgot_back_to_login'),
-            onPressed: onBackToLogin,
-            child: const Text('Back to Login'),
-          ),
+        const Spacer(),
+        AppPillButton(
+          key: const Key('forgot_back_to_login'),
+          label: 'Back to login',
+          onPressed: onBackToLogin,
         ),
       ],
     );
