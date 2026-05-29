@@ -27,6 +27,7 @@ dependencies:
   formz: ^0.8.0
   freezed_annotation: ^2.4.0
   go_router: ^14.6.3
+  google_fonts: ^6.2.1
   hive_flutter: ^1.1.0
   image_picker: ^1.1.2
   json_annotation: ^4.9.0
@@ -71,6 +72,12 @@ flutter_gen:
     exclude:
       - .env.dev
       - .env.prod
+      # Bundled Figtree font files are resolved by google_fonts via the
+      # AssetManifest, not referenced through the generated accessor.
+      - google_fonts/Figtree-Regular.ttf
+      - google_fonts/Figtree-SemiBold.ttf
+      - google_fonts/Figtree-Bold.ttf
+      - google_fonts/OFL.txt
 
 flutter:
   uses-material-design: true
@@ -82,6 +89,14 @@ flutter:
     - assets/images/
     - assets/icons/
     - assets/jsons/
+    # Figtree body font — bundled so google_fonts resolves from assets (no
+    # runtime HTTP fetch). Files MUST keep the Google Fonts API names so
+    # GoogleFonts.figtree() matches them. NOT declared under `fonts:` on
+    # purpose — google_fonts discovers them via the AssetManifest instead.
+    - google_fonts/Figtree-Regular.ttf
+    - google_fonts/Figtree-SemiBold.ttf
+    - google_fonts/Figtree-Bold.ttf
+    - google_fonts/OFL.txt
 
   fonts:
     - family: Parkinsans

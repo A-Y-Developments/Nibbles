@@ -34,7 +34,7 @@ abstract final class AppTheme {
       outlineVariant: AppColors.borderMuted,
     );
 
-    const textTheme = AppTypography.textTheme;
+    final textTheme = AppTypography.textTheme;
 
     return ThemeData(
       useMaterial3: true,
