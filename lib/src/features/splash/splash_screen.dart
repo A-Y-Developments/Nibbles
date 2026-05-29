@@ -32,21 +32,16 @@ class SplashScreen extends ConsumerWidget {
   }
 
   Widget _buildBranding(BuildContext context) {
-    return Column(
+    return const Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Quatrefoil(size: AppSizes.avatarXl),
-        const SizedBox(height: AppSizes.md),
+        Quatrefoil(size: AppSizes.avatarXl),
+        SizedBox(height: AppSizes.md),
         FittedBox(
           fit: BoxFit.scaleDown,
           child: Text(
             'nibbles',
-            style: AppTypography.textTheme.displayMedium?.copyWith(
-              fontSize: 42,
-              fontWeight: FontWeight.w800,
-              color: AppColors.greenDeep,
-              letterSpacing: -0.02,
-            ),
+            style: AppTypography.brandWordmark,
           ),
         ),
       ],
