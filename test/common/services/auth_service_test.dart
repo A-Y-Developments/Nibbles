@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:nibbles/src/common/data/repositories/auth_repository.dart';
+import 'package:nibbles/src/common/data/repositories/baby_profile_repository.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/services/auth_service.dart';
@@ -10,6 +11,9 @@ import 'package:nibbles/src/common/services/local_flag_service.dart';
 class MockAuthRepository extends Mock implements AuthRepository {}
 
 class MockLocalFlagService extends Mock implements LocalFlagService {}
+
+class MockBabyProfileRepository extends Mock
+    implements BabyProfileRepository {}
 
 void main() {
   late MockAuthRepository mockRepo;
@@ -225,5 +229,96 @@ void main() {
       expect(result.isFailure, isTrue);
       expect(container.read(authServiceProvider), isFalse);
     });
+  });
+
+  // ---------------------------------------------------------------------------
+  // NIB-119: gap coverage — no-name signUp contract + backfill happy path
+  // ---------------------------------------------------------------------------
+
+  group('AuthService.signUp (no-name contract)', () {
+    test(
+      'delegates to repository with email + password ONLY (no name argument)',
+      () async {
+        when(
+          () => mockRepo.signUp(any(), any()),
+        ).thenAnswer((_) async => const Result.success(null));
+
+        await sut.signUp('alice@example.com', 'password123');
+
+        // Forwards only the two arguments — no positional/named 'name' field.
+        verify(
+          () => mockRepo.signUp('alice@example.com', 'password123'),
+        ).called(1);
+        // Any other signUp shape must NOT exist on the contract.
+        verifyNever(
+          () => mockRepo.signUp(any(that: isNot('alice@example.com')), any()),
+        );
+      },
+    );
+  });
+
+  group('AuthService backfill on signIn', () {
+    test(
+      'when onboarding NOT done locally, queries the baby repo and '
+      'backfills both flags on a completed remote profile',
+      () async {
+        // Reset flags mock so isOnboardingBabySetupDone == false hits the
+        // backfill branch.
+        final mockFlagsBackfill = MockLocalFlagService();
+        when(mockFlagsBackfill.isOnboardingBabySetupDone).thenReturn(false);
+        when(mockFlagsBackfill.setOnboardingReadinessDone).thenAnswer((_) {});
+        when(mockFlagsBackfill.setOnboardingBabySetupDone).thenAnswer((_) {});
+
+        final mockBabyRepo = MockBabyProfileRepository();
+        when(mockBabyRepo.isOnboardingCompleted).thenAnswer((_) async => true);
+
+        when(
+          () => mockRepo.signIn(any(), any()),
+        ).thenAnswer((_) async => const Result.success(null));
+
+        final localContainer = ProviderContainer(
+          overrides: [
+            authRepositoryProvider.overrideWithValue(mockRepo),
+            localFlagServiceProvider.overrideWithValue(mockFlagsBackfill),
+            babyProfileRepositoryProvider.overrideWithValue(mockBabyRepo),
+          ],
+        );
+        addTearDown(localContainer.dispose);
+
+        final localSut = localContainer.read(authServiceProvider.notifier);
+        await localSut.signIn('alice@example.com', 'password123');
+
+        verify(mockBabyRepo.isOnboardingCompleted).called(1);
+        verify(mockFlagsBackfill.setOnboardingReadinessDone).called(1);
+        verify(mockFlagsBackfill.setOnboardingBabySetupDone).called(1);
+      },
+    );
+
+    test(
+      'when onboarding already done locally, does NOT hit the baby repo '
+      '(short-circuit)',
+      () async {
+        final mockBabyRepo = MockBabyProfileRepository();
+
+        when(
+          () => mockRepo.signIn(any(), any()),
+        ).thenAnswer((_) async => const Result.success(null));
+
+        // Default container already stubs isOnboardingBabySetupDone -> true.
+        final localContainer = ProviderContainer(
+          overrides: [
+            authRepositoryProvider.overrideWithValue(mockRepo),
+            localFlagServiceProvider.overrideWithValue(mockFlags),
+            babyProfileRepositoryProvider.overrideWithValue(mockBabyRepo),
+          ],
+        );
+        addTearDown(localContainer.dispose);
+
+        final localSut = localContainer.read(authServiceProvider.notifier);
+        await localSut.signIn('alice@example.com', 'password123');
+
+        verifyNever(mockBabyRepo.isOnboardingCompleted);
+      },
+    );
   });
 }
