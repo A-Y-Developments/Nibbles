@@ -95,6 +95,34 @@ void main() {
       expect(result.isFailure, isTrue);
       verifyNever(() => mockRepo.createAllergenProgramState(any()));
     });
+
+    test(
+      'succeeds with NO gender argument — defaults to preferNotToSay '
+      'and remains atomic',
+      () async {
+        when(
+          () => mockRepo.createBaby(any(), any(), any()),
+        ).thenAnswer((_) async => Result.success(_fakeBaby));
+        when(
+          () => mockRepo.createAllergenProgramState(any()),
+        ).thenAnswer((_) async => const Result.success(null));
+
+        final result = await sut.createBaby('Lily', DateTime(2024, 6));
+
+        expect(result.isSuccess, isTrue);
+        verify(
+          () => mockRepo.createBaby(
+            'Lily',
+            DateTime(2024, 6),
+            // Explicit Gender.preferNotToSay is the assertion of this test —
+            // mocktail needs the literal value to match the captured argument.
+            // ignore: avoid_redundant_argument_values
+            Gender.preferNotToSay,
+          ),
+        ).called(1);
+        verify(() => mockRepo.createAllergenProgramState('baby-001')).called(1);
+      },
+    );
   });
 
   group('BabyProfileService.getBaby', () {

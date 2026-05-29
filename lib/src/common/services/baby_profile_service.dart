@@ -14,11 +14,14 @@ class BabyProfileService {
 
   /// Creates baby row + allergen_program_state row atomically (sequential).
   /// If allergen_program_state insert fails, returns Failure.
+  ///
+  /// Gender is optional — the redesigned onboarding (NIB-120) drops the
+  /// selector. Defaults to [Gender.preferNotToSay] when omitted.
   Future<Result<Baby>> createBaby(
     String name,
-    DateTime dob,
-    Gender gender,
-  ) async {
+    DateTime dob, [
+    Gender gender = Gender.preferNotToSay,
+  ]) async {
     final babyResult = await _repo.createBaby(name, dob, gender);
     if (babyResult.isFailure) return babyResult;
 
