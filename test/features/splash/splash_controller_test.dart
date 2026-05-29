@@ -226,4 +226,121 @@ void main() {
       );
     },
   );
+
+  // ---------------------------------------------------------------------------
+  // Redirect matrix gaps (NIB-88) — branches not covered by NIB-64 above.
+  // ---------------------------------------------------------------------------
+
+  test(
+    'logged in but no baby yet routes to /onboarding/intro',
+    () async {
+      // Returning, logged-in user whose remote profile has no baby row.
+      when(() => babyProfile.getBaby()).thenAnswer((_) async => null);
+      final container = _makeContainer(
+        initiallyLoggedIn: true,
+        stream: const Stream.empty(),
+        babyProfile: babyProfile,
+        flags: flags,
+      );
+
+      expect(
+        await container.read(splashControllerProvider.future),
+        '/onboarding/intro',
+      );
+      // Never reached the flag-seeding (onboarding not complete).
+      verifyNever(flags.setOnboardingReadinessDone);
+      verifyNever(flags.setOnboardingBabySetupDone);
+    },
+  );
+
+  test(
+    'baby exists but onboarding incomplete routes to /onboarding/intro',
+    () async {
+      when(
+        () => babyProfile.onboardingCompleted,
+      ).thenAnswer((_) async => false);
+      final container = _makeContainer(
+        initiallyLoggedIn: true,
+        stream: const Stream.empty(),
+        babyProfile: babyProfile,
+        flags: flags,
+      );
+
+      expect(
+        await container.read(splashControllerProvider.future),
+        '/onboarding/intro',
+      );
+      verifyNever(flags.setOnboardingReadinessDone);
+      verifyNever(flags.setOnboardingBabySetupDone);
+    },
+  );
+
+  test(
+    'all good (logged in, baby, onboarding done) routes to /home and '
+    'seeds onboarding flags',
+    () async {
+      final container = _makeContainer(
+        initiallyLoggedIn: true,
+        stream: const Stream.empty(),
+        babyProfile: babyProfile,
+        flags: flags,
+      );
+
+      expect(
+        await container.read(splashControllerProvider.future),
+        '/home',
+      );
+      // Supabase truth seeds local flags so reinstalls skip onboarding.
+      verify(flags.setOnboardingReadinessDone).called(1);
+      verify(flags.setOnboardingBabySetupDone).called(1);
+    },
+  );
+
+  test(
+    'reinstall: first launch but session restored -> backfills flags, /home',
+    () async {
+      // app_has_launched is false (fresh install) yet the keychain restored a
+      // logged-in session: boot must NOT short-circuit to intro. It marks the
+      // launch flag, falls through the Supabase checks, and seeds onboarding
+      // flags so the reinstalled user lands on /home.
+      when(flags.hasLaunched).thenReturn(false);
+      final container = _makeContainer(
+        initiallyLoggedIn: true,
+        stream: const Stream.empty(),
+        babyProfile: babyProfile,
+        flags: flags,
+      );
+
+      expect(
+        await container.read(splashControllerProvider.future),
+        '/home',
+      );
+      verify(flags.setHasLaunched).called(1);
+      verify(flags.setOnboardingReadinessDone).called(1);
+      verify(flags.setOnboardingBabySetupDone).called(1);
+    },
+  );
+
+  test(
+    'guarded onboardingCompleted read failure surfaces as '
+    'SplashBootException (P0)',
+    () async {
+      // Second guarded read (after getBaby) throwing must also be rewrapped,
+      // not leaked as a raw error.
+      when(
+        () => babyProfile.onboardingCompleted,
+      ).thenThrow(Exception('no connectivity'));
+      final container = _makeContainer(
+        initiallyLoggedIn: true,
+        stream: const Stream.empty(),
+        babyProfile: babyProfile,
+        flags: flags,
+      );
+
+      await expectLater(
+        container.read(splashControllerProvider.future),
+        throwsA(isA<SplashBootException>()),
+      );
+    },
+  );
 }
