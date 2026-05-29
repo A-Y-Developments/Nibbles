@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:nibbles/gen/fonts.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
@@ -12,22 +13,25 @@ abstract final class AppTheme {
   static ThemeData light() {
     const colorScheme = ColorScheme(
       brightness: Brightness.light,
-      primary: AppColors.primary,
-      onPrimary: AppColors.onPrimary,
-      primaryContainer: AppColors.primaryLight,
-      onPrimaryContainer: AppColors.primaryDark,
-      secondary: AppColors.secondary,
-      onSecondary: AppColors.onSecondary,
-      secondaryContainer: AppColors.secondaryLight,
-      onSecondaryContainer: AppColors.text,
-      error: AppColors.error,
-      onError: AppColors.onError,
+      // greenDeep #3D5236 brand primary; cream foreground on it.
+      primary: AppColors.greenDeep,
+      onPrimary: AppColors.cream,
+      primaryContainer: AppColors.green,
+      onPrimaryContainer: AppColors.cream,
+      secondary: AppColors.coral,
+      onSecondary: AppColors.cream,
+      secondaryContainer: AppColors.coralSoft,
+      onSecondaryContainer: AppColors.fgStrong,
+      // Maroon #851E1E is destructive-button intent; validation borders use
+      // AppColors.error (#E53E3E) explicitly in inputDecorationTheme.
+      error: AppColors.destructive,
+      onError: AppColors.cream,
       surface: AppColors.surface,
-      onSurface: AppColors.onSurface,
+      onSurface: AppColors.fgStrong,
       surfaceContainerHighest: AppColors.surfaceVariant,
-      onSurfaceVariant: AppColors.subtext,
-      outline: AppColors.divider,
-      outlineVariant: AppColors.hint,
+      onSurfaceVariant: AppColors.fgMuted,
+      outline: AppColors.borderSoft,
+      outlineVariant: AppColors.borderMuted,
     );
 
     const textTheme = AppTypography.textTheme;
@@ -36,96 +40,101 @@ abstract final class AppTheme {
       useMaterial3: true,
       colorScheme: colorScheme,
       textTheme: textTheme,
-      fontFamily: 'Nunito',
-      scaffoldBackgroundColor: AppColors.background,
-      dividerColor: AppColors.divider,
+      fontFamily: FontFamily.parkinsans,
+      scaffoldBackgroundColor: AppColors.cream,
+      dividerColor: AppColors.borderSoft,
       dividerTheme: const DividerThemeData(
-        color: AppColors.divider,
+        color: AppColors.borderSoft,
         thickness: AppSizes.dividerThickness,
         space: 0,
       ),
+      // Most screens use the custom AppHeader (later ticket); this AppBarTheme
+      // is a sane cream/transparent-tint fallback.
       appBarTheme: AppBarTheme(
-        backgroundColor: AppColors.surface,
+        backgroundColor: AppColors.cream,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        scrolledUnderElevation: 1,
-        shadowColor: AppColors.divider,
+        scrolledUnderElevation: 0,
+        shadowColor: AppColors.borderSoft,
         centerTitle: true,
-        titleTextStyle: textTheme.titleLarge,
+        titleTextStyle: textTheme.titleMedium,
         systemOverlayStyle: SystemUiOverlayStyle.dark,
         iconTheme: const IconThemeData(
-          color: AppColors.text,
+          color: AppColors.fgStrong,
           size: AppSizes.iconMd,
         ),
       ),
+      // Canonical nav is the custom AppBottomNav (later ticket); this block is
+      // a fallback only — retuned to the new palette.
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: AppColors.surface,
-        selectedItemColor: AppColors.primary,
-        unselectedItemColor: AppColors.subtext,
+        selectedItemColor: AppColors.greenDeep,
+        unselectedItemColor: AppColors.fgFaint,
         selectedLabelStyle: TextStyle(
-          fontFamily: 'Nunito',
+          fontFamily: FontFamily.parkinsans,
           fontWeight: FontWeight.w700,
-          fontSize: 11,
-          color: AppColors.primary,
+          fontSize: 10,
+          color: AppColors.greenDeep,
         ),
         unselectedLabelStyle: TextStyle(
-          fontFamily: 'Nunito',
-          fontWeight: FontWeight.w600,
-          fontSize: 11,
-          color: AppColors.subtext,
+          fontFamily: FontFamily.parkinsans,
+          fontWeight: FontWeight.w700,
+          fontSize: 10,
+          color: AppColors.fgFaint,
         ),
         elevation: 8,
         type: BottomNavigationBarType.fixed,
       ),
+      // Primary CTA — greenDeep/cream pill, no per-call override needed.
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: AppColors.onPrimary,
-          disabledBackgroundColor: AppColors.hint,
+          backgroundColor: AppColors.greenDeep,
+          foregroundColor: AppColors.cream,
+          disabledBackgroundColor: AppColors.borderMuted,
+          disabledForegroundColor: AppColors.cream,
           minimumSize: const Size.fromHeight(AppSizes.buttonHeight),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          ),
+          shape: const StadiumBorder(),
           textStyle: AppTypography.button,
           elevation: 0,
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.primary,
+          foregroundColor: AppColors.greenDeep,
           minimumSize: const Size.fromHeight(AppSizes.buttonHeight),
-          side: const BorderSide(color: AppColors.primary, width: 1.5),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          ),
-          textStyle: AppTypography.button.copyWith(color: AppColors.primary),
+          side: const BorderSide(color: AppColors.greenDeep, width: 1.5),
+          shape: const StadiumBorder(),
+          textStyle: AppTypography.button.copyWith(color: AppColors.greenDeep),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: AppColors.primary,
+          foregroundColor: AppColors.greenDeep,
           textStyle: textTheme.labelLarge,
         ),
       ),
+      // Filled bgInput per kit (.field); focused border = greenDeep (sage
+      // focus). Validation reds use AppColors.error (#E53E3E) explicitly, NOT
+      // ColorScheme.error (maroon).
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.surface,
+        fillColor: AppColors.bgInput,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: AppSizes.md,
           vertical: AppSizes.md,
         ),
-        hintStyle: textTheme.bodyMedium?.copyWith(color: AppColors.hint),
+        hintStyle: textTheme.bodyMedium?.copyWith(color: AppColors.greenSoft),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          borderSide: const BorderSide(color: AppColors.divider),
+          borderSide: const BorderSide(color: AppColors.borderSoft),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          borderSide: const BorderSide(color: AppColors.divider),
+          borderSide: const BorderSide(color: AppColors.borderSoft),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          borderSide: const BorderSide(color: AppColors.primary, width: 2),
+          borderSide: const BorderSide(color: AppColors.greenDeep, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSizes.radiusMd),
@@ -141,10 +150,13 @@ abstract final class AppTheme {
         color: AppColors.surface,
         elevation: 0,
         margin: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(AppSizes.radiusXl)),
+        ),
       ),
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.surfaceVariant,
-        selectedColor: AppColors.primaryLight,
+        selectedColor: AppColors.butter,
         labelStyle: textTheme.labelMedium,
         side: BorderSide.none,
         shape: const RoundedRectangleBorder(
@@ -155,10 +167,13 @@ abstract final class AppTheme {
           vertical: AppSizes.xs,
         ),
       ),
+      // Floating P2 toast — fgStrong surface, cream text, radiusMd.
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        backgroundColor: AppColors.text,
-        contentTextStyle: textTheme.bodyMedium?.copyWith(color: Colors.white),
+        backgroundColor: AppColors.fgStrong,
+        contentTextStyle: textTheme.bodyMedium?.copyWith(
+          color: AppColors.cream,
+        ),
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(AppSizes.radiusMd)),
         ),
