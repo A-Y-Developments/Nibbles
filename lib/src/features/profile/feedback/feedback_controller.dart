@@ -52,15 +52,20 @@ class FeedbackController extends _$FeedbackController {
   /// belt-and-braces.
   Future<bool> submit() async {
     final trimmed = state.message.trim();
-    if (trimmed.isEmpty || state.isSubmitting) return false;
+    if (trimmed.isEmpty || state.phase == FeedbackPhase.submitting) {
+      return false;
+    }
 
-    state = state.copyWith(isSubmitting: true, errorMessage: null);
+    state = state.copyWith(
+      phase: FeedbackPhase.submitting,
+      errorMessage: null,
+    );
 
     final result = await ref.read(feedbackServiceProvider).submit(trimmed);
 
     switch (result) {
       case Success<void>():
-        state = state.copyWith(isSubmitting: false);
+        state = state.copyWith(phase: FeedbackPhase.success);
         // Success — fire-and-forget. NO message text in the event.
         unawaited(ref.read(analyticsProvider).logFeedbackSubmitted());
         return true;
@@ -73,7 +78,7 @@ class FeedbackController extends _$FeedbackController {
           reason: 'profile_feedback_submit_failure',
         );
         state = state.copyWith(
-          isSubmitting: false,
+          phase: FeedbackPhase.idle,
           errorMessage: error.message,
         );
         return false;

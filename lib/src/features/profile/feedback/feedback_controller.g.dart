@@ -29,7 +29,7 @@ final feedbackCrashRecorderProvider =
 // ignore: unused_element
 typedef FeedbackCrashRecorderRef = ProviderRef<FeedbackCrashRecorderFn>;
 String _$feedbackControllerHash() =>
-    r'4e646c81910ecf466b8af7128730f8c3710c3f15';
+    r'd218c84577bec6a5d28a13d0799c51a80dfa4a12';
 
 /// See also [FeedbackController].
 @ProviderFor(FeedbackController)
