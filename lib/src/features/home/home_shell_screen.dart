@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nibbles/gen/fonts.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/features/home/home_controller.dart';
@@ -60,7 +61,7 @@ class _HomeShellScreenState extends ConsumerState<HomeShellScreen> {
           labelTextStyle: WidgetStateProperty.resolveWith((states) {
             final selected = states.contains(WidgetState.selected);
             return TextStyle(
-              fontFamily: 'Parkinsans',
+              fontFamily: FontFamily.parkinsans,
               fontSize: 10,
               height: 1,
               fontWeight: FontWeight.w700,
