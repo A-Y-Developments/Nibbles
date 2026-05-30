@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/constants/allergen_emoji.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
@@ -14,10 +13,10 @@ import 'package:nibbles/src/features/recipe/library/recipe_library_state.dart';
 import 'package:nibbles/src/features/recipe/library/widgets/library_header.dart';
 import 'package:nibbles/src/features/recipe/library/widgets/read_guide_banner.dart';
 import 'package:nibbles/src/features/recipe/library/widgets/recipe_category_row.dart';
-import 'package:nibbles/src/features/recipe/library/widgets/recipe_grid_card.dart';
-import 'package:nibbles/src/routing/route_enums.dart';
+import 'package:nibbles/src/features/recipe/library/widgets/recipe_search_empty.dart';
+import 'package:nibbles/src/features/recipe/library/widgets/recipe_search_results.dart';
 
-/// Recipe Library screen (RC-01, NIB-53 reskin).
+/// Recipe Library screen (RC-01, NIB-53 reskin + NIB-58 search rewire).
 ///
 /// Reskins the previous SliverGrid layout to a butter-wash [LibraryHeader] +
 /// vertical stack of horizontal [RecipeCategoryRow]s, driven by
@@ -28,8 +27,14 @@ import 'package:nibbles/src/routing/route_enums.dart';
 ///      any category whose `allergenTags` contain the in-progress allergen.
 ///   2. One row per category in the order returned by the service.
 ///
-/// Allergen-level recipe flagging is preserved via [RecipeGridCard]'s
-/// `flaggedAllergenKeys` prop.
+/// Search (NIB-58): the header's search input dispatches the query to
+/// [RecipeLibraryController.setSearchQuery]. A non-empty
+/// `state.searchQuery` collapses the body into [RecipeSearchResults]; an
+/// empty result inside that branch renders [RecipeSearchEmpty]. Clearing
+/// the field reverts to the category-rows layout.
+///
+/// Allergen-level recipe flagging is preserved via the
+/// `flaggedAllergenKeys` prop on every card-rendering widget.
 class RecipeLibraryScreen extends ConsumerWidget {
   const RecipeLibraryScreen({super.key});
 
@@ -70,7 +75,6 @@ class _RecipeLibraryBody extends ConsumerStatefulWidget {
 
 class _RecipeLibraryBodyState extends ConsumerState<_RecipeLibraryBody> {
   final _searchController = TextEditingController();
-  String _searchQuery = '';
 
   @override
   void dispose() {
@@ -109,6 +113,12 @@ class _RecipeLibraryBodyState extends ConsumerState<_RecipeLibraryBody> {
     _openStartingGuide();
   }
 
+  void _onSearchChanged(String query) {
+    ref
+        .read(recipeLibraryControllerProvider(widget.babyId).notifier)
+        .setSearchQuery(query);
+  }
+
   Future<void> _refresh() => ref
       .read(recipeLibraryControllerProvider(widget.babyId).notifier)
       .refresh();
@@ -119,15 +129,16 @@ class _RecipeLibraryBodyState extends ConsumerState<_RecipeLibraryBody> {
       recipeLibraryControllerProvider(widget.babyId),
     );
 
+    final searchValue = libraryAsync.valueOrNull?.searchQuery ?? '';
+
     return Scaffold(
       backgroundColor: AppColors.cream,
       body: Column(
         children: [
           LibraryHeader(
             searchController: _searchController,
-            searchValue: _searchQuery,
-            onSearchChanged: (q) =>
-                setState(() => _searchQuery = q.trim()),
+            searchValue: searchValue,
+            onSearchChanged: _onSearchChanged,
             onBookmarkTap: _onBookmarkTap,
           ),
           Expanded(
@@ -137,7 +148,6 @@ class _RecipeLibraryBodyState extends ConsumerState<_RecipeLibraryBody> {
               error: (_, __) => _ErrorView(onRetry: _refresh),
               data: (state) => _RecipeContent(
                 state: state,
-                searchQuery: _searchQuery,
                 onReadGuideTap: _onReadGuideTap,
                 onRefresh: _refresh,
               ),
@@ -152,13 +162,11 @@ class _RecipeLibraryBodyState extends ConsumerState<_RecipeLibraryBody> {
 class _RecipeContent extends StatelessWidget {
   const _RecipeContent({
     required this.state,
-    required this.searchQuery,
     required this.onReadGuideTap,
     required this.onRefresh,
   });
 
   final RecipeLibraryState state;
-  final String searchQuery;
   final VoidCallback onReadGuideTap;
   final Future<void> Function() onRefresh;
 
@@ -166,18 +174,6 @@ class _RecipeContent extends StatelessWidget {
       .expand((rs) => rs)
       .toSet()
       .toList();
-
-  List<Recipe> get _filteredRecipes {
-    final q = searchQuery.toLowerCase();
-    return _allRecipes
-        .where(
-          (r) =>
-              r.title.toLowerCase().contains(q) ||
-              r.allergenTags.any((t) => t.toLowerCase().contains(q)) ||
-              r.nutritionTags.any((t) => t.toLowerCase().contains(q)),
-        )
-        .toList();
-  }
 
   List<Recipe> get _recommendations {
     final key = state.ongoingAllergenKey;
@@ -187,10 +183,13 @@ class _RecipeContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (searchQuery.isNotEmpty) {
-      return _SearchResults(
-        recipes: _filteredRecipes,
-        query: searchQuery,
+    if (state.searchQuery.isNotEmpty) {
+      final results = state.filteredRecipes;
+      if (results.isEmpty) {
+        return const RecipeSearchEmpty();
+      }
+      return RecipeSearchResults(
+        recipes: results,
         flaggedAllergenKeys: state.flaggedAllergenKeys,
       );
     }
@@ -322,63 +321,6 @@ class _EmptyView extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _SearchResults extends StatelessWidget {
-  const _SearchResults({
-    required this.recipes,
-    required this.query,
-    this.flaggedAllergenKeys = const {},
-  });
-
-  final List<Recipe> recipes;
-  final String query;
-  final Set<String> flaggedAllergenKeys;
-
-  @override
-  Widget build(BuildContext context) {
-    if (recipes.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSizes.lg),
-          child: Text(
-            'No recipes found for "$query".',
-            textAlign: TextAlign.center,
-            style: AppTypography.caption.copyWith(
-              color: AppColors.fgFaint,
-            ),
-          ),
-        ),
-      );
-    }
-
-    return GridView.builder(
-      padding: const EdgeInsets.fromLTRB(
-        AppSizes.pagePaddingH,
-        AppSizes.md,
-        AppSizes.pagePaddingH,
-        AppSizes.xl,
-      ),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: AppSizes.sp12,
-        mainAxisSpacing: AppSizes.sp12,
-        childAspectRatio: 158 / 220,
-      ),
-      itemCount: recipes.length,
-      itemBuilder: (context, index) {
-        final recipe = recipes[index];
-        return RecipeGridCard(
-          recipe: recipe,
-          flaggedAllergenKeys: flaggedAllergenKeys,
-          onTap: () => context.pushNamed(
-            AppRoute.recipeDetail.name,
-            pathParameters: {'recipeId': recipe.id},
-          ),
-        );
-      },
     );
   }
 }
