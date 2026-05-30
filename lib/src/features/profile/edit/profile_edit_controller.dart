@@ -4,7 +4,6 @@ import 'package:nibbles/src/common/services/auth_service.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/features/profile/edit/profile_edit_state.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'profile_edit_controller.g.dart';
 
@@ -20,7 +19,7 @@ class ProfileEditController extends _$ProfileEditController {
     final parts = baby.name.trim().split(RegExp(r'\s+'));
     final firstName = parts.isEmpty ? '' : parts.first;
     final lastName = parts.length > 1 ? parts.skip(1).join(' ') : '';
-    final email = Supabase.instance.client.auth.currentUser?.email ?? '';
+    final email = ref.read(authServiceProvider.notifier).currentUserEmail ?? '';
     _initialEmail = email;
 
     return ProfileEditState(
