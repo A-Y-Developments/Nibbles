@@ -15,11 +15,14 @@ import 'package:nibbles/src/routing/route_enums.dart';
 ///
 /// The audit's item 1 string concatenates two distinct signs ("Can sit upright
 /// with minimal support. Good head and neck control (can hold head steady)") —
-/// flagged as a copy-paste defect in both frames. We render the head-control
-/// half on row 0 to match index 0 of `readinessAnswers` (head control), and
-/// keep the remaining four strings verbatim.
+/// flagged as a copy-paste defect in both frames. Visual gate confirmed Figma
+/// renders the COMBINED two-sentence string as a single first item, so we
+/// keep it verbatim. The audit-flagged duplicate "Sits upright with minimal
+/// support" remains on row 1 pending PO cleanup.
 const List<String> _signLabels = [
-  'Good head and neck control (can hold head steady)',
+  // ignore: no_adjacent_strings_in_list — verbatim Figma copy spans two phrases
+  'Can sit upright with minimal support. ' +
+      'Good head and neck control (can hold head steady)',
   'Sits upright with minimal support',
   "Loss of the tongue-thrust reflex (doesn't automatically push food out).",
   'Shows interest in food (watching, reaching, opening mouth).',
