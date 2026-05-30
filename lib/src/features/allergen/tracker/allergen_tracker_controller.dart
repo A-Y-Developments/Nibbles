@@ -3,6 +3,7 @@ import 'package:nibbles/src/common/domain/entities/allergen.dart';
 import 'package:nibbles/src/common/domain/entities/allergen_board_item.dart';
 import 'package:nibbles/src/common/domain/entities/allergen_log.dart';
 import 'package:nibbles/src/common/domain/entities/allergen_program_state.dart';
+import 'package:nibbles/src/common/domain/enums/emoji_taste.dart';
 import 'package:nibbles/src/common/domain/enums/reaction_severity.dart';
 import 'package:nibbles/src/common/services/allergen_service.dart';
 import 'package:nibbles/src/features/allergen/tracker/allergen_tracker_state.dart';
@@ -60,7 +61,7 @@ class AllergenTrackerController extends _$AllergenTrackerController {
           allergenEmoji: entry.allergen.emoji,
           logDate: entry.log.logDate,
           createdAt: entry.log.createdAt,
-          taste: entry.log.emojiTaste,
+          taste: entry.log.emojiTaste ?? EmojiTaste.neutral,
           hadReaction: entry.log.hadReaction,
           severity: severity,
         ),

@@ -103,7 +103,9 @@ class _LogEntryCardState extends State<LogEntryCard> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          _tasteLabel(widget.log.emojiTaste),
+                          _tasteLabel(
+                            widget.log.emojiTaste ?? EmojiTaste.neutral,
+                          ),
                           style: textTheme.bodySmall?.copyWith(
                             color: AppColors.subtext,
                           ),

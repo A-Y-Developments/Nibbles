@@ -9,10 +9,13 @@ class AllergenLog with _$AllergenLog {
     required String id,
     required String babyId,
     required String allergenKey,
-    required EmojiTaste emojiTaste,
     required bool hadReaction,
     required DateTime logDate,
     required DateTime createdAt,
+    EmojiTaste? emojiTaste,
+    String? notes,
+    String? attachmentTitle,
+    String? attachmentDescription,
     String? photoUrl,
   }) = _AllergenLog;
 }

@@ -161,9 +161,15 @@ class AllergenRepositoryImpl implements AllergenRepository {
           .insert({
             'baby_id': log.babyId,
             'allergen_key': log.allergenKey,
-            'emoji_taste': log.emojiTaste.toJson(),
             'had_reaction': log.hadReaction,
             'log_date': _formatDate(log.logDate),
+            if (log.emojiTaste != null)
+              'emoji_taste': log.emojiTaste!.toJson(),
+            if (log.notes != null) 'notes': log.notes,
+            if (log.attachmentTitle != null)
+              'attachment_title': log.attachmentTitle,
+            if (log.attachmentDescription != null)
+              'attachment_description': log.attachmentDescription,
             if (log.photoUrl != null) 'photo_url': log.photoUrl,
           })
           .select()
@@ -271,16 +277,24 @@ class AllergenRepositoryImpl implements AllergenRepository {
     );
   }
 
-  AllergenLog _logFromRow(Map<String, dynamic> row) => AllergenLog(
-    id: row['id'] as String,
-    babyId: row['baby_id'] as String,
-    allergenKey: row['allergen_key'] as String,
-    emojiTaste: EmojiTasteX.fromJson(row['emoji_taste'] as String),
-    hadReaction: row['had_reaction'] as bool,
-    logDate: DateTime.parse(row['log_date'] as String),
-    createdAt: DateTime.parse(row['created_at'] as String),
-    photoUrl: row['photo_url'] as String?,
-  );
+  AllergenLog _logFromRow(Map<String, dynamic> row) {
+    final tasteRaw = row['emoji_taste'] as String?;
+    final logDateRaw = row['log_date'] as String?;
+    final createdAt = DateTime.parse(row['created_at'] as String);
+    return AllergenLog(
+      id: row['id'] as String,
+      babyId: row['baby_id'] as String,
+      allergenKey: row['allergen_key'] as String,
+      hadReaction: row['had_reaction'] as bool,
+      logDate: logDateRaw != null ? DateTime.parse(logDateRaw) : createdAt,
+      createdAt: createdAt,
+      emojiTaste: tasteRaw != null ? EmojiTasteX.fromJson(tasteRaw) : null,
+      notes: row['notes'] as String?,
+      attachmentTitle: row['attachment_title'] as String?,
+      attachmentDescription: row['attachment_description'] as String?,
+      photoUrl: row['photo_url'] as String?,
+    );
+  }
 
   AllergenProgramState _programStateFromRow(Map<String, dynamic> row) =>
       AllergenProgramState(
