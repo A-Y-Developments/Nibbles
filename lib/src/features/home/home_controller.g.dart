@@ -6,7 +6,7 @@ part of 'home_controller.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$homeControllerHash() => r'ba048ff8c2dfa7e39ee80675c53fbdcc1c3cc69e';
+String _$homeControllerHash() => r'3e6824097b5ab3b84f6affc4d44f66de76cffeb8';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -36,16 +36,60 @@ abstract class _$HomeController
   FutureOr<HomeState> build(String babyId);
 }
 
-/// See also [HomeController].
+/// NIB-86: Redesigned Home dashboard controller.
+///
+/// Parallel-fetches:
+///  1. The current baby profile (NIB-65 header + greeting).
+///  2. Per-allergen derived statuses (NIB-126).
+///  3. Rolling-7 meal plan entries (NIB-59), filtered to today.
+///
+/// A missing baby is NOT an error — the screen renders the full empty-state
+/// placeholder. Allergen or meal-plan fetch failures throw via the existing
+/// pattern and surface as `AsyncValue.error`.
+///
+/// Copied from [HomeController].
 @ProviderFor(HomeController)
 const homeControllerProvider = HomeControllerFamily();
 
-/// See also [HomeController].
+/// NIB-86: Redesigned Home dashboard controller.
+///
+/// Parallel-fetches:
+///  1. The current baby profile (NIB-65 header + greeting).
+///  2. Per-allergen derived statuses (NIB-126).
+///  3. Rolling-7 meal plan entries (NIB-59), filtered to today.
+///
+/// A missing baby is NOT an error — the screen renders the full empty-state
+/// placeholder. Allergen or meal-plan fetch failures throw via the existing
+/// pattern and surface as `AsyncValue.error`.
+///
+/// Copied from [HomeController].
 class HomeControllerFamily extends Family<AsyncValue<HomeState>> {
-  /// See also [HomeController].
+  /// NIB-86: Redesigned Home dashboard controller.
+  ///
+  /// Parallel-fetches:
+  ///  1. The current baby profile (NIB-65 header + greeting).
+  ///  2. Per-allergen derived statuses (NIB-126).
+  ///  3. Rolling-7 meal plan entries (NIB-59), filtered to today.
+  ///
+  /// A missing baby is NOT an error — the screen renders the full empty-state
+  /// placeholder. Allergen or meal-plan fetch failures throw via the existing
+  /// pattern and surface as `AsyncValue.error`.
+  ///
+  /// Copied from [HomeController].
   const HomeControllerFamily();
 
-  /// See also [HomeController].
+  /// NIB-86: Redesigned Home dashboard controller.
+  ///
+  /// Parallel-fetches:
+  ///  1. The current baby profile (NIB-65 header + greeting).
+  ///  2. Per-allergen derived statuses (NIB-126).
+  ///  3. Rolling-7 meal plan entries (NIB-59), filtered to today.
+  ///
+  /// A missing baby is NOT an error — the screen renders the full empty-state
+  /// placeholder. Allergen or meal-plan fetch failures throw via the existing
+  /// pattern and surface as `AsyncValue.error`.
+  ///
+  /// Copied from [HomeController].
   HomeControllerProvider call(String babyId) {
     return HomeControllerProvider(babyId);
   }
@@ -72,10 +116,32 @@ class HomeControllerFamily extends Family<AsyncValue<HomeState>> {
   String? get name => r'homeControllerProvider';
 }
 
-/// See also [HomeController].
+/// NIB-86: Redesigned Home dashboard controller.
+///
+/// Parallel-fetches:
+///  1. The current baby profile (NIB-65 header + greeting).
+///  2. Per-allergen derived statuses (NIB-126).
+///  3. Rolling-7 meal plan entries (NIB-59), filtered to today.
+///
+/// A missing baby is NOT an error — the screen renders the full empty-state
+/// placeholder. Allergen or meal-plan fetch failures throw via the existing
+/// pattern and surface as `AsyncValue.error`.
+///
+/// Copied from [HomeController].
 class HomeControllerProvider
     extends AutoDisposeAsyncNotifierProviderImpl<HomeController, HomeState> {
-  /// See also [HomeController].
+  /// NIB-86: Redesigned Home dashboard controller.
+  ///
+  /// Parallel-fetches:
+  ///  1. The current baby profile (NIB-65 header + greeting).
+  ///  2. Per-allergen derived statuses (NIB-126).
+  ///  3. Rolling-7 meal plan entries (NIB-59), filtered to today.
+  ///
+  /// A missing baby is NOT an error — the screen renders the full empty-state
+  /// placeholder. Allergen or meal-plan fetch failures throw via the existing
+  /// pattern and surface as `AsyncValue.error`.
+  ///
+  /// Copied from [HomeController].
   HomeControllerProvider(String babyId)
     : this._internal(
         () => HomeController()..babyId = babyId,
