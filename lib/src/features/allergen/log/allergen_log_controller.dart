@@ -152,6 +152,12 @@ class AllergenLogController extends _$AllergenLogController {
       }
 
       state = state.copyWith(isLoading: false, isSaved: true);
+      unawaited(
+        Analytics.instance.logAllergenLogEdited(
+          allergenKey: allergenKey,
+          hasAttachment: _hasAttachment(),
+        ),
+      );
       return;
     }
 
@@ -199,7 +205,21 @@ class AllergenLogController extends _$AllergenLogController {
       photoUploadFailed: photoFailed,
     );
     unawaited(
-      Analytics.instance.logAllergenLogCreated(allergenKey: allergenKey),
+      Analytics.instance.logAllergenLogCreated(
+        allergenKey: allergenKey,
+        hasAttachment: _hasAttachment(),
+      ),
     );
+  }
+
+  bool _hasAttachment() {
+    final title = state.attachmentTitle;
+    final description = state.attachmentDescription;
+    final photo = state.photoPath;
+    final existingPhoto = state.existingPhotoPath;
+    return (photo != null && photo.isNotEmpty) ||
+        (existingPhoto != null && existingPhoto.isNotEmpty) ||
+        (title != null && title.isNotEmpty) ||
+        (description != null && description.isNotEmpty);
   }
 }
