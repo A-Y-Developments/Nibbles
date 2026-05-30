@@ -4,6 +4,7 @@ import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
+import 'package:nibbles/src/common/components/chips/app_chip.dart';
 import 'package:nibbles/src/common/domain/entities/meal_plan_entry.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
 
@@ -271,7 +272,7 @@ class _RecipeRow extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: AppTypography.textTheme.labelLarge,
+                    style: AppTypography.textTheme.labelMedium,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -353,22 +354,10 @@ class _AllergenTagChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final emoji = AllergenEmoji.get(tag);
     final name = tag.replaceAll('_', ' ');
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.sm,
-        vertical: AppSizes.sp2,
-      ),
-      decoration: BoxDecoration(
-        color: flagged ? AppColors.destructiveSoft : AppColors.coralSoft,
-        borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-      ),
-      child: Text(
-        '$emoji $name',
-        style: AppTypography.caption.copyWith(
-          color: flagged ? AppColors.flagFg : AppColors.coralDeep,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
+    return AppChip(
+      label: name,
+      emoji: emoji,
+      tone: flagged ? AppChipTone.flag : AppChipTone.neutral,
     );
   }
 }
@@ -380,22 +369,6 @@ class _OverflowChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.sm,
-        vertical: AppSizes.sp2,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.coralSoft,
-        borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-      ),
-      child: Text(
-        '+$count',
-        style: AppTypography.caption.copyWith(
-          color: AppColors.coralDeep,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
+    return AppChip(label: '+$count');
   }
 }
