@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 abstract final class AppSizes {
   // Spacing (8pt grid)
+  static const double sp2 = 2;
   static const double xs = 4;
   static const double sm = 8;
   static const double sp12 = 12;
@@ -42,6 +43,8 @@ abstract final class AppSizes {
   static const double inputHeight = 52;
   // Kit .field is 48px (inputHeight=52 is a deferred decision; do not mutate).
   static const double fieldHeight = 48;
+  // Kit .field horizontal padding (components-inputs.html .field spec: 0 14px).
+  static const double fieldPaddingH = 14;
   // Segmented control track height (controls/segmented preview).
   static const double segmentedHeight = 42;
   // Switch track / thumb (controls preview: 44x24 track, 20px thumb).

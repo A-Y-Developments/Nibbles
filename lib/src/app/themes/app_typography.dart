@@ -149,6 +149,16 @@ abstract final class AppTypography {
     color: AppColors.text,
   );
 
+  // emptyStateTitle — components-empty-state.html .ttl spec:
+  // 700 16px/1.2 var(--font-display) color var(--fg-strong).
+  static const TextStyle emptyStateTitle = TextStyle(
+    fontFamily: FontFamily.parkinsans,
+    fontSize: 16,
+    fontWeight: FontWeight.w700,
+    height: 1.2,
+    color: AppColors.fgStrong,
+  );
+
   // caption — 12/400 h1.333. Figtree body helper.
   static final TextStyle caption = GoogleFonts.figtree(
     fontSize: 12,

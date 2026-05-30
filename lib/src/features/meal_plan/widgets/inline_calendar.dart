@@ -148,8 +148,7 @@ class _MonthHeader extends StatelessWidget {
           child: Center(
             child: Text(
               label,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontSize: 16,
+              style: theme.textTheme.titleSmall?.copyWith(
                 color: AppColors.fgStrong,
               ),
             ),
@@ -302,7 +301,7 @@ class _DayPlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) =>
-      const SizedBox(height: AppSizes.xxl - AppSizes.sm);
+      const SizedBox(height: AppSizes.sp40);
 }
 
 class _DayCell extends StatelessWidget {
@@ -351,9 +350,9 @@ class _DayCell extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Container(
-        height: AppSizes.xxl - AppSizes.sm,
+        height: AppSizes.sp40,
         alignment: Alignment.center,
-        margin: const EdgeInsets.symmetric(horizontal: 2),
+        margin: const EdgeInsets.symmetric(horizontal: AppSizes.sp2),
         decoration: BoxDecoration(
           color: bg,
           shape: BoxShape.circle,
