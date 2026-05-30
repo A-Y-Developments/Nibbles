@@ -6,14 +6,14 @@ import 'package:nibbles/src/features/onboarding/onboarding_controller.dart';
 import 'package:nibbles/src/features/onboarding/result/onboarding_result_screen.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 
-/// NIB-105 — widget tests for `OnboardingResultScreen` (NIB-91).
+/// NIB-91 — widget tests for `OnboardingResultScreen`.
 ///
-/// Pins the soft-warn UX: Next routes forward to `/onboarding/consent` in
-/// BOTH the ready and not-ready variants. Visual variant pins:
-///   - ready (signsMet=5):     "New Journey Unlock!" eyebrow + score "5 / 5
-///     signs".
-///   - not-ready (signsMet=1): "Almost there" eyebrow + cross marks on each
-///     not-met sign row + score "1 / 5 signs".
+/// Pins the soft-warn UX (Next routes forward to `/onboarding/consent` in
+/// BOTH variants) and the Figma-aligned visuals:
+///   - ready variant (signsMet>=3): "New Journey Unlock!" eyebrow + ready
+///     headline + all 5 rows positive + X/Y chip reflects actual score.
+///   - not-ready variant (signsMet<3): no eyebrow, not-ready headline, per-
+///     answer check/cross icons on each row.
 GoRouter _routerFor(Widget screen) => GoRouter(
   initialLocation: AppRoute.onboardingResult.path,
   routes: [
@@ -55,39 +55,43 @@ Future<void> _pumpResult(
 
 void main() {
   testWidgets(
-    'ready variant (signsMet=5) shows "New Journey Unlock!" eyebrow and the '
-    '5 / 5 score badge',
+    'ready variant (signsMet=5) shows the "New Journey Unlock!" eyebrow, the '
+    'ready headline and the 5/5 score chip',
     (tester) async {
       await _pumpResult(
         tester,
         answers: const <bool?>[true, true, true, true, true],
       );
 
-      // Eyebrow is uppercased via .toUpperCase() before render.
-      expect(find.text('NEW JOURNEY UNLOCK!'), findsOneWidget);
+      expect(find.text('New Journey Unlock!'), findsOneWidget);
       expect(
         find.text('Lily is ready for solids at this time'),
         findsOneWidget,
       );
-      expect(find.text('5 / 5 signs'), findsOneWidget);
+      expect(find.text('Readiness Signs'), findsOneWidget);
+      expect(find.text('5/5'), findsOneWidget);
+      // Ready variant renders all rows positive — 5 checks, 0 crosses.
+      expect(find.byIcon(Icons.check_rounded), findsNWidgets(5));
+      expect(find.byIcon(Icons.close_rounded), findsNothing);
     },
   );
 
   testWidgets(
-    'not-ready variant (signsMet=1) shows "Almost there" eyebrow, 1 / 5 score '
-    'and cross marks on the not-met rows',
+    'not-ready variant (signsMet=1) drops the eyebrow, shows the not-ready '
+    'headline, the 1/5 chip and per-answer check/cross icons',
     (tester) async {
       await _pumpResult(
         tester,
         answers: const <bool?>[true, false, false, false, false],
       );
 
-      expect(find.text('ALMOST THERE'), findsOneWidget);
+      // Not-ready variant carries no eyebrow per Figma 1029:8508.
+      expect(find.text('New Journey Unlock!'), findsNothing);
       expect(
         find.text('Lily is not ready for solids at this time'),
         findsOneWidget,
       );
-      expect(find.text('1 / 5 signs'), findsOneWidget);
+      expect(find.text('1/5'), findsOneWidget);
 
       // 4 not-met -> 4 cross marks; 1 met -> 1 check mark.
       expect(find.byIcon(Icons.close_rounded), findsNWidgets(4));
@@ -103,12 +107,12 @@ void main() {
         answers: const <bool?>[true, true, true, false, false],
       );
 
-      expect(find.text('NEW JOURNEY UNLOCK!'), findsOneWidget);
+      expect(find.text('New Journey Unlock!'), findsOneWidget);
       // Ready variant renders all rows positive regardless of per-answer
       // values (verbatim from `OnboardingResultScreen`'s `isPositive` rule):
       //   final isPositive = ready || (answers[i] ?? false);
       expect(find.byIcon(Icons.close_rounded), findsNothing);
-      expect(find.text('3 / 5 signs'), findsOneWidget);
+      expect(find.text('3/5'), findsOneWidget);
     },
   );
 
