@@ -170,6 +170,14 @@ class Analytics {
     await _logEvent('subscription_restored');
   }
 
+  Future<void> logAllPlansViewed() async {
+    await _logEvent('all_plans_viewed');
+  }
+
+  Future<void> logPlanSelected({required String period}) async {
+    await _logEvent('plan_selected', parameters: {'period': period});
+  }
+
   // ---------------------------------------------------------------------------
   // Allergen tracker
   // ---------------------------------------------------------------------------
