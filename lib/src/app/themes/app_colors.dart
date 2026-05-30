@@ -72,6 +72,10 @@ abstract final class AppColors {
   // (NIB-107 Figma node 971:10029 — token "Nibble-primary-Burgundy").
   static const Color burgundy = Color(0xFF77393B);
 
+  // Shop-row delete glyph (.shop-row__del) — deeper than `error` per kit.css.
+  // No existing token: kit hardcodes #C62828 for the round red x glyph.
+  static const Color deleteGlyph = Color(0xFFC62828);
+
   // ── Semantic tokens ───────────────────────────────────────────
   static const Color fgStrong = Color(0xFF2C2C2C);
   static const Color fgDefault = Color(0xFF2D1F17);

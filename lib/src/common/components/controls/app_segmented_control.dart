@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:nibbles/gen/fonts.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 
 /// 2-up segmented control. Mirrors kit components-segmented preview:
-/// track #EAEAEA (borderSoft), radiusMd, active segment greenDeep/cream.
+/// track #EAEAEA (borderSoft), radiusMd, active segment greenDeep/cream,
+/// labels in Parkinsans display 700/15 (kit `var(--font-display)` 700 15px/1).
 class AppSegmentedControl extends StatelessWidget {
   const AppSegmentedControl({
     required this.segments,
@@ -18,8 +20,6 @@ class AppSegmentedControl extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Container(
       height: AppSizes.segmentedHeight,
       padding: const EdgeInsets.all(1),
@@ -43,8 +43,11 @@ class AppSegmentedControl extends StatelessWidget {
                 alignment: Alignment.center,
                 child: Text(
                   segments[i],
-                  style: theme.textTheme.bodyLarge?.copyWith(
+                  style: TextStyle(
+                    fontFamily: FontFamily.parkinsans,
+                    fontSize: 15,
                     fontWeight: FontWeight.w700,
+                    height: 1,
                     color: active ? AppColors.cream : AppColors.greenDeep,
                   ),
                 ),
