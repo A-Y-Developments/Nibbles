@@ -6,21 +6,28 @@ import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
+import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
+import 'package:nibbles/src/common/components/chips/app_chip.dart';
 import 'package:nibbles/src/features/starting_guide/constants/articles.dart';
 import 'package:nibbles/src/features/starting_guide/starting_guide_controller.dart';
 import 'package:nibbles/src/features/starting_guide/widgets/guide_back_button.dart';
-import 'package:nibbles/src/features/starting_guide/widgets/guide_cta_pill.dart';
+import 'package:nibbles/src/features/starting_guide/widgets/guide_checklist_card.dart';
+import 'package:nibbles/src/features/starting_guide/widgets/guide_chip_grid_card.dart';
 import 'package:nibbles/src/features/starting_guide/widgets/guide_hero_card.dart';
-import 'package:nibbles/src/features/starting_guide/widgets/numbered_step.dart';
+import 'package:nibbles/src/features/starting_guide/widgets/guide_icon_tile_grid.dart';
+import 'package:nibbles/src/features/starting_guide/widgets/guide_info_card.dart';
+import 'package:nibbles/src/features/starting_guide/widgets/guide_numbered_list_card.dart';
+import 'package:nibbles/src/features/starting_guide/widgets/guide_philosophy_card.dart';
+import 'package:nibbles/src/features/starting_guide/widgets/guide_ready_to_start_card.dart';
+import 'package:nibbles/src/features/starting_guide/widgets/guide_section_heading.dart';
 import 'package:nibbles/src/logging/analytics.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 
 /// Single Starting Guide article screen.
 ///
-/// Resolves the article by [slug] via [StartingGuideController]. Renders the
-/// hero card, the article's numbered sections, and a single terminal CTA at
-/// the bottom that routes to one of the existing top-level routes
-/// (`recipe-library`, `meal-plan`, `allergen-tracker`, etc.).
+/// Resolves the article by [slug] via [StartingGuideController] and renders
+/// its [GuideBlock] sequence. Each block is mapped to the matching guide
+/// widget via the sealed-class switch in [_buildBlock].
 ///
 /// If the slug doesn't match any article we fall back to a tiny not-found
 /// scaffold rather than crashing — protects against a malformed deeplink.
@@ -59,11 +66,11 @@ class _StartingGuideArticleScreenState
   }
 
   void _onCta(BuildContext context, GuideCta cta) {
-    // 'Get Free Weekly Baby Recipes' has no destination flow yet — see the
-    // placeholder note in `constants/articles.dart`. The article routes back
-    // to the hub (placeholder targets `AppRoute.startingGuide.name`); doing
-    // the same for unknown route names keeps us crash-safe if the list is
-    // extended with a target that isn't registered yet.
+    // 'Get Free Weekly Baby Recipes' currently has no destination flow (NIB-94
+    // pending). Until it lands, that CTA's `routeName` is `starting-guide` —
+    // routing to it just pops the article so the user stays in context.
+    // Defensive guard for any unknown future route names: do the same thing
+    // instead of crashing.
     final isKnown = AppRoute.values.any((r) => r.name == cta.routeName);
     if (!isKnown || cta.routeName == AppRoute.startingGuide.name) {
       _onBack(context);
@@ -116,69 +123,128 @@ class _ArticleBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cta = article.terminalCta;
     return CustomScrollView(
       slivers: [
-        SliverToBoxAdapter(child: _Header(onBack: onBack)),
+        SliverToBoxAdapter(
+          child: _Header(title: article.title, onBack: onBack),
+        ),
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(
             AppSizes.pagePaddingH,
             AppSizes.md,
             AppSizes.pagePaddingH,
-            AppSizes.lg,
-          ),
-          sliver: SliverToBoxAdapter(
-            child: GuideHeroCard(
-              title: article.title,
-              subtitle: article.subtitle,
-            ),
-          ),
-        ),
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSizes.pagePaddingH,
-            0,
-            AppSizes.pagePaddingH,
-            AppSizes.lg,
+            AppSizes.xl,
           ),
           sliver: SliverList.separated(
-            itemCount: article.sections.length,
+            itemCount: article.blocks.length,
             separatorBuilder: (_, __) => const SizedBox(height: AppSizes.lg),
-            itemBuilder: (context, index) {
-              final section = article.sections[index];
-              return NumberedStep(
-                stepNumber: section.stepNumber,
-                heading: section.heading,
-                body: section.body,
-              );
-            },
+            itemBuilder: (context, index) =>
+                _buildBlock(article.blocks[index], onCta),
           ),
         ),
-        if (cta != null)
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSizes.pagePaddingH,
-              AppSizes.sm,
-              AppSizes.pagePaddingH,
-              AppSizes.xl,
-            ),
-            sliver: SliverToBoxAdapter(
-              child: GuideCtaPill(
-                label: cta.label,
-                onTap: () => onCta(cta),
-              ),
-            ),
-          )
-        else
-          const SliverToBoxAdapter(child: SizedBox(height: AppSizes.xl)),
+      ],
+    );
+  }
+}
+
+Widget _buildBlock(GuideBlock block, ValueChanged<GuideCta> onCta) {
+  switch (block) {
+    case HeroCardBlock():
+      return GuideHeroCard(title: block.title, subtitle: block.body);
+    case SectionHeadingBlock():
+      return GuideSectionHeading(block.text);
+    case ParagraphBlock():
+      return Text(
+        block.text,
+        style: AppTypography.textTheme.bodyLarge?.copyWith(
+          color: AppColors.fgDefault,
+        ),
+      );
+    case LabelChipBlock():
+      return Align(
+        alignment: Alignment.centerLeft,
+        child: AppChip(label: block.label),
+      );
+    case InfoCardBlock():
+      return GuideInfoCard(title: block.title, body: block.body);
+    case IconTileGridBlock():
+      return GuideIconTileGrid(labels: block.labels);
+    case ChipGridCardBlock():
+      return GuideChipGridCard(
+        title: block.title,
+        body: block.body,
+        chips: block.chips,
+      );
+    case NumberedListCardBlock():
+      return GuideNumberedListCard(
+        title: block.title,
+        body: block.body,
+        items: block.items,
+      );
+    case PhilosophyCardBlock():
+      return GuidePhilosophyCard(
+        title: block.title,
+        body: block.body,
+        chips: block.chips,
+      );
+    case ReadyToStartCardBlock():
+      return GuideReadyToStartCard(
+        title: block.title,
+        body: block.body,
+        ctaLabel: block.cta.label,
+        onCta: () => onCta(block.cta),
+      );
+    case InlineCtaPairBlock():
+      return _InlineCtaPair(
+        primary: block.primary,
+        secondary: block.secondary,
+        onCta: onCta,
+      );
+    case ChecklistCardBlock():
+      return GuideChecklistCard(
+        title: block.title,
+        score: block.score,
+        items: block.items,
+      );
+  }
+}
+
+class _InlineCtaPair extends StatelessWidget {
+  const _InlineCtaPair({
+    required this.primary,
+    required this.secondary,
+    required this.onCta,
+  });
+
+  final GuideCta primary;
+  final GuideCta? secondary;
+  final ValueChanged<GuideCta> onCta;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        AppPillButton(
+          label: primary.label,
+          onPressed: () => onCta(primary),
+        ),
+        if (secondary != null) ...[
+          const SizedBox(height: AppSizes.sp12),
+          AppPillButton(
+            label: secondary!.label,
+            variant: AppPillButtonVariant.ghost,
+            onPressed: () => onCta(secondary!),
+          ),
+        ],
       ],
     );
   }
 }
 
 class _Header extends StatelessWidget {
-  const _Header({required this.onBack});
+  const _Header({required this.title, required this.onBack});
 
+  final String title;
   final VoidCallback onBack;
 
   @override
@@ -205,8 +271,8 @@ class _Header extends StatelessWidget {
             const SizedBox(width: AppSizes.sp12),
             Expanded(
               child: Text(
-                'Starting Guide',
-                style: AppTypography.textTheme.titleLarge,
+                title,
+                style: AppTypography.textTheme.titleSmall,
               ),
             ),
           ],

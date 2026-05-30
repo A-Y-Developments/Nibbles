@@ -1,10 +1,9 @@
 // Widget tests for the Starting Guide article screen.
 //
 // Asserts:
-//   * a known slug ('first-nibbles') renders the matching article's title,
-//     all sections, and its terminal CTA label
-//   * tapping the terminal CTA calls `goNamed` on a known top-level route
-//     — asserted by a stub destination route that surfaces the routed path
+//   * a known slug ('first-nibbles') renders the article's hero title and
+//     section copy (verbatim from the Figma audit)
+//   * tapping the article's primary inline CTA routes to recipe-library
 //   * an unknown slug falls back to the in-screen 'Article not found' UI
 //     (no crash, no exception)
 //
@@ -48,6 +47,22 @@ class _RecipeLibraryStub extends StatelessWidget {
       const Scaffold(body: Center(child: Text('LIBRARY_STUB')));
 }
 
+class _MealPlanStub extends StatelessWidget {
+  const _MealPlanStub();
+
+  @override
+  Widget build(BuildContext context) =>
+      const Scaffold(body: Center(child: Text('MEAL_PLAN_STUB')));
+}
+
+class _AllergenStub extends StatelessWidget {
+  const _AllergenStub();
+
+  @override
+  Widget build(BuildContext context) =>
+      const Scaffold(body: Center(child: Text('ALLERGEN_STUB')));
+}
+
 GoRouter _makeRouter({required String slug}) => GoRouter(
   initialLocation: AppRoute.startingGuideArticle.path.replaceFirst(
     ':slug',
@@ -70,6 +85,16 @@ GoRouter _makeRouter({required String slug}) => GoRouter(
       name: AppRoute.recipeLibrary.name,
       builder: (_, __) => const _RecipeLibraryStub(),
     ),
+    GoRoute(
+      path: AppRoute.mealPlan.path,
+      name: AppRoute.mealPlan.name,
+      builder: (_, __) => const _MealPlanStub(),
+    ),
+    GoRoute(
+      path: AppRoute.allergenTracker.path,
+      name: AppRoute.allergenTracker.name,
+      builder: (_, __) => const _AllergenStub(),
+    ),
   ],
 );
 
@@ -78,13 +103,29 @@ Widget _buildSut({required String slug}) => ProviderScope(
 );
 
 Future<void> _pump(WidgetTester tester, {required String slug}) async {
-  tester.view.physicalSize = const Size(1080, 2400);
+  tester.view.physicalSize = const Size(1080, 3600);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
 
   await tester.pumpWidget(_buildSut(slug: slug));
   await tester.pumpAndSettle();
+}
+
+/// Collects every CTA across the article's blocks (inline pair + ready-card)
+/// so tests don't have to know the block layout.
+List<GuideCta> _allCtas(GuideArticle article) {
+  final out = <GuideCta>[];
+  for (final block in article.blocks) {
+    if (block is InlineCtaPairBlock) {
+      out.add(block.primary);
+      final secondary = block.secondary;
+      if (secondary != null) out.add(secondary);
+    } else if (block is ReadyToStartCardBlock) {
+      out.add(block.cta);
+    }
+  }
+  return out;
 }
 
 void main() {
@@ -96,7 +137,7 @@ void main() {
 
   group('StartingGuideArticleScreen — known slug', () {
     testWidgets(
-      "'first-nibbles' renders the matching article's title and CTA",
+      "'first-nibbles' renders the article's hub title in the header",
       (tester) async {
         const slug = 'first-nibbles';
         await _pump(tester, slug: slug);
@@ -105,29 +146,14 @@ void main() {
           (a) => a.slug == slug,
         );
 
-        // Title is rendered (it appears in the hero card AND header — at least
-        // one).
+        // Hub title is verbatim from Figma — it shows in the header and the
+        // hero card so we expect it at least once.
         expect(find.text(article.title), findsWidgets);
-        // Terminal CTA label is rendered exactly once.
-        expect(find.text(article.terminalCta!.label), findsOneWidget);
       },
     );
 
-    testWidgets("'first-nibbles' renders every section heading", (
-      tester,
-    ) async {
-      const slug = 'first-nibbles';
-      await _pump(tester, slug: slug);
-
-      final article = kStartingGuideArticles.firstWhere((a) => a.slug == slug);
-
-      for (final section in article.sections) {
-        expect(find.text(section.heading), findsOneWidget);
-      }
-    });
-
     testWidgets(
-      "'first-nibbles' terminal CTA tap → goNamed routes to recipe-library",
+      "'first-nibbles' renders every section heading + info-card title",
       (tester) async {
         const slug = 'first-nibbles';
         await _pump(tester, slug: slug);
@@ -135,13 +161,83 @@ void main() {
         final article = kStartingGuideArticles.firstWhere(
           (a) => a.slug == slug,
         );
-        expect(article.terminalCta!.routeName, AppRoute.recipeLibrary.name);
 
-        await tester.tap(find.text(article.terminalCta!.label));
+        for (final block in article.blocks) {
+          if (block is SectionHeadingBlock) {
+            expect(
+              find.text(block.text),
+              findsWidgets,
+              reason: 'section heading "${block.text}" missing',
+            );
+          } else if (block is InfoCardBlock) {
+            expect(
+              find.text(block.title),
+              findsOneWidget,
+              reason: 'info card "${block.title}" missing',
+            );
+          }
+        }
+      },
+    );
+
+    testWidgets(
+      "'first-nibbles' primary CTA → routes to recipe-library",
+      (tester) async {
+        const slug = 'first-nibbles';
+        await _pump(tester, slug: slug);
+
+        final article = kStartingGuideArticles.firstWhere(
+          (a) => a.slug == slug,
+        );
+        final ctas = _allCtas(article);
+        final primary = ctas.firstWhere(
+          (c) => c.routeName == AppRoute.recipeLibrary.name,
+        );
+
+        await tester.ensureVisible(find.text(primary.label));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text(primary.label));
         await tester.pumpAndSettle();
 
-        // Routed to the recipe-library stub.
         expect(find.text('LIBRARY_STUB'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      "'introduction' renders Essential Nutrients icon tiles",
+      (tester) async {
+        await _pump(tester, slug: 'introduction');
+
+        for (final label in ['Iron', 'Minerals', 'Vitamins', 'Zinc']) {
+          expect(find.text(label), findsWidgets);
+        }
+      },
+    );
+
+    testWidgets(
+      "'feeding-principles' renders 'The Big 11' allergen chips",
+      (tester) async {
+        await _pump(tester, slug: 'feeding-principles');
+
+        // Sample a few chips from The Big 11. 'Egg' is also in the iron-rich
+        // grid as 'Eggs' (plural) — checking distinct labels avoids overlap.
+        for (final label in ['Almond', 'Cashew', 'Wallnut', 'Sesame']) {
+          expect(
+            find.text(label),
+            findsWidgets,
+            reason: 'allergen chip "$label" missing',
+          );
+        }
+      },
+    );
+
+    testWidgets(
+      "'readiness-signs' renders the Readiness Signs checklist + score",
+      (tester) async {
+        await _pump(tester, slug: 'readiness-signs');
+
+        expect(find.text('Readiness Signs'), findsOneWidget);
+        expect(find.text('3/5'), findsOneWidget);
       },
     );
   });

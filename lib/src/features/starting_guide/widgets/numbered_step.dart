@@ -47,13 +47,15 @@ class NumberedStep extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: AppSizes.xs),
-              Text(
-                body,
-                style: AppTypography.textTheme.bodyMedium?.copyWith(
-                  color: AppColors.fgMuted,
+              if (body.isNotEmpty) ...[
+                const SizedBox(height: AppSizes.xs),
+                Text(
+                  body,
+                  style: AppTypography.textTheme.bodyMedium?.copyWith(
+                    color: AppColors.fgMuted,
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
         ),
