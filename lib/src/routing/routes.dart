@@ -25,6 +25,7 @@ import 'package:nibbles/src/features/onboarding/name/onboarding_name_screen.dart
 import 'package:nibbles/src/features/onboarding/readiness/onboarding_readiness_screen.dart';
 import 'package:nibbles/src/features/onboarding/result/onboarding_result_screen.dart';
 import 'package:nibbles/src/features/profile/edit/profile_edit_screen.dart';
+import 'package:nibbles/src/features/profile/feedback/feedback_screen.dart';
 import 'package:nibbles/src/features/profile/profile_screen.dart';
 import 'package:nibbles/src/features/recipe/detail/recipe_detail_screen.dart';
 import 'package:nibbles/src/features/recipe/library/recipe_library_screen.dart';
@@ -316,6 +317,12 @@ GoRouter goRouter(Ref ref) {
                         name: AppRoute.profileEdit.name,
                         parentNavigatorKey: rootNavigatorKey,
                         builder: (context, state) => const ProfileEditScreen(),
+                      ),
+                      GoRoute(
+                        path: 'feedback',
+                        name: AppRoute.profileFeedback.name,
+                        parentNavigatorKey: rootNavigatorKey,
+                        builder: (context, state) => const FeedbackScreen(),
                       ),
                     ],
                   ),

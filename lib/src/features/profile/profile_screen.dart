@@ -130,11 +130,8 @@ class _ProfileContent extends ConsumerWidget {
                   SettingsRow(
                     key: const Key('profile_feedback_row'),
                     title: 'Give Feedback',
-                    // TODO(NIB-70): push profileFeedback route when added.
-                    onTap: () => _showComingSoon(
-                      context,
-                      'Feedback coming soon.',
-                    ),
+                    onTap: () =>
+                        context.pushNamed(AppRoute.profileFeedback.name),
                   ),
                   const SizedBox(height: AppSizes.sp12),
                   SettingsRow(

@@ -1,27 +1,28 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'routes.dart';
+part of 'feedback_repository.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$goRouterHash() => r'fdce46d093079b4f10f6661f9b74b2180691f13a';
+String _$feedbackRepositoryHash() =>
+    r'5cf127a5dd9fec747e2d1b51341ce46124ca616f';
 
-/// See also [goRouter].
-@ProviderFor(goRouter)
-final goRouterProvider = Provider<GoRouter>.internal(
-  goRouter,
-  name: r'goRouterProvider',
+/// See also [feedbackRepository].
+@ProviderFor(feedbackRepository)
+final feedbackRepositoryProvider = Provider<FeedbackRepository>.internal(
+  feedbackRepository,
+  name: r'feedbackRepositoryProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
-      : _$goRouterHash,
+      : _$feedbackRepositoryHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-typedef GoRouterRef = ProviderRef<GoRouter>;
+typedef FeedbackRepositoryRef = ProviderRef<FeedbackRepository>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
