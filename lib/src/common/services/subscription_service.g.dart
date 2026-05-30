@@ -7,10 +7,15 @@ part of 'subscription_service.dart';
 // **************************************************************************
 
 String _$subscriptionServiceHash() =>
-    r'a19ffaac6571296239894948843a8e744d000c54';
+    r'0a5b4e13dd0c19f75cf8da447a27aa84b8a59922';
 
 /// Stub SubscriptionService — will be wired in NIB-18.
 /// Returns false by default; redirect logic sends users to paywall.
+///
+/// NIB-73 expands the surface with [info] so the Manage Subscription screen
+/// can render plan / Started / Renewal from a single entitlement snapshot.
+/// The shape mirrors what RevenueCat `customerInfo` will yield, so swapping
+/// the stub for the real implementation is a no-op for the screen.
 ///
 /// Copied from [SubscriptionService].
 @ProviderFor(SubscriptionService)

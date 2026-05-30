@@ -33,6 +33,7 @@ import 'package:nibbles/src/features/shopping_list/shopping_list_screen.dart';
 import 'package:nibbles/src/features/splash/splash_screen.dart';
 import 'package:nibbles/src/features/starting_guide/starting_guide_article_screen.dart';
 import 'package:nibbles/src/features/starting_guide/starting_guide_hub_screen.dart';
+import 'package:nibbles/src/features/subscription/manage/manage_subscription_screen.dart';
 import 'package:nibbles/src/features/subscription/paywall/paywall_screen.dart';
 import 'package:nibbles/src/features/subscription/success/subscription_success_screen.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
@@ -231,6 +232,16 @@ GoRouter goRouter(Ref ref) {
         path: AppRoute.subscriptionSuccess.path,
         name: AppRoute.subscriptionSuccess.name,
         builder: (context, state) => const SubscriptionSuccessScreen(),
+      ),
+      // NIB-73 — Manage Subscription. Two render branches (not-subscribed /
+      // subscribed-trial) keyed on `SubscriptionService.info()`. Kept OFF
+      // `gatedPaths` so onboarded users can reach it from Profile while M2
+      // is deferred — see NIB-73 acceptance: "reachable, not redirected to
+      // /home".
+      GoRoute(
+        path: AppRoute.manageSubscription.path,
+        name: AppRoute.manageSubscription.name,
+        builder: (context, state) => const ManageSubscriptionScreen(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>

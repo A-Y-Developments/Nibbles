@@ -153,10 +153,9 @@ class _ProfileContent extends ConsumerWidget {
                         key: const Key('profile_manage_subscription_row'),
                         title: 'Manage Subscription',
                         subtitle: state.subscriptionLabel ?? 'No Subscription',
-                        // TODO(NIB-73): push paywall when ticket ships.
-                        onTap: () => _showComingSoon(
-                          context,
-                          'Subscription management coming soon.',
+                        // NIB-73 — push the Manage Subscription screen.
+                        onTap: () => context.pushNamed(
+                          AppRoute.manageSubscription.name,
                         ),
                       ),
                       const SizedBox(height: AppSizes.sp12),
@@ -200,12 +199,6 @@ class _ProfileContent extends ConsumerWidget {
     final days = now.difference(monthStart).inDays;
     final clampedDays = days < 0 ? 0 : days;
     return '$months month $clampedDays days';
-  }
-
-  void _showComingSoon(BuildContext context, String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _confirmSignOut(BuildContext context, WidgetRef ref) async {
