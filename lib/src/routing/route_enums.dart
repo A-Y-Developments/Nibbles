@@ -51,7 +51,8 @@ enum AppRoute {
   allergenComplete(path: '/home/allergen/complete', name: 'allergen-complete'),
   recipeDetail(path: '/home/recipes/:recipeId', name: 'recipe-detail'),
   profile(path: '/home/profile', name: 'profile'),
-  profileEdit(path: '/home/profile/edit', name: 'profile-edit');
+  profileEdit(path: '/home/profile/edit', name: 'profile-edit'),
+  profileFeedback(path: '/home/profile/feedback', name: 'profile-feedback');
 
   const AppRoute({required this.path, required this.name});
 
