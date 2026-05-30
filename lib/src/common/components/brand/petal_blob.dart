@@ -21,8 +21,15 @@ class PetalBlob extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final innerSize = size * (96 / 184);
-    final glowSize = size * (16.8 / 184);
+    // Ratios are anchored to the original loading-screen geometry — outer
+    // 220.8 (avatarXl*1.84), inner 115.2 (avatarXl*0.96), glow 16.8 (sp12*1.4).
+    // Computed from the outer so other call sites that pass a custom [size]
+    // scale linearly without drifting against the NIB-131 baseline.
+    const baseOuter = AppSizes.avatarXl * 1.84;
+    const baseInner = AppSizes.avatarXl * 0.96;
+    const baseGlow = AppSizes.sp12 * 1.4;
+    final innerSize = size * (baseInner / baseOuter);
+    final glowSize = size * (baseGlow / baseOuter);
 
     return SizedBox(
       width: size,

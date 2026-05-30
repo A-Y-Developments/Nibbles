@@ -113,6 +113,9 @@ class _OnboardingConsentScreenState
                 style: textTheme.displaySmall,
               ),
               const SizedBox(height: AppSizes.lg),
+              // Figma audit calls the cluster at 220x220; we render at 180
+              // so the 3-checkbox <6mo variant still fits without scrolling on
+              // ~5.5" devices (the cluster scales linearly via [PetalBlob]).
               const Center(child: PetalBlob(size: 180)),
               const SizedBox(height: AppSizes.xl),
               Expanded(
@@ -230,7 +233,8 @@ class _ConsentCheckboxRow extends StatelessWidget {
             Expanded(
               child: Text(
                 label,
-                style: textTheme.bodyMedium?.copyWith(
+                // Body/Regular per Figma audit (Figtree 15/22) → bodyLarge.
+                style: textTheme.bodyLarge?.copyWith(
                   color: AppColors.fgDefault,
                 ),
               ),
