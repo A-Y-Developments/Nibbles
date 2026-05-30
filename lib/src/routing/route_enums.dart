@@ -19,6 +19,10 @@ enum AppRoute {
     path: '/onboarding/baby-setup',
     name: 'onboarding-baby-setup',
   ),
+  onboardingBabySetupLoading(
+    path: '/onboarding/baby-setup-loading',
+    name: 'onboarding-baby-setup-loading',
+  ),
   register(path: '/auth/register', name: 'register'),
   login(path: '/auth/login', name: 'login'),
   forgotPassword(path: '/auth/forgot-password', name: 'forgot-password'),

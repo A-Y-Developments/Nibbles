@@ -48,6 +48,15 @@ GoRouter _routerFor(Widget screen) => GoRouter(
       name: AppRoute.onboardingConsent.name,
       builder: (_, __) => screen,
     ),
+    // NIB-137 — consent now pushes through the post-consent loading
+    // transition instead of going straight to /home. Stub it so the
+    // success-path test can land on a deterministic route.
+    GoRoute(
+      path: AppRoute.onboardingBabySetupLoading.path,
+      name: AppRoute.onboardingBabySetupLoading.name,
+      builder: (_, __) =>
+          const Scaffold(body: Center(child: Text('LOADING_STUB'))),
+    ),
     GoRoute(
       path: AppRoute.home.path,
       name: AppRoute.home.name,
@@ -257,7 +266,7 @@ void main() {
 
   testWidgets(
     'on confirm: calls baby_profile_service.createBaby, flips '
-    'onboarding_done, navigates to /home',
+    'onboarding_done, navigates to the post-consent loading transition',
     (tester) async {
       when(
         () => babyProfile.createBaby(any(), any()),
@@ -280,7 +289,10 @@ void main() {
 
       verify(() => babyProfile.createBaby('Lily', dob)).called(1);
       verify(flags.setOnboardingDone).called(1);
-      expect(find.text('HOME_STUB'), findsOneWidget);
+      // NIB-137 — consent now pushes through the loading transition; that
+      // screen owns the auto-route to /home and is tested in isolation.
+      expect(find.text('LOADING_STUB'), findsOneWidget);
+      expect(find.text('HOME_STUB'), findsNothing);
     },
   );
 
