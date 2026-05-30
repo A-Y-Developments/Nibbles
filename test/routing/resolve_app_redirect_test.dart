@@ -260,4 +260,48 @@ void main() {
       );
     });
   });
+
+  // ---------------------------------------------------------------------------
+  // NIB-105 — onboarding redirect matrix pin
+  //
+  // The four named phase-landing transitions are already exercised piecemeal
+  // above. This group restates them as the literal NIB-105 contract row so a
+  // future edit of `resolveAppRedirect` that touches phase landings (without
+  // breaking the existing rows) is still caught by a single, top-level
+  // assertion per phase.
+  // ---------------------------------------------------------------------------
+  group('NIB-105 onboarding redirect contract', () {
+    test('!babySetupDone -> /onboarding/name', () {
+      expect(
+        resolve(at: AppRoute.home.path),
+        AppRoute.onboardingName.path,
+      );
+    });
+
+    test('babySetupDone && !readinessDone -> /onboarding/readiness', () {
+      expect(
+        resolve(at: AppRoute.home.path, babySetup: true),
+        AppRoute.onboardingReadiness.path,
+      );
+    });
+
+    test('readinessDone && !onboardingDone -> /onboarding/consent', () {
+      expect(
+        resolve(at: AppRoute.home.path, babySetup: true, readiness: true),
+        AppRoute.onboardingConsent.path,
+      );
+    });
+
+    test('all done -> /home (passes through)', () {
+      expect(
+        resolve(
+          at: AppRoute.home.path,
+          babySetup: true,
+          readiness: true,
+          onboarding: true,
+        ),
+        isNull,
+      );
+    });
+  });
 }
