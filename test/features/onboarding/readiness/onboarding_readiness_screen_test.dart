@@ -8,19 +8,23 @@ import 'package:nibbles/src/features/onboarding/onboarding_controller.dart';
 import 'package:nibbles/src/features/onboarding/readiness/onboarding_readiness_screen.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 
-/// NIB-105 — widget tests for `OnboardingReadinessScreen` (NIB-83).
+/// NIB-83 — widget tests for `OnboardingReadinessScreen`.
 ///
 /// Pins:
-///   - the 5-step stepper renders "1 of 5 Questions" through "5 of 5
-///     Questions" verbatim.
+///   - the 6-step questionnaire renders "1 of 6 Questions" through
+///     "6 of 6 Questions" verbatim.
+///   - tapping a card stores the answer but does NOT auto-advance; Next
+///     does.
+///   - Q1 (pediatrician gate) writes to a separate state field; Q2-Q6
+///     write to `readinessAnswers[0..4]` so downstream signs_met math
+///     keeps its length-5 contract.
 ///   - back-nav inside the stepper preserves answers captured at earlier
 ///     steps via the hoisted controller (keepAlive).
 ///
 /// The screen calls `localFlagServiceProvider.setOnboardingReadinessDone()`
-/// in `_finish` (after step 5). We don't tap step 5 in these tests — both
-/// scenarios stay within step 4 — so the local flag service isn't reached.
-/// Hive box init guards the test in case any future helper does flip the
-/// flag during back-nav (currently doesn't).
+/// in `_finish` (after step 6). We don't tap step 6 in these tests so the
+/// local flag service isn't reached. Hive box init guards the test in case
+/// any future helper does flip the flag during back-nav.
 GoRouter _routerFor(Widget screen) => GoRouter(
   initialLocation: AppRoute.onboardingReadiness.path,
   routes: [
@@ -73,23 +77,36 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  Future<void> tapYesAndAdvance(WidgetTester tester) async {
+    await tester.tap(find.byKey(const Key('readiness_choice_yes')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('onboarding_readiness_next')));
+    await tester.pumpAndSettle();
+  }
+
   testWidgets(
-    'renders the "1 of 5 Questions" counter on first paint',
+    'renders the "1 of 6 Questions" counter on first paint',
     (tester) async {
       final container = ProviderContainer();
       addTearDown(container.dispose);
-      // Seed a baby name so the question copy doesn't interpolate to the
+      // Seed a baby name so question copy doesn't interpolate to the
       // "your baby" fallback.
       container.read(onboardingControllerProvider.notifier).updateName('Lily');
 
       await pumpReadiness(tester, container: container);
 
-      expect(find.text('1 of 5 Questions'), findsOneWidget);
+      expect(find.text('1 of 6 Questions'), findsOneWidget);
+      // Q1 is the pediatrician-approval gate (Figma 971:10293).
+      expect(find.text('Is Lily ready for solids?'), findsOneWidget);
+      expect(
+        find.text('Yes, our pediatrician approved it.'),
+        findsOneWidget,
+      );
     },
   );
 
   testWidgets(
-    'tapping a card advances the counter 1/5 -> 2/5 -> 3/5 -> 4/5 -> 5/5',
+    'tapping a card alone does NOT advance; Next CTA advances 1/6 -> 2/6',
     (tester) async {
       final container = ProviderContainer();
       addTearDown(container.dispose);
@@ -97,12 +114,65 @@ void main() {
 
       await pumpReadiness(tester, container: container);
 
-      for (var i = 1; i <= 5; i++) {
-        expect(find.text('$i of 5 Questions'), findsOneWidget);
-        if (i == 5) break;
-        await tester.tap(find.byKey(const Key('readiness_choice_yes')));
-        await tester.pumpAndSettle();
-      }
+      // Tap the Yes card — selection is captured but counter stays put.
+      await tester.tap(find.byKey(const Key('readiness_choice_yes')));
+      await tester.pumpAndSettle();
+      expect(find.text('1 of 6 Questions'), findsOneWidget);
+
+      // Next CTA advances.
+      await tester.tap(find.byKey(const Key('onboarding_readiness_next')));
+      await tester.pumpAndSettle();
+      expect(find.text('2 of 6 Questions'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'Next is disabled until the user picks an answer on the active step',
+    (tester) async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      container.read(onboardingControllerProvider.notifier).updateName('Lily');
+
+      await pumpReadiness(tester, container: container);
+
+      // Tap Next without selecting — counter must stay at 1/6.
+      await tester.tap(find.byKey(const Key('onboarding_readiness_next')));
+      await tester.pumpAndSettle();
+      expect(find.text('1 of 6 Questions'), findsOneWidget);
+
+      // Now select + Next — counter advances.
+      await tester.tap(find.byKey(const Key('readiness_choice_yes')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('onboarding_readiness_next')));
+      await tester.pumpAndSettle();
+      expect(find.text('2 of 6 Questions'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'Yes on Q1 writes to pediatricianApproved; Yes on Q2 writes to '
+    'readinessAnswers[0] (length-5 sign list preserved for NIB-91 downstream)',
+    (tester) async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      container.read(onboardingControllerProvider.notifier).updateName('Lily');
+
+      await pumpReadiness(tester, container: container);
+
+      // Q1 -> Yes.
+      await tapYesAndAdvance(tester);
+
+      var state = container.read(onboardingControllerProvider);
+      expect(state.pediatricianApproved, isTrue);
+      // Sign list untouched.
+      expect(state.readinessAnswers, [null, null, null, null, null]);
+
+      // Q2 -> Yes (writes to readinessAnswers[0]).
+      await tapYesAndAdvance(tester);
+
+      state = container.read(onboardingControllerProvider);
+      expect(state.readinessAnswers[0], isTrue);
+      expect(state.readinessAnswers[1], isNull);
     },
   );
 
@@ -116,35 +186,33 @@ void main() {
 
       await pumpReadiness(tester, container: container);
 
-      // Step 1: tap Yes -> advances to step 2.
-      await tester.tap(find.byKey(const Key('readiness_choice_yes')));
-      await tester.pumpAndSettle();
-      expect(find.text('2 of 5 Questions'), findsOneWidget);
+      // Q1 (pediatrician): Yes -> Next.
+      await tapYesAndAdvance(tester);
+      expect(find.text('2 of 6 Questions'), findsOneWidget);
 
-      // Step 2: tap "Still figuring it out" -> advances to step 3.
+      // Q2 (head): "Still figuring it out" -> Next.
       await tester.tap(find.byKey(const Key('readiness_choice_unsure')));
       await tester.pumpAndSettle();
-      expect(find.text('3 of 5 Questions'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('onboarding_readiness_next')));
+      await tester.pumpAndSettle();
+      expect(find.text('3 of 6 Questions'), findsOneWidget);
 
-      // Back twice -> we're at step 1, and the controller still holds
-      // both earlier answers.
+      // Back twice -> back at Q1; both earlier answers still on state.
       await tester.tap(find.bySemanticsLabel('Back'));
       await tester.pumpAndSettle();
-      expect(find.text('2 of 5 Questions'), findsOneWidget);
+      expect(find.text('2 of 6 Questions'), findsOneWidget);
 
       await tester.tap(find.bySemanticsLabel('Back'));
       await tester.pumpAndSettle();
-      expect(find.text('1 of 5 Questions'), findsOneWidget);
+      expect(find.text('1 of 6 Questions'), findsOneWidget);
 
-      // Controller-level: answers list reflects both step taps, all later
-      // indices remain null.
-      final answers =
-          container.read(onboardingControllerProvider).readinessAnswers;
-      expect(answers[0], isTrue);
-      expect(answers[1], isFalse);
-      expect(answers[2], isNull);
-      expect(answers[3], isNull);
-      expect(answers[4], isNull);
+      final state = container.read(onboardingControllerProvider);
+      expect(state.pediatricianApproved, isTrue);
+      expect(state.readinessAnswers[0], isFalse);
+      expect(state.readinessAnswers[1], isNull);
+      expect(state.readinessAnswers[2], isNull);
+      expect(state.readinessAnswers[3], isNull);
+      expect(state.readinessAnswers[4], isNull);
     },
   );
 }

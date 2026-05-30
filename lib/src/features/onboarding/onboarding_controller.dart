@@ -30,6 +30,12 @@ class OnboardingController extends _$OnboardingController {
   // Readiness + result stages
   // ---------------------------------------------------------------------------
 
+  /// NIB-83 Q1 — pediatrician-approval gate. Captured separately from the
+  /// developmental-sign answers; not counted toward `signs_met`.
+  void setPediatricianApproved({required bool approved}) {
+    state = state.copyWith(pediatricianApproved: approved);
+  }
+
   void setReadinessAnswers(List<bool?> answers) {
     state = state.copyWith(
       readinessAnswers: List<bool?>.unmodifiable(answers),

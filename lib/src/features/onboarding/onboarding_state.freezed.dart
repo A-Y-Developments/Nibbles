@@ -19,6 +19,9 @@ final _privateConstructorUsedError = UnsupportedError(
 mixin _$OnboardingState {
   BabyNameInput get babyName => throw _privateConstructorUsedError;
   DateTime? get dob =>
+      throw _privateConstructorUsedError; // NIB-83 Q1 gate. Null = not answered yet, true = pediatrician approved,
+  // false = unsure. Not counted toward `signs_met` — see the result screen.
+  bool? get pediatricianApproved =>
       throw _privateConstructorUsedError; // Seeded as a length-5 nullable list so the readiness screen can index
   // safely on first build; kept in sync with [readinessQuestionCount].
   List<bool?> get readinessAnswers => throw _privateConstructorUsedError;
@@ -44,6 +47,7 @@ abstract class $OnboardingStateCopyWith<$Res> {
   $Res call({
     BabyNameInput babyName,
     DateTime? dob,
+    bool? pediatricianApproved,
     List<bool?> readinessAnswers,
     bool readinessReady,
     bool consentAccepted,
@@ -69,6 +73,7 @@ class _$OnboardingStateCopyWithImpl<$Res, $Val extends OnboardingState>
   $Res call({
     Object? babyName = null,
     Object? dob = freezed,
+    Object? pediatricianApproved = freezed,
     Object? readinessAnswers = null,
     Object? readinessReady = null,
     Object? consentAccepted = null,
@@ -85,6 +90,10 @@ class _$OnboardingStateCopyWithImpl<$Res, $Val extends OnboardingState>
                 ? _value.dob
                 : dob // ignore: cast_nullable_to_non_nullable
                       as DateTime?,
+            pediatricianApproved: freezed == pediatricianApproved
+                ? _value.pediatricianApproved
+                : pediatricianApproved // ignore: cast_nullable_to_non_nullable
+                      as bool?,
             readinessAnswers: null == readinessAnswers
                 ? _value.readinessAnswers
                 : readinessAnswers // ignore: cast_nullable_to_non_nullable
@@ -123,6 +132,7 @@ abstract class _$$OnboardingStateImplCopyWith<$Res>
   $Res call({
     BabyNameInput babyName,
     DateTime? dob,
+    bool? pediatricianApproved,
     List<bool?> readinessAnswers,
     bool readinessReady,
     bool consentAccepted,
@@ -147,6 +157,7 @@ class __$$OnboardingStateImplCopyWithImpl<$Res>
   $Res call({
     Object? babyName = null,
     Object? dob = freezed,
+    Object? pediatricianApproved = freezed,
     Object? readinessAnswers = null,
     Object? readinessReady = null,
     Object? consentAccepted = null,
@@ -163,6 +174,10 @@ class __$$OnboardingStateImplCopyWithImpl<$Res>
             ? _value.dob
             : dob // ignore: cast_nullable_to_non_nullable
                   as DateTime?,
+        pediatricianApproved: freezed == pediatricianApproved
+            ? _value.pediatricianApproved
+            : pediatricianApproved // ignore: cast_nullable_to_non_nullable
+                  as bool?,
         readinessAnswers: null == readinessAnswers
             ? _value._readinessAnswers
             : readinessAnswers // ignore: cast_nullable_to_non_nullable
@@ -194,6 +209,7 @@ class _$OnboardingStateImpl implements _OnboardingState {
   const _$OnboardingStateImpl({
     this.babyName = const BabyNameInput.pure(),
     this.dob,
+    this.pediatricianApproved,
     final List<bool?> readinessAnswers = const <bool?>[
       null,
       null,
@@ -212,6 +228,10 @@ class _$OnboardingStateImpl implements _OnboardingState {
   final BabyNameInput babyName;
   @override
   final DateTime? dob;
+  // NIB-83 Q1 gate. Null = not answered yet, true = pediatrician approved,
+  // false = unsure. Not counted toward `signs_met` — see the result screen.
+  @override
+  final bool? pediatricianApproved;
   // Seeded as a length-5 nullable list so the readiness screen can index
   // safely on first build; kept in sync with [readinessQuestionCount].
   final List<bool?> _readinessAnswers;
@@ -240,7 +260,7 @@ class _$OnboardingStateImpl implements _OnboardingState {
 
   @override
   String toString() {
-    return 'OnboardingState(babyName: $babyName, dob: $dob, readinessAnswers: $readinessAnswers, readinessReady: $readinessReady, consentAccepted: $consentAccepted, isSubmitting: $isSubmitting, submitErrorMessage: $submitErrorMessage)';
+    return 'OnboardingState(babyName: $babyName, dob: $dob, pediatricianApproved: $pediatricianApproved, readinessAnswers: $readinessAnswers, readinessReady: $readinessReady, consentAccepted: $consentAccepted, isSubmitting: $isSubmitting, submitErrorMessage: $submitErrorMessage)';
   }
 
   @override
@@ -251,6 +271,8 @@ class _$OnboardingStateImpl implements _OnboardingState {
             (identical(other.babyName, babyName) ||
                 other.babyName == babyName) &&
             (identical(other.dob, dob) || other.dob == dob) &&
+            (identical(other.pediatricianApproved, pediatricianApproved) ||
+                other.pediatricianApproved == pediatricianApproved) &&
             const DeepCollectionEquality().equals(
               other._readinessAnswers,
               _readinessAnswers,
@@ -270,6 +292,7 @@ class _$OnboardingStateImpl implements _OnboardingState {
     runtimeType,
     babyName,
     dob,
+    pediatricianApproved,
     const DeepCollectionEquality().hash(_readinessAnswers),
     readinessReady,
     consentAccepted,
@@ -293,6 +316,7 @@ abstract class _OnboardingState implements OnboardingState {
   const factory _OnboardingState({
     final BabyNameInput babyName,
     final DateTime? dob,
+    final bool? pediatricianApproved,
     final List<bool?> readinessAnswers,
     final bool readinessReady,
     final bool consentAccepted,
@@ -303,7 +327,10 @@ abstract class _OnboardingState implements OnboardingState {
   @override
   BabyNameInput get babyName;
   @override
-  DateTime? get dob; // Seeded as a length-5 nullable list so the readiness screen can index
+  DateTime? get dob; // NIB-83 Q1 gate. Null = not answered yet, true = pediatrician approved,
+  // false = unsure. Not counted toward `signs_met` — see the result screen.
+  @override
+  bool? get pediatricianApproved; // Seeded as a length-5 nullable list so the readiness screen can index
   // safely on first build; kept in sync with [readinessQuestionCount].
   @override
   List<bool?> get readinessAnswers;
