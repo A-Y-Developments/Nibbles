@@ -7,9 +7,9 @@ import 'package:nibbles/src/features/starting_guide/widgets/baby_face_glyph.dart
 
 /// Article card rendered on the Starting Guide hub list.
 ///
-/// White surface, rounded-2xl, soft card shadow, with a butter-tinted glyph,
-/// title, subtitle, and a trailing chevron — mirrors the kit's interactive
-/// list card pattern.
+/// White surface, rounded-2xl, soft card shadow, with a green-deep glyph
+/// (kit `.tip__ico`), title, subtitle, and a trailing chevron — mirrors the
+/// kit's interactive list card pattern.
 class ArticleCard extends StatelessWidget {
   const ArticleCard({
     required this.article,
