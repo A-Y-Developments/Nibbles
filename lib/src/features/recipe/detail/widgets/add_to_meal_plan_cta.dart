@@ -4,7 +4,7 @@ import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
 
 /// Sticky bottom CTA used on the recipe detail screen — a single full-width
-/// green pill button that opens the existing `AddToMealPlanSheet`.
+/// green pill button that opens the multi-day Add-to-Meal-Plan sheet.
 ///
 /// Wrapped in a white surface with a subtle top divider so it floats above
 /// the scrollable content. Bottom inset is added so the button clears the

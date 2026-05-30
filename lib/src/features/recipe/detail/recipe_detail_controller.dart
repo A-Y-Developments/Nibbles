@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/domain/entities/allergen_log.dart';
+import 'package:nibbles/src/common/domain/entities/meal_plan_entry.dart';
 import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
 import 'package:nibbles/src/common/services/allergen_service.dart';
 import 'package:nibbles/src/common/services/meal_plan_service.dart';
@@ -49,20 +49,41 @@ class RecipeDetailController extends _$RecipeDetailController {
     );
   }
 
-  /// Assigns this recipe to a meal plan date, with optional meal time.
-  /// Fires analytics on success.
-  Future<Result<void>> assignToMealPlan(
-    DateTime date, {
-    TimeOfDay? time,
-  }) async {
+  /// Bulk-assigns this recipe to every date in [dates] via a single
+  /// `appendMealsToRange` call.
+  ///
+  /// Builds a list of [RecipeAssignment] with `dayOffset` relative to the
+  /// earliest date in [dates] (the window's `startDate`). Fires analytics
+  /// once on success regardless of day count.
+  Future<Result<List<MealPlanEntry>>> assignToMealPlan(
+    Set<DateTime> dates,
+  ) async {
     final current = state.valueOrNull;
     if (current == null) return const Result.failure(UnknownException());
+    if (dates.isEmpty) return const Result.success(<MealPlanEntry>[]);
 
     state = AsyncData(current.copyWith(isAddingToMealPlan: true));
 
+    final normalized = dates.map(_dateOnly).toList()..sort();
+    final start = normalized.first;
+    final end = normalized.last;
+    final assignments = normalized
+        .map(
+          (d) => RecipeAssignment(
+            recipeId: recipeId,
+            dayOffset: d.difference(start).inDays,
+          ),
+        )
+        .toList();
+
     final result = await ref
         .read(mealPlanServiceProvider)
-        .assignRecipe(babyId, recipeId, date, mealTime: time);
+        .appendMealsToRange(
+          babyId: babyId,
+          startDate: start,
+          endDate: end,
+          assignments: assignments,
+        );
 
     state = AsyncData(current.copyWith(isAddingToMealPlan: false));
 
@@ -87,4 +108,6 @@ class RecipeDetailController extends _$RecipeDetailController {
     state = AsyncData(current.copyWith(isAddingToShoppingList: false));
     return result;
   }
+
+  static DateTime _dateOnly(DateTime dt) => DateTime(dt.year, dt.month, dt.day);
 }

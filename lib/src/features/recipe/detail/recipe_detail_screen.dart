@@ -127,17 +127,17 @@ class _RecipeContentState extends ConsumerState<_RecipeContent> {
   bool _showSuccessBanner = false;
 
   Future<void> _handleAddToMealPlan() async {
-    final result = await showAddToMealPlanFlow(context);
-    if (result == null) return;
+    final dates = await showAddToMealPlanSheet(
+      context,
+      babyId: widget.babyId,
+    );
+    if (dates == null || dates.isEmpty) return;
     if (!mounted) return;
 
     final controller = ref.read(
       recipeDetailControllerProvider(widget.babyId, widget.recipeId).notifier,
     );
-    final addResult = await controller.assignToMealPlan(
-      result.date,
-      time: result.time,
-    );
+    final addResult = await controller.assignToMealPlan(dates);
 
     if (!mounted) return;
 
