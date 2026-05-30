@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
+import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/brand/quatrefoil.dart';
 import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
 import 'package:nibbles/src/features/meal_plan/widgets/inline_calendar.dart';
@@ -114,17 +115,17 @@ class _MealPlanEmptyStateState extends State<MealPlanEmptyState> {
             // flower illustration if/when Figma exports one.
             const Center(child: Quatrefoil()),
             const SizedBox(height: AppSizes.md),
-            Text(
+            const Text(
               'Ready to start?',
               textAlign: TextAlign.center,
-              style: theme.textTheme.displaySmall,
+              style: AppTypography.emptyStateTitle,
             ),
             const SizedBox(height: AppSizes.sm),
             Text(
               "Pick a start and end date to plan ${widget.babyName}'s meals.",
               textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: AppColors.fgMuted,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: AppColors.fgFaint,
               ),
             ),
             const SizedBox(height: AppSizes.xl),
@@ -210,7 +211,7 @@ class _DateField extends StatelessWidget {
       children: [
         Text(
           label,
-          style: theme.textTheme.bodyMedium?.copyWith(
+          style: theme.textTheme.labelMedium?.copyWith(
             fontWeight: FontWeight.w700,
             color: AppColors.fgStrong,
           ),
@@ -223,7 +224,7 @@ class _DateField extends StatelessWidget {
             duration: const Duration(milliseconds: 120),
             height: AppSizes.fieldHeight,
             padding: const EdgeInsets.symmetric(
-              horizontal: AppSizes.md - 2,
+              horizontal: AppSizes.fieldPaddingH,
             ),
             decoration: BoxDecoration(
               color: isOpen ? AppColors.surface : AppColors.bgInput,
@@ -235,7 +236,7 @@ class _DateField extends StatelessWidget {
               boxShadow: isOpen
                   ? [
                       BoxShadow(
-                        color: AppColors.green.withValues(alpha: 0.18),
+                        color: AppColors.green.withValues(alpha: 0.15),
                         spreadRadius: 3,
                       ),
                     ]
