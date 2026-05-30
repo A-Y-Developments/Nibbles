@@ -18,6 +18,11 @@ part 'recipe_library_state.freezed.dart';
 /// whose `allergenTags` intersect with a baby's flagged-allergen set.
 ///
 /// [isStartingGuideSeen] gates the first-launch 'Read Guide' banner.
+///
+/// [searchQuery] is the trimmed search input from the header pill. When
+/// non-empty the screen collapses category rows into a flat
+/// `RecipeSearchResults` list driven by [filteredRecipes]; when empty
+/// the category-rows layout is restored.
 @freezed
 class RecipeLibraryState with _$RecipeLibraryState {
   const factory RecipeLibraryState({
@@ -25,5 +30,28 @@ class RecipeLibraryState with _$RecipeLibraryState {
     String? ongoingAllergenKey,
     @Default(<String>{}) Set<String> flaggedAllergenKeys,
     @Default(false) bool isStartingGuideSeen,
+    @Default('') String searchQuery,
   }) = _RecipeLibraryState;
+
+  const RecipeLibraryState._();
+
+  /// Flat, deduped list of recipes across every category. Iteration order
+  /// follows the insertion order of [recipesByCategory].
+  List<Recipe> get _allRecipes =>
+      recipesByCategory.values.expand((rs) => rs).toSet().toList();
+
+  /// Recipes matching [searchQuery] (case-insensitive contains) against
+  /// the recipe title or any `nutritionTags` entry. Returns an empty list
+  /// when [searchQuery] is empty.
+  List<Recipe> get filteredRecipes {
+    final q = searchQuery.toLowerCase();
+    if (q.isEmpty) return const [];
+    return _allRecipes
+        .where(
+          (r) =>
+              r.title.toLowerCase().contains(q) ||
+              r.nutritionTags.any((t) => t.toLowerCase().contains(q)),
+        )
+        .toList();
+  }
 }

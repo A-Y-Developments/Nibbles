@@ -69,4 +69,16 @@ class RecipeLibraryController extends _$RecipeLibraryController {
     state = AsyncData(current.copyWith(isStartingGuideSeen: true));
     await ref.read(localFlagServiceProvider).markStartingGuideSeen();
   }
+
+  /// Updates the active search query. The query is trimmed; a non-empty
+  /// query collapses the screen into the search-results view, an empty one
+  /// restores the category-rows layout. Filtering itself lives on
+  /// [RecipeLibraryState.filteredRecipes].
+  void setSearchQuery(String query) {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    final trimmed = query.trim();
+    if (trimmed == current.searchQuery) return;
+    state = AsyncData(current.copyWith(searchQuery: trimmed));
+  }
 }
