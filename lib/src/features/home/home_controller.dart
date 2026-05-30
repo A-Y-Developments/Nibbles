@@ -1,115 +1,60 @@
-import 'dart:math';
-
-import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
-import 'package:nibbles/src/common/domain/entities/allergen_board_item.dart';
 import 'package:nibbles/src/common/domain/entities/meal_plan_entry.dart';
-import 'package:nibbles/src/common/domain/entities/recipe.dart';
-import 'package:nibbles/src/common/domain/enums/allergen_program_status.dart';
 import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
 import 'package:nibbles/src/common/services/allergen_service.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/common/services/meal_plan_service.dart';
-import 'package:nibbles/src/common/services/recipe_service.dart';
 import 'package:nibbles/src/features/home/home_state.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'home_controller.g.dart';
 
+/// NIB-86: Redesigned Home dashboard controller.
+///
+/// Parallel-fetches:
+///  1. The current baby profile (NIB-65 header + greeting).
+///  2. Per-allergen derived statuses (NIB-126).
+///  3. Rolling-7 meal plan entries (NIB-59), filtered to today.
+///
+/// A missing baby is NOT an error — the screen renders the full empty-state
+/// placeholder. Allergen or meal-plan fetch failures throw via the existing
+/// pattern and surface as `AsyncValue.error`.
 @riverpod
 class HomeController extends _$HomeController {
   @override
   Future<HomeState> build(String babyId) async {
-    final baby = await ref.read(babyProfileServiceProvider).getBaby();
-    if (baby == null) throw const UnknownException('Baby profile not found.');
-
-    final recipeService = ref.read(recipeServiceProvider);
-
-    final programResult = await ref
+    final babyFut = ref.read(babyProfileServiceProvider).getBaby();
+    final statusesFut = ref
         .read(allergenServiceProvider)
-        .getProgramState(babyId);
-    if (programResult.isFailure) throw programResult.errorOrNull!;
-    final programState = programResult.dataOrNull!;
+        .getAllergenStatuses(babyId);
+    final mealsFut = ref.read(mealPlanServiceProvider).getRolling7(babyId);
 
-    final flaggedResult = await recipeService.getFlaggedAllergenKeys(babyId);
-    final flaggedKeys = flaggedResult.dataOrNull ?? <String>{};
+    final baby = await babyFut;
+    final statusesResult = await statusesFut;
+    final mealsResult = await mealsFut;
 
-    // Get today's meals from this week's plan
+    if (baby == null) {
+      // Empty-state path: no baby yet — surface a successful, empty state so
+      // the screen can render the empty-state placeholder rather than an error.
+      return const HomeState();
+    }
+
+    if (statusesResult.isFailure) throw statusesResult.errorOrNull!;
+    if (mealsResult.isFailure) throw mealsResult.errorOrNull!;
+
+    final statuses =
+        statusesResult.dataOrNull ?? const <String, AllergenStatus>{};
+    final rolling = mealsResult.dataOrNull ?? const <MealPlanEntry>[];
+
     final today = DateTime.now();
-    final weekStart = today.subtract(Duration(days: today.weekday % 7));
-    var todayMeals = <MealPlanEntry>[];
-    final todayRecipes = <Recipe>[];
-    final weekMealsResult = await ref
-        .read(mealPlanServiceProvider)
-        .getWeekMeals(babyId, weekStart);
-    if (weekMealsResult.isSuccess) {
-      todayMeals = weekMealsResult.dataOrNull!
-          .where((MealPlanEntry e) => _isSameDay(e.planDate, today))
-          .toList();
-      for (final meal in todayMeals) {
-        final recipeResult = await recipeService.getRecipeById(meal.recipeId);
-        if (recipeResult.dataOrNull != null) {
-          todayRecipes.add(recipeResult.dataOrNull!);
-        }
-      }
-    }
-
-    AllergenBoardItem? currentBoardItem;
-    var recommendations = <Recipe>[];
-    var generalRecommendations = <Recipe>[];
-
-    if (programState.status != AllergenProgramStatus.completed) {
-      final boardResult = await ref
-          .read(allergenServiceProvider)
-          .getAllergenBoardSummary(babyId);
-      if (boardResult.isSuccess) {
-        currentBoardItem = boardResult.dataOrNull!
-            .where(
-              (AllergenBoardItem item) =>
-                  item.allergen.key == programState.currentAllergenKey,
-            )
-            .firstOrNull;
-      }
-
-      final isAllergenDone =
-          currentBoardItem?.status == AllergenStatus.safe ||
-          currentBoardItem?.status == AllergenStatus.flagged;
-
-      if (isAllergenDone) {
-        final recsResult = await recipeService.getGeneralRecommendations(
-          babyId,
-        );
-        generalRecommendations = recsResult.dataOrNull ?? [];
-      } else {
-        final recsResult = await recipeService.getRecommendationsForAllergen(
-          programState.currentAllergenKey,
-          babyId,
-        );
-        recommendations = recsResult.dataOrNull ?? [];
-
-        // Also fetch randomised general recommendations shown below the
-        // allergen-specific strip when the allergen is still in progress.
-        final allResult = await recipeService.getAllRecipes(babyId);
-        if (allResult.isSuccess) {
-          final all = List<Recipe>.from(allResult.dataOrNull!)
-            ..shuffle(Random());
-          generalRecommendations = all.take(10).toList();
-        }
-      }
-    }
+    final todaysMeals = rolling
+        .where((e) => _isSameDay(e.planDate, today))
+        .toList(growable: false);
 
     return HomeState(
       baby: baby,
-      programState: programState,
-      currentAllergenBoardItem: currentBoardItem,
-      todayMeals: todayMeals,
-      todayRecipes: todayRecipes,
-      recommendations: recommendations,
-      isGeneralRecommendations:
-          currentBoardItem?.status == AllergenStatus.safe ||
-          currentBoardItem?.status == AllergenStatus.flagged,
-      generalRecommendations: generalRecommendations,
-      flaggedAllergenKeys: flaggedKeys,
+      allergenStatuses: statuses,
+      todaysMeals: todaysMeals,
     );
   }
 }

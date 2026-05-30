@@ -1,23 +1,59 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:nibbles/src/common/domain/entities/allergen_board_item.dart';
-import 'package:nibbles/src/common/domain/entities/allergen_program_state.dart';
 import 'package:nibbles/src/common/domain/entities/baby.dart';
 import 'package:nibbles/src/common/domain/entities/meal_plan_entry.dart';
-import 'package:nibbles/src/common/domain/entities/recipe.dart';
+import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
 
 part 'home_state.freezed.dart';
 
+/// Reshaped per NIB-86 (NIB-120 Home redesign):
+///
+/// - `baby`: nullable so empty-state can render without throwing.
+/// - `allergenStatuses`: derived per-allergen statuses (NIB-126). Always
+///   contains all 9 canonical keys.
+/// - `todaysMeals`: rolling-7 entries (NIB-59) filtered to today.
+///
+/// Legacy fields (`programState`, `recommendations`, `todayRecipes`,
+/// `currentAllergenBoardItem`, `isGeneralRecommendations`,
+/// `generalRecommendations`, `flaggedAllergenKeys`) are dropped — no remaining
+/// consumers exist after the `home_screen` rewrite.
 @freezed
 class HomeState with _$HomeState {
   const factory HomeState({
-    required Baby baby,
-    required AllergenProgramState programState,
-    required List<Recipe> recommendations,
-    AllergenBoardItem? currentAllergenBoardItem,
-    @Default([]) List<MealPlanEntry> todayMeals,
-    @Default([]) List<Recipe> todayRecipes,
-    @Default(false) bool isGeneralRecommendations,
-    @Default([]) List<Recipe> generalRecommendations,
-    @Default(<String>{}) Set<String> flaggedAllergenKeys,
+    Baby? baby,
+    @Default(<String, AllergenStatus>{})
+    Map<String, AllergenStatus> allergenStatuses,
+    @Default(<MealPlanEntry>[]) List<MealPlanEntry> todaysMeals,
   }) = _HomeState;
+
+  const HomeState._();
+
+  /// Count of allergens in [AllergenStatus.safe].
+  int get safeCount =>
+      allergenStatuses.values.where((s) => s == AllergenStatus.safe).length;
+
+  /// Count of allergens in [AllergenStatus.flagged].
+  int get flaggedCount =>
+      allergenStatuses.values.where((s) => s == AllergenStatus.flagged).length;
+
+  /// Count of allergens in [AllergenStatus.notStarted].
+  int get notStartedCount => allergenStatuses.values
+      .where((s) => s == AllergenStatus.notStarted)
+      .length;
+
+  /// Count of allergens currently being introduced.
+  int get inProgressCount => allergenStatuses.values
+      .where((s) => s == AllergenStatus.inProgress)
+      .length;
+
+  /// Today's meal count.
+  int get todayMealCount => todaysMeals.length;
+
+  /// True when the baby exists but has zero allergen logs (everything still
+  /// [AllergenStatus.notStarted]) and no meals planned. Drives the full
+  /// empty-state placeholder.
+  bool get hasNoActivity =>
+      todayMealCount == 0 &&
+      safeCount == 0 &&
+      flaggedCount == 0 &&
+      inProgressCount == 0;
 }

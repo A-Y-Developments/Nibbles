@@ -4,37 +4,26 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
-import 'package:nibbles/src/common/domain/entities/allergen.dart';
-import 'package:nibbles/src/common/domain/entities/allergen_board_item.dart';
-import 'package:nibbles/src/common/domain/entities/allergen_program_state.dart';
 import 'package:nibbles/src/common/domain/entities/baby.dart';
 import 'package:nibbles/src/common/domain/entities/meal_plan_entry.dart';
-import 'package:nibbles/src/common/domain/entities/recipe.dart';
-import 'package:nibbles/src/common/domain/enums/allergen_program_status.dart';
 import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
 import 'package:nibbles/src/common/domain/enums/gender.dart';
 import 'package:nibbles/src/common/services/allergen_service.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/common/services/meal_plan_service.dart';
-import 'package:nibbles/src/common/services/recipe_service.dart';
 import 'package:nibbles/src/features/home/home_screen.dart';
-import 'package:nibbles/src/routing/route_enums.dart';
 
 // ---------------------------------------------------------------------------
-// Mocks
+// NIB-86: render-smoke tests only. The home screen now delegates to placeholder
+// widgets (NIB-65 / NIB-77 / NIB-96 will implement). NIB-111 owns the full
+// widget test suite once the leaf widgets land.
 // ---------------------------------------------------------------------------
 
-class MockBabyProfileService extends Mock implements BabyProfileService {}
+class _MockBabyProfileService extends Mock implements BabyProfileService {}
 
-class MockAllergenService extends Mock implements AllergenService {}
+class _MockAllergenService extends Mock implements AllergenService {}
 
-class MockMealPlanService extends Mock implements MealPlanService {}
-
-class MockRecipeService extends Mock implements RecipeService {}
-
-// ---------------------------------------------------------------------------
-// Fixtures
-// ---------------------------------------------------------------------------
+class _MockMealPlanService extends Mock implements MealPlanService {}
 
 const _babyId = 'baby-001';
 
@@ -47,288 +36,58 @@ final _fakeBaby = Baby(
   onboardingCompleted: true,
 );
 
-const _peanutAllergen = Allergen(
-  key: 'peanut',
-  name: 'Peanut',
-  sequenceOrder: 1,
-  emoji: '🥜',
-);
-
-AllergenBoardItem _makeBoardItem({
-  AllergenStatus status = AllergenStatus.inProgress,
-}) => AllergenBoardItem(
-  allergen: _peanutAllergen,
-  logs: const [],
-  status: status,
-);
-
-AllergenProgramState _makeProgramState({
-  AllergenProgramStatus status = AllergenProgramStatus.inProgress,
-  String currentKey = 'peanut',
-  int currentOrder = 1,
-}) {
-  final now = DateTime.now();
-  return AllergenProgramState(
-    id: 'ps-1',
-    babyId: _babyId,
-    currentAllergenKey: currentKey,
-    currentSequenceOrder: currentOrder,
-    status: status,
-    createdAt: now,
-    updatedAt: now,
-  );
-}
-
-const _fakeRecipe = Recipe(
-  id: 'recipe-001',
-  title: 'Peanut Butter Toast',
-  ageRange: '6m+',
-  allergenTags: ['peanut'],
-  ingredients: [],
-  steps: [],
-  howToServe: 'Serve mashed.',
-);
-
-MealPlanEntry get _todayMeal => MealPlanEntry(
-  id: 'mp-001',
-  babyId: _babyId,
-  recipeId: 'recipe-001',
-  planDate: DateTime.now(),
-);
-
-// ---------------------------------------------------------------------------
-// Router + widget helper
-// ---------------------------------------------------------------------------
-
-GoRouter _routerFor(Widget screen) => GoRouter(
-  initialLocation: '/',
-  routes: [
-    GoRoute(path: '/', builder: (_, __) => screen),
-    GoRoute(
-      path: AppRoute.profile.path,
-      name: AppRoute.profile.name,
-      builder: (_, __) => const Scaffold(body: Text('Profile')),
-    ),
-    GoRoute(
-      path: AppRoute.recipeLibrary.path,
-      name: AppRoute.recipeLibrary.name,
-      builder: (_, __) => const Scaffold(body: Text('Recipes')),
-    ),
-    GoRoute(
-      path: '/home/recipes/:recipeId',
-      name: AppRoute.recipeDetail.name,
-      builder: (_, __) => const Scaffold(body: Text('Recipe Detail')),
-    ),
-    GoRoute(
-      path: AppRoute.shoppingList.path,
-      name: AppRoute.shoppingList.name,
-      builder: (_, __) => const Scaffold(body: Text('Shopping List')),
-    ),
-  ],
-);
-
-Widget _wrap(Widget screen, List<Override> overrides) => ProviderScope(
+Widget _wrap(List<Override> overrides) => ProviderScope(
   overrides: overrides,
-  child: MaterialApp.router(routerConfig: _routerFor(screen)),
+  child: MaterialApp.router(
+    routerConfig: GoRouter(
+      initialLocation: '/',
+      routes: [GoRoute(path: '/', builder: (_, __) => const HomeScreen())],
+    ),
+  ),
 );
-
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
 
 void main() {
-  late MockBabyProfileService mockBabyService;
-  late MockAllergenService mockAllergenService;
-  late MockMealPlanService mockMealPlanService;
-  late MockRecipeService mockRecipeService;
+  late _MockBabyProfileService mockBabyService;
+  late _MockAllergenService mockAllergenService;
+  late _MockMealPlanService mockMealPlanService;
 
   setUp(() {
-    mockBabyService = MockBabyProfileService();
-    mockAllergenService = MockAllergenService();
-    mockMealPlanService = MockMealPlanService();
-    mockRecipeService = MockRecipeService();
+    mockBabyService = _MockBabyProfileService();
+    mockAllergenService = _MockAllergenService();
+    mockMealPlanService = _MockMealPlanService();
   });
 
   List<Override> buildOverrides() => [
     babyProfileServiceProvider.overrideWithValue(mockBabyService),
     allergenServiceProvider.overrideWithValue(mockAllergenService),
     mealPlanServiceProvider.overrideWithValue(mockMealPlanService),
-    recipeServiceProvider.overrideWithValue(mockRecipeService),
   ];
 
-  /// Stubs the minimum service calls required for the home controller to build.
-  void stubCommon({
-    required AllergenProgramState programState,
-    List<Recipe> recommendations = const [],
-    List<MealPlanEntry> weekMeals = const [],
-    Recipe? recipeForMeal,
-    AllergenBoardItem? boardItem,
-  }) {
+  testWidgets('renders without errors when baby + services resolve', (
+    tester,
+  ) async {
     when(() => mockBabyService.getBaby()).thenAnswer((_) async => _fakeBaby);
-    when(
-      () => mockAllergenService.getProgramState(_babyId),
-    ).thenAnswer((_) async => Result.success(programState));
-    when(
-      () => mockMealPlanService.getWeekMeals(_babyId, any()),
-    ).thenAnswer((_) async => Result.success(weekMeals));
-    when(
-      () => mockRecipeService.getFlaggedAllergenKeys(any()),
-    ).thenAnswer((_) async => const Result.success(<String>{}));
-    if (recipeForMeal != null) {
-      when(
-        () => mockRecipeService.getRecipeById(any()),
-      ).thenAnswer((_) async => Result.success(recipeForMeal));
-    }
-    if (programState.status != AllergenProgramStatus.completed) {
-      when(
-        () => mockAllergenService.getAllergenBoardSummary(_babyId),
-      ).thenAnswer(
-        (_) async => Result.success([boardItem ?? _makeBoardItem()]),
-      );
-      when(
-        () => mockRecipeService.getRecommendationsForAllergen(any(), _babyId),
-      ).thenAnswer((_) async => Result.success(recommendations));
-      when(
-        () => mockRecipeService.getAllRecipes(any()),
-      ).thenAnswer((_) async => Result.success(recommendations));
-    }
-  }
-
-  // -------------------------------------------------------------------------
-  // State A: active, not logged today
-  // -------------------------------------------------------------------------
-
-  testWidgets(
-    'State A — allergen emoji, name, Day X/3 and Log Food button shown',
-    (tester) async {
-      stubCommon(programState: _makeProgramState());
-
-      await tester.pumpWidget(_wrap(const HomeScreen(), buildOverrides()));
-      await tester.pumpAndSettle();
-
-      expect(find.text('🥜'), findsWidgets);
-      expect(find.text('Peanut'), findsOneWidget);
-      expect(find.textContaining('of 3 exposures logged'), findsOneWidget);
-      expect(find.byKey(const Key('log_food_button')), findsOneWidget);
-    },
-  );
-
-  // -------------------------------------------------------------------------
-  // State B: program complete
-  // -------------------------------------------------------------------------
-
-  testWidgets(
-    'State C — completion banner shown, allergen widget and strip absent',
-    (tester) async {
-      stubCommon(
-        programState: _makeProgramState(
-          status: AllergenProgramStatus.completed,
-        ),
-      );
-
-      await tester.pumpWidget(_wrap(const HomeScreen(), buildOverrides()));
-      await tester.pumpAndSettle();
-
-      expect(
-        find.textContaining('has completed the allergen program'),
-        findsOneWidget,
-      );
-      expect(find.byKey(const Key('log_food_button')), findsNothing);
-      expect(find.textContaining('Recommended for'), findsNothing);
-    },
-  );
-
-  // -------------------------------------------------------------------------
-  // No meal today
-  // -------------------------------------------------------------------------
-
-  testWidgets('No meal today — empty state copy and Plan a Meal CTA shown', (
-    tester,
-  ) async {
-    stubCommon(programState: _makeProgramState());
-
-    await tester.pumpWidget(_wrap(const HomeScreen(), buildOverrides()));
-    await tester.pumpAndSettle();
-
-    expect(
-      find.text('No meal planned for today. Add one to get started.'),
-      findsOneWidget,
+    when(() => mockAllergenService.getAllergenStatuses(_babyId)).thenAnswer(
+      (_) async => const Result.success(<String, AllergenStatus>{}),
     );
-    expect(find.text('Plan a Meal'), findsOneWidget);
-  });
-
-  // -------------------------------------------------------------------------
-  // With meal today
-  // -------------------------------------------------------------------------
-
-  testWidgets('With meal today — recipe name and allergen badge shown', (
-    tester,
-  ) async {
-    stubCommon(
-      programState: _makeProgramState(),
-      weekMeals: [_todayMeal],
-      recipeForMeal: _fakeRecipe,
+    when(() => mockMealPlanService.getRolling7(_babyId)).thenAnswer(
+      (_) async => const Result.success(<MealPlanEntry>[]),
     );
 
-    await tester.pumpWidget(_wrap(const HomeScreen(), buildOverrides()));
+    await tester.pumpWidget(_wrap(buildOverrides()));
     await tester.pumpAndSettle();
 
-    expect(find.text('Peanut Butter Toast'), findsOneWidget);
-    expect(find.textContaining('peanut'), findsWidgets);
+    expect(find.byType(HomeScreen), findsOneWidget);
   });
 
-  // -------------------------------------------------------------------------
-  // Recommendations strip visible
-  // -------------------------------------------------------------------------
+  testWidgets('renders empty state scaffold when no baby exists', (
+    tester,
+  ) async {
+    when(() => mockBabyService.getBaby()).thenAnswer((_) async => null);
 
-  testWidgets(
-    'Recommendations strip visible when program in progress and recipes exist',
-    (tester) async {
-      stubCommon(
-        programState: _makeProgramState(),
-        recommendations: [_fakeRecipe],
-      );
+    await tester.pumpWidget(_wrap(buildOverrides()));
+    await tester.pumpAndSettle();
 
-      await tester.pumpWidget(_wrap(const HomeScreen(), buildOverrides()));
-      await tester.pumpAndSettle();
-
-      expect(find.textContaining('Recommended for'), findsOneWidget);
-    },
-  );
-
-  // -------------------------------------------------------------------------
-  // Recommendations hidden — program complete
-  // -------------------------------------------------------------------------
-
-  testWidgets(
-    'Recommendations strip absent when allergen program is completed',
-    (tester) async {
-      stubCommon(
-        programState: _makeProgramState(
-          status: AllergenProgramStatus.completed,
-        ),
-      );
-
-      await tester.pumpWidget(_wrap(const HomeScreen(), buildOverrides()));
-      await tester.pumpAndSettle();
-
-      expect(find.textContaining('Recommended for'), findsNothing);
-    },
-  );
-
-  // -------------------------------------------------------------------------
-  // Recommendations hidden — no matching recipes
-  // -------------------------------------------------------------------------
-
-  testWidgets(
-    'Recommendations strip absent when no recipes match current allergen',
-    (tester) async {
-      stubCommon(programState: _makeProgramState());
-
-      await tester.pumpWidget(_wrap(const HomeScreen(), buildOverrides()));
-      await tester.pumpAndSettle();
-
-      expect(find.textContaining('Recommended for'), findsNothing);
-    },
-  );
+    expect(find.byType(HomeScreen), findsOneWidget);
+  });
 }
