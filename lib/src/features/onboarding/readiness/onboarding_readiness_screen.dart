@@ -11,42 +11,81 @@ import 'package:nibbles/src/features/onboarding/readiness/widgets/readiness_choi
 import 'package:nibbles/src/features/onboarding/readiness/widgets/readiness_progress_bar.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 
-/// Single-question copy for each of the 5 developmental signs. Index aligns
-/// with `readinessAnswers` on [OnboardingState].
+/// Total step count for the 6-screen NIB-83 readiness questionnaire (Q1
+/// pediatrician gate + Q2-Q6 developmental signs).
+const int _readinessTotalSteps = 1 + readinessQuestionCount;
+
+/// Per-step copy / option labels. Step 0 is the Q1 pediatrician gate;
+/// steps 1..5 align with `readinessAnswers[0..4]`.
 ///
-/// `{name}` is interpolated at build with the first token of
-/// `state.babyName.value` (falls back to "your baby" when empty so we never
-/// render a dangling possessive apostrophe).
-const List<_ReadinessQuestion> _questions = [
-  _ReadinessQuestion(
+/// Verbatim from the Linear ticket and the Figma audit
+/// (.figma-audit/onboarding/readiness-check-{1..6}). Double-space typos
+/// flagged by audit are normalized to a single space per the PO open
+/// question; the literal "Asther Lee" / "[Baby Name]" placeholder is
+/// interpolated with the baby's first name.
+const List<_ReadinessStep> _steps = [
+  // Q1 — pediatrician gate.
+  _ReadinessStep(
+    title: 'Is {name} ready for solids?',
+    body: 'Most babies are ready around 6 months, but every child is '
+        "different. Let's check key signs of readiness",
+    yesLabel: 'Yes, our pediatrician approved it.',
+    noLabel: "I'm not sure yet",
+  ),
+  // Q2 — head/neck control.
+  _ReadinessStep(
     title: 'Can {name} hold their head steady?',
-    icon: Icons.face_retouching_natural,
+    body: 'Good head and neck control (can hold head steady)',
+    yesLabel: 'Yes!',
+    noLabel: 'Still figuring it out',
   ),
-  _ReadinessQuestion(
+  // Q3 — sitting.
+  _ReadinessStep(
     title: 'Can {name} sit upright with minimal support?',
-    icon: Icons.airline_seat_recline_extra_rounded,
+    body: 'Sits upright with minimal support',
+    yesLabel: 'Yes!',
+    noLabel: 'Still figuring it out',
   ),
-  _ReadinessQuestion(
-    title: "Has {name}'s tongue-thrust reflex gone?",
-    icon: Icons.emoji_emotions_outlined,
+  // Q4 — tongue-thrust reflex.
+  _ReadinessStep(
+    title:
+        'Does {name} no longer automatically push food out with their tongue?',
+    body:
+        "Loss of the tongue-thrust reflex (doesn't automatically push food "
+        'out).',
+    yesLabel: 'Yes!',
+    noLabel: 'Still figuring it out',
   ),
-  _ReadinessQuestion(
+  // Q5 — food interest.
+  _ReadinessStep(
     title: 'Does {name} show interest in food?',
-    icon: Icons.restaurant_rounded,
+    body: 'Shows interest in food (watching, reaching, opening mouth).',
+    yesLabel: 'Yes!',
+    noLabel: 'Still figuring it out',
   ),
-  _ReadinessQuestion(
+  // Q6 — hand-to-mouth.
+  _ReadinessStep(
     title: 'Can {name} bring objects to their mouth?',
-    icon: Icons.front_hand_outlined,
+    body: 'Can bring objects to their mouth.',
+    yesLabel: 'Yes!',
+    noLabel: 'Still figuring it out',
   ),
 ];
 
-/// NIB-83 — Readiness questionnaire rebuilt as a 5-step stepper.
+/// NIB-83 — 6-screen readiness questionnaire with color-progressing bar.
 ///
-/// Each step renders one developmental-sign question + two large square cards
-/// ('Yes!' / 'Still figuring it out'). Tapping a card records the answer on
-/// the hoisted [OnboardingController] (keepAlive — back-nav preserves state)
-/// and auto-advances. After step 4 we set the readiness-done local flag and
-/// navigate to `/onboarding/result`.
+/// Q1 captures pediatrician approval on `OnboardingState.pediatricianApproved`
+/// (separate gate field). Q2-Q6 capture the 5 developmental signs on
+/// `readinessAnswers[0..4]` — this is what the result screen
+/// (NIB-91 / NIB-120) counts for the 3/5 majority gate. Splitting Q1 out
+/// keeps the downstream score math unchanged.
+///
+/// Each step renders title + body + two answer cards. Tapping a card stores
+/// the answer on the hoisted [OnboardingController] (keepAlive — back-nav
+/// preserves state) and arms the bottom `Next` CTA. Next advances; on the
+/// last step we set the readiness-done local flag and navigate to
+/// `/onboarding/result`. Back inside the stepper rewinds one question;
+/// back from Q1 pops the route.
 class OnboardingReadinessScreen extends ConsumerStatefulWidget {
   const OnboardingReadinessScreen({super.key});
 
@@ -61,15 +100,17 @@ class _OnboardingReadinessScreenState
 
   @override
   Widget build(BuildContext context) {
-    // Defensive: the screen depends on a fixed-length answer list. The state
-    // default seeds 5 nulls (matches `readinessQuestionCount`) — assert in
-    // debug so a future spec change in either place fails loudly.
+    // Defensive: keep the stepper and the seeded answer list in lock-step
+    // with the readiness-signs count.
     assert(
-      _questions.length == readinessQuestionCount,
-      'Readiness question count drifted from OnboardingState seed',
+      _steps.length == _readinessTotalSteps,
+      'Readiness step count drifted from Q1 gate + readinessQuestionCount',
     );
 
-    final answers = ref.watch(
+    final pediatricianApproved = ref.watch(
+      onboardingControllerProvider.select((s) => s.pediatricianApproved),
+    );
+    final signAnswers = ref.watch(
       onboardingControllerProvider.select((s) => s.readinessAnswers),
     );
     final babyNameRaw = ref.watch(
@@ -77,76 +118,102 @@ class _OnboardingReadinessScreenState
     );
     final textTheme = Theme.of(context).textTheme;
 
-    final question = _questions[_currentIndex];
-    final currentAnswer = answers[_currentIndex];
+    final step = _steps[_currentIndex];
     final firstName = _firstToken(babyNameRaw);
-    final title = question.title.replaceAll('{name}', firstName);
+    final title = step.title.replaceAll('{name}', firstName);
+    final currentAnswer = _answerForIndex(
+      _currentIndex,
+      pediatricianApproved: pediatricianApproved,
+      signAnswers: signAnswers,
+    );
+    final isNextEnabled = currentAnswer != null;
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        leadingWidth: AppSizes.roundButton + AppSizes.md,
-        leading: Padding(
-          padding: const EdgeInsets.only(left: AppSizes.md),
-          child: Center(
-            child: AppRoundButton(
-              icon: const Icon(Icons.arrow_back_rounded),
-              tone: AppRoundButtonTone.butter,
-              semanticLabel: 'Back',
-              onPressed: _onBack,
-            ),
-          ),
-        ),
-      ),
       body: SafeArea(
-        top: false,
         child: Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: AppSizes.pagePaddingH,
           ),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              ReadinessProgressBar(
-                stepCount: _questions.length,
-                currentIndex: _currentIndex,
+              const SizedBox(height: AppSizes.md),
+              Center(
+                child: Text(
+                  '${_currentIndex + 1} of $_readinessTotalSteps Questions',
+                  key: const Key('onboarding_readiness_counter'),
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: AppColors.fgStrong,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
               const SizedBox(height: AppSizes.sm),
-              Text(
-                '${_currentIndex + 1} of ${_questions.length} Questions',
-                style: textTheme.bodySmall?.copyWith(color: AppColors.fgMuted),
+              ReadinessProgressBar(
+                stepCount: _readinessTotalSteps,
+                currentIndex: _currentIndex,
               ),
               const SizedBox(height: AppSizes.xl),
-              Text(title, style: textTheme.displaySmall),
-              const SizedBox(height: AppSizes.xl),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: textTheme.titleLarge,
+              ),
+              const SizedBox(height: AppSizes.md),
+              Text(
+                step.body,
+                textAlign: TextAlign.center,
+                style: textTheme.bodyMedium?.copyWith(
+                  color: AppColors.fgMuted,
+                ),
+              ),
+              const SizedBox(height: AppSizes.lg),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: ReadinessChoiceCard(
                       key: const Key('readiness_choice_yes'),
-                      label: 'Yes!',
-                      icon: Icons.check_rounded,
+                      label: step.yesLabel,
                       selected: currentAnswer ?? false,
-                      onTap: () => _onAnswer(isYes: true),
+                      onTap: () => _recordAnswer(isYes: true),
                     ),
                   ),
                   const SizedBox(width: AppSizes.md),
                   Expanded(
                     child: ReadinessChoiceCard(
                       key: const Key('readiness_choice_unsure'),
-                      label: 'Still figuring it out',
-                      icon: Icons.help_outline_rounded,
-                      selected: !(currentAnswer ?? true),
-                      onTap: () => _onAnswer(isYes: false),
+                      label: step.noLabel,
+                      selected: currentAnswer == false,
+                      onTap: () => _recordAnswer(isYes: false),
                     ),
                   ),
                 ],
               ),
               const Spacer(),
-              const SizedBox(height: AppSizes.pagePaddingV),
+              Padding(
+                padding: const EdgeInsets.only(bottom: AppSizes.pagePaddingV),
+                child: Row(
+                  children: [
+                    AppRoundButton(
+                      key: const Key('onboarding_readiness_back'),
+                      icon: const Icon(Icons.arrow_back_rounded),
+                      tone: AppRoundButtonTone.butter,
+                      semanticLabel: 'Back',
+                      onPressed: _onBack,
+                    ),
+                    const SizedBox(width: AppSizes.sm),
+                    Expanded(
+                      child: AppPillButton(
+                        key: const Key('onboarding_readiness_next'),
+                        label: 'Next',
+                        onPressed: isNextEnabled ? _onNext : null,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
@@ -155,8 +222,7 @@ class _OnboardingReadinessScreenState
   }
 
   /// First whitespace-separated token of [raw], or "your baby" fallback when
-  /// the name has not been captured yet. Prevents dangling possessives like
-  /// "'s tongue-thrust reflex".
+  /// the name has not been captured yet. Prevents dangling possessives.
   String _firstToken(String raw) {
     final trimmed = raw.trim();
     if (trimmed.isEmpty) return 'your baby';
@@ -164,9 +230,35 @@ class _OnboardingReadinessScreenState
     return idx < 0 ? trimmed : trimmed.substring(0, idx);
   }
 
+  /// Reads the currently-stored answer for [index] from the right slot:
+  /// index 0 = pediatricianApproved, index 1..5 = readinessAnswers[0..4].
+  bool? _answerForIndex(
+    int index, {
+    required bool? pediatricianApproved,
+    required List<bool?> signAnswers,
+  }) {
+    if (index == 0) return pediatricianApproved;
+    final signIndex = index - 1;
+    if (signIndex < 0 || signIndex >= signAnswers.length) return null;
+    return signAnswers[signIndex];
+  }
+
+  /// Stores the answer on the controller. Step 0 hits the pediatrician gate
+  /// field; steps 1..5 write into readinessAnswers[index-1]. Selection alone
+  /// does not auto-advance — Next handles navigation.
+  void _recordAnswer({required bool isYes}) {
+    final controller = ref.read(onboardingControllerProvider.notifier);
+    if (_currentIndex == 0) {
+      controller.setPediatricianApproved(approved: isYes);
+      return;
+    }
+    controller.answerReadinessQuestion(_currentIndex - 1, isYes: isYes);
+  }
+
   void _onBack() {
     if (_currentIndex == 0) {
-      // Pre-MVP: name -> dob -> readiness, so back must always pop to dob.
+      // Pre-MVP order is name -> dob -> readiness, so back from Q1 always
+      // pops to DOB.
       if (context.canPop()) {
         context.pop();
       }
@@ -175,12 +267,8 @@ class _OnboardingReadinessScreenState
     setState(() => _currentIndex--);
   }
 
-  void _onAnswer({required bool isYes}) {
-    ref
-        .read(onboardingControllerProvider.notifier)
-        .answerReadinessQuestion(_currentIndex, isYes: isYes);
-
-    if (_currentIndex < _questions.length - 1) {
+  void _onNext() {
+    if (_currentIndex < _steps.length - 1) {
       setState(() => _currentIndex++);
       return;
     }
@@ -189,9 +277,9 @@ class _OnboardingReadinessScreenState
 
   void _finish() {
     final controller = ref.read(onboardingControllerProvider.notifier);
-    // signs_met derivation: ready iff every answer is `true`. Stored on state
-    // so downstream screens (result/consent) can branch on it without
-    // recounting nullable bools.
+    // signs_met derivation: ready iff every sign answer is `true`. Pinned on
+    // state so the consent screen can branch without recounting. The result
+    // screen still applies the NIB-120 3/5 majority gate when rendering.
     final answers = ref.read(onboardingControllerProvider).readinessAnswers;
     final allMet = answers.every((a) => a ?? false);
     controller.setReadinessReady(ready: allMet);
@@ -202,9 +290,16 @@ class _OnboardingReadinessScreenState
   }
 }
 
-class _ReadinessQuestion {
-  const _ReadinessQuestion({required this.title, required this.icon});
+class _ReadinessStep {
+  const _ReadinessStep({
+    required this.title,
+    required this.body,
+    required this.yesLabel,
+    required this.noLabel,
+  });
 
   final String title;
-  final IconData icon;
+  final String body;
+  final String yesLabel;
+  final String noLabel;
 }
