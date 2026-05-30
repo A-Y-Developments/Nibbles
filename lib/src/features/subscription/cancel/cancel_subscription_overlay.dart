@@ -56,6 +56,14 @@ class _CancelSubscriptionSheetState
     extends ConsumerState<_CancelSubscriptionSheet> {
   CancelReason? _selectedReason;
 
+  /// Local ScaffoldMessenger key. SnackBars must render via this messenger
+  /// (NOT the parent-route messenger) — modal bottom sheets paint above the
+  /// parent Scaffold's body, so a parent SnackBar lands behind the sheet
+  /// and is invisible. The local ScaffoldMessenger wrapping the sheet body
+  /// (below) puts the toast in front.
+  final GlobalKey<ScaffoldMessengerState> _messengerKey =
+      GlobalKey<ScaffoldMessengerState>();
+
   @override
   void initState() {
     super.initState();
@@ -80,10 +88,9 @@ class _CancelSubscriptionSheetState
     final reason = _selectedReason;
     if (reason == null) return;
 
-    // Capture the messenger BEFORE the await so we can surface the failure
-    // SnackBar on the parent route after the sheet pops itself.
+    // Capture the navigator BEFORE the await. The messenger lookup goes
+    // through the local key (below) so the toast renders inside the sheet.
     final navigator = Navigator.of(context);
-    final messenger = ScaffoldMessenger.maybeOf(context);
 
     final ok = await ref
         .read(cancelSubscriptionControllerProvider.notifier)
@@ -96,9 +103,10 @@ class _CancelSubscriptionSheetState
       // remains visible underneath.
       navigator.pop();
     } else {
-      // P2 failure — keep the sheet open so the user can retry, but show a
-      // transient toast on whichever ScaffoldMessenger is in scope.
-      messenger?.showSnackBar(
+      // P2 failure — keep the sheet open so the user can retry, and show a
+      // transient toast on the sheet's local messenger so it paints above
+      // the bottom sheet's content.
+      _messengerKey.currentState?.showSnackBar(
         const SnackBar(
           key: Key('cancel_subscription_failure_snackbar'),
           content: Text(_kLaunchFailureCopy),
@@ -115,77 +123,83 @@ class _CancelSubscriptionSheetState
     final submitting = state.isSubmitting;
     final reasonPicked = _selectedReason != null;
 
-    return SafeArea(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: media.size.height * 0.92,
-        ),
-        child: Padding(
-          padding: EdgeInsets.only(bottom: media.viewInsets.bottom),
-          child: SingleChildScrollView(
+    return ScaffoldMessenger(
+      key: _messengerKey,
+      child: Scaffold(
+        // Transparent so the sheet's `backgroundColor` (set in
+        // showModalBottomSheet, AppColors.background) shows through and the
+        // rounded top corners aren't clipped by an opaque scaffold.
+        backgroundColor: Colors.transparent,
+        body: SafeArea(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: media.size.height * 0.92),
             child: Padding(
-              // Figma column inset: left/right 16, top 37, bottom 27.
-              padding: const EdgeInsets.fromLTRB(
-                AppSizes.md,
-                37,
-                AppSizes.md,
-                27,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _SheetHeader(
-                    onClose: submitting
-                        ? null
-                        : () => Navigator.of(context).pop(),
+              padding: EdgeInsets.only(bottom: media.viewInsets.bottom),
+              child: SingleChildScrollView(
+                child: Padding(
+                  // Figma column inset: left/right 16, top 37, bottom 27.
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSizes.md,
+                    37,
+                    AppSizes.md,
+                    27,
                   ),
-                  // Figma: header-to-lockup gap = 24.
-                  const SizedBox(height: AppSizes.lg),
-                  const _BrandLockup(),
-                  // Figma: lockup-to-heading gap = 24.
-                  const SizedBox(height: AppSizes.lg),
-                  // Title 2 / Bold — Parkinsans 20/28, Black (#2c2c2c), left.
-                  Text(
-                    _kHeading,
-                    key: const Key('cancel_subscription_heading'),
-                    textAlign: TextAlign.left,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: AppColors.text,
-                      height: 28 / 20,
-                    ),
-                  ),
-                  // Figma: heading-to-chips gap = 24.
-                  const SizedBox(height: AppSizes.lg),
-                  for (var i = 0; i < CancelReason.values.length; i++) ...[
-                    CancelReasonChip(
-                      key: Key('cancel_subscription_reason_$i'),
-                      label: CancelReason.values[i].label,
-                      selected:
-                          _selectedReason == CancelReason.values[i],
-                      onTap: submitting
-                          ? () {}
-                          : () => setState(() {
-                              _selectedReason = CancelReason.values[i];
-                            }),
-                    ),
-                    // Figma: gap between choices = 12.
-                    if (i != CancelReason.values.length - 1)
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _SheetHeader(
+                        onClose: submitting
+                            ? null
+                            : () => Navigator.of(context).pop(),
+                      ),
+                      // Figma: header-to-lockup gap = 24.
+                      const SizedBox(height: AppSizes.lg),
+                      const _BrandLockup(),
+                      // Figma: lockup-to-heading gap = 24.
+                      const SizedBox(height: AppSizes.lg),
+                      // Title 2 / Bold — Parkinsans 20/28, Black (#2c2c2c), left.
+                      Text(
+                        _kHeading,
+                        key: const Key('cancel_subscription_heading'),
+                        textAlign: TextAlign.left,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: AppColors.text,
+                          height: 28 / 20,
+                        ),
+                      ),
+                      // Figma: heading-to-chips gap = 24.
+                      const SizedBox(height: AppSizes.lg),
+                      for (var i = 0; i < CancelReason.values.length; i++) ...[
+                        CancelReasonChip(
+                          key: Key('cancel_subscription_reason_$i'),
+                          label: CancelReason.values[i].label,
+                          selected: _selectedReason == CancelReason.values[i],
+                          onTap: submitting
+                              ? () {}
+                              : () => setState(() {
+                                  _selectedReason = CancelReason.values[i];
+                                }),
+                        ),
+                        // Figma: gap between choices = 12.
+                        if (i != CancelReason.values.length - 1)
+                          const SizedBox(height: AppSizes.sp12),
+                      ],
+                      // Figma: chips-to-CTA stack gap (column → bottom stack).
+                      const SizedBox(height: AppSizes.lg),
+                      _ContinueButton(
+                        enabled: reasonPicked && !submitting,
+                        submitting: submitting,
+                        onPressed: _onContinue,
+                      ),
+                      // Figma: Continue-to-Cancel gap = 12.
                       const SizedBox(height: AppSizes.sp12),
-                  ],
-                  // Figma: chips-to-CTA stack gap (column → bottom stack).
-                  const SizedBox(height: AppSizes.lg),
-                  _ContinueButton(
-                    enabled: reasonPicked && !submitting,
-                    submitting: submitting,
-                    onPressed: _onContinue,
+                      _CancelButton(
+                        enabled: !submitting,
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ],
                   ),
-                  // Figma: Continue-to-Cancel gap = 12.
-                  const SizedBox(height: AppSizes.sp12),
-                  _CancelButton(
-                    enabled: !submitting,
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
@@ -215,10 +229,7 @@ class _SheetHeader extends StatelessWidget {
           onPressed: onClose,
           tooltip: 'Close',
           padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(
-            minWidth: 34,
-            minHeight: 33,
-          ),
+          constraints: const BoxConstraints(minWidth: 34, minHeight: 33),
           style: IconButton.styleFrom(
             shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(30)),
@@ -230,35 +241,40 @@ class _SheetHeader extends StatelessWidget {
   }
 }
 
+/// Brand lockup — `nibbles` wordmark + butter crown badge.
+///
+/// Mirrors `_BrandLockup` from `manage_subscription_screen.dart` (the screen
+/// that opens this sheet) so the visual rhythm is consistent. Sized to the
+/// Figma values: wordmark 173x42, crown badge 42x42 (vs. the 26x26 inline
+/// variant on the parent screen).
 class _BrandLockup extends StatelessWidget {
   const _BrandLockup();
 
   @override
   Widget build(BuildContext context) {
-    // Same neutral placeholder treatment as delete_account_overlay (NIB-78)
-    // — the Figma SVGs (Nibbles wordmark 869:7532 and Nibble-Icon-2
-    // 1216:11960) aren't in the repo yet. Keep the lockup spatially
-    // accurate so the rest of the layout matches the screenshot exactly.
+    // 42px wordmark height matches Figma's 869:7532 (h=42) and lines up with
+    // the brand wordmark token's intrinsic 42px size — no scaling needed.
+    final wordmark = AppTypography.brandWordmark.copyWith(
+      color: AppColors.text,
+    );
+
     return Row(
+      key: const Key('cancel_subscription_brand_lockup'),
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          key: const Key('cancel_subscription_wordmark_placeholder'),
-          width: 173,
-          height: 42,
-          decoration: BoxDecoration(
-            color: AppColors.borderSoft,
-            borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-          ),
-        ),
+        Text('nibbles', style: wordmark),
         const SizedBox(width: AppSizes.sp12),
         Container(
-          key: const Key('cancel_subscription_mascot_placeholder'),
           width: 42,
           height: 42,
           decoration: BoxDecoration(
             color: AppColors.butter,
             borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+          ),
+          child: const Icon(
+            Icons.workspace_premium_rounded,
+            size: 28,
+            color: AppColors.greenDeep,
           ),
         ),
       ],
