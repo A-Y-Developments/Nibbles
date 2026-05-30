@@ -29,6 +29,11 @@ enum AppRoute {
   mealPlanMap(path: '/home/meal/map', name: 'meal-plan-map'),
   shoppingList(path: '/home/shopping-list', name: 'shopping-list'),
   recipeLibrary(path: '/home/recipe', name: 'recipe-library'),
+  startingGuide(path: '/home/recipe/guide', name: 'starting-guide'),
+  startingGuideArticle(
+    path: '/home/recipe/guide/:slug',
+    name: 'starting-guide-article',
+  ),
   allergenTracker(path: '/home/allergen/tracker', name: 'allergen-tracker'),
   allergenDetail(path: '/home/allergen/:allergenKey', name: 'allergen-detail'),
   allergenLogCreate(
