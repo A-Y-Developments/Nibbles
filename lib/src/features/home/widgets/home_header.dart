@@ -63,7 +63,7 @@ class HomeHeader extends StatelessWidget {
                   fontFamily: FontFamily.parkinsans,
                   fontSize: 17,
                   fontWeight: FontWeight.w700,
-                  height: 1.294,
+                  height: 1,
                   color: AppColors.fgStrong,
                 ),
               ),
@@ -89,7 +89,7 @@ class _TodayPill extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: AppSizes.sp12),
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: AppColors.cream,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppSizes.radiusFull),
       ),
       child: const Text(
