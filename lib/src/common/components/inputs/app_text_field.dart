@@ -11,6 +11,7 @@ class AppTextField extends StatefulWidget {
     this.controller,
     this.hintText,
     this.errorText,
+    this.errorColor,
     this.obscureText = false,
     this.keyboardType,
     this.textInputAction,
@@ -28,6 +29,11 @@ class AppTextField extends StatefulWidget {
 
   /// When non-null the field renders its error state (red border + caption).
   final String? errorText;
+
+  /// Optional override for the error border + caption colour. Defaults to
+  /// [AppColors.error] (#E53E3E). Used by screens whose Figma spec calls for a
+  /// non-default tone (e.g. NIB-66 baby-name uses burgundy / destructive).
+  final Color? errorColor;
   final bool obscureText;
   final TextInputType? keyboardType;
   final TextInputAction? textInputAction;
@@ -74,9 +80,10 @@ class _AppTextFieldState extends State<AppTextField> {
     final theme = Theme.of(context);
     final hasError = widget.errorText != null;
     final focused = _focusNode.hasFocus;
+    final errorColor = widget.errorColor ?? AppColors.error;
 
     final borderColor = hasError
-        ? AppColors.error
+        ? errorColor
         : focused
             ? AppColors.greenDeep
             : AppColors.borderSoft;
@@ -153,7 +160,7 @@ class _AppTextFieldState extends State<AppTextField> {
           const SizedBox(height: AppSizes.xs),
           Text(
             widget.errorText!,
-            style: theme.textTheme.bodySmall?.copyWith(color: AppColors.error),
+            style: theme.textTheme.bodySmall?.copyWith(color: errorColor),
           ),
         ],
       ],

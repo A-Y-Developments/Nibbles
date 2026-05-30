@@ -97,19 +97,10 @@ class _OnboardingNameScreenState extends ConsumerState<OnboardingNameScreen> {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final errorText = _firstErrorText;
+    final canPop = Navigator.of(context).canPop();
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        leading: Navigator.of(context).canPop()
-            ? IconButton(
-                icon: const Icon(Icons.arrow_back_rounded),
-                onPressed: () => Navigator.of(context).pop(),
-              )
-            : null,
-      ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(
@@ -119,48 +110,63 @@ class _OnboardingNameScreenState extends ConsumerState<OnboardingNameScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              const SizedBox(height: AppSizes.xxl),
               Text(
                 "What is your baby's name?",
-                style: textTheme.displaySmall,
+                style: textTheme.headlineSmall,
+                textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSizes.sm),
               Text(
-                "We'll use this to personalise your meal plans and progress.",
-                style: textTheme.bodyMedium?.copyWith(color: AppColors.fgMuted),
+                "We'll use this to build their personalized 3-6 month guide.",
+                style: textTheme.bodyMedium?.copyWith(
+                  color: AppColors.fgStrong,
+                ),
+                textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSizes.xl),
               AppTextField(
                 key: const Key('onboarding_first_name_field'),
                 label: 'First Name',
-                hintText: 'Asther',
+                hintText: "Baby's First Name",
                 controller: _firstNameController,
                 textInputAction: TextInputAction.next,
                 onChanged: _onFirstChanged,
+                errorText: errorText,
+                // Figma state-2 token: Nibble-primary-Burgundy ≈ destructive.
+                errorColor: AppColors.destructive,
               ),
-              if (errorText != null) ...[
-                const SizedBox(height: AppSizes.xs),
-                Text(
-                  errorText,
-                  style: textTheme.bodySmall?.copyWith(
-                    color: AppColors.destructive,
-                  ),
-                ),
-              ],
               const SizedBox(height: AppSizes.md),
               AppTextField(
                 key: const Key('onboarding_last_name_field'),
                 label: 'Last Name (Optional)',
-                hintText: 'Putra',
+                hintText: "Baby's Last Name",
                 controller: _lastNameController,
                 textInputAction: TextInputAction.done,
                 onChanged: _onLastChanged,
                 onSubmitted: (_) => _onNext(),
               ),
               const Spacer(),
-              AppPillButton(
-                key: const Key('onboarding_name_next'),
-                label: 'Next',
-                onPressed: _canSubmit ? _onNext : null,
+              Row(
+                children: [
+                  if (canPop) ...[
+                    AppRoundButton(
+                      key: const Key('onboarding_name_back'),
+                      icon: const Icon(Icons.arrow_back_rounded),
+                      tone: AppRoundButtonTone.butter,
+                      semanticLabel: 'Back',
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                    const SizedBox(width: AppSizes.sm),
+                  ],
+                  Expanded(
+                    child: AppPillButton(
+                      key: const Key('onboarding_name_next'),
+                      label: 'Next',
+                      onPressed: _canSubmit ? _onNext : null,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
