@@ -406,7 +406,10 @@ void main() {
       await tester.pumpAndSettle();
 
       // Overlay rendered: heading + at least one reason row.
-      expect(find.text('Why are you leaving us?'), findsOneWidget);
+      expect(
+        find.text('Tell us why you want to delete your account'),
+        findsOneWidget,
+      );
       expect(find.byKey(const Key('delete_reason_0')), findsOneWidget);
     },
   );

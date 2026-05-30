@@ -94,14 +94,16 @@ void main() {
         when(() => mockAccountRepo.requestAccountDeletion(any()))
             .thenAnswer((_) async => const Result.success(null));
 
-        final ok = await readController().submit('Privacy concerns');
+        final ok = await readController().submit('I achieved my goal already');
 
         // Drain pending fire-and-forget analytics microtasks.
         await Future<void>.delayed(Duration.zero);
 
         expect(ok, isTrue);
         verify(
-          () => mockAccountRepo.requestAccountDeletion('Privacy concerns'),
+          () => mockAccountRepo.requestAccountDeletion(
+            'I achieved my goal already',
+          ),
         ).called(1);
         verify(mockFlags.clearAll).called(1);
         verify(() => mockAuthRepo.signOut()).called(1);
