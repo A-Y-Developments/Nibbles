@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:nibbles/src/common/data/repositories/allergen_repository.dart';
@@ -88,6 +90,7 @@ void main() {
       ),
     );
     registerFallbackValue(_now);
+    registerFallbackValue(File('test-fallback.jpg'));
   });
 
   setUp(() {
@@ -350,6 +353,202 @@ void main() {
       );
 
       final result = await sut.completeProgram(_babyId);
+
+      expect(result.isFailure, isTrue);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // updateAllergenLog
+  // ---------------------------------------------------------------------------
+
+  group('AllergenService.updateAllergenLog', () {
+    test(
+      'no new photo: skips storage, calls repo.updateLog with input log',
+      () async {
+        final log = _makeLog();
+        when(
+          () => mockRepo.updateLog(any()),
+        ).thenAnswer((_) async => Result.success(log));
+
+        final result = await sut.updateAllergenLog(log: log);
+
+        expect(result.isSuccess, isTrue);
+        verify(() => mockRepo.updateLog(log)).called(1);
+        verifyNever(() => mockStorage.uploadFile(any(), any(), any()));
+        verifyNever(() => mockStorage.deleteFile(any(), any()));
+      },
+    );
+
+    test(
+      'new photo path: uploads new, deletes old non-fatal, '
+      'calls updateLog with new photoUrl',
+      () async {
+        final log = _makeLog().copyWith(photoUrl: 'old/path.jpg');
+        when(
+          () => mockStorage.uploadFile(any(), any(), any()),
+        ).thenAnswer((_) async => const Result.success('ignored'));
+        when(
+          () => mockStorage.deleteFile(any(), any()),
+        ).thenAnswer((_) async => const Result.success(null));
+        when(
+          () => mockRepo.updateLog(any()),
+        ).thenAnswer((_) async => Result.success(log));
+
+        final result = await sut.updateAllergenLog(
+          log: log,
+          newPhotoLocalPath: '/tmp/new.jpg',
+          oldPhotoPath: 'old/path.jpg',
+        );
+
+        expect(result.isSuccess, isTrue);
+        verify(() => mockStorage.uploadFile(any(), any(), any())).called(1);
+        verify(
+          () => mockStorage.deleteFile('allergen-photos', 'old/path.jpg'),
+        ).called(1);
+
+        final captured = verify(() => mockRepo.updateLog(captureAny())).captured
+            .single as AllergenLog;
+        // photoUrl now points at the freshly uploaded path
+        // (not the old path passed in).
+        expect(captured.photoUrl, isNot('old/path.jpg'));
+        expect(captured.photoUrl, isNotNull);
+      },
+    );
+
+    test('upload failure propagates and skips repo.updateLog', () async {
+      final log = _makeLog();
+      when(() => mockStorage.uploadFile(any(), any(), any())).thenAnswer(
+        (_) async => const Result.failure(ServerException('upload bad')),
+      );
+
+      final result = await sut.updateAllergenLog(
+        log: log,
+        newPhotoLocalPath: '/tmp/new.jpg',
+        oldPhotoPath: 'old/path.jpg',
+      );
+
+      expect(result.isFailure, isTrue);
+      verifyNever(() => mockRepo.updateLog(any()));
+      verifyNever(() => mockStorage.deleteFile(any(), any()));
+    });
+
+    test(
+      'old-photo delete failure is non-fatal: '
+      'crash recorder called + updateLog still runs',
+      () async {
+        final log = _makeLog();
+        var recorded = 0;
+        sut = AllergenService(
+          mockRepo,
+          mockStorage,
+          crashRecorder:
+              (Object error, StackTrace stack, {String? reason}) async {
+                recorded++;
+              },
+        );
+
+        when(
+          () => mockStorage.uploadFile(any(), any(), any()),
+        ).thenAnswer((_) async => const Result.success('ignored'));
+        when(() => mockStorage.deleteFile(any(), any())).thenAnswer(
+          (_) async => const Result.failure(ServerException('not found')),
+        );
+        when(
+          () => mockRepo.updateLog(any()),
+        ).thenAnswer((_) async => Result.success(log));
+
+        final result = await sut.updateAllergenLog(
+          log: log,
+          newPhotoLocalPath: '/tmp/new.jpg',
+          oldPhotoPath: 'old/path.jpg',
+        );
+
+        expect(result.isSuccess, isTrue);
+        expect(recorded, 1);
+        verify(() => mockRepo.updateLog(any())).called(1);
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
+  // deleteAllergenLog
+  // ---------------------------------------------------------------------------
+
+  group('AllergenService.deleteAllergenLog', () {
+    test('no photoPath: skips storage, calls repo.deleteLog', () async {
+      when(
+        () => mockRepo.deleteLog(any()),
+      ).thenAnswer((_) async => const Result.success(null));
+
+      final result = await sut.deleteAllergenLog(logId: 'log-1');
+
+      expect(result.isSuccess, isTrue);
+      verify(() => mockRepo.deleteLog('log-1')).called(1);
+      verifyNever(() => mockStorage.deleteFile(any(), any()));
+    });
+
+    test(
+      'with photoPath: deletes photo then deletes log row',
+      () async {
+        when(
+          () => mockStorage.deleteFile(any(), any()),
+        ).thenAnswer((_) async => const Result.success(null));
+        when(
+          () => mockRepo.deleteLog(any()),
+        ).thenAnswer((_) async => const Result.success(null));
+
+        final result = await sut.deleteAllergenLog(
+          logId: 'log-1',
+          photoPath: 'old/path.jpg',
+        );
+
+        expect(result.isSuccess, isTrue);
+        verify(
+          () => mockStorage.deleteFile('allergen-photos', 'old/path.jpg'),
+        ).called(1);
+        verify(() => mockRepo.deleteLog('log-1')).called(1);
+      },
+    );
+
+    test(
+      'storage delete failure is non-fatal: '
+      'crash recorder called + repo.deleteLog still runs',
+      () async {
+        var recorded = 0;
+        sut = AllergenService(
+          mockRepo,
+          mockStorage,
+          crashRecorder:
+              (Object error, StackTrace stack, {String? reason}) async {
+                recorded++;
+              },
+        );
+
+        when(() => mockStorage.deleteFile(any(), any())).thenAnswer(
+          (_) async => const Result.failure(ServerException('not found')),
+        );
+        when(
+          () => mockRepo.deleteLog(any()),
+        ).thenAnswer((_) async => const Result.success(null));
+
+        final result = await sut.deleteAllergenLog(
+          logId: 'log-1',
+          photoPath: 'old/path.jpg',
+        );
+
+        expect(result.isSuccess, isTrue);
+        expect(recorded, 1);
+        verify(() => mockRepo.deleteLog('log-1')).called(1);
+      },
+    );
+
+    test('propagates repo.deleteLog failure', () async {
+      when(() => mockRepo.deleteLog(any())).thenAnswer(
+        (_) async => const Result.failure(ServerException('row missing')),
+      );
+
+      final result = await sut.deleteAllergenLog(logId: 'log-1');
 
       expect(result.isFailure, isTrue);
     });

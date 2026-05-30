@@ -14,6 +14,11 @@ abstract interface class StorageRepository {
     String path, {
     int expiresIn,
   });
+
+  /// Deletes [path] from [bucket]. Returns Success on a successful remove
+  /// (regardless of whether the object existed). Maps StorageException to
+  /// ServerException; any other error to UnknownException.
+  Future<Result<void>> deleteFile(String bucket, String path);
 }
 
 class StorageRepositoryImpl implements StorageRepository {
@@ -43,6 +48,18 @@ class StorageRepositoryImpl implements StorageRepository {
           .upload(path, file);
 
       return Result.success(storagePath);
+    } on StorageException catch (e) {
+      return Result.failure(ServerException(e.message));
+    } on Object {
+      return const Result.failure(UnknownException());
+    }
+  }
+
+  @override
+  Future<Result<void>> deleteFile(String bucket, String path) async {
+    try {
+      await _supabase.storage.from(bucket).remove([path]);
+      return const Result.success(null);
     } on StorageException catch (e) {
       return Result.failure(ServerException(e.message));
     } on Object {
