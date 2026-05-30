@@ -7,9 +7,17 @@ part of 'allergen_log_controller.dart';
 // **************************************************************************
 
 String _$allergenLogControllerHash() =>
-    r'a9db53cba10c35b5d4fb9f15719eee44c9485f04';
+    r'fec3f134ae2c194ca27f9daade45b048149fa168';
 
-/// See also [AllergenLogController].
+/// Controller backing the redesigned full-screen Allergen Log capture screen
+/// (NIB-127).
+///
+/// Shared between CREATE (new log) and EDIT (existing log) modes. EDIT mode
+/// hydrates state from an existing log via [hydrateForEdit]; submit dispatches
+/// to either [AllergenService.saveAllergenLog] or
+/// [AllergenService.updateAllergenLog].
+///
+/// Copied from [AllergenLogController].
 @ProviderFor(AllergenLogController)
 final allergenLogControllerProvider =
     NotifierProvider<AllergenLogController, AllergenLogState>.internal(

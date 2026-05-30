@@ -3,10 +3,9 @@ import 'dart:io';
 
 import 'package:image_picker/image_picker.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
-import 'package:nibbles/src/common/domain/entities/reaction_detail.dart';
+import 'package:nibbles/src/common/domain/entities/allergen_log.dart';
 import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
 import 'package:nibbles/src/common/domain/enums/emoji_taste.dart';
-import 'package:nibbles/src/common/domain/enums/reaction_severity.dart';
 import 'package:nibbles/src/common/services/allergen_service.dart';
 import 'package:nibbles/src/features/allergen/log/allergen_log_state.dart';
 import 'package:nibbles/src/logging/analytics.dart';
@@ -14,43 +13,39 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'allergen_log_controller.g.dart';
 
+/// Controller backing the redesigned full-screen Allergen Log capture screen
+/// (NIB-127).
+///
+/// Shared between CREATE (new log) and EDIT (existing log) modes. EDIT mode
+/// hydrates state from an existing log via [hydrateForEdit]; submit dispatches
+/// to either [AllergenService.saveAllergenLog] or
+/// [AllergenService.updateAllergenLog].
 @Riverpod(keepAlive: true)
 class AllergenLogController extends _$AllergenLogController {
   final _picker = ImagePicker();
 
   @override
-  AllergenLogState build() => const AllergenLogState();
+  AllergenLogState build() => const AllergenLogState(hydrated: true);
 
   void setTaste(EmojiTaste taste) =>
       state = state.copyWith(taste: taste, errorMessage: null);
 
-  void toggleReaction() {
-    final toggled = !state.hadReaction;
-    state = state.copyWith(
-      hadReaction: toggled,
-      // Clear reaction fields when toggling off.
-      symptoms: toggled ? state.symptoms : const [],
-      severity: toggled ? state.severity : null,
-      notes: toggled ? state.notes : null,
-      errorMessage: null,
-    );
-  }
+  void toggleReaction() => state = state.copyWith(
+    hadReaction: !state.hadReaction,
+    errorMessage: null,
+  );
 
-  void toggleSymptom(String symptom) {
-    final updated = List<String>.from(state.symptoms);
-    if (updated.contains(symptom)) {
-      updated.remove(symptom);
-    } else {
-      updated.add(symptom);
-    }
-    state = state.copyWith(symptoms: updated);
-  }
+  void setNotes(String value) =>
+      state = state.copyWith(notes: value.isEmpty ? null : value);
 
-  void setSeverity(ReactionSeverity severity) =>
-      state = state.copyWith(severity: severity);
+  void setAttachmentTitle(String value) =>
+      state = state.copyWith(attachmentTitle: value.isEmpty ? null : value);
 
-  void setNotes(String notes) =>
-      state = state.copyWith(notes: notes.isEmpty ? null : notes);
+  void setAttachmentDescription(String value) => state = state.copyWith(
+    attachmentDescription: value.isEmpty ? null : value,
+  );
+
+  void setLogDate(DateTime date) => state = state.copyWith(logDate: date);
 
   Future<void> pickPhoto(ImageSource source) async {
     final xFile = await _picker.pickImage(
@@ -64,37 +59,112 @@ class AllergenLogController extends _$AllergenLogController {
 
   void removePhoto() => state = state.copyWith(photoPath: null);
 
-  void reset() => state = const AllergenLogState();
+  /// Resets the controller to its CREATE-mode defaults (logDate = today, all
+  /// fields empty).
+  void reset() =>
+      state = AllergenLogState(hydrated: true, logDate: DateTime.now());
 
-  /// Saves the log with optional reaction detail and photo.
+  /// Hydrates the controller from an existing [AllergenLog] for EDIT mode.
+  /// Looks up the log via [AllergenService.getLogs] filtered to [logId].
   ///
-  /// For no-reaction logs: auto-advances to the next allergen once 3 clean
-  /// logs exist (safe status).
+  /// Idempotent — if the controller is already hydrated for [logId] it
+  /// short-circuits so screen rebuilds don't double-fetch.
+  Future<void> hydrateForEdit({
+    required String babyId,
+    required String allergenKey,
+    required String logId,
+  }) async {
+    if (state.hydrated && state.logId == logId) return;
+
+    state = state.copyWith(isLoading: true);
+
+    final service = ref.read(allergenServiceProvider);
+    final logsResult = await service.getLogs(babyId, allergenKey: allergenKey);
+    if (logsResult.isFailure) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: "Couldn't load this log. Please try again.",
+      );
+      return;
+    }
+
+    final log = logsResult.dataOrNull!.firstWhere(
+      (AllergenLog l) => l.id == logId,
+      orElse: () => throw StateError('Log "$logId" not found.'),
+    );
+
+    state = AllergenLogState(
+      logId: log.id,
+      hydrated: true,
+      taste: log.emojiTaste,
+      hadReaction: log.hadReaction,
+      notes: log.notes,
+      attachmentTitle: log.attachmentTitle,
+      attachmentDescription: log.attachmentDescription,
+      existingPhotoPath: log.photoUrl,
+      logDate: log.logDate,
+    );
+  }
+
+  /// Saves or updates the log, then flips [AllergenLogState.isSaved] when the
+  /// screen should pop. CREATE mode also auto-advances the program once the
+  /// allergen reaches `safe`.
   ///
   /// Error level: P1 — "Couldn't save your log. Please try again."
-  Future<void> saveLog(String babyId, String allergenKey) async {
+  Future<void> submit({
+    required String babyId,
+    required String allergenKey,
+  }) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     final service = ref.read(allergenServiceProvider);
+    final isEdit = state.logId != null;
 
-    ReactionDetail? reactionDetail;
-    if (state.hadReaction && state.severity != null) {
-      reactionDetail = ReactionDetail(
-        id: '',
-        logId: '',
-        severity: state.severity!,
-        symptoms: state.symptoms,
-        notes: state.notes,
+    if (isEdit) {
+      final hydrated = AllergenLog(
+        id: state.logId!,
+        babyId: babyId,
+        allergenKey: allergenKey,
+        hadReaction: state.hadReaction,
+        logDate: state.logDate ?? DateTime.now(),
         createdAt: DateTime.now(),
+        emojiTaste: state.taste,
+        notes: state.notes,
+        attachmentTitle: state.attachmentTitle,
+        attachmentDescription: state.attachmentDescription,
+        // Keep existing photoUrl unless the user picked a new file — the
+        // service rewrites it on a successful new upload.
+        photoUrl: state.existingPhotoPath,
       );
+
+      final result = await service.updateAllergenLog(
+        log: hydrated,
+        newPhotoLocalPath: state.photoPath,
+        oldPhotoPath: state.existingPhotoPath,
+      );
+
+      if (result.isFailure) {
+        state = state.copyWith(
+          isLoading: false,
+          errorMessage: "Couldn't save your log. Please try again.",
+        );
+        return;
+      }
+
+      state = state.copyWith(isLoading: false, isSaved: true);
+      return;
     }
 
+    // CREATE
     final result = await service.saveAllergenLog(
       babyId: babyId,
       allergenKey: allergenKey,
       emojiTaste: state.taste,
+      notes: state.notes,
+      attachmentTitle: state.attachmentTitle,
+      attachmentDescription: state.attachmentDescription,
+      logDate: state.logDate,
       hadReaction: state.hadReaction,
-      reactionDetail: reactionDetail,
       photo: state.photoPath != null ? File(state.photoPath!) : null,
     );
 
@@ -106,7 +176,6 @@ class AllergenLogController extends _$AllergenLogController {
       return;
     }
 
-    // Check if photo upload failed (log saved but without photo).
     final savedLog = result.dataOrNull!;
     final photoFailed = state.photoPath != null && savedLog.photoUrl == null;
 

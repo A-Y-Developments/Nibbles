@@ -29,9 +29,7 @@ class ReactionLogRow extends StatelessWidget {
   /// First letter of the baby's name. Used to draw the avatar glyph.
   final String babyInitial;
 
-  /// Row tap target. Routes to the read-only log detail when that screen
-  /// exists; for now the tracker screen routes to the allergen detail
-  /// (NIB-93 will land the dedicated read-only log view).
+  /// Row tap target. Routes to the read-only log detail (NIB-127).
   final VoidCallback? onTap;
 
   String get _tasteGlyph {
