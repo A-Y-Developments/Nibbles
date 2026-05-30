@@ -21,6 +21,7 @@ class _ComponentGalleryState extends State<ComponentGallery> {
   int _radioIndex = 0;
   int _navIndex = 0;
   int _dayIndex = 0;
+  bool _shopBought = false;
 
   @override
   Widget build(BuildContext context) {
@@ -213,6 +214,28 @@ class _ComponentGalleryState extends State<ComponentGallery> {
                   ),
                 ),
               ],
+            ),
+          ]),
+          _section('Shop rows', [
+            ShopRow(
+              label: 'Bananas',
+              isBought: _shopBought,
+              onToggle: () => setState(() => _shopBought = !_shopBought),
+              onDelete: () {},
+            ),
+            const SizedBox(height: AppSizes.sm),
+            ShopRow(
+              label: 'A really long ingredient name that should ellipsize',
+              isBought: false,
+              onToggle: () {},
+              onDelete: () {},
+            ),
+            const SizedBox(height: AppSizes.sm),
+            ShopRow(
+              label: 'Whole-wheat pasta',
+              isBought: true,
+              onToggle: () {},
+              onDelete: () {},
             ),
           ]),
           _section('Empty state', [

@@ -10,6 +10,7 @@ export 'buttons/app_round_button.dart';
 export 'calendar/day_chip.dart';
 export 'calendar/week_strip.dart';
 export 'cards/app_card.dart';
+export 'cards/shop_row.dart';
 export 'cards/tip_card.dart';
 export 'chips/app_chip.dart';
 export 'controls/app_checkbox.dart';
