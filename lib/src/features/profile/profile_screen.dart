@@ -4,13 +4,14 @@ import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
-import 'package:nibbles/src/common/domain/entities/allergen_board_item.dart';
-import 'package:nibbles/src/common/domain/entities/baby.dart';
-import 'package:nibbles/src/common/domain/enums/gender.dart';
 import 'package:nibbles/src/common/services/auth_service.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/features/profile/profile_controller.dart';
 import 'package:nibbles/src/features/profile/profile_state.dart';
+import 'package:nibbles/src/features/profile/widgets/premium_teaser_card.dart';
+import 'package:nibbles/src/features/profile/widgets/profile_avatar_card.dart';
+import 'package:nibbles/src/features/profile/widgets/profile_header.dart';
+import 'package:nibbles/src/features/profile/widgets/settings_row.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -21,14 +22,19 @@ class ProfileScreen extends ConsumerWidget {
     final babyIdAsync = ref.watch(currentBabyIdProvider);
 
     return babyIdAsync.when(
-      loading: () =>
-          const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (_, __) =>
-          const Scaffold(body: Center(child: Text('Could not load profile.'))),
+      loading: () => const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: CircularProgressIndicator()),
+      ),
+      error: (_, __) => _ProfileError(
+        message: 'Could not load profile.',
+        onRetry: () => ref.invalidate(currentBabyIdProvider),
+      ),
       data: (babyId) {
         if (babyId == null) {
-          return const Scaffold(
-            body: Center(child: Text('No baby profile found.')),
+          return _ProfileError(
+            message: 'No baby profile found.',
+            onRetry: () => ref.invalidate(currentBabyIdProvider),
           );
         }
         return _ProfileBody(babyId: babyId);
@@ -47,113 +53,136 @@ class _ProfileBody extends ConsumerWidget {
     final asyncState = ref.watch(profileControllerProvider(babyId));
 
     return asyncState.when(
-      loading: () =>
-          const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (err, _) => Scaffold(
+      loading: () => const Scaffold(
         backgroundColor: AppColors.background,
-        appBar: AppBar(
-          backgroundColor: AppColors.background,
-          elevation: 0,
-          title: const Text('Profile'),
-        ),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(AppSizes.pagePaddingH),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.error_outline,
-                  size: AppSizes.iconXl,
-                  color: AppColors.error,
-                ),
-                const SizedBox(height: AppSizes.md),
-                Text(
-                  err is AppException ? err.message : 'Something went wrong.',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyLarge?.copyWith(color: AppColors.subtext),
-                ),
-                const SizedBox(height: AppSizes.lg),
-                FilledButton(
-                  onPressed: () =>
-                      ref.invalidate(profileControllerProvider(babyId)),
-                  child: const Text('Try Again'),
-                ),
-              ],
-            ),
-          ),
-        ),
+        body: Center(child: CircularProgressIndicator()),
       ),
-      data: (state) => _ProfileContent(babyId: babyId, state: state),
+      error: (err, _) => _ProfileError(
+        message: err is AppException ? err.message : 'Something went wrong.',
+        onRetry: () => ref.invalidate(profileControllerProvider(babyId)),
+      ),
+      data: (state) => _ProfileContent(state: state),
     );
   }
 }
 
 class _ProfileContent extends ConsumerWidget {
-  const _ProfileContent({required this.babyId, required this.state});
+  const _ProfileContent({required this.state});
 
-  final String babyId;
   final ProfileState state;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final textTheme = Theme.of(context).textTheme;
+    final baby = state.baby;
+    if (baby == null) {
+      return const _ProfileError(message: 'No baby profile found.');
+    }
+
+    void goBack() => context.canPop() ? context.pop() : context.go('/home');
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        title: Text(
-          'Profile',
-          style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-        ),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSizes.pagePaddingH,
-            vertical: AppSizes.pagePaddingV,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SafeArea(
+            bottom: false,
+            child: ColoredBox(
+              color: AppColors.butterSoft,
+              child: Column(
+                children: [
+                  ProfileHeader(onBack: goBack),
+                  ProfileAvatarCard(
+                    name: baby.name,
+                    ageLabel: _ageLabel(baby.dateOfBirth),
+                    onEdit: () => context.pushNamed(
+                      AppRoute.profileEdit.name,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _BabyInfoCard(
-                baby: state.baby,
-                subscriptionLabel: state.subscriptionLabel,
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(
+                AppSizes.pagePaddingH,
+                AppSizes.md,
+                AppSizes.pagePaddingH,
+                AppSizes.pagePaddingV,
               ),
-              const SizedBox(height: AppSizes.lg),
-              _SafeAllergenSection(safeAllergens: state.safeAllergens),
-              const SizedBox(height: AppSizes.xl),
-              FilledButton(
-                key: const Key('profile_edit_button'),
-                onPressed: () => context.pushNamed(AppRoute.profileEdit.name),
-                child: const Text('Edit'),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const PremiumTeaserCard(),
+                  const SizedBox(height: AppSizes.md + 2),
+                  SettingsRow(
+                    key: const Key('profile_manage_subscription_row'),
+                    title: 'Manage Subscription',
+                    subtitle: state.subscriptionLabel ?? 'No Subscription',
+                    // TODO(NIB-73): push paywall when ticket ships.
+                    onTap: () => _showComingSoon(
+                      context,
+                      'Subscription management coming soon.',
+                    ),
+                  ),
+                  const SizedBox(height: AppSizes.sp12),
+                  SettingsRow(
+                    key: const Key('profile_feedback_row'),
+                    title: 'Give Feedback',
+                    // TODO(NIB-70): push profileFeedback route when added.
+                    onTap: () => _showComingSoon(
+                      context,
+                      'Feedback coming soon.',
+                    ),
+                  ),
+                  const SizedBox(height: AppSizes.sp12),
+                  SettingsRow(
+                    key: const Key('profile_sign_out_button'),
+                    title: 'Sign out',
+                    onTap: () => _confirmSignOut(context, ref),
+                  ),
+                  const SizedBox(height: AppSizes.sp12),
+                  SettingsRow(
+                    key: const Key('profile_delete_account_row'),
+                    title: 'Delete account',
+                    danger: true,
+                    // TODO(NIB-78): push delete overlay when ticket ships.
+                    onTap: () => _showComingSoon(
+                      context,
+                      'Account deletion coming soon.',
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: AppSizes.md),
-              OutlinedButton(
-                key: const Key('profile_sign_out_button'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.error,
-                  side: const BorderSide(color: AppColors.error),
-                ),
-                onPressed: () => _confirmSignOut(context, ref),
-                child: const Text('Sign Out'),
-              ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
+  }
+
+  String _ageLabel(DateTime dob) {
+    final now = DateTime.now();
+    final totalMonths = (now.year - dob.year) * 12 + now.month - dob.month;
+    final months = totalMonths < 0 ? 0 : totalMonths;
+    final monthStart = DateTime(now.year, now.month - months, dob.day);
+    final days = now.difference(monthStart).inDays;
+    final clampedDays = days < 0 ? 0 : days;
+    return '$months months $clampedDays days';
+  }
+
+  void _showComingSoon(BuildContext context, String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _confirmSignOut(BuildContext context, WidgetRef ref) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Sign Out'),
+        title: const Text('Sign out'),
         content: const Text('Are you sure you want to sign out?'),
         actions: [
           TextButton(
@@ -161,7 +190,7 @@ class _ProfileContent extends ConsumerWidget {
             child: const Text('No'),
           ),
           TextButton(
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            style: TextButton.styleFrom(foregroundColor: AppColors.destructive),
             onPressed: () => Navigator.of(ctx).pop(true),
             child: const Text('Yes'),
           ),
@@ -171,210 +200,54 @@ class _ProfileContent extends ConsumerWidget {
 
     if (confirmed ?? false) {
       await ref.read(authServiceProvider.notifier).signOut();
-      // GoRouter redirect handles navigation to /auth/login automatically
+      // GoRouter redirect handles navigation to /auth/login.
     }
   }
 }
 
-// ---------------------------------------------------------------------------
-// Baby Info Card
-// ---------------------------------------------------------------------------
+class _ProfileError extends StatelessWidget {
+  const _ProfileError({required this.message, this.onRetry});
 
-class _BabyInfoCard extends StatelessWidget {
-  const _BabyInfoCard({required this.baby, required this.subscriptionLabel});
-
-  final Baby baby;
-  final String subscriptionLabel;
+  final String message;
+  final VoidCallback? onRetry;
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
 
-    return Container(
-      padding: const EdgeInsets.all(AppSizes.cardPadding),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Avatar
-          Container(
-            width: AppSizes.avatarLg,
-            height: AppSizes.avatarLg,
-            decoration: const BoxDecoration(
-              color: AppColors.primaryLight,
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(
-                baby.name.isNotEmpty ? baby.name[0].toUpperCase() : '?',
-                style: const TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primaryDark,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: AppSizes.md),
-          // Info
-          Expanded(
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSizes.pagePaddingH),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
+                const Icon(
+                  Icons.error_outline,
+                  size: AppSizes.iconXl,
+                  color: AppColors.destructive,
+                ),
+                const SizedBox(height: AppSizes.md),
                 Text(
-                  baby.name,
-                  style: textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
+                  message,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: AppColors.fgMuted,
                   ),
                 ),
-                const SizedBox(height: AppSizes.xs),
-                Text(
-                  _calculateAge(baby.dateOfBirth),
-                  style: textTheme.bodyMedium?.copyWith(
-                    color: AppColors.subtext,
+                if (onRetry != null) ...[
+                  const SizedBox(height: AppSizes.lg),
+                  FilledButton(
+                    onPressed: onRetry,
+                    child: const Text('Try Again'),
                   ),
-                ),
-                const SizedBox(height: AppSizes.xs),
-                Text(
-                  _genderLabel(baby.gender),
-                  style: textTheme.bodySmall?.copyWith(
-                    color: AppColors.subtext,
-                  ),
-                ),
-                const SizedBox(height: AppSizes.xs),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSizes.sm,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-                  ),
-                  child: Text(
-                    subscriptionLabel,
-                    style: textTheme.labelSmall?.copyWith(
-                      color: AppColors.primaryDark,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
+                ],
               ],
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  String _calculateAge(DateTime dob) {
-    final now = DateTime.now();
-    final months = (now.year - dob.year) * 12 + now.month - dob.month;
-    if (months < 12) return '$months months old';
-    final years = months ~/ 12;
-    return '$years year${years > 1 ? 's' : ''} old';
-  }
-
-  String _genderLabel(Gender gender) => switch (gender) {
-    Gender.male => 'Male',
-    Gender.female => 'Female',
-    Gender.preferNotToSay => 'Prefer not to say',
-  };
-}
-
-// ---------------------------------------------------------------------------
-// Safe Allergen Section
-// ---------------------------------------------------------------------------
-
-class _SafeAllergenSection extends StatelessWidget {
-  const _SafeAllergenSection({required this.safeAllergens});
-
-  final List<AllergenBoardItem> safeAllergens;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Discovered Safe Allergens',
-          style: textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
         ),
-        const SizedBox(height: AppSizes.md),
-        if (safeAllergens.isEmpty)
-          Container(
-            padding: const EdgeInsets.all(AppSizes.cardPadding),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-              border: Border.all(color: AppColors.divider),
-            ),
-            child: Center(
-              child: Text(
-                'No safe allergens confirmed yet. Keep going!',
-                style: textTheme.bodyMedium?.copyWith(color: AppColors.subtext),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          )
-        else
-          Wrap(
-            spacing: AppSizes.sm,
-            runSpacing: AppSizes.sm,
-            children: safeAllergens.map((item) {
-              return _AllergenChip(
-                emoji: item.allergen.emoji,
-                name: item.allergen.name,
-              );
-            }).toList(),
-          ),
-      ],
-    );
-  }
-}
-
-class _AllergenChip extends StatelessWidget {
-  const _AllergenChip({required this.emoji, required this.name});
-
-  final String emoji;
-  final String name;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.md,
-        vertical: AppSizes.sm,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.allergenSafe.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-        border: Border.all(color: AppColors.allergenSafe, width: 1.5),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(emoji, style: const TextStyle(fontSize: 16)),
-          const SizedBox(width: AppSizes.xs),
-          Text(
-            name,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: AppColors.allergenSafe,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
       ),
     );
   }

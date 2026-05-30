@@ -17,10 +17,9 @@ final _privateConstructorUsedError = UnsupportedError(
 
 /// @nodoc
 mixin _$ProfileState {
-  Baby get baby => throw _privateConstructorUsedError;
-  List<AllergenBoardItem> get safeAllergens =>
-      throw _privateConstructorUsedError;
-  String get subscriptionLabel => throw _privateConstructorUsedError;
+  Baby? get baby => throw _privateConstructorUsedError;
+  String? get email => throw _privateConstructorUsedError;
+  String? get subscriptionLabel => throw _privateConstructorUsedError;
 
   /// Create a copy of ProfileState
   /// with the given fields replaced by the non-null parameter values.
@@ -36,13 +35,9 @@ abstract class $ProfileStateCopyWith<$Res> {
     $Res Function(ProfileState) then,
   ) = _$ProfileStateCopyWithImpl<$Res, ProfileState>;
   @useResult
-  $Res call({
-    Baby baby,
-    List<AllergenBoardItem> safeAllergens,
-    String subscriptionLabel,
-  });
+  $Res call({Baby? baby, String? email, String? subscriptionLabel});
 
-  $BabyCopyWith<$Res> get baby;
+  $BabyCopyWith<$Res>? get baby;
 }
 
 /// @nodoc
@@ -60,24 +55,24 @@ class _$ProfileStateCopyWithImpl<$Res, $Val extends ProfileState>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? baby = null,
-    Object? safeAllergens = null,
-    Object? subscriptionLabel = null,
+    Object? baby = freezed,
+    Object? email = freezed,
+    Object? subscriptionLabel = freezed,
   }) {
     return _then(
       _value.copyWith(
-            baby: null == baby
+            baby: freezed == baby
                 ? _value.baby
                 : baby // ignore: cast_nullable_to_non_nullable
-                      as Baby,
-            safeAllergens: null == safeAllergens
-                ? _value.safeAllergens
-                : safeAllergens // ignore: cast_nullable_to_non_nullable
-                      as List<AllergenBoardItem>,
-            subscriptionLabel: null == subscriptionLabel
+                      as Baby?,
+            email: freezed == email
+                ? _value.email
+                : email // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            subscriptionLabel: freezed == subscriptionLabel
                 ? _value.subscriptionLabel
                 : subscriptionLabel // ignore: cast_nullable_to_non_nullable
-                      as String,
+                      as String?,
           )
           as $Val,
     );
@@ -87,8 +82,12 @@ class _$ProfileStateCopyWithImpl<$Res, $Val extends ProfileState>
   /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
-  $BabyCopyWith<$Res> get baby {
-    return $BabyCopyWith<$Res>(_value.baby, (value) {
+  $BabyCopyWith<$Res>? get baby {
+    if (_value.baby == null) {
+      return null;
+    }
+
+    return $BabyCopyWith<$Res>(_value.baby!, (value) {
       return _then(_value.copyWith(baby: value) as $Val);
     });
   }
@@ -103,14 +102,10 @@ abstract class _$$ProfileStateImplCopyWith<$Res>
   ) = __$$ProfileStateImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({
-    Baby baby,
-    List<AllergenBoardItem> safeAllergens,
-    String subscriptionLabel,
-  });
+  $Res call({Baby? baby, String? email, String? subscriptionLabel});
 
   @override
-  $BabyCopyWith<$Res> get baby;
+  $BabyCopyWith<$Res>? get baby;
 }
 
 /// @nodoc
@@ -127,24 +122,24 @@ class __$$ProfileStateImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? baby = null,
-    Object? safeAllergens = null,
-    Object? subscriptionLabel = null,
+    Object? baby = freezed,
+    Object? email = freezed,
+    Object? subscriptionLabel = freezed,
   }) {
     return _then(
       _$ProfileStateImpl(
-        baby: null == baby
+        baby: freezed == baby
             ? _value.baby
             : baby // ignore: cast_nullable_to_non_nullable
-                  as Baby,
-        safeAllergens: null == safeAllergens
-            ? _value._safeAllergens
-            : safeAllergens // ignore: cast_nullable_to_non_nullable
-                  as List<AllergenBoardItem>,
-        subscriptionLabel: null == subscriptionLabel
+                  as Baby?,
+        email: freezed == email
+            ? _value.email
+            : email // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        subscriptionLabel: freezed == subscriptionLabel
             ? _value.subscriptionLabel
             : subscriptionLabel // ignore: cast_nullable_to_non_nullable
-                  as String,
+                  as String?,
       ),
     );
   }
@@ -153,28 +148,18 @@ class __$$ProfileStateImplCopyWithImpl<$Res>
 /// @nodoc
 
 class _$ProfileStateImpl implements _ProfileState {
-  const _$ProfileStateImpl({
-    required this.baby,
-    required final List<AllergenBoardItem> safeAllergens,
-    required this.subscriptionLabel,
-  }) : _safeAllergens = safeAllergens;
+  const _$ProfileStateImpl({this.baby, this.email, this.subscriptionLabel});
 
   @override
-  final Baby baby;
-  final List<AllergenBoardItem> _safeAllergens;
+  final Baby? baby;
   @override
-  List<AllergenBoardItem> get safeAllergens {
-    if (_safeAllergens is EqualUnmodifiableListView) return _safeAllergens;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(_safeAllergens);
-  }
-
+  final String? email;
   @override
-  final String subscriptionLabel;
+  final String? subscriptionLabel;
 
   @override
   String toString() {
-    return 'ProfileState(baby: $baby, safeAllergens: $safeAllergens, subscriptionLabel: $subscriptionLabel)';
+    return 'ProfileState(baby: $baby, email: $email, subscriptionLabel: $subscriptionLabel)';
   }
 
   @override
@@ -183,21 +168,13 @@ class _$ProfileStateImpl implements _ProfileState {
         (other.runtimeType == runtimeType &&
             other is _$ProfileStateImpl &&
             (identical(other.baby, baby) || other.baby == baby) &&
-            const DeepCollectionEquality().equals(
-              other._safeAllergens,
-              _safeAllergens,
-            ) &&
+            (identical(other.email, email) || other.email == email) &&
             (identical(other.subscriptionLabel, subscriptionLabel) ||
                 other.subscriptionLabel == subscriptionLabel));
   }
 
   @override
-  int get hashCode => Object.hash(
-    runtimeType,
-    baby,
-    const DeepCollectionEquality().hash(_safeAllergens),
-    subscriptionLabel,
-  );
+  int get hashCode => Object.hash(runtimeType, baby, email, subscriptionLabel);
 
   /// Create a copy of ProfileState
   /// with the given fields replaced by the non-null parameter values.
@@ -210,17 +187,17 @@ class _$ProfileStateImpl implements _ProfileState {
 
 abstract class _ProfileState implements ProfileState {
   const factory _ProfileState({
-    required final Baby baby,
-    required final List<AllergenBoardItem> safeAllergens,
-    required final String subscriptionLabel,
+    final Baby? baby,
+    final String? email,
+    final String? subscriptionLabel,
   }) = _$ProfileStateImpl;
 
   @override
-  Baby get baby;
+  Baby? get baby;
   @override
-  List<AllergenBoardItem> get safeAllergens;
+  String? get email;
   @override
-  String get subscriptionLabel;
+  String? get subscriptionLabel;
 
   /// Create a copy of ProfileState
   /// with the given fields replaced by the non-null parameter values.
