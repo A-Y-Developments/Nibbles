@@ -70,7 +70,10 @@ class _OnboardingConsentScreenState
     if (!ok || !mounted) return;
     ref.read(localFlagServiceProvider).setOnboardingDone();
     if (!mounted) return;
-    context.goNamed(AppRoute.home.name);
+    // NIB-137 — drop the user on the post-consent loading transition; the
+    // loading screen auto-routes to /home after a short min dwell. createBaby
+    // has already resolved at this point so this screen is purely visual.
+    context.goNamed(AppRoute.onboardingBabySetupLoading.name);
   }
 
   void _onBack() {

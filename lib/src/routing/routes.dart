@@ -18,6 +18,7 @@ import 'package:nibbles/src/features/meal_plan/map/map_meals_screen.dart';
 import 'package:nibbles/src/features/meal_plan/map/map_meals_state.dart';
 import 'package:nibbles/src/features/meal_plan/meal_plan_screen.dart';
 import 'package:nibbles/src/features/onboarding/baby_setup/onboarding_baby_setup_screen.dart';
+import 'package:nibbles/src/features/onboarding/baby_setup_loading/onboarding_baby_setup_loading_screen.dart';
 import 'package:nibbles/src/features/onboarding/consent/onboarding_consent_screen.dart';
 import 'package:nibbles/src/features/onboarding/dob/onboarding_dob_screen.dart';
 import 'package:nibbles/src/features/onboarding/intro/onboarding_intro_screen.dart';
@@ -199,6 +200,16 @@ GoRouter goRouter(Ref ref) {
         path: AppRoute.onboardingBabySetup.path,
         name: AppRoute.onboardingBabySetup.name,
         builder: (context, state) => const OnboardingBabySetupScreen(),
+      ),
+      // NIB-137 — passive post-consent transition. Kept OFF `gatedPaths` so a
+      // user whose `onboarding_done` flag has just flipped (set by the consent
+      // screen before pushing here) is not bounced straight to /home by the
+      // redirect. The screen auto-routes to /home after a short min dwell.
+      GoRoute(
+        path: AppRoute.onboardingBabySetupLoading.path,
+        name: AppRoute.onboardingBabySetupLoading.name,
+        builder: (context, state) =>
+            const OnboardingBabySetupLoadingScreen(),
       ),
       GoRoute(
         path: AppRoute.register.path,
