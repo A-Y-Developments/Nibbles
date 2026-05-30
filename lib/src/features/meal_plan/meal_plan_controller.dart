@@ -1,9 +1,12 @@
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/domain/entities/allergen_board_item.dart';
 import 'package:nibbles/src/common/domain/entities/allergen_program_state.dart';
+import 'package:nibbles/src/common/domain/entities/baby.dart';
+import 'package:nibbles/src/common/domain/entities/meal_plan_entry.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
 import 'package:nibbles/src/common/domain/enums/allergen_program_status.dart';
 import 'package:nibbles/src/common/services/allergen_service.dart';
+import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/common/services/meal_plan_service.dart';
 import 'package:nibbles/src/common/services/recipe_service.dart';
 import 'package:nibbles/src/features/meal_plan/meal_plan_state.dart';
@@ -13,51 +16,56 @@ part 'meal_plan_controller.g.dart';
 
 @riverpod
 class MealPlanController extends _$MealPlanController {
-  var _weekStart = _mondayOf(DateTime.now());
-  var _selectedDate = _dateOnly(DateTime.now());
-  var _calendarExpanded = false;
   late String _babyId;
 
-  static DateTime _mondayOf(DateTime date) {
-    final d = _dateOnly(date);
-    return d.subtract(Duration(days: d.weekday - 1));
-  }
-
   static DateTime _dateOnly(DateTime dt) => DateTime(dt.year, dt.month, dt.day);
+
+  /// Normalize an expand-map key to a UTC date-only [DateTime] so keys match
+  /// regardless of the input's local TZ or sub-day precision.
+  static DateTime _expandedKey(DateTime day) =>
+      DateTime.utc(day.year, day.month, day.day);
 
   @override
   Future<MealPlanState> build(String babyId) async {
     _babyId = babyId;
 
-    final service = ref.read(mealPlanServiceProvider);
-    final mealsResult = await service.getWeekMeals(babyId, _weekStart);
-    if (mealsResult.isFailure) throw mealsResult.errorOrNull!;
-    final meals = mealsResult.dataOrNull!;
+    final windowStart = _dateOnly(DateTime.now());
+    final windowEnd = windowStart.add(const Duration(days: 6));
 
+    final mealPlanService = ref.read(mealPlanServiceProvider);
     final recipeService = ref.read(recipeServiceProvider);
-    final recipeMap = <String, Recipe>{};
-    for (final entry in meals) {
-      if (!recipeMap.containsKey(entry.recipeId)) {
-        final r = await recipeService.getRecipeById(entry.recipeId);
-        if (r.isSuccess) recipeMap[entry.recipeId] = r.dataOrNull!;
-      }
-    }
+    final babyService = ref.read(babyProfileServiceProvider);
+    final allergenService = ref.read(allergenServiceProvider);
 
-    final flaggedResult = await recipeService.getFlaggedAllergenKeys(babyId);
+    // Parallel fetch: baby + rolling-7 entries + flagged keys + program state.
+    final results = await Future.wait<Object?>([
+      babyService.getBaby(),
+      mealPlanService.getRolling7(babyId, today: windowStart),
+      recipeService.getFlaggedAllergenKeys(babyId),
+      allergenService.getProgramState(babyId),
+    ]);
+
+    final baby = results[0] as Baby?;
+
+    final entriesResult = results[1]! as Result<List<MealPlanEntry>>;
+    if (entriesResult.isFailure) {
+      throw StateError(entriesResult.errorOrNull!.message);
+    }
+    final entries = entriesResult.dataOrNull!;
+
+    final flaggedResult = results[2]! as Result<Set<String>>;
     final flaggedKeys = flaggedResult.dataOrNull ?? <String>{};
 
-    AllergenBoardItem? currentBoardItem;
+    final programResult = results[3]! as Result<AllergenProgramState>;
     AllergenProgramState? programState;
-    final programResult = await ref
-        .read(allergenServiceProvider)
-        .getProgramState(babyId);
+    AllergenBoardItem? currentBoardItem;
     if (programResult.isSuccess) {
       final ps = programResult.dataOrNull;
       programState = ps;
       if (ps != null && ps.status != AllergenProgramStatus.completed) {
-        final boardResult = await ref
-            .read(allergenServiceProvider)
-            .getAllergenBoardSummary(babyId);
+        final boardResult = await allergenService.getAllergenBoardSummary(
+          babyId,
+        );
         if (boardResult.isSuccess) {
           currentBoardItem = boardResult.dataOrNull!
               .where(
@@ -69,11 +77,19 @@ class MealPlanController extends _$MealPlanController {
       }
     }
 
+    // Hydrate recipe lookup for every entry (best-effort, deduplicated).
+    final recipeMap = <String, Recipe>{};
+    for (final entry in entries) {
+      if (recipeMap.containsKey(entry.recipeId)) continue;
+      final r = await recipeService.getRecipeById(entry.recipeId);
+      if (r.isSuccess) recipeMap[entry.recipeId] = r.dataOrNull!;
+    }
+
     return MealPlanState(
-      meals: meals,
-      weekStart: _weekStart,
-      selectedDate: _selectedDate,
-      calendarExpanded: _calendarExpanded,
+      windowStart: windowStart,
+      windowEnd: windowEnd,
+      entries: entries,
+      baby: baby,
       recipes: recipeMap,
       flaggedAllergenKeys: flaggedKeys,
       currentAllergenBoardItem: currentBoardItem,
@@ -81,39 +97,47 @@ class MealPlanController extends _$MealPlanController {
     );
   }
 
-  void selectDate(DateTime date) {
-    final d = _dateOnly(date);
-    _selectedDate = d;
-
+  /// Flip the accordion expand state for [day]. Key is normalized to UTC
+  /// date-only so lookups are stable.
+  void toggleExpanded(DateTime day) {
     final current = state.valueOrNull;
     if (current == null) return;
-
-    final weekEnd = current.weekStart.add(const Duration(days: 6));
-    if (d.isBefore(current.weekStart) || d.isAfter(weekEnd)) {
-      // Day is outside current week — shift week and reload meals.
-      _weekStart = _mondayOf(d);
-      ref.invalidateSelf();
-    } else {
-      // Same week — pure UI update, no reload.
-      state = AsyncData(current.copyWith(selectedDate: d));
-    }
+    final key = _expandedKey(day);
+    final next = Map<DateTime, bool>.from(current.expanded);
+    next[key] = !(next[key] ?? false);
+    state = AsyncData(current.copyWith(expanded: next));
   }
 
-  void toggleCalendar() {
-    _calendarExpanded = !_calendarExpanded;
-    final current = state.valueOrNull;
-    if (current == null) return;
-    state = AsyncData(current.copyWith(calendarExpanded: _calendarExpanded));
-  }
-
-  void previousWeek() {
-    _weekStart = _weekStart.subtract(const Duration(days: 7));
+  /// NIB-59: APPEND-bulk add for [startDate]..[endDate]. Calls
+  /// [MealPlanService.appendMealsToRange] then invalidates self to refetch.
+  /// Returns false on failure — caller should surface a P2 toast.
+  Future<bool> appendBulkPrep({
+    required DateTime startDate,
+    required DateTime endDate,
+    required List<RecipeAssignment> assignments,
+  }) async {
+    final result = await ref
+        .read(mealPlanServiceProvider)
+        .appendMealsToRange(
+          babyId: _babyId,
+          startDate: startDate,
+          endDate: endDate,
+          assignments: assignments,
+        );
+    if (result.isFailure) return false;
     ref.invalidateSelf();
+    return true;
   }
 
-  void nextWeek() {
-    _weekStart = _weekStart.add(const Duration(days: 7));
+  /// NIB-59: explicit clear for an arbitrary date range. Returns false on
+  /// failure — caller should surface a P2 toast.
+  Future<bool> clearRange(DateTime startDate, DateTime endDate) async {
+    final result = await ref
+        .read(mealPlanServiceProvider)
+        .clearRange(_babyId, startDate, endDate);
+    if (result.isFailure) return false;
     ref.invalidateSelf();
+    return true;
   }
 
   /// Returns false on failure — caller should show P2 toast.
@@ -144,13 +168,26 @@ class MealPlanController extends _$MealPlanController {
     return true;
   }
 
-  /// Returns false on failure — caller should show P2 toast.
+  // ---------------------------------------------------------------------------
+  // Backwards-compat shims for the pre-rewrite screen (NIB-69 removes these).
+  // ---------------------------------------------------------------------------
+
+  // TODO(NIB-69): remove after screen rewrite — accordion replaces the strip.
+  void selectDate(DateTime date) {}
+
+  // TODO(NIB-69): remove after screen rewrite — accordion replaces the toggle.
+  void toggleCalendar() {}
+
+  // TODO(NIB-69): remove after screen rewrite — rolling-7 doesn't navigate.
+  void previousWeek() {}
+
+  // TODO(NIB-69): remove after screen rewrite — rolling-7 doesn't navigate.
+  void nextWeek() {}
+
+  // TODO(NIB-69): remove after screen rewrite — use [clearRange] instead.
   Future<bool> clearWeek() async {
-    final result = await ref
-        .read(mealPlanServiceProvider)
-        .clearWeek(_babyId, _weekStart);
-    if (result.isFailure) return false;
-    ref.invalidateSelf();
-    return true;
+    final state = this.state.valueOrNull;
+    if (state == null) return false;
+    return clearRange(state.windowStart, state.windowEnd);
   }
 }

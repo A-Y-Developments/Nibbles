@@ -17,10 +17,11 @@ final _privateConstructorUsedError = UnsupportedError(
 
 /// @nodoc
 mixin _$MealPlanState {
-  List<MealPlanEntry> get meals => throw _privateConstructorUsedError;
-  DateTime get weekStart => throw _privateConstructorUsedError;
-  DateTime get selectedDate => throw _privateConstructorUsedError;
-  bool get calendarExpanded => throw _privateConstructorUsedError;
+  DateTime get windowStart => throw _privateConstructorUsedError;
+  DateTime get windowEnd => throw _privateConstructorUsedError;
+  List<MealPlanEntry> get entries => throw _privateConstructorUsedError;
+  Baby? get baby => throw _privateConstructorUsedError;
+  Map<DateTime, bool> get expanded => throw _privateConstructorUsedError;
   Map<String, Recipe> get recipes => throw _privateConstructorUsedError;
   Set<String> get flaggedAllergenKeys => throw _privateConstructorUsedError;
   AllergenBoardItem? get currentAllergenBoardItem =>
@@ -42,16 +43,18 @@ abstract class $MealPlanStateCopyWith<$Res> {
   ) = _$MealPlanStateCopyWithImpl<$Res, MealPlanState>;
   @useResult
   $Res call({
-    List<MealPlanEntry> meals,
-    DateTime weekStart,
-    DateTime selectedDate,
-    bool calendarExpanded,
+    DateTime windowStart,
+    DateTime windowEnd,
+    List<MealPlanEntry> entries,
+    Baby? baby,
+    Map<DateTime, bool> expanded,
     Map<String, Recipe> recipes,
     Set<String> flaggedAllergenKeys,
     AllergenBoardItem? currentAllergenBoardItem,
     AllergenProgramState? programState,
   });
 
+  $BabyCopyWith<$Res>? get baby;
   $AllergenBoardItemCopyWith<$Res>? get currentAllergenBoardItem;
   $AllergenProgramStateCopyWith<$Res>? get programState;
 }
@@ -71,10 +74,11 @@ class _$MealPlanStateCopyWithImpl<$Res, $Val extends MealPlanState>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? meals = null,
-    Object? weekStart = null,
-    Object? selectedDate = null,
-    Object? calendarExpanded = null,
+    Object? windowStart = null,
+    Object? windowEnd = null,
+    Object? entries = null,
+    Object? baby = freezed,
+    Object? expanded = null,
     Object? recipes = null,
     Object? flaggedAllergenKeys = null,
     Object? currentAllergenBoardItem = freezed,
@@ -82,22 +86,26 @@ class _$MealPlanStateCopyWithImpl<$Res, $Val extends MealPlanState>
   }) {
     return _then(
       _value.copyWith(
-            meals: null == meals
-                ? _value.meals
-                : meals // ignore: cast_nullable_to_non_nullable
+            windowStart: null == windowStart
+                ? _value.windowStart
+                : windowStart // ignore: cast_nullable_to_non_nullable
+                      as DateTime,
+            windowEnd: null == windowEnd
+                ? _value.windowEnd
+                : windowEnd // ignore: cast_nullable_to_non_nullable
+                      as DateTime,
+            entries: null == entries
+                ? _value.entries
+                : entries // ignore: cast_nullable_to_non_nullable
                       as List<MealPlanEntry>,
-            weekStart: null == weekStart
-                ? _value.weekStart
-                : weekStart // ignore: cast_nullable_to_non_nullable
-                      as DateTime,
-            selectedDate: null == selectedDate
-                ? _value.selectedDate
-                : selectedDate // ignore: cast_nullable_to_non_nullable
-                      as DateTime,
-            calendarExpanded: null == calendarExpanded
-                ? _value.calendarExpanded
-                : calendarExpanded // ignore: cast_nullable_to_non_nullable
-                      as bool,
+            baby: freezed == baby
+                ? _value.baby
+                : baby // ignore: cast_nullable_to_non_nullable
+                      as Baby?,
+            expanded: null == expanded
+                ? _value.expanded
+                : expanded // ignore: cast_nullable_to_non_nullable
+                      as Map<DateTime, bool>,
             recipes: null == recipes
                 ? _value.recipes
                 : recipes // ignore: cast_nullable_to_non_nullable
@@ -117,6 +125,20 @@ class _$MealPlanStateCopyWithImpl<$Res, $Val extends MealPlanState>
           )
           as $Val,
     );
+  }
+
+  /// Create a copy of MealPlanState
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $BabyCopyWith<$Res>? get baby {
+    if (_value.baby == null) {
+      return null;
+    }
+
+    return $BabyCopyWith<$Res>(_value.baby!, (value) {
+      return _then(_value.copyWith(baby: value) as $Val);
+    });
   }
 
   /// Create a copy of MealPlanState
@@ -160,16 +182,19 @@ abstract class _$$MealPlanStateImplCopyWith<$Res>
   @override
   @useResult
   $Res call({
-    List<MealPlanEntry> meals,
-    DateTime weekStart,
-    DateTime selectedDate,
-    bool calendarExpanded,
+    DateTime windowStart,
+    DateTime windowEnd,
+    List<MealPlanEntry> entries,
+    Baby? baby,
+    Map<DateTime, bool> expanded,
     Map<String, Recipe> recipes,
     Set<String> flaggedAllergenKeys,
     AllergenBoardItem? currentAllergenBoardItem,
     AllergenProgramState? programState,
   });
 
+  @override
+  $BabyCopyWith<$Res>? get baby;
   @override
   $AllergenBoardItemCopyWith<$Res>? get currentAllergenBoardItem;
   @override
@@ -190,10 +215,11 @@ class __$$MealPlanStateImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? meals = null,
-    Object? weekStart = null,
-    Object? selectedDate = null,
-    Object? calendarExpanded = null,
+    Object? windowStart = null,
+    Object? windowEnd = null,
+    Object? entries = null,
+    Object? baby = freezed,
+    Object? expanded = null,
     Object? recipes = null,
     Object? flaggedAllergenKeys = null,
     Object? currentAllergenBoardItem = freezed,
@@ -201,22 +227,26 @@ class __$$MealPlanStateImplCopyWithImpl<$Res>
   }) {
     return _then(
       _$MealPlanStateImpl(
-        meals: null == meals
-            ? _value._meals
-            : meals // ignore: cast_nullable_to_non_nullable
+        windowStart: null == windowStart
+            ? _value.windowStart
+            : windowStart // ignore: cast_nullable_to_non_nullable
+                  as DateTime,
+        windowEnd: null == windowEnd
+            ? _value.windowEnd
+            : windowEnd // ignore: cast_nullable_to_non_nullable
+                  as DateTime,
+        entries: null == entries
+            ? _value._entries
+            : entries // ignore: cast_nullable_to_non_nullable
                   as List<MealPlanEntry>,
-        weekStart: null == weekStart
-            ? _value.weekStart
-            : weekStart // ignore: cast_nullable_to_non_nullable
-                  as DateTime,
-        selectedDate: null == selectedDate
-            ? _value.selectedDate
-            : selectedDate // ignore: cast_nullable_to_non_nullable
-                  as DateTime,
-        calendarExpanded: null == calendarExpanded
-            ? _value.calendarExpanded
-            : calendarExpanded // ignore: cast_nullable_to_non_nullable
-                  as bool,
+        baby: freezed == baby
+            ? _value.baby
+            : baby // ignore: cast_nullable_to_non_nullable
+                  as Baby?,
+        expanded: null == expanded
+            ? _value._expanded
+            : expanded // ignore: cast_nullable_to_non_nullable
+                  as Map<DateTime, bool>,
         recipes: null == recipes
             ? _value._recipes
             : recipes // ignore: cast_nullable_to_non_nullable
@@ -240,35 +270,46 @@ class __$$MealPlanStateImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$MealPlanStateImpl implements _MealPlanState {
+class _$MealPlanStateImpl extends _MealPlanState {
   const _$MealPlanStateImpl({
-    required final List<MealPlanEntry> meals,
-    required this.weekStart,
-    required this.selectedDate,
-    this.calendarExpanded = false,
+    required this.windowStart,
+    required this.windowEnd,
+    required final List<MealPlanEntry> entries,
+    this.baby,
+    final Map<DateTime, bool> expanded = const <DateTime, bool>{},
     final Map<String, Recipe> recipes = const <String, Recipe>{},
     final Set<String> flaggedAllergenKeys = const <String>{},
     this.currentAllergenBoardItem,
     this.programState,
-  }) : _meals = meals,
+  }) : _entries = entries,
+       _expanded = expanded,
        _recipes = recipes,
-       _flaggedAllergenKeys = flaggedAllergenKeys;
+       _flaggedAllergenKeys = flaggedAllergenKeys,
+       super._();
 
-  final List<MealPlanEntry> _meals;
   @override
-  List<MealPlanEntry> get meals {
-    if (_meals is EqualUnmodifiableListView) return _meals;
+  final DateTime windowStart;
+  @override
+  final DateTime windowEnd;
+  final List<MealPlanEntry> _entries;
+  @override
+  List<MealPlanEntry> get entries {
+    if (_entries is EqualUnmodifiableListView) return _entries;
     // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(_meals);
+    return EqualUnmodifiableListView(_entries);
   }
 
   @override
-  final DateTime weekStart;
-  @override
-  final DateTime selectedDate;
+  final Baby? baby;
+  final Map<DateTime, bool> _expanded;
   @override
   @JsonKey()
-  final bool calendarExpanded;
+  Map<DateTime, bool> get expanded {
+    if (_expanded is EqualUnmodifiableMapView) return _expanded;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(_expanded);
+  }
+
   final Map<String, Recipe> _recipes;
   @override
   @JsonKey()
@@ -295,7 +336,7 @@ class _$MealPlanStateImpl implements _MealPlanState {
 
   @override
   String toString() {
-    return 'MealPlanState(meals: $meals, weekStart: $weekStart, selectedDate: $selectedDate, calendarExpanded: $calendarExpanded, recipes: $recipes, flaggedAllergenKeys: $flaggedAllergenKeys, currentAllergenBoardItem: $currentAllergenBoardItem, programState: $programState)';
+    return 'MealPlanState(windowStart: $windowStart, windowEnd: $windowEnd, entries: $entries, baby: $baby, expanded: $expanded, recipes: $recipes, flaggedAllergenKeys: $flaggedAllergenKeys, currentAllergenBoardItem: $currentAllergenBoardItem, programState: $programState)';
   }
 
   @override
@@ -303,13 +344,13 @@ class _$MealPlanStateImpl implements _MealPlanState {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$MealPlanStateImpl &&
-            const DeepCollectionEquality().equals(other._meals, _meals) &&
-            (identical(other.weekStart, weekStart) ||
-                other.weekStart == weekStart) &&
-            (identical(other.selectedDate, selectedDate) ||
-                other.selectedDate == selectedDate) &&
-            (identical(other.calendarExpanded, calendarExpanded) ||
-                other.calendarExpanded == calendarExpanded) &&
+            (identical(other.windowStart, windowStart) ||
+                other.windowStart == windowStart) &&
+            (identical(other.windowEnd, windowEnd) ||
+                other.windowEnd == windowEnd) &&
+            const DeepCollectionEquality().equals(other._entries, _entries) &&
+            (identical(other.baby, baby) || other.baby == baby) &&
+            const DeepCollectionEquality().equals(other._expanded, _expanded) &&
             const DeepCollectionEquality().equals(other._recipes, _recipes) &&
             const DeepCollectionEquality().equals(
               other._flaggedAllergenKeys,
@@ -327,10 +368,11 @@ class _$MealPlanStateImpl implements _MealPlanState {
   @override
   int get hashCode => Object.hash(
     runtimeType,
-    const DeepCollectionEquality().hash(_meals),
-    weekStart,
-    selectedDate,
-    calendarExpanded,
+    windowStart,
+    windowEnd,
+    const DeepCollectionEquality().hash(_entries),
+    baby,
+    const DeepCollectionEquality().hash(_expanded),
     const DeepCollectionEquality().hash(_recipes),
     const DeepCollectionEquality().hash(_flaggedAllergenKeys),
     currentAllergenBoardItem,
@@ -346,26 +388,30 @@ class _$MealPlanStateImpl implements _MealPlanState {
       __$$MealPlanStateImplCopyWithImpl<_$MealPlanStateImpl>(this, _$identity);
 }
 
-abstract class _MealPlanState implements MealPlanState {
+abstract class _MealPlanState extends MealPlanState {
   const factory _MealPlanState({
-    required final List<MealPlanEntry> meals,
-    required final DateTime weekStart,
-    required final DateTime selectedDate,
-    final bool calendarExpanded,
+    required final DateTime windowStart,
+    required final DateTime windowEnd,
+    required final List<MealPlanEntry> entries,
+    final Baby? baby,
+    final Map<DateTime, bool> expanded,
     final Map<String, Recipe> recipes,
     final Set<String> flaggedAllergenKeys,
     final AllergenBoardItem? currentAllergenBoardItem,
     final AllergenProgramState? programState,
   }) = _$MealPlanStateImpl;
+  const _MealPlanState._() : super._();
 
   @override
-  List<MealPlanEntry> get meals;
+  DateTime get windowStart;
   @override
-  DateTime get weekStart;
+  DateTime get windowEnd;
   @override
-  DateTime get selectedDate;
+  List<MealPlanEntry> get entries;
   @override
-  bool get calendarExpanded;
+  Baby? get baby;
+  @override
+  Map<DateTime, bool> get expanded;
   @override
   Map<String, Recipe> get recipes;
   @override
