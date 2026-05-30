@@ -13,6 +13,10 @@ import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
 Future<bool?> showClearMealPlanConfirm(BuildContext context) {
   return showDialog<bool>(
     context: context,
+    // Spec NIB-103 build-rule 5 requires `barrierDismissible: true` to be
+    // passed explicitly even though it matches the default.
+    // ignore: avoid_redundant_argument_values
+    barrierDismissible: true,
     builder: (ctx) => const _ClearConfirmDialog(),
   );
 }
