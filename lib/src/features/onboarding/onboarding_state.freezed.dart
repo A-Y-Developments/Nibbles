@@ -19,7 +19,7 @@ final _privateConstructorUsedError = UnsupportedError(
 mixin _$OnboardingState {
   BabyNameInput get babyName => throw _privateConstructorUsedError;
   DateTime? get dob =>
-      throw _privateConstructorUsedError; // Seeded as a length-6 nullable list so the readiness screen can index
+      throw _privateConstructorUsedError; // Seeded as a length-5 nullable list so the readiness screen can index
   // safely on first build; kept in sync with [readinessQuestionCount].
   List<bool?> get readinessAnswers => throw _privateConstructorUsedError;
   bool get readinessReady => throw _privateConstructorUsedError;
@@ -200,7 +200,6 @@ class _$OnboardingStateImpl implements _OnboardingState {
       null,
       null,
       null,
-      null,
     ],
     this.readinessReady = false,
     this.consentAccepted = false,
@@ -213,10 +212,10 @@ class _$OnboardingStateImpl implements _OnboardingState {
   final BabyNameInput babyName;
   @override
   final DateTime? dob;
-  // Seeded as a length-6 nullable list so the readiness screen can index
+  // Seeded as a length-5 nullable list so the readiness screen can index
   // safely on first build; kept in sync with [readinessQuestionCount].
   final List<bool?> _readinessAnswers;
-  // Seeded as a length-6 nullable list so the readiness screen can index
+  // Seeded as a length-5 nullable list so the readiness screen can index
   // safely on first build; kept in sync with [readinessQuestionCount].
   @override
   @JsonKey()
@@ -304,7 +303,7 @@ abstract class _OnboardingState implements OnboardingState {
   @override
   BabyNameInput get babyName;
   @override
-  DateTime? get dob; // Seeded as a length-6 nullable list so the readiness screen can index
+  DateTime? get dob; // Seeded as a length-5 nullable list so the readiness screen can index
   // safely on first build; kept in sync with [readinessQuestionCount].
   @override
   List<bool?> get readinessAnswers;
