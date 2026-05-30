@@ -34,9 +34,7 @@ SubscriptionLaunchUrlFn subscriptionLaunchUrl(
 /// App Store / Play subscriptions — the OS owns the cancellation UI. The
 /// https URLs avoid an Info.plist `LSApplicationQueriesSchemes` entry that
 /// `itms-apps://` would otherwise force.
-@visibleForTesting
 const String iosManagementUrl = 'https://apps.apple.com/account/subscriptions';
-@visibleForTesting
 const String androidManagementUrl =
     'https://play.google.com/store/account/subscriptions';
 
