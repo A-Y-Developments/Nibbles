@@ -155,6 +155,77 @@ class FakeAnalytics implements Analytics {
       _record('recipe_added_to_meal_plan', {'recipe_id': recipeId});
 
   @override
+  Future<void> logMealPlanViewed({required int dayCount}) async =>
+      _record('meal_plan_viewed', {'day_count': dayCount});
+
+  @override
+  Future<void> logMealPlanDayExpanded({required String dayOffsetIso}) async =>
+      _record('meal_plan_day_expanded', {'day_offset_iso': dayOffsetIso});
+
+  @override
+  Future<void> logMealPlanDayCollapsed({required String dayOffsetIso}) async =>
+      _record('meal_plan_day_collapsed', {'day_offset_iso': dayOffsetIso});
+
+  @override
+  Future<void> logMealPlanAddDateTapped() async =>
+      _record('meal_plan_add_date_tapped');
+
+  @override
+  Future<void> logMealPlanRecipeAssigned({
+    required String recipeId,
+    required String dayOffsetIso,
+  }) async => _record('meal_plan_recipe_assigned', {
+    'recipe_id': recipeId,
+    'day_offset_iso': dayOffsetIso,
+  });
+
+  @override
+  Future<void> logMealPlanRecipeRemoved({required String recipeId}) async =>
+      _record('meal_plan_recipe_removed', {'recipe_id': recipeId});
+
+  @override
+  Future<void> logMealPrepCreateStarted() async =>
+      _record('meal_prep_create_started');
+
+  @override
+  Future<void> logMealPrepRangeSelected({required int days}) async =>
+      _record('meal_prep_range_selected', {'days': days});
+
+  @override
+  Future<void> logMealPrepBrowseSelected({required String recipeId}) async =>
+      _record('meal_prep_browse_selected', {'recipe_id': recipeId});
+
+  @override
+  Future<void> logMealPrepBrowseDeselected({required String recipeId}) async =>
+      _record('meal_prep_browse_deselected', {'recipe_id': recipeId});
+
+  @override
+  Future<void> logMealPrepMappingAssigned({
+    required String recipeId,
+    required String dayOffsetIso,
+  }) async => _record('meal_prep_mapping_assigned', {
+    'recipe_id': recipeId,
+    'day_offset_iso': dayOffsetIso,
+  });
+
+  @override
+  Future<void> logMealPrepCommitted({
+    required int recipeCount,
+    required int dayCount,
+  }) async => _record('meal_prep_committed', {
+    'recipe_count': recipeCount,
+    'day_count': dayCount,
+  });
+
+  @override
+  Future<void> logMealPlanClearWeekConfirmed({required int dayCount}) async =>
+      _record('meal_plan_clear_week_confirmed', {'day_count': dayCount});
+
+  @override
+  Future<void> logMealPlanAddToShopList({required int dayCount}) async =>
+      _record('meal_plan_add_to_shop_list', {'day_count': dayCount});
+
+  @override
   Future<void> logScreenView({required String screenName}) async =>
       _record('screen_view', {'screen_name': screenName});
 }

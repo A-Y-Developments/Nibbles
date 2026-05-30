@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -19,8 +21,16 @@ import 'package:nibbles/src/features/meal_plan/widgets/clear_confirm_dialog.dart
 import 'package:nibbles/src/features/meal_plan/widgets/day_accordion_card.dart';
 import 'package:nibbles/src/features/meal_plan/widgets/meal_plan_empty_state.dart';
 import 'package:nibbles/src/features/meal_plan/widgets/meal_plan_header.dart';
+import 'package:nibbles/src/logging/analytics.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 import 'package:nibbles/src/utils/age_in_months.dart';
+
+/// `yyyy-MM-dd` for analytics. Locale-stable, no PII.
+String _isoDate(DateTime dt) {
+  final m = dt.month.toString().padLeft(2, '0');
+  final d = dt.day.toString().padLeft(2, '0');
+  return '${dt.year}-$m-$d';
+}
 
 /// Screen-level overflow menu actions (Figma 971:7999).
 enum _ScreenMenuAction { addToShopList, createMealPrep, clearCurrentWeek }
@@ -74,6 +84,10 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
   /// controller state changes window (e.g. invalidate on the day rollover).
   DateTime? _extraEnd;
 
+  /// Guard so `meal_plan_viewed` only fires once per mount, after the
+  /// controller resolves with success.
+  bool _viewedFired = false;
+
   @override
   Widget build(BuildContext context) {
     final controllerAsync = ref.watch(
@@ -98,6 +112,7 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
     if (baby == null) {
       return const Center(child: Text('No baby profile found.'));
     }
+    _fireViewedOnce(state);
     if (state.entries.isEmpty) {
       return MealPlanEmptyState(
         babyName: baby.name,
@@ -113,11 +128,48 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
       onScreenMenuSelected: _onScreenMenuSelected,
       onDayAdd: _onDayAdd,
       onDayMenuSelected: _onDayMenuSelected,
-      onToggleExpanded: (day) => ref
-          .read(mealPlanControllerProvider(widget.babyId).notifier)
-          .toggleExpanded(day),
+      onToggleExpanded: _onToggleExpanded,
       onRecipeTap: _onRecipeTap,
     );
+  }
+
+  void _fireViewedOnce(MealPlanState state) {
+    if (_viewedFired) return;
+    _viewedFired = true;
+    final start = DateTime(
+      state.windowStart.year,
+      state.windowStart.month,
+      state.windowStart.day,
+    );
+    final end = _effectiveWindowEnd(state);
+    final dayCount = DateTime(end.year, end.month, end.day)
+            .difference(start)
+            .inDays +
+        1;
+    unawaited(
+      ref.read(analyticsProvider).logMealPlanViewed(dayCount: dayCount),
+    );
+  }
+
+  void _onToggleExpanded(DateTime day) {
+    final notifier = ref.read(
+      mealPlanControllerProvider(widget.babyId).notifier,
+    );
+    // Read current expanded state BEFORE toggling so we can fire the correct
+    // expanded/collapsed event for the resulting state.
+    final current = ref
+        .read(mealPlanControllerProvider(widget.babyId))
+        .valueOrNull;
+    final key = DateTime.utc(day.year, day.month, day.day);
+    final wasExpanded = current?.expanded[key] ?? false;
+    notifier.toggleExpanded(day);
+    final analytics = ref.read(analyticsProvider);
+    final iso = _isoDate(day);
+    if (wasExpanded) {
+      unawaited(analytics.logMealPlanDayCollapsed(dayOffsetIso: iso));
+    } else {
+      unawaited(analytics.logMealPlanDayExpanded(dayOffsetIso: iso));
+    }
   }
 
   DateTime _effectiveWindowEnd(MealPlanState state) {
@@ -135,9 +187,14 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
       final current = _effectiveWindowEnd(state);
       _extraEnd = current.add(const Duration(days: 1));
     });
+    unawaited(ref.read(analyticsProvider).logMealPlanAddDateTapped());
   }
 
   Future<void> _onCreateMealPlanFromEmpty(DateTimeRange range) async {
+    final days = range.end.difference(range.start).inDays + 1;
+    unawaited(
+      ref.read(analyticsProvider).logMealPrepRangeSelected(days: days),
+    );
     final picked = await showBrowseMealSheet(
       context,
       babyId: widget.babyId,
@@ -170,9 +227,21 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
           endDate: day,
           assignments: assignments,
         );
-    if (!ok && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Couldn't add to meal plan. Try again.")),
+    if (!ok) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Couldn't add to meal plan. Try again."),
+          ),
+        );
+      }
+      return;
+    }
+    final analytics = ref.read(analyticsProvider);
+    final iso = _isoDate(day);
+    for (final r in picked) {
+      unawaited(
+        analytics.logMealPlanRecipeAssigned(recipeId: r.id, dayOffsetIso: iso),
       );
     }
   }
@@ -182,10 +251,23 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
         .read(mealPlanControllerProvider(widget.babyId))
         .valueOrNull;
     if (state == null) return;
+    final analytics = ref.read(analyticsProvider);
     switch (action) {
       case _ScreenMenuAction.addToShopList:
+        final start = DateTime(
+          state.windowStart.year,
+          state.windowStart.month,
+          state.windowStart.day,
+        );
+        final end = _effectiveWindowEnd(state);
+        final dayCount = DateTime(end.year, end.month, end.day)
+                .difference(start)
+                .inDays +
+            1;
+        unawaited(analytics.logMealPlanAddToShopList(dayCount: dayCount));
         await _openAddToShoppingList(state.windowStart);
       case _ScreenMenuAction.createMealPrep:
+        unawaited(analytics.logMealPrepCreateStarted());
         await _onCreateMealPrep(state);
       case _ScreenMenuAction.clearCurrentWeek:
         await _onClearWindow(state);
@@ -202,6 +284,9 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
     if (state == null) return;
     switch (action) {
       case DayCardMenuAction.addToShopList:
+        // Per NIB-109 spec, `meal_plan_add_to_shop_list` only fires from the
+        // SCREEN-LEVEL overflow menu (see [_onScreenMenuSelected]). The
+        // day-card menu intentionally does not fire it.
         await _openAddToShoppingList(day);
       case DayCardMenuAction.clearCurrentWeek:
         await _onClearWindow(state);
@@ -209,29 +294,44 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
   }
 
   Future<void> _onCreateMealPrep(MealPlanState state) async {
+    final endDate = _effectiveWindowEnd(state);
+    final days = endDate.difference(state.windowStart).inDays + 1;
+    unawaited(
+      ref.read(analyticsProvider).logMealPrepRangeSelected(days: days),
+    );
     final picked = await showBrowseMealSheet(
       context,
       babyId: widget.babyId,
       startDate: state.windowStart,
-      endDate: _effectiveWindowEnd(state),
+      endDate: endDate,
     );
     if (picked == null || picked.isEmpty) return;
     if (!mounted) return;
-    await _pushMapMeals(picked, state.windowStart, _effectiveWindowEnd(state));
+    await _pushMapMeals(picked, state.windowStart, endDate);
   }
 
   Future<void> _onClearWindow(MealPlanState state) async {
     final confirmed = await showClearMealPlanConfirm(context);
     if (confirmed != true) return;
     if (!mounted) return;
+    final endDate = _effectiveWindowEnd(state);
     final ok = await ref
         .read(mealPlanControllerProvider(widget.babyId).notifier)
-        .clearRange(state.windowStart, _effectiveWindowEnd(state));
-    if (!ok && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Couldn't clear meals. Try again.")),
-      );
+        .clearRange(state.windowStart, endDate);
+    if (!ok) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Couldn't clear meals. Try again.")),
+        );
+      }
+      return;
     }
+    final dayCount = endDate.difference(state.windowStart).inDays + 1;
+    unawaited(
+      ref
+          .read(analyticsProvider)
+          .logMealPlanClearWeekConfirmed(dayCount: dayCount),
+    );
   }
 
   Future<void> _openAddToShoppingList(DateTime date) async {

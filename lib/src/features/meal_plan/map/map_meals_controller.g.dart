@@ -6,8 +6,30 @@ part of 'map_meals_controller.dart';
 // RiverpodGenerator
 // **************************************************************************
 
+String _$mealPrepCrashRecorderHash() =>
+    r'61917b9a106232580c8e34736777bb7e03961138';
+
+/// Provider for the [MealPrepCrashRecorderFn]. Tests override this to capture
+/// the recorded payload without hitting Crashlytics.
+///
+/// Copied from [mealPrepCrashRecorder].
+@ProviderFor(mealPrepCrashRecorder)
+final mealPrepCrashRecorderProvider =
+    Provider<MealPrepCrashRecorderFn>.internal(
+      mealPrepCrashRecorder,
+      name: r'mealPrepCrashRecorderProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$mealPrepCrashRecorderHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef MealPrepCrashRecorderRef = ProviderRef<MealPrepCrashRecorderFn>;
 String _$mapMealsControllerHash() =>
-    r'e4d7781e7268d1aa30b0fcce773b320022803c30';
+    r'3bd04cb23a21215baf69a349c8514a2adea03309';
 
 /// Copied from Dart SDK
 class _SystemHash {
