@@ -16,13 +16,24 @@ import 'package:nibbles/src/features/profile/edit/profile_edit_state.dart';
 import 'package:nibbles/src/features/profile/profile_controller.dart';
 import 'package:nibbles/src/logging/analytics.dart';
 
+// ── Figma frame 1200:10475 spec values (profile-edit only) ──────────────
+// Avatar PNG is 143x143 in Figma; no asset shipped, so we keep the coral
+// circle + cream icon (same fallback used by ProfileAvatarCard) at 143px.
+const double _kEditAvatarSize = 143;
+// Form column inset: 16px left, 17px right (Figma); use 16 symmetrically.
+const double _kFormPaddingH = 16;
+// Field group gap (between fields) = 17; label→input gap = 11.
+const double _kFieldGroupGap = 17;
+const double _kLabelGap = 11;
+// Page background Grad-1 (linear-gradient 154.372deg butter→light-grey).
+const Color _kGradEnd = Color(0xFFF5F5F5);
+
 /// PR-02 — Edit Profile.
 ///
-/// Mirrors Figma frame 1200:10475 (`ProfileEditScreen` in
-/// `design/ui_kits/nibbles_mobile/ProfileScreen.jsx`): butter-soft wash
-/// header with a back chevron + "Change Profile" title, coral avatar puck,
-/// then a cream form pane with First Name / Last Name (Optional) / Email
-/// labelled fields and a full-width primary "Save" pill.
+/// Mirrors Figma frame 1200:10475: Grad-1 page wash (butter→#f5f5f5 at
+/// ~154°), back chip + "Change Profile" header, 143px coral avatar puck,
+/// then First Name / Last Name (Optional) / Email labelled fields and a
+/// primary "Save" pill.
 class ProfileEditScreen extends ConsumerStatefulWidget {
   const ProfileEditScreen({super.key});
 
@@ -56,8 +67,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
     final babyIdAsync = ref.watch(currentBabyIdProvider);
 
     return babyIdAsync.when(
-      loading: () => const Scaffold(
-        backgroundColor: AppColors.background,
+      loading: () => const _ProfileEditScaffold(
         body: Center(child: CircularProgressIndicator()),
       ),
       error: (_, __) => _ProfileEditError(
@@ -87,8 +97,7 @@ class _ProfileEditBody extends ConsumerWidget {
     final asyncState = ref.watch(profileEditControllerProvider(babyId));
 
     return asyncState.when(
-      loading: () => const Scaffold(
-        backgroundColor: AppColors.background,
+      loading: () => const _ProfileEditScaffold(
         body: Center(child: CircularProgressIndicator()),
       ),
       error: (err, _) => _ProfileEditError(
@@ -154,86 +163,95 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
 
     void goBack() => context.canPop() ? context.pop() : context.go('/home');
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          SafeArea(
-            bottom: false,
-            child: ColoredBox(
-              color: AppColors.butterSoft,
-              child: Column(
-                children: [
-                  _EditHeader(onBack: goBack),
-                  const _EditAvatar(),
-                ],
-              ),
-            ),
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(
-                AppSizes.pagePaddingH,
-                AppSizes.sm,
-                AppSizes.pagePaddingH,
-                AppSizes.md,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  AppTextField(
-                    key: const Key('edit_first_name_field'),
-                    label: 'First Name',
-                    controller: _firstNameController,
-                    onChanged: controller.updateFirstName,
-                    textInputAction: TextInputAction.next,
-                  ),
-                  const SizedBox(height: AppSizes.md),
-                  AppTextField(
-                    key: const Key('edit_last_name_field'),
-                    label: 'Last Name (Optional)',
-                    controller: _lastNameController,
-                    onChanged: controller.updateLastName,
-                    textInputAction: TextInputAction.next,
-                  ),
-                  const SizedBox(height: AppSizes.md),
-                  AppTextField(
-                    key: const Key('edit_email_field'),
-                    label: 'Email',
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    textInputAction: TextInputAction.done,
-                    onChanged: (value) {
-                      if (!_emailTouched) {
-                        setState(() => _emailTouched = true);
-                      }
-                      controller.updateEmail(value);
-                    },
-                    errorText: _emailTouched && !emailValid
-                        ? 'Enter a valid email address.'
-                        : null,
-                  ),
-                  if (formState.errorMessage != null) ...[
-                    const SizedBox(height: AppSizes.sm),
-                    Text(
-                      formState.errorMessage!,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: AppColors.error,
+    final labelStyle = theme.textTheme.titleSmall?.copyWith(
+      fontSize: 15,
+      fontWeight: FontWeight.w600,
+      height: 22 / 15,
+      color: AppColors.fgStrong,
+    );
+
+    return _ProfileEditScaffold(
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _EditHeader(onBack: goBack),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(
+                  _kFormPaddingH,
+                  0,
+                  _kFormPaddingH,
+                  AppSizes.md,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const _EditAvatar(),
+                    const SizedBox(height: _kFieldGroupGap),
+                    _LabelledField(
+                      label: 'First Name',
+                      labelStyle: labelStyle,
+                      field: AppTextField(
+                        key: const Key('edit_first_name_field'),
+                        controller: _firstNameController,
+                        onChanged: controller.updateFirstName,
+                        textInputAction: TextInputAction.next,
                       ),
                     ),
+                    const SizedBox(height: _kFieldGroupGap),
+                    _LabelledField(
+                      label: 'Last Name (Optional)',
+                      labelStyle: labelStyle,
+                      field: AppTextField(
+                        key: const Key('edit_last_name_field'),
+                        controller: _lastNameController,
+                        onChanged: controller.updateLastName,
+                        textInputAction: TextInputAction.next,
+                      ),
+                    ),
+                    const SizedBox(height: _kFieldGroupGap),
+                    _LabelledField(
+                      label: 'Email',
+                      labelStyle: labelStyle,
+                      field: AppTextField(
+                        key: const Key('edit_email_field'),
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        textInputAction: TextInputAction.done,
+                        onChanged: (value) {
+                          if (!_emailTouched) {
+                            setState(() => _emailTouched = true);
+                          }
+                          controller.updateEmail(value);
+                        },
+                        errorText: _emailTouched && !emailValid
+                            ? 'Enter a valid email address.'
+                            : null,
+                      ),
+                    ),
+                    if (formState.errorMessage != null) ...[
+                      const SizedBox(height: AppSizes.sm),
+                      Text(
+                        formState.errorMessage!,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: AppColors.error,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: AppSizes.xl - 4),
+                    AppPillButton(
+                      key: const Key('edit_profile_save_button'),
+                      label: formState.isLoading ? 'Saving…' : 'Save',
+                      onPressed: canSave ? _save : null,
+                    ),
                   ],
-                  const SizedBox(height: AppSizes.xl - 4),
-                  AppPillButton(
-                    key: const Key('edit_profile_save_button'),
-                    label: formState.isLoading ? 'Saving…' : 'Save',
-                    onPressed: canSave ? _save : null,
-                  ),
-                ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -258,6 +276,34 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
   }
 }
 
+/// Scaffold with the Grad-1 page wash (Figma: linear-gradient 154.372deg
+/// from #fffcd5 at 19.168% to #f5f5f5 at 50%). Flutter's [LinearGradient]
+/// uses begin/end alignments; ~154° clockwise from "up" maps to a top-left
+/// → bottom-right diagonal — Alignment.topLeft → Alignment.bottomRight.
+class _ProfileEditScaffold extends StatelessWidget {
+  const _ProfileEditScaffold({required this.body});
+
+  final Widget body;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.butterSoft,
+      body: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            stops: [0.19, 0.5],
+            colors: [AppColors.butterSoft, _kGradEnd],
+          ),
+        ),
+        child: body,
+      ),
+    );
+  }
+}
+
 class _EditHeader extends StatelessWidget {
   const _EditHeader({required this.onBack});
 
@@ -266,30 +312,26 @@ class _EditHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      color: AppColors.butterSoft,
+    return Padding(
       padding: const EdgeInsets.fromLTRB(
-        AppSizes.md + 2,
-        AppSizes.sm - 2,
-        AppSizes.md + 2,
-        AppSizes.md + 2,
+        AppSizes.sp12,
+        AppSizes.sm,
+        AppSizes.sp12,
+        AppSizes.sm,
       ),
       child: Row(
         children: [
-          SizedBox(
-            width: AppSizes.roundButtonSm,
-            child: AppRoundButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded),
-              onPressed: onBack,
-              tone: AppRoundButtonTone.ghost,
-              size: AppRoundButtonSize.small,
-              semanticLabel: 'Back',
-            ),
+          AppRoundButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded),
+            onPressed: onBack,
+            tone: AppRoundButtonTone.ghost,
+            size: AppRoundButtonSize.small,
+            semanticLabel: 'Back',
           ),
+          const SizedBox(width: AppSizes.sp2),
           Expanded(
             child: Text(
               'Change Profile',
-              textAlign: TextAlign.center,
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w700,
                 color: AppColors.fgStrong,
@@ -297,7 +339,6 @@ class _EditHeader extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: AppSizes.roundButtonSm),
         ],
       ),
     );
@@ -309,31 +350,50 @@ class _EditAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: AppColors.butterSoft,
-      padding: const EdgeInsets.fromLTRB(
-        AppSizes.md + 2,
-        0,
-        AppSizes.md + 2,
-        AppSizes.md + 2,
-      ),
-      child: Center(
-        child: Container(
-          width: AppSizes.avatarXl,
-          height: AppSizes.avatarXl,
-          decoration: const BoxDecoration(
-            color: AppColors.coral,
-            shape: BoxShape.circle,
-          ),
-          child: const Center(
-            child: Icon(
-              Icons.child_care_rounded,
-              size: AppSizes.xxxl,
-              color: AppColors.cream,
-            ),
+    return Center(
+      child: Container(
+        width: _kEditAvatarSize,
+        height: _kEditAvatarSize,
+        decoration: const BoxDecoration(
+          color: AppColors.coral,
+          shape: BoxShape.circle,
+        ),
+        child: const Center(
+          child: Icon(
+            Icons.child_care_rounded,
+            // ~74px glyph fits the 143px coral puck while echoing the
+            // ProfileScreen avatar proportions (64 glyph in 120 puck).
+            size: 74,
+            color: AppColors.cream,
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Field row matching Figma: label (Parkinsans SemiBold 15) then field with
+/// an 11px gap. Used in the Profile Edit form for First/Last/Email.
+class _LabelledField extends StatelessWidget {
+  const _LabelledField({
+    required this.label,
+    required this.field,
+    required this.labelStyle,
+  });
+
+  final String label;
+  final Widget field;
+  final TextStyle? labelStyle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(label, style: labelStyle),
+        const SizedBox(height: _kLabelGap),
+        field,
+      ],
     );
   }
 }
@@ -347,8 +407,7 @@ class _ProfileEditError extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return _ProfileEditScaffold(
       body: SafeArea(
         child: Center(
           child: Padding(
