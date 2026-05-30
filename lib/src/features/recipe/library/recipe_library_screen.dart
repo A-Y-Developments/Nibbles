@@ -268,8 +268,8 @@ class _ErrorView extends StatelessWidget {
                 child: Text(
                   "Couldn't load recipes. Pull down to retry.",
                   textAlign: TextAlign.center,
-                  style: AppTypography.textTheme.bodyMedium?.copyWith(
-                    color: AppColors.fgMuted,
+                  style: AppTypography.caption.copyWith(
+                    color: AppColors.fgFaint,
                   ),
                 ),
               ),
@@ -312,8 +312,8 @@ class _EmptyView extends StatelessWidget {
                   Text(
                     'Check back after completing more allergen steps.',
                     textAlign: TextAlign.center,
-                    style: AppTypography.textTheme.bodyMedium?.copyWith(
-                      color: AppColors.fgMuted,
+                    style: AppTypography.caption.copyWith(
+                      color: AppColors.fgFaint,
                     ),
                   ),
                 ],
@@ -346,8 +346,8 @@ class _SearchResults extends StatelessWidget {
           child: Text(
             'No recipes found for "$query".',
             textAlign: TextAlign.center,
-            style: AppTypography.textTheme.bodyMedium?.copyWith(
-              color: AppColors.fgMuted,
+            style: AppTypography.caption.copyWith(
+              color: AppColors.fgFaint,
             ),
           ),
         ),
