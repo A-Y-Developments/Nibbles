@@ -27,7 +27,8 @@ class SettingsRow extends StatelessWidget {
     final titleColor = danger ? AppColors.destructive : AppColors.fgStrong;
     final chevronColor = danger ? AppColors.destructive : AppColors.greenDeep;
 
-    final radius = BorderRadius.circular(AppSizes.radiusXl);
+    // Figma audit (node 1207:15365 etc.): list rows use radius 10 and p-12.
+    final radius = BorderRadius.circular(AppSizes.radiusMd);
 
     return Material(
       color: AppColors.cream,
@@ -42,31 +43,31 @@ class SettingsRow extends StatelessWidget {
           onTap: onTap,
           borderRadius: radius,
           child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSizes.md,
-              vertical: AppSizes.md - 2,
-            ),
+            padding: const EdgeInsets.all(AppSizes.sp12),
             child: Row(
               children: [
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Headline/SemiBold — Parkinsans 600 15/22.
                       Text(
                         title,
                         style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w600,
                           fontSize: 15,
+                          height: 22 / 15,
                           color: titleColor,
-                          height: 1.2,
                         ),
                       ),
                       if (subtitle != null) ...[
-                        const SizedBox(height: AppSizes.sp2),
+                        // Body/Regular — Figtree 400 15/22.
                         Text(
                           subtitle!,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: AppColors.fgFaint,
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            color: AppColors.text,
+                            fontSize: 15,
+                            height: 22 / 15,
                           ),
                         ),
                       ],
