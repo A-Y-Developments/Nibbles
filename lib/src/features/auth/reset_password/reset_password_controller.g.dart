@@ -7,9 +7,15 @@ part of 'reset_password_controller.dart';
 // **************************************************************************
 
 String _$resetPasswordControllerHash() =>
-    r'272b87c7b675fe94e674309f9449a10bd1c75b8f';
+    r'cbc677883b683d49dbd19df8dfd229fc4c3ecdf7';
 
-/// See also [ResetPasswordController].
+/// NIB-115 — Reset password / AU-03 controller.
+///
+/// Drives the three Figma states for forget-password 3/4/5:
+///   971:10136 (initial guidance), 971:10148 (too short),
+///   971:10160 (mismatch).
+///
+/// Copied from [ResetPasswordController].
 @ProviderFor(ResetPasswordController)
 final resetPasswordControllerProvider =
     AutoDisposeNotifierProvider<
