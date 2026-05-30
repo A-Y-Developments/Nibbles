@@ -6,6 +6,7 @@ import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/services/auth_service.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
+import 'package:nibbles/src/features/profile/delete/delete_account_overlay.dart';
 import 'package:nibbles/src/features/profile/profile_controller.dart';
 import 'package:nibbles/src/features/profile/profile_state.dart';
 import 'package:nibbles/src/features/profile/widgets/premium_teaser_card.dart';
@@ -144,11 +145,7 @@ class _ProfileContent extends ConsumerWidget {
                     key: const Key('profile_delete_account_row'),
                     title: 'Delete account',
                     danger: true,
-                    // TODO(NIB-78): push delete overlay when ticket ships.
-                    onTap: () => _showComingSoon(
-                      context,
-                      'Account deletion coming soon.',
-                    ),
+                    onTap: () => showDeleteAccountOverlay(context),
                   ),
                 ],
               ),
