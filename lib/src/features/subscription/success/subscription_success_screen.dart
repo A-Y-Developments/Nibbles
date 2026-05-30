@@ -89,12 +89,17 @@ class _SubscriptionSuccessScreenState
       child: Scaffold(
         backgroundColor: AppColors.butterSoft,
         body: SafeArea(
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              const _PetalBlob(key: Key('subscription_success_blob')),
-              _PhaseLabel(phase: phase),
-            ],
+          // SizedBox.expand forces the Stack to fill the SafeArea — without
+          // it the Stack collapses to its non-positioned child (_PetalBlob)
+          // and the whole cluster snaps to the upper-left.
+          child: SizedBox.expand(
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                const _PetalBlob(key: Key('subscription_success_blob')),
+                _PhaseLabel(phase: phase),
+              ],
+            ),
           ),
         ),
       ),
@@ -151,9 +156,12 @@ class _PetalBlob extends StatelessWidget {
   }
 }
 
-/// Phase caption — faint uppercase "Loading" overlay inside the petal animation
-/// in the loading phase; bold "You all set!" body label below the animation in
-/// the success phase. Verbatim copy from the Figma frame (1290:10122).
+/// Phase caption — faint uppercase "Loading" sits below the petal animation in
+/// both phases (matches the Figma frame 1290:10122 which renders LOADING
+/// faded above "You all set!" during the success state — a cross-fade where
+/// the slot is reserved so the layout never shifts). The "You all set!" label
+/// is rendered in both phases but invisible during loading so the vertical
+/// rhythm is preserved across the transition.
 class _PhaseLabel extends StatelessWidget {
   const _PhaseLabel({required this.phase});
 
@@ -162,47 +170,59 @@ class _PhaseLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final isSuccess = phase == SubscriptionSuccessPhase.success;
 
-    if (phase == SubscriptionSuccessPhase.loading) {
-      // "Loading" — Inter Regular 12.8 / 19.2 / tracking 4.33 / UPPERCASE,
-      // rendered low-contrast (cream on butter-soft) per spec.
-      return Positioned.fill(
-        child: Align(
-          alignment: const Alignment(0, 0.34),
-          child: Text(
-            'Loading'.toUpperCase(),
-            key: const Key('subscription_success_loading_label'),
-            textAlign: TextAlign.center,
-            style: textTheme.bodySmall?.copyWith(
-              color: AppColors.cream,
-              fontSize: 12.8,
-              height: 19.2 / 12.8,
-              letterSpacing: 4.33,
-              fontWeight: FontWeight.w400,
-            ),
-          ),
-        ),
-      );
-    }
-
-    // success — "You all set!" body label below the animation.
     return Positioned.fill(
-      child: Align(
-        alignment: const Alignment(0, 0.6),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSizes.md + AppSizes.sp2,
-          ),
-          child: Text(
-            'You all set!',
-            key: const Key('subscription_success_done_label'),
-            textAlign: TextAlign.center,
-            style: textTheme.bodyLarge?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: AppColors.text,
+      child: Stack(
+        children: [
+          // "Loading" — Inter Regular 12.8 / 19.2 / tracking 4.33 / UPPERCASE,
+          // rendered low-contrast (cream on butter-soft) per spec. Stays
+          // visible (faded) during the success phase to match Figma's
+          // cross-fade snapshot.
+          Align(
+            alignment: const Alignment(0, 0.34),
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 240),
+              opacity: isSuccess ? 0.55 : 1,
+              child: Text(
+                'Loading'.toUpperCase(),
+                key: const Key('subscription_success_loading_label'),
+                textAlign: TextAlign.center,
+                style: textTheme.bodySmall?.copyWith(
+                  color: AppColors.cream,
+                  fontSize: 12.8,
+                  height: 19.2 / 12.8,
+                  letterSpacing: 4.33,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
             ),
           ),
-        ),
+          // "You all set!" — body label below the animation. Always laid out
+          // so the slot is reserved during the loading phase too; opacity
+          // gates visibility so there's zero layout shift on transition.
+          Align(
+            alignment: const Alignment(0, 0.6),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSizes.md + AppSizes.sp2,
+              ),
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 240),
+                opacity: isSuccess ? 1 : 0,
+                child: Text(
+                  'You all set!',
+                  key: const Key('subscription_success_done_label'),
+                  textAlign: TextAlign.center,
+                  style: textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.text,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

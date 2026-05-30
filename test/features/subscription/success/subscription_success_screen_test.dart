@@ -48,6 +48,17 @@ Widget _buildSut({required GoRouter router}) => ProviderScope(
   child: MaterialApp.router(routerConfig: router),
 );
 
+/// Reads the *target* opacity of the [AnimatedOpacity] that wraps the widget
+/// keyed [key]. Target (not currently-tweened) opacity is what we assert
+/// against since it deterministically reflects the phase regardless of
+/// where the cross-fade animation sits at the moment of the assertion.
+double _opacityOf(WidgetTester tester, Key key) {
+  final ancestor = tester.widget<AnimatedOpacity>(
+    find.ancestor(of: find.byKey(key), matching: find.byType(AnimatedOpacity)),
+  );
+  return ancestor.opacity;
+}
+
 void main() {
   testWidgets(
     'loading frame renders the petal blob and UPPERCASE LOADING label',
@@ -68,7 +79,19 @@ void main() {
       );
       // Verbatim copy from the Figma spec is rendered uppercased per CSS class.
       expect(find.text('LOADING'), findsOneWidget);
-      expect(find.text('You all set!'), findsNothing);
+
+      // Both labels are always in the tree so the layout never shifts on
+      // transition — visibility is gated by AnimatedOpacity. During loading
+      // "You all set!" is laid out but fully transparent.
+      expect(find.text('You all set!'), findsOneWidget);
+      expect(
+        _opacityOf(tester, const Key('subscription_success_done_label')),
+        0.0,
+      );
+      expect(
+        _opacityOf(tester, const Key('subscription_success_loading_label')),
+        1.0,
+      );
     },
   );
 
@@ -87,8 +110,17 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('You all set!'), findsOneWidget);
-      // Loading caption is gone in the success phase.
-      expect(find.text('LOADING'), findsNothing);
+      // Loading caption stays mounted (matches the Figma cross-fade snapshot)
+      // but is rendered low-opacity in the success phase.
+      expect(find.text('LOADING'), findsOneWidget);
+      expect(
+        _opacityOf(tester, const Key('subscription_success_done_label')),
+        1.0,
+      );
+      expect(
+        _opacityOf(tester, const Key('subscription_success_loading_label')),
+        0.55,
+      );
     },
   );
 
