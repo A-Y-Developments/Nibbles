@@ -8,6 +8,9 @@ import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/services/local_flag_service.dart';
 import 'package:nibbles/src/features/profile/delete/delete_account_controller.dart';
 import 'package:nibbles/src/features/profile/delete/delete_account_state.dart';
+import 'package:nibbles/src/logging/analytics.dart';
+
+import '../../../support/fake_analytics.dart';
 
 class _MockAccountRepository extends Mock implements AccountRepository {}
 
@@ -19,12 +22,14 @@ void main() {
   late _MockAccountRepository mockAccountRepo;
   late _MockAuthRepository mockAuthRepo;
   late _MockLocalFlagService mockFlags;
+  late FakeAnalytics fakeAnalytics;
   late ProviderContainer container;
 
   setUp(() {
     mockAccountRepo = _MockAccountRepository();
     mockAuthRepo = _MockAuthRepository();
     mockFlags = _MockLocalFlagService();
+    fakeAnalytics = FakeAnalytics();
 
     when(() => mockAuthRepo.isLoggedIn).thenReturn(true);
     when(
@@ -39,6 +44,12 @@ void main() {
         accountRepositoryProvider.overrideWithValue(mockAccountRepo),
         authRepositoryProvider.overrideWithValue(mockAuthRepo),
         localFlagServiceProvider.overrideWithValue(mockFlags),
+        analyticsProvider.overrideWithValue(fakeAnalytics),
+        // No-op Crashlytics recorder — tests assert behaviour, not non-fatal
+        // payload (NIB-99 owns the recorder payload coverage).
+        deleteAccountCrashRecorderProvider.overrideWithValue(
+          (_, __, {String? reason, List<String>? information}) async {},
+        ),
       ],
     )
     // Hold the controller alive across awaits so state isn't lost to

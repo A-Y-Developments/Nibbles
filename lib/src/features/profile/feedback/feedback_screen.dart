@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,15 +8,41 @@ import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
 import 'package:nibbles/src/features/profile/feedback/feedback_controller.dart';
 import 'package:nibbles/src/features/profile/widgets/profile_header.dart';
+import 'package:nibbles/src/logging/analytics.dart';
 
 /// Give Feedback screen. Butter-soft "Settings" header, single multiline
 /// textarea, helper caption, and a full-width green-deep CTA. Mirrors the
 /// ProfileScreen kit pattern — no shell, no bottom nav (full-screen push).
-class FeedbackScreen extends ConsumerWidget {
+class FeedbackScreen extends ConsumerStatefulWidget {
   const FeedbackScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<FeedbackScreen> createState() => _FeedbackScreenState();
+}
+
+class _FeedbackScreenState extends ConsumerState<FeedbackScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Fire screen_view('profile_feedback') once on mount via post-frame.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(_logScreenView());
+    });
+  }
+
+  Future<void> _logScreenView() async {
+    try {
+      await ref
+          .read(analyticsProvider)
+          .logScreenView(screenName: 'profile_feedback');
+    } on Object catch (_) {
+      // Analytics is best-effort; never surface to the UI.
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(feedbackControllerProvider);
     final controller = ref.read(feedbackControllerProvider.notifier);
     final textTheme = Theme.of(context).textTheme;
@@ -79,7 +107,7 @@ class FeedbackScreen extends ConsumerWidget {
                   AppPillButton(
                     key: const Key('feedback_send_button'),
                     label: state.isSubmitting ? 'Sending…' : 'Send Feedback',
-                    onPressed: canSubmit ? () => _submit(context, ref) : null,
+                    onPressed: canSubmit ? _submit : null,
                   ),
                 ],
               ),
@@ -90,11 +118,11 @@ class FeedbackScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _submit(BuildContext context, WidgetRef ref) async {
+  Future<void> _submit() async {
     final messenger = ScaffoldMessenger.of(context);
     final controller = ref.read(feedbackControllerProvider.notifier);
     final ok = await controller.submit();
-    if (!context.mounted) return;
+    if (!mounted) return;
 
     if (ok) {
       messenger.showSnackBar(
