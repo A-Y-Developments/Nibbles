@@ -35,25 +35,20 @@ void main() {
       babyProfile = _MockBabyProfileService();
     });
 
-    test(
-      'returns false, sets inline error, and is a no-op when name + dob are '
-      'not captured yet (defensive guard — splash reset should make this '
-      'unreachable but it must NOT silently no-op if hit)',
-      () async {
-        final container = _makeContainer(babyProfile);
-        final controller = container.read(
-          onboardingControllerProvider.notifier,
-        );
+    test('returns false, sets inline error, and is a no-op when name + dob are '
+        'not captured yet (defensive guard — splash reset should make this '
+        'unreachable but it must NOT silently no-op if hit)', () async {
+      final container = _makeContainer(babyProfile);
+      final controller = container.read(onboardingControllerProvider.notifier);
 
-        final ok = await controller.submit();
+      final ok = await controller.submit();
 
-        expect(ok, isFalse);
-        verifyNever(() => babyProfile.createBaby(any(), any()));
-        final state = container.read(onboardingControllerProvider);
-        expect(state.submitErrorMessage, isNotNull);
-        expect(state.submitErrorMessage, contains('name'));
-      },
-    );
+      expect(ok, isFalse);
+      verifyNever(() => babyProfile.createBaby(any(), any()));
+      final state = container.read(onboardingControllerProvider);
+      expect(state.submitErrorMessage, isNotNull);
+      expect(state.submitErrorMessage, contains('name'));
+    });
 
     test('success path returns true and clears error', () async {
       when(
@@ -76,16 +71,12 @@ void main() {
     test(
       'failure path returns false, populates inline error, resets isSubmitting',
       () async {
-        when(
-          () => babyProfile.createBaby(any(), any()),
-        ).thenAnswer(
+        when(() => babyProfile.createBaby(any(), any())).thenAnswer(
           (_) async => const Result.failure(NetworkException('offline')),
         );
 
         final container = _makeContainer(babyProfile);
-        final controller = container.read(
-          onboardingControllerProvider.notifier,
-        )
+        final controller = container.read(onboardingControllerProvider.notifier)
           ..updateName('Lily')
           ..updateDob(DateTime(2025, 6));
 
@@ -124,35 +115,33 @@ void main() {
 
     test(
       'answerReadinessQuestion writes a single answer in place and preserves '
-      'the seeded length-6 list (back-nav contract)',
+      'the seeded length-5 list (back-nav contract)',
       () {
         final container = _makeContainer(_MockBabyProfileService());
-        final notifier = container.read(
-          onboardingControllerProvider.notifier,
-        )
+        final notifier = container.read(onboardingControllerProvider.notifier)
           ..answerReadinessQuestion(0, isYes: true)
           ..answerReadinessQuestion(3, isYes: false);
 
         final state = container.read(onboardingControllerProvider);
-        expect(state.readinessAnswers.length, 6);
+        expect(state.readinessAnswers.length, 5);
         expect(state.readinessAnswers[0], isTrue);
         expect(state.readinessAnswers[3], isFalse);
-        expect(state.readinessAnswers[5], isNull);
+        expect(state.readinessAnswers[4], isNull);
 
         // Out-of-range indices are a no-op (defensive).
         notifier.answerReadinessQuestion(99, isYes: true);
         expect(
           container.read(onboardingControllerProvider).readinessAnswers.length,
-          6,
+          5,
         );
       },
     );
 
     test('setConsentAccepted toggles consent flag and clears submit error', () {
       final container = _makeContainer(_MockBabyProfileService());
-      container.read(onboardingControllerProvider.notifier).setConsentAccepted(
-        accepted: true,
-      );
+      container
+          .read(onboardingControllerProvider.notifier)
+          .setConsentAccepted(accepted: true);
 
       expect(
         container.read(onboardingControllerProvider).consentAccepted,
