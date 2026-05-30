@@ -1,10 +1,22 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:nibbles/src/app/constants/allergen_emoji.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
+import 'package:nibbles/src/app/themes/app_typography.dart';
+import 'package:nibbles/src/common/components/chips/app_chip.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
 
+/// Recipe library / home recommendation card (NIB-53 reskin).
+///
+/// Visual target is a 158x220 tile per Figma 971:8760 — image-top + headline
+/// + a leading nutrition chip with a `+N` overflow chip when the recipe has
+/// more than one nutrition tag. Flagged-allergen recipes show a
+/// [AppChipTone.flag] 'Not safe' chip overlaid on the image.
+///
+/// The card is width-flexible (parent provides the box) so the same widget
+/// continues to render in the Home carousel (140-wide `SizedBox`) and the
+/// Home recommendations grid (aspect-ratio driven) — only the Library row
+/// pins the box to 158x220.
 class RecipeGridCard extends StatelessWidget {
   const RecipeGridCard({
     required this.recipe,
@@ -27,102 +39,33 @@ class RecipeGridCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Opacity(
-        opacity: isUnsafe ? 0.7 : 1.0,
+        opacity: isUnsafe ? 0.85 : 1,
         child: Container(
           decoration: BoxDecoration(
             color: AppColors.surface,
-            borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-            border: isUnsafe
-                ? Border.all(
-                    color: AppColors.allergenFlagged.withValues(alpha: 0.4),
-                  )
-                : null,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.06),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
+            borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+            boxShadow: AppSizes.shadowCard,
           ),
+          padding: const EdgeInsets.all(AppSizes.sp12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Stack(
-                children: [
-                  _GridThumbnail(url: recipe.thumbnailUrl),
-                  if (isUnsafe)
-                    Positioned(
-                      top: AppSizes.xs,
-                      left: AppSizes.xs,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSizes.sm,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.allergenFlagged,
-                          borderRadius: BorderRadius.circular(
-                            AppSizes.radiusFull,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.warning_amber_rounded,
-                              size: 12,
-                              color: Colors.white,
-                            ),
-                            const SizedBox(width: 3),
-                            Text(
-                              'Not safe',
-                              style: Theme.of(context).textTheme.labelSmall
-                                  ?.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 10,
-                                  ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                ],
+              _CardThumbnail(
+                url: recipe.thumbnailUrl,
+                isUnsafe: isUnsafe,
               ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSizes.sm,
-                    AppSizes.sm,
-                    AppSizes.sm,
-                    AppSizes.xs,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        recipe.title,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.text,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: AppSizes.xs),
-                      _AgeTag(ageRange: recipe.ageRange),
-                      if (recipe.allergenTags.isNotEmpty) ...[
-                        const SizedBox(height: AppSizes.xs),
-                        _AllergenChips(
-                          tags: recipe.allergenTags,
-                          flaggedKeys: flaggedAllergenKeys,
-                        ),
-                      ],
-                    ],
-                  ),
+              const SizedBox(height: AppSizes.sm + 2),
+              Text(
+                recipe.title,
+                style: AppTypography.textTheme.titleSmall?.copyWith(
+                  fontSize: 13,
+                  height: 1.25,
                 ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
+              const SizedBox(height: AppSizes.sm - 2),
+              _NutritionChipRow(tags: recipe.nutritionTags),
             ],
           ),
         ),
@@ -131,107 +74,87 @@ class RecipeGridCard extends StatelessWidget {
   }
 }
 
-class _GridThumbnail extends StatelessWidget {
-  const _GridThumbnail({required this.url});
+class _CardThumbnail extends StatelessWidget {
+  const _CardThumbnail({required this.url, required this.isUnsafe});
 
   final String? url;
+  final bool isUnsafe;
 
   @override
   Widget build(BuildContext context) {
-    const borderRadius = BorderRadius.only(
-      topLeft: Radius.circular(AppSizes.radiusMd),
-      topRight: Radius.circular(AppSizes.radiusMd),
-    );
-
-    if (url == null || url!.isEmpty) {
-      return AspectRatio(
-        aspectRatio: 4 / 3,
-        child: Container(
-          decoration: const BoxDecoration(
-            color: AppColors.surfaceVariant,
-            borderRadius: borderRadius,
-          ),
-          child: const Icon(
-            Icons.restaurant_outlined,
-            color: AppColors.hint,
-            size: AppSizes.iconLg,
-          ),
-        ),
-      );
-    }
-
     return AspectRatio(
-      aspectRatio: 4 / 3,
+      aspectRatio: 134 / 110,
       child: ClipRRect(
-        borderRadius: borderRadius,
-        child: CachedNetworkImage(
-          imageUrl: url!,
-          fit: BoxFit.cover,
-          placeholder: (_, __) =>
-              const ColoredBox(color: AppColors.surfaceVariant),
-          errorWidget: (_, __, ___) => const ColoredBox(
-            color: AppColors.surfaceVariant,
-            child: Icon(
-              Icons.restaurant_outlined,
-              color: AppColors.hint,
-              size: AppSizes.iconLg,
-            ),
-          ),
+        borderRadius: BorderRadius.circular(AppSizes.radiusLg - 2),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (url == null || url!.isEmpty)
+              const ColoredBox(
+                color: AppColors.tan20,
+                child: Icon(
+                  Icons.restaurant_outlined,
+                  color: AppColors.tan60,
+                  size: AppSizes.iconLg,
+                ),
+              )
+            else
+              CachedNetworkImage(
+                imageUrl: url!,
+                fit: BoxFit.cover,
+                placeholder: (_, __) =>
+                    const ColoredBox(color: AppColors.tan20),
+                errorWidget: (_, __, ___) => const ColoredBox(
+                  color: AppColors.tan20,
+                  child: Icon(
+                    Icons.restaurant_outlined,
+                    color: AppColors.tan60,
+                    size: AppSizes.iconLg,
+                  ),
+                ),
+              ),
+            if (isUnsafe)
+              const Positioned(
+                top: AppSizes.xs + 2,
+                left: AppSizes.xs + 2,
+                child: AppChip(
+                  label: 'Not safe',
+                  tone: AppChipTone.flag,
+                  icon: Icon(Icons.warning_amber_rounded),
+                ),
+              ),
+          ],
         ),
       ),
     );
   }
 }
 
-class _AgeTag extends StatelessWidget {
-  const _AgeTag({required this.ageRange});
-
-  final String ageRange;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSizes.sm, vertical: 2),
-      decoration: BoxDecoration(
-        color: AppColors.primaryLight.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-      ),
-      child: Text(
-        'Fit for: $ageRange',
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: AppColors.primaryDark,
-          fontWeight: FontWeight.w500,
-        ),
-        overflow: TextOverflow.ellipsis,
-        maxLines: 1,
-      ),
-    );
-  }
-}
-
-class _AllergenChips extends StatelessWidget {
-  const _AllergenChips({required this.tags, this.flaggedKeys = const {}});
+/// First nutrition tag as a salmon-ghost chip + `+N` mute chip for the rest.
+/// When there are no tags, renders a fixed-height spacer so the card height
+/// stays stable across recipes.
+class _NutritionChipRow extends StatelessWidget {
+  const _NutritionChipRow({required this.tags});
 
   final List<String> tags;
-  final Set<String> flaggedKeys;
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: AppSizes.xs,
-      children: tags
-          .map(
-            (tag) => Text(
-              AllergenEmoji.get(tag),
-              style: TextStyle(
-                fontSize: 12,
-                color: flaggedKeys.contains(tag)
-                    ? AppColors.allergenFlagged
-                    : null,
-              ),
-            ),
-          )
-          .toList(),
+    if (tags.isEmpty) {
+      return const SizedBox(height: AppSizes.chipHeightSm);
+    }
+    final extra = tags.length - 1;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Flexible(
+          child: AppChip(label: tags.first),
+        ),
+        if (extra > 0) ...[
+          const SizedBox(width: AppSizes.xs),
+          AppChip(label: '+$extra', tone: AppChipTone.mute),
+        ],
+      ],
     );
   }
 }

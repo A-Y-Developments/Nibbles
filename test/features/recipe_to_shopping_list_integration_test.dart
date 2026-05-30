@@ -25,6 +25,8 @@ import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
 import 'package:nibbles/src/common/domain/enums/emoji_taste.dart';
 import 'package:nibbles/src/common/services/allergen_service.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
+import 'package:nibbles/src/common/services/helpers/derive_allergen_status.dart';
+import 'package:nibbles/src/common/services/local_flag_service.dart';
 import 'package:nibbles/src/common/services/recipe_service.dart';
 import 'package:nibbles/src/common/services/shopping_list_service.dart';
 import 'package:nibbles/src/features/recipe/detail/recipe_detail_screen.dart';
@@ -36,6 +38,8 @@ class MockRecipeService extends Mock implements RecipeService {}
 class MockAllergenService extends Mock implements AllergenService {}
 
 class MockShoppingListService extends Mock implements ShoppingListService {}
+
+class MockLocalFlagService extends Mock implements LocalFlagService {}
 
 const _babyId = 'baby-001';
 final _now = DateTime(2026, 3, 24);
@@ -81,6 +85,7 @@ Widget _buildSut({
   required MockRecipeService recipeService,
   required MockAllergenService allergenService,
   required MockShoppingListService shoppingListService,
+  required MockLocalFlagService localFlagService,
   required GoRouter router,
 }) => ProviderScope(
   overrides: [
@@ -88,6 +93,7 @@ Widget _buildSut({
     recipeServiceProvider.overrideWithValue(recipeService),
     allergenServiceProvider.overrideWithValue(allergenService),
     shoppingListServiceProvider.overrideWithValue(shoppingListService),
+    localFlagServiceProvider.overrideWithValue(localFlagService),
   ],
   child: MaterialApp.router(routerConfig: router),
 );
@@ -96,6 +102,7 @@ void main() {
   late MockRecipeService mockRecipeService;
   late MockAllergenService mockAllergenService;
   late MockShoppingListService mockShoppingListService;
+  late MockLocalFlagService mockLocalFlagService;
   late GoRouter testRouter;
 
   setUpAll(() {
@@ -116,6 +123,7 @@ void main() {
     mockRecipeService = MockRecipeService();
     mockAllergenService = MockAllergenService();
     mockShoppingListService = MockShoppingListService();
+    mockLocalFlagService = MockLocalFlagService();
     testRouter = _makeTestRouter();
   });
 
@@ -141,17 +149,40 @@ void main() {
 
       // --- Stubs ---
 
-      // RC-01: library loads all recipes
+      // RC-01 (NIB-53): library now drives off getRecipesByCategory.
+      // Keep getAllRecipes stubbed for any indirect callers.
       when(
         () => mockRecipeService.getAllRecipes(any()),
       ).thenAnswer((_) async => const Result.success([recipe]));
       when(
+        () => mockRecipeService.getRecipesByCategory(any()),
+      ).thenAnswer(
+        (_) async => const Result.success({
+          'Other': [recipe],
+        }),
+      );
+      when(
         () => mockRecipeService.getFlaggedAllergenKeys(any()),
       ).thenAnswer((_) async => const Result.success(<String>{}));
-      // RC-01: allergen program state (for section grouping)
+      // RC-01 (NIB-53): allergen statuses replace program state for
+      // ongoing-allergen detection in the library.
+      when(
+        () => mockAllergenService.getAllergenStatuses(any()),
+      ).thenAnswer(
+        (_) async => Result.success({
+          for (final k in kAllergenKeys) k: AllergenStatus.notStarted,
+        }),
+      );
+      // RecipeDetailController still relies on getProgramState (NIB-68
+      // owns the detail reskin). Keep this stub so detail navigation works.
       when(
         () => mockAllergenService.getProgramState(any()),
       ).thenAnswer((_) async => Result.success(_makeProgramState()));
+      // First-launch banner — flag the guide as seen so the test focuses on
+      // the navigation flow without dismissing the banner first.
+      when(
+        () => mockLocalFlagService.isStartingGuideSeen(),
+      ).thenReturn(true);
 
       // RC-02: recipe detail loads
       when(
@@ -175,6 +206,7 @@ void main() {
           recipeService: mockRecipeService,
           allergenService: mockAllergenService,
           shoppingListService: mockShoppingListService,
+          localFlagService: mockLocalFlagService,
           router: testRouter,
         ),
       );

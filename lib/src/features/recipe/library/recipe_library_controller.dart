@@ -1,116 +1,72 @@
-import 'package:nibbles/src/app/constants/allergen_emoji.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
-import 'package:nibbles/src/common/domain/entities/recipe.dart';
+import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
 import 'package:nibbles/src/common/services/allergen_service.dart';
+import 'package:nibbles/src/common/services/helpers/derive_allergen_status.dart';
+import 'package:nibbles/src/common/services/local_flag_service.dart';
 import 'package:nibbles/src/common/services/recipe_service.dart';
 import 'package:nibbles/src/features/recipe/library/recipe_library_state.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'recipe_library_controller.g.dart';
 
-/// Allergen key → display name map (sequence order preserved for sections).
-const _allergenNames = {
-  'peanut': 'Peanut',
-  'egg': 'Egg',
-  'dairy': 'Dairy',
-  'tree_nuts': 'Tree Nuts',
-  'sesame': 'Sesame',
-  'soy': 'Soy',
-  'wheat': 'Wheat',
-  'fish': 'Fish',
-  'shellfish': 'Shellfish',
-};
-
-const _allergenSequence = [
-  'peanut',
-  'egg',
-  'dairy',
-  'tree_nuts',
-  'sesame',
-  'soy',
-  'wheat',
-  'fish',
-  'shellfish',
-];
-
+/// Controller for the Recipe Library screen (RC-01, NIB-53 reskin).
+///
+/// Drives off [RecipeService.getRecipesByCategory] (NIB-129) for the main
+/// category grouping, [AllergenService.getAllergenStatuses] for the
+/// ongoing-allergen recommendation header, and
+/// [RecipeService.getFlaggedAllergenKeys] for the 'Not safe' card treatment.
+/// The first-launch 'Read Guide' banner state is read synchronously from
+/// [LocalFlagService.isStartingGuideSeen].
 @riverpod
 class RecipeLibraryController extends _$RecipeLibraryController {
   @override
   Future<RecipeLibraryState> build(String babyId) async {
     final recipeService = ref.read(recipeServiceProvider);
-    final (recipesResult, programResult, flaggedResult) = await (
-      recipeService.getAllRecipes(babyId),
-      ref.read(allergenServiceProvider).getProgramState(babyId),
+    final allergenService = ref.read(allergenServiceProvider);
+    final flags = ref.read(localFlagServiceProvider);
+
+    final (categoriesResult, statusesResult, flaggedResult) = await (
+      recipeService.getRecipesByCategory(babyId),
+      allergenService.getAllergenStatuses(babyId),
       recipeService.getFlaggedAllergenKeys(babyId),
     ).wait;
 
-    if (recipesResult.isFailure) throw recipesResult.errorOrNull!;
-    if (programResult.isFailure) throw programResult.errorOrNull!;
+    if (categoriesResult.isFailure) throw categoriesResult.errorOrNull!;
+    if (statusesResult.isFailure) throw statusesResult.errorOrNull!;
     if (flaggedResult.isFailure) throw flaggedResult.errorOrNull!;
 
-    final recipes = recipesResult.dataOrNull!;
-    final currentKey = programResult.dataOrNull!.currentAllergenKey;
+    final recipesByCategory = categoriesResult.dataOrNull!;
+    final statuses = statusesResult.dataOrNull!;
     final flagged = flaggedResult.dataOrNull!;
 
-    final sections = <RecipeSection>[];
-
-    // Helper: sort safe recipes first, flagged-allergen recipes last.
-    List<Recipe> sortByFlagged(List<Recipe> list) {
-      if (flagged.isEmpty) return list;
-      final safe = <Recipe>[];
-      final unsafe = <Recipe>[];
-      for (final r in list) {
-        if (r.allergenTags.any(flagged.contains)) {
-          unsafe.add(r);
-        } else {
-          safe.add(r);
-        }
+    // First allergen in canonical order with status == inProgress (or null).
+    String? ongoingAllergenKey;
+    for (final key in kAllergenKeys) {
+      if (statuses[key] == AllergenStatus.inProgress) {
+        ongoingAllergenKey = key;
+        break;
       }
-      return [...safe, ...unsafe];
     }
 
-    // 1. Recommendations — recipes tagged with current allergen.
-    final recommendations = recipes
-        .where((Recipe r) => r.allergenTags.contains(currentKey))
-        .toList();
-    if (recommendations.isNotEmpty) {
-      final name = _allergenNames[currentKey] ?? currentKey;
-      final emoji = AllergenEmoji.get(currentKey);
-      sections.add(
-        RecipeSection(
-          title: 'Recommendation for $name $emoji',
-          recipes: sortByFlagged(recommendations),
-        ),
-      );
-    }
-
-    // 2. One section per allergen in sequence order (skip current).
-    for (final key in _allergenSequence) {
-      if (key == currentKey) continue;
-      final tagged = recipes
-          .where((Recipe r) => r.allergenTags.contains(key))
-          .toList();
-      if (tagged.isEmpty) continue;
-      final name = _allergenNames[key] ?? key;
-      final emoji = AllergenEmoji.get(key);
-      sections.add(
-        RecipeSection(title: '$name $emoji', recipes: sortByFlagged(tagged)),
-      );
-    }
-
-    // 3. Untagged recipes — "All Recipes".
-    final untagged = recipes
-        .where((Recipe r) => r.allergenTags.isEmpty)
-        .toList();
-    if (untagged.isNotEmpty) {
-      sections.add(RecipeSection(title: 'All Recipes', recipes: untagged));
-    }
-
-    return RecipeLibraryState(sections: sections, flaggedAllergenKeys: flagged);
+    return RecipeLibraryState(
+      recipesByCategory: recipesByCategory,
+      ongoingAllergenKey: ongoingAllergenKey,
+      flaggedAllergenKeys: flagged,
+      isStartingGuideSeen: flags.isStartingGuideSeen(),
+    );
   }
 
   Future<void> refresh() async {
     ref.invalidateSelf();
     await future;
+  }
+
+  /// Persists the Starting Guide seen flag and updates state so the banner
+  /// disappears immediately. Fire-and-forget — Hive write is non-blocking.
+  Future<void> markStartingGuideSeen() async {
+    final current = state.valueOrNull;
+    if (current == null || current.isStartingGuideSeen) return;
+    state = AsyncData(current.copyWith(isStartingGuideSeen: true));
+    await ref.read(localFlagServiceProvider).markStartingGuideSeen();
   }
 }
