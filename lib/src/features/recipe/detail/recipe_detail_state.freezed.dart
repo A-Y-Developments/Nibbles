@@ -178,7 +178,7 @@ class __$$RecipeDetailStateImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$RecipeDetailStateImpl implements _RecipeDetailState {
+class _$RecipeDetailStateImpl extends _RecipeDetailState {
   const _$RecipeDetailStateImpl({
     required this.recipe,
     required this.currentAllergenKey,
@@ -186,7 +186,8 @@ class _$RecipeDetailStateImpl implements _RecipeDetailState {
         const <String, AllergenStatus>{},
     this.isAddingToMealPlan = false,
     this.isAddingToShoppingList = false,
-  }) : _allergenStatuses = allergenStatuses;
+  }) : _allergenStatuses = allergenStatuses,
+       super._();
 
   @override
   final Recipe recipe;
@@ -253,7 +254,7 @@ class _$RecipeDetailStateImpl implements _RecipeDetailState {
       );
 }
 
-abstract class _RecipeDetailState implements RecipeDetailState {
+abstract class _RecipeDetailState extends RecipeDetailState {
   const factory _RecipeDetailState({
     required final Recipe recipe,
     required final String currentAllergenKey,
@@ -261,6 +262,7 @@ abstract class _RecipeDetailState implements RecipeDetailState {
     final bool isAddingToMealPlan,
     final bool isAddingToShoppingList,
   }) = _$RecipeDetailStateImpl;
+  const _RecipeDetailState._() : super._();
 
   @override
   Recipe get recipe;
