@@ -6,8 +6,31 @@ part of 'delete_account_controller.dart';
 // RiverpodGenerator
 // **************************************************************************
 
+String _$deleteAccountCrashRecorderHash() =>
+    r'16e79ff904d8e06d9dcbd2b52a9f43e5d9ec1061';
+
+/// Provider for the [DeleteAccountCrashRecorderFn]. Tests override this to
+/// capture the recorded payload without hitting Crashlytics.
+///
+/// Copied from [deleteAccountCrashRecorder].
+@ProviderFor(deleteAccountCrashRecorder)
+final deleteAccountCrashRecorderProvider =
+    Provider<DeleteAccountCrashRecorderFn>.internal(
+      deleteAccountCrashRecorder,
+      name: r'deleteAccountCrashRecorderProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$deleteAccountCrashRecorderHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef DeleteAccountCrashRecorderRef =
+    ProviderRef<DeleteAccountCrashRecorderFn>;
 String _$deleteAccountControllerHash() =>
-    r'9be7673cc2102bd6120a1a2782425f5a3c23b1af';
+    r'a051fe95d9ac3553ace7ccf275cd1e9b186d890b';
 
 /// Drives the delete-account flow opened from Profile (NIB-78).
 ///

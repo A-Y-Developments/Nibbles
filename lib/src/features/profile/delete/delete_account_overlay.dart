@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nibbles/gen/fonts.gen.dart';
@@ -7,6 +9,7 @@ import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
 import 'package:nibbles/src/features/profile/delete/delete_account_controller.dart';
 import 'package:nibbles/src/features/profile/delete/widgets/reason_choice_row.dart';
+import 'package:nibbles/src/logging/analytics.dart';
 
 /// 6 reason strings — hardcoded per NIB-78 spec. The selected string is
 /// passed verbatim to `AccountService.deleteAccount(reason)`.
@@ -49,9 +52,35 @@ class _DeleteAccountSheet extends ConsumerStatefulWidget {
 class _DeleteAccountSheetState extends ConsumerState<_DeleteAccountSheet> {
   String? _selectedReason;
 
+  @override
+  void initState() {
+    super.initState();
+    // Fire screen_view('delete_account_overlay') once on mount via post-frame.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(_logScreenView());
+    });
+  }
+
+  Future<void> _logScreenView() async {
+    try {
+      await ref
+          .read(analyticsProvider)
+          .logScreenView(screenName: 'delete_account_overlay');
+    } on Object catch (_) {
+      // Analytics is best-effort; never surface to the UI.
+    }
+  }
+
   Future<void> _onContinue() async {
     final reason = _selectedReason;
     if (reason == null) return;
+
+    // Intent event — fires BEFORE the destructive call. Reason is one of the
+    // 6 hardcoded `_kReasons` strings (stable enum, NOT PII / NOT free text).
+    unawaited(
+      ref.read(analyticsProvider).logAccountDeletionStarted(reason: reason),
+    );
 
     final ok = await ref
         .read(deleteAccountControllerProvider.notifier)

@@ -431,6 +431,33 @@ class Analytics {
   }
 
   // ---------------------------------------------------------------------------
+  // Profile (NIB-92) — non-PII only: email_changed bool + stable reason enum.
+  // NEVER feedback message text, email values, baby IDs, or free text.
+  // ---------------------------------------------------------------------------
+
+  Future<void> logProfileEditSaved({required bool emailChanged}) async {
+    await _logEvent(
+      'profile_edit_saved',
+      parameters: {'email_changed': emailChanged},
+    );
+  }
+
+  Future<void> logFeedbackSubmitted() async {
+    await _logEvent('feedback_submitted');
+  }
+
+  Future<void> logAccountDeletionStarted({required String reason}) async {
+    await _logEvent(
+      'account_deletion_started',
+      parameters: {'reason': reason},
+    );
+  }
+
+  Future<void> logAccountDeletionCompleted() async {
+    await _logEvent('account_deletion_completed');
+  }
+
+  // ---------------------------------------------------------------------------
   // Screen tracking
   // ---------------------------------------------------------------------------
 

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -13,13 +15,38 @@ import 'package:nibbles/src/features/profile/widgets/premium_teaser_card.dart';
 import 'package:nibbles/src/features/profile/widgets/profile_avatar_card.dart';
 import 'package:nibbles/src/features/profile/widgets/profile_header.dart';
 import 'package:nibbles/src/features/profile/widgets/settings_row.dart';
+import 'package:nibbles/src/logging/analytics.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 
-class ProfileScreen extends ConsumerWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Fire screen_view('profile') once on mount via a post-frame callback.
+    // Best-effort + unawaited so a Firebase hiccup never throws into the frame.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(_logScreenView());
+    });
+  }
+
+  Future<void> _logScreenView() async {
+    try {
+      await ref.read(analyticsProvider).logScreenView(screenName: 'profile');
+    } on Object catch (_) {
+      // Analytics is best-effort; never surface to the UI.
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final babyIdAsync = ref.watch(currentBabyIdProvider);
 
     return babyIdAsync.when(
@@ -194,6 +221,7 @@ class _ProfileContent extends ConsumerWidget {
 
     if (confirmed ?? false) {
       await ref.read(authServiceProvider.notifier).signOut();
+      unawaited(ref.read(analyticsProvider).logLogout());
       // GoRouter redirect handles navigation to /auth/login.
     }
   }

@@ -265,6 +265,21 @@ class FakeAnalytics implements Analytics {
       _record('home_create_first_meal_tapped');
 
   @override
+  Future<void> logProfileEditSaved({required bool emailChanged}) async =>
+      _record('profile_edit_saved', {'email_changed': emailChanged});
+
+  @override
+  Future<void> logFeedbackSubmitted() async => _record('feedback_submitted');
+
+  @override
+  Future<void> logAccountDeletionStarted({required String reason}) async =>
+      _record('account_deletion_started', {'reason': reason});
+
+  @override
+  Future<void> logAccountDeletionCompleted() async =>
+      _record('account_deletion_completed');
+
+  @override
   Future<void> logScreenView({required String screenName}) async =>
       _record('screen_view', {'screen_name': screenName});
 }

@@ -6,8 +6,30 @@ part of 'feedback_controller.dart';
 // RiverpodGenerator
 // **************************************************************************
 
+String _$feedbackCrashRecorderHash() =>
+    r'd1c749ee65e3484864e30b5687d51fc1cb9a8b1e';
+
+/// Provider for the [FeedbackCrashRecorderFn]. Tests override this to capture
+/// the recorded payload without hitting Crashlytics.
+///
+/// Copied from [feedbackCrashRecorder].
+@ProviderFor(feedbackCrashRecorder)
+final feedbackCrashRecorderProvider =
+    Provider<FeedbackCrashRecorderFn>.internal(
+      feedbackCrashRecorder,
+      name: r'feedbackCrashRecorderProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$feedbackCrashRecorderHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef FeedbackCrashRecorderRef = ProviderRef<FeedbackCrashRecorderFn>;
 String _$feedbackControllerHash() =>
-    r'd1f6d919331f138f7912ecbf5b04b9b425969dd8';
+    r'4e646c81910ecf466b8af7128730f8c3710c3f15';
 
 /// See also [FeedbackController].
 @ProviderFor(FeedbackController)

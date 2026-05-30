@@ -6,8 +6,30 @@ part of 'profile_edit_controller.dart';
 // RiverpodGenerator
 // **************************************************************************
 
+String _$profileEditCrashRecorderHash() =>
+    r'15c5c0af8188b5328486b968fea04e5b79d25482';
+
+/// Provider for the [ProfileEditCrashRecorderFn]. Tests override this to
+/// capture the recorded payload without hitting Crashlytics.
+///
+/// Copied from [profileEditCrashRecorder].
+@ProviderFor(profileEditCrashRecorder)
+final profileEditCrashRecorderProvider =
+    Provider<ProfileEditCrashRecorderFn>.internal(
+      profileEditCrashRecorder,
+      name: r'profileEditCrashRecorderProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$profileEditCrashRecorderHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef ProfileEditCrashRecorderRef = ProviderRef<ProfileEditCrashRecorderFn>;
 String _$profileEditControllerHash() =>
-    r'80eeb05bf4c12705fd8c6ecacd1ad6ff2026f09f';
+    r'94b216ab96fa3787cc60e2d91352cd553d8f362c';
 
 /// Copied from Dart SDK
 class _SystemHash {

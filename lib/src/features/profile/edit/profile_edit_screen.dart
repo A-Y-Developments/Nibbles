@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -12,6 +14,7 @@ import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/features/profile/edit/profile_edit_controller.dart';
 import 'package:nibbles/src/features/profile/edit/profile_edit_state.dart';
 import 'package:nibbles/src/features/profile/profile_controller.dart';
+import 'package:nibbles/src/logging/analytics.dart';
 
 /// PR-02 — Edit Profile.
 ///
@@ -20,11 +23,36 @@ import 'package:nibbles/src/features/profile/profile_controller.dart';
 /// header with a back chevron + "Change Profile" title, coral avatar puck,
 /// then a cream form pane with First Name / Last Name (Optional) / Email
 /// labelled fields and a full-width primary "Save" pill.
-class ProfileEditScreen extends ConsumerWidget {
+class ProfileEditScreen extends ConsumerStatefulWidget {
   const ProfileEditScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProfileEditScreen> createState() => _ProfileEditScreenState();
+}
+
+class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Fire screen_view('profile_edit') once on mount via post-frame callback.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(_logScreenView());
+    });
+  }
+
+  Future<void> _logScreenView() async {
+    try {
+      await ref
+          .read(analyticsProvider)
+          .logScreenView(screenName: 'profile_edit');
+    } on Object catch (_) {
+      // Analytics is best-effort; never surface to the UI.
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final babyIdAsync = ref.watch(currentBabyIdProvider);
 
     return babyIdAsync.when(
