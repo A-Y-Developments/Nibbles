@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
-import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
+import 'package:nibbles/src/common/components/controls/app_checkbox.dart';
 
 /// Shows the multi-day Add-to-Meal-Plan bottom sheet.
 ///
@@ -102,7 +102,10 @@ class _AddToMealPlanSheetState extends State<_AddToMealPlanSheet> {
               child: _SheetHeader(selectedCount: count),
             ),
             const SizedBox(height: AppSizes.sm),
-            const Divider(height: 1, color: AppColors.borderSoft),
+            const Divider(
+              height: AppSizes.dividerThickness,
+              color: AppColors.borderSoft,
+            ),
             Flexible(
               child: ListView.separated(
                 padding: const EdgeInsets.symmetric(
@@ -128,7 +131,10 @@ class _AddToMealPlanSheetState extends State<_AddToMealPlanSheet> {
                 },
               ),
             ),
-            const Divider(height: 1, color: AppColors.borderSoft),
+            const Divider(
+              height: AppSizes.dividerThickness,
+              color: AppColors.borderSoft,
+            ),
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 AppSizes.pagePaddingH,
@@ -190,11 +196,10 @@ class _SheetHeader extends StatelessWidget {
               Text(
                 '$selectedCount ${selectedCount == 1 ? 'Day' : 'Days'} '
                 'Selected',
-                style: AppTypography.caption.copyWith(
+                style: theme.textTheme.labelMedium?.copyWith(
                   color: selectedCount == 0
                       ? AppColors.fgMuted
                       : AppColors.greenDeep,
-                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],
@@ -284,18 +289,16 @@ class _WeekAccordion extends StatelessWidget {
                       children: [
                         Text(
                           _weekLabel,
-                          style: theme.textTheme.labelLarge?.copyWith(
+                          style: theme.textTheme.titleSmall?.copyWith(
                             color: AppColors.fgDefault,
-                            fontWeight: FontWeight.w700,
                           ),
                         ),
                         if (selectedCount > 0) ...[
                           const SizedBox(height: AppSizes.sp2),
                           Text(
                             '$selectedCount selected',
-                            style: AppTypography.caption.copyWith(
+                            style: theme.textTheme.labelMedium?.copyWith(
                               color: AppColors.greenDeep,
-                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ],
@@ -323,7 +326,7 @@ class _WeekAccordion extends StatelessWidget {
                 ? Column(
                     children: [
                       const Divider(
-                        height: 1,
+                        height: AppSizes.dividerThickness,
                         color: AppColors.borderSoft,
                       ),
                       for (var i = 0; i < 7; i++)
@@ -389,60 +392,22 @@ class _DayRow extends StatelessWidget {
         ),
         child: Row(
           children: [
-            _Checkbox(checked: isSelected, disabled: disabled),
+            AppCheckbox(
+              value: isSelected,
+              onChanged: disabled ? null : (_) => onTap(day),
+            ),
             const SizedBox(width: AppSizes.sm),
             Expanded(
               child: Text(
                 _label,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: labelColor,
-                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
           ],
         ),
       ),
-    );
-  }
-}
-
-class _Checkbox extends StatelessWidget {
-  const _Checkbox({required this.checked, required this.disabled});
-
-  final bool checked;
-  final bool disabled;
-
-  @override
-  Widget build(BuildContext context) {
-    final Color fill;
-    final Color border;
-    if (disabled) {
-      fill = AppColors.bgInput;
-      border = AppColors.borderMuted;
-    } else if (checked) {
-      fill = AppColors.greenDeep;
-      border = AppColors.greenDeep;
-    } else {
-      fill = AppColors.surface;
-      border = AppColors.borderMuted;
-    }
-
-    return Container(
-      width: AppSizes.checkbox,
-      height: AppSizes.checkbox,
-      decoration: BoxDecoration(
-        color: fill,
-        borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-        border: Border.all(color: border, width: 1.5),
-      ),
-      child: checked
-          ? const Icon(
-              Icons.check,
-              size: AppSizes.iconSm,
-              color: AppColors.cream,
-            )
-          : null,
     );
   }
 }
