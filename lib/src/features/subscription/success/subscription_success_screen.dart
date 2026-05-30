@@ -3,9 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:nibbles/src/app/themes/app_colors.dart';
-import 'package:nibbles/src/app/themes/app_sizes.dart';
-import 'package:nibbles/src/common/components/brand/quatrefoil.dart';
+import 'package:nibbles/src/common/components/feedback/loading_confirmation.dart';
 import 'package:nibbles/src/features/subscription/success/subscription_success_controller.dart';
 import 'package:nibbles/src/features/subscription/success/subscription_success_state.dart';
 import 'package:nibbles/src/logging/analytics.dart';
@@ -17,6 +15,10 @@ import 'package:nibbles/src/routing/route_enums.dart';
 ///   * loading: petal blob + faint uppercase "LOADING" caption.
 ///   * success: petal blob + bold "You all set!" body label, then auto-routes
 ///     to `/home` after [SubscriptionSuccessController.successDwell].
+///
+/// Visuals come from the shared [LoadingConfirmation] composite (NIB-131
+/// extraction). This screen owns the controller wiring, analytics, and
+/// auto-route; the composite owns geometry + tokens + cross-fade.
 ///
 /// No interactive elements; back is blocked while provisioning is in flight
 /// (and on the success frame until the auto-route fires) per spec.
@@ -69,9 +71,9 @@ class _SubscriptionSuccessScreenState
 
   @override
   Widget build(BuildContext context) {
-    // Schedule the auto-route exactly once on the loading→success transition.
-    // Listening (not watching) keeps the build pure; the timer + mounted guard
-    // make double-fires safe.
+    // Schedule the auto-route once on the loading -> success transition.
+    // Listening (not watching) keeps the build pure; the timer + mounted
+    // guard make double-fires safe.
     ref.listen<SubscriptionSuccessPhase>(
       subscriptionSuccessControllerProvider,
       (prev, next) {
@@ -83,146 +85,20 @@ class _SubscriptionSuccessScreenState
     );
 
     final phase = ref.watch(subscriptionSuccessControllerProvider);
+    final mapped = phase == SubscriptionSuccessPhase.success
+        ? LoadingConfirmationPhase.success
+        : LoadingConfirmationPhase.loading;
 
     return PopScope(
       canPop: false,
       child: Scaffold(
-        backgroundColor: AppColors.butterSoft,
-        body: SafeArea(
-          // SizedBox.expand forces the Stack to fill the SafeArea — without
-          // it the Stack collapses to its non-positioned child (_PetalBlob)
-          // and the whole cluster snaps to the upper-left.
-          child: SizedBox.expand(
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                const _PetalBlob(key: Key('subscription_success_blob')),
-                _PhaseLabel(phase: phase),
-              ],
-            ),
-          ),
+        body: LoadingConfirmation(
+          phase: mapped,
+          successLabel: 'You all set!',
+          blobKey: const Key('subscription_success_blob'),
+          loadingLabelKey: const Key('subscription_success_loading_label'),
+          successLabelKey: const Key('subscription_success_done_label'),
         ),
-      ),
-    );
-  }
-}
-
-/// Layered petal mark mimicking the Figma `LoadingAnimation` frame:
-/// a pale outer quatrefoil + a sage inner quatrefoil + a soft butter glow
-/// dot at the core (Quatrefoil's circle core alone reads as flat).
-class _PetalBlob extends StatelessWidget {
-  const _PetalBlob({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: AppSizes.avatarXl * 1.84,
-      height: AppSizes.avatarXl * 1.84,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // Outer pale-butter petal blob (spec petal layer 1+2 composite).
-          const Quatrefoil(
-            size: AppSizes.avatarXl * 1.84,
-            coreColor: AppColors.butter,
-          ),
-          // Inner sage petal — smaller, scales down to ~52% of outer.
-          const Quatrefoil(
-            size: AppSizes.avatarXl * 0.96,
-            petalColor: AppColors.green,
-            coreColor: AppColors.greenDeep,
-          ),
-          // Soft butter glow dot at the center (spec blurred lime dot).
-          DecoratedBox(
-            decoration: BoxDecoration(
-              color: AppColors.butter,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.butter.withValues(alpha: 0.9),
-                  blurRadius: AppSizes.sm,
-                  spreadRadius: AppSizes.xs,
-                ),
-              ],
-            ),
-            child: const SizedBox(
-              width: AppSizes.sp12 * 1.4,
-              height: AppSizes.sp12 * 1.4,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Phase caption — faint uppercase "Loading" sits below the petal animation in
-/// both phases (matches the Figma frame 1290:10122 which renders LOADING
-/// faded above "You all set!" during the success state — a cross-fade where
-/// the slot is reserved so the layout never shifts). The "You all set!" label
-/// is rendered in both phases but invisible during loading so the vertical
-/// rhythm is preserved across the transition.
-class _PhaseLabel extends StatelessWidget {
-  const _PhaseLabel({required this.phase});
-
-  final SubscriptionSuccessPhase phase;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final isSuccess = phase == SubscriptionSuccessPhase.success;
-
-    return Positioned.fill(
-      child: Stack(
-        children: [
-          // "Loading" — Inter Regular 12.8 / 19.2 / tracking 4.33 / UPPERCASE,
-          // rendered low-contrast (cream on butter-soft) per spec. Stays
-          // visible (faded) during the success phase to match Figma's
-          // cross-fade snapshot.
-          Align(
-            alignment: const Alignment(0, 0.34),
-            child: AnimatedOpacity(
-              duration: const Duration(milliseconds: 240),
-              opacity: isSuccess ? 0.55 : 1,
-              child: Text(
-                'Loading'.toUpperCase(),
-                key: const Key('subscription_success_loading_label'),
-                textAlign: TextAlign.center,
-                style: textTheme.bodySmall?.copyWith(
-                  color: AppColors.cream,
-                  fontSize: 12.8,
-                  height: 19.2 / 12.8,
-                  letterSpacing: 4.33,
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-            ),
-          ),
-          // "You all set!" — body label below the animation. Always laid out
-          // so the slot is reserved during the loading phase too; opacity
-          // gates visibility so there's zero layout shift on transition.
-          Align(
-            alignment: const Alignment(0, 0.6),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSizes.md + AppSizes.sp2,
-              ),
-              child: AnimatedOpacity(
-                duration: const Duration(milliseconds: 240),
-                opacity: isSuccess ? 1 : 0,
-                child: Text(
-                  'You all set!',
-                  key: const Key('subscription_success_done_label'),
-                  textAlign: TextAlign.center,
-                  style: textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.text,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

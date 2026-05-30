@@ -16,6 +16,7 @@ export 'controls/app_segmented_control.dart';
 export 'controls/app_switch.dart';
 export 'controls/radio_pill.dart';
 export 'feedback/empty_state.dart';
+export 'feedback/loading_confirmation.dart';
 export 'inputs/app_search_field.dart';
 export 'inputs/app_text_field.dart';
 export 'navigation/app_bottom_nav.dart';
