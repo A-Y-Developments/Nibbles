@@ -7,7 +7,7 @@ part of 'manage_subscription_controller.dart';
 // **************************************************************************
 
 String _$manageSubscriptionControllerHash() =>
-    r'0f42bb5230031d98d837755303cfdf7dd731525d';
+    r'35fbe2622c6daacd3f6ab1a6f2e2cc211863e4fe';
 
 /// AsyncNotifier for the Manage Subscription screen (NIB-73).
 ///

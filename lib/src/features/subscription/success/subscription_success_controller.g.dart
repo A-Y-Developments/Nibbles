@@ -7,7 +7,7 @@ part of 'subscription_success_controller.dart';
 // **************************************************************************
 
 String _$subscriptionSuccessControllerHash() =>
-    r'ff342a52b9ddc3dca73544d4f53448aedad3dd81';
+    r'e12fe3c3ee4f743115c9397d927fa28ca8bb2b25';
 
 /// NIB-130 — passive two-phase transition shown after a successful purchase.
 ///

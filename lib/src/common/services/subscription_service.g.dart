@@ -7,15 +7,23 @@ part of 'subscription_service.dart';
 // **************************************************************************
 
 String _$subscriptionServiceHash() =>
-    r'0a5b4e13dd0c19f75cf8da447a27aa84b8a59922';
+    r'c5ece94fd553c4d270b8e630aaf272b43ab7b3cd';
 
-/// Stub SubscriptionService — will be wired in NIB-18.
-/// Returns false by default; redirect logic sends users to paywall.
+/// Stub SubscriptionService — to be wired through `purchases_flutter` in
+/// NIB-18. State is the entitlement bool used by callers like the post-
+/// purchase transition controller and the (currently deferred) router guard.
 ///
 /// NIB-73 expands the surface with [info] so the Manage Subscription screen
 /// can render plan / Started / Renewal from a single entitlement snapshot.
+/// NIB-55 adds [loadOfferings] / [purchaseDefault] / [restore] so the paywall
+/// reads its default trial offering and triggers purchase/restore at this
+/// seam. Until NIB-18 lands the stub returns a fixed placeholder offering so
+/// the UI never has to hardcode price strings, and the three P1 failure paths
+/// (`purchaseFail` / `restoreNoEntitlement` / `offeringsLoadFail`) are wired
+/// at the seam — tests override the provider to exercise them.
+///
 /// The shape mirrors what RevenueCat `customerInfo` will yield, so swapping
-/// the stub for the real implementation is a no-op for the screen.
+/// the stub for the real implementation is a no-op for callers.
 ///
 /// Copied from [SubscriptionService].
 @ProviderFor(SubscriptionService)
