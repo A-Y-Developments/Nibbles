@@ -107,4 +107,10 @@ class AuthService extends _$AuthService {
 
   Future<Result<void>> updatePassword(String newPassword) =>
       _repo.updatePassword(newPassword);
+
+  /// Requests Supabase to change the user's email. Supabase sends a
+  /// confirmation email to the new address; the change only commits after
+  /// the user clicks the link.
+  Future<Result<void>> updateEmail(String newEmail) =>
+      _repo.updateEmail(newEmail);
 }

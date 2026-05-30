@@ -52,6 +52,11 @@ abstract interface class AuthRepository {
   Future<Result<void>> signOut();
   Future<Result<void>> resetPassword(String email);
   Future<Result<void>> updatePassword(String newPassword);
+
+  /// Triggers Supabase's email-change flow. Supabase sends a confirmation
+  /// email to the new address; the change only takes effect after the user
+  /// clicks the link. Returns `Success(null)` once the request is accepted.
+  Future<Result<void>> updateEmail(String newEmail);
   bool get isLoggedIn;
   Stream<AuthState> get authStateStream;
 }
@@ -242,6 +247,19 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Result<void>> updatePassword(String newPassword) async {
     try {
       await _supabase.auth.updateUser(UserAttributes(password: newPassword));
+      return const Result.success(null);
+    } on AuthException catch (e) {
+      return Result.failure(ServerException(e.message));
+    } on Object catch (e, st) {
+      await _recordAuthUnknown(e, st);
+      return const Result.failure(UnknownException());
+    }
+  }
+
+  @override
+  Future<Result<void>> updateEmail(String newEmail) async {
+    try {
+      await _supabase.auth.updateUser(UserAttributes(email: newEmail));
       return const Result.success(null);
     } on AuthException catch (e) {
       return Result.failure(ServerException(e.message));

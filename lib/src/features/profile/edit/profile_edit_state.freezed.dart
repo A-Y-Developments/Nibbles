@@ -17,9 +17,9 @@ final _privateConstructorUsedError = UnsupportedError(
 
 /// @nodoc
 mixin _$ProfileEditState {
-  String get name => throw _privateConstructorUsedError;
-  DateTime get dob => throw _privateConstructorUsedError;
-  Gender get gender => throw _privateConstructorUsedError;
+  String get firstName => throw _privateConstructorUsedError;
+  String get lastName => throw _privateConstructorUsedError;
+  String get email => throw _privateConstructorUsedError;
   bool get isLoading => throw _privateConstructorUsedError;
   String? get errorMessage => throw _privateConstructorUsedError;
 
@@ -38,9 +38,9 @@ abstract class $ProfileEditStateCopyWith<$Res> {
   ) = _$ProfileEditStateCopyWithImpl<$Res, ProfileEditState>;
   @useResult
   $Res call({
-    String name,
-    DateTime dob,
-    Gender gender,
+    String firstName,
+    String lastName,
+    String email,
     bool isLoading,
     String? errorMessage,
   });
@@ -61,26 +61,26 @@ class _$ProfileEditStateCopyWithImpl<$Res, $Val extends ProfileEditState>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? name = null,
-    Object? dob = null,
-    Object? gender = null,
+    Object? firstName = null,
+    Object? lastName = null,
+    Object? email = null,
     Object? isLoading = null,
     Object? errorMessage = freezed,
   }) {
     return _then(
       _value.copyWith(
-            name: null == name
-                ? _value.name
-                : name // ignore: cast_nullable_to_non_nullable
+            firstName: null == firstName
+                ? _value.firstName
+                : firstName // ignore: cast_nullable_to_non_nullable
                       as String,
-            dob: null == dob
-                ? _value.dob
-                : dob // ignore: cast_nullable_to_non_nullable
-                      as DateTime,
-            gender: null == gender
-                ? _value.gender
-                : gender // ignore: cast_nullable_to_non_nullable
-                      as Gender,
+            lastName: null == lastName
+                ? _value.lastName
+                : lastName // ignore: cast_nullable_to_non_nullable
+                      as String,
+            email: null == email
+                ? _value.email
+                : email // ignore: cast_nullable_to_non_nullable
+                      as String,
             isLoading: null == isLoading
                 ? _value.isLoading
                 : isLoading // ignore: cast_nullable_to_non_nullable
@@ -105,9 +105,9 @@ abstract class _$$ProfileEditStateImplCopyWith<$Res>
   @override
   @useResult
   $Res call({
-    String name,
-    DateTime dob,
-    Gender gender,
+    String firstName,
+    String lastName,
+    String email,
     bool isLoading,
     String? errorMessage,
   });
@@ -127,26 +127,26 @@ class __$$ProfileEditStateImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? name = null,
-    Object? dob = null,
-    Object? gender = null,
+    Object? firstName = null,
+    Object? lastName = null,
+    Object? email = null,
     Object? isLoading = null,
     Object? errorMessage = freezed,
   }) {
     return _then(
       _$ProfileEditStateImpl(
-        name: null == name
-            ? _value.name
-            : name // ignore: cast_nullable_to_non_nullable
+        firstName: null == firstName
+            ? _value.firstName
+            : firstName // ignore: cast_nullable_to_non_nullable
                   as String,
-        dob: null == dob
-            ? _value.dob
-            : dob // ignore: cast_nullable_to_non_nullable
-                  as DateTime,
-        gender: null == gender
-            ? _value.gender
-            : gender // ignore: cast_nullable_to_non_nullable
-                  as Gender,
+        lastName: null == lastName
+            ? _value.lastName
+            : lastName // ignore: cast_nullable_to_non_nullable
+                  as String,
+        email: null == email
+            ? _value.email
+            : email // ignore: cast_nullable_to_non_nullable
+                  as String,
         isLoading: null == isLoading
             ? _value.isLoading
             : isLoading // ignore: cast_nullable_to_non_nullable
@@ -164,19 +164,19 @@ class __$$ProfileEditStateImplCopyWithImpl<$Res>
 
 class _$ProfileEditStateImpl implements _ProfileEditState {
   const _$ProfileEditStateImpl({
-    required this.name,
-    required this.dob,
-    required this.gender,
+    required this.firstName,
+    required this.lastName,
+    required this.email,
     this.isLoading = false,
     this.errorMessage,
   });
 
   @override
-  final String name;
+  final String firstName;
   @override
-  final DateTime dob;
+  final String lastName;
   @override
-  final Gender gender;
+  final String email;
   @override
   @JsonKey()
   final bool isLoading;
@@ -185,7 +185,7 @@ class _$ProfileEditStateImpl implements _ProfileEditState {
 
   @override
   String toString() {
-    return 'ProfileEditState(name: $name, dob: $dob, gender: $gender, isLoading: $isLoading, errorMessage: $errorMessage)';
+    return 'ProfileEditState(firstName: $firstName, lastName: $lastName, email: $email, isLoading: $isLoading, errorMessage: $errorMessage)';
   }
 
   @override
@@ -193,9 +193,11 @@ class _$ProfileEditStateImpl implements _ProfileEditState {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$ProfileEditStateImpl &&
-            (identical(other.name, name) || other.name == name) &&
-            (identical(other.dob, dob) || other.dob == dob) &&
-            (identical(other.gender, gender) || other.gender == gender) &&
+            (identical(other.firstName, firstName) ||
+                other.firstName == firstName) &&
+            (identical(other.lastName, lastName) ||
+                other.lastName == lastName) &&
+            (identical(other.email, email) || other.email == email) &&
             (identical(other.isLoading, isLoading) ||
                 other.isLoading == isLoading) &&
             (identical(other.errorMessage, errorMessage) ||
@@ -203,8 +205,14 @@ class _$ProfileEditStateImpl implements _ProfileEditState {
   }
 
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, name, dob, gender, isLoading, errorMessage);
+  int get hashCode => Object.hash(
+    runtimeType,
+    firstName,
+    lastName,
+    email,
+    isLoading,
+    errorMessage,
+  );
 
   /// Create a copy of ProfileEditState
   /// with the given fields replaced by the non-null parameter values.
@@ -220,19 +228,19 @@ class _$ProfileEditStateImpl implements _ProfileEditState {
 
 abstract class _ProfileEditState implements ProfileEditState {
   const factory _ProfileEditState({
-    required final String name,
-    required final DateTime dob,
-    required final Gender gender,
+    required final String firstName,
+    required final String lastName,
+    required final String email,
     final bool isLoading,
     final String? errorMessage,
   }) = _$ProfileEditStateImpl;
 
   @override
-  String get name;
+  String get firstName;
   @override
-  DateTime get dob;
+  String get lastName;
   @override
-  Gender get gender;
+  String get email;
   @override
   bool get isLoading;
   @override
