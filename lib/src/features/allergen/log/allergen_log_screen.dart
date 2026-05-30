@@ -5,11 +5,16 @@ import 'package:image_picker/image_picker.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/components.dart';
+import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
+import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
+import 'package:nibbles/src/common/services/allergen_service.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
+import 'package:nibbles/src/common/services/local_flag_service.dart';
 import 'package:nibbles/src/features/allergen/log/allergen_log_controller.dart';
 import 'package:nibbles/src/features/allergen/log/allergen_log_state.dart';
 import 'package:nibbles/src/features/allergen/log/widgets/photo_capture_button.dart';
 import 'package:nibbles/src/features/allergen/log/widgets/taste_selector.dart';
+import 'package:nibbles/src/routing/route_enums.dart';
 
 /// Full-screen Allergen Log capture / edit screen (NIB-127).
 ///
@@ -92,7 +97,10 @@ class _AllergenLogScreenState extends ConsumerState<AllergenLogScreen> {
 
     _syncControllersFromState(state);
 
-    ref.listen<AllergenLogState>(allergenLogControllerProvider, (_, next) {
+    ref.listen<AllergenLogState>(allergenLogControllerProvider, (
+      _,
+      next,
+    ) async {
       if (!next.isSaved || !context.mounted) return;
 
       if (next.photoUploadFailed) {
@@ -103,6 +111,42 @@ class _AllergenLogScreenState extends ConsumerState<AllergenLogScreen> {
           ),
         );
       }
+
+      // AL-08 reachability gate (NIB-128). After a successful save (CREATE or
+      // EDIT) re-derive per-allergen statuses; if every allergen is `safe`
+      // AND the per-baby `program_completion_shown_{babyId}` flag is unset,
+      // flip the flag and route to /home/allergen/complete instead of popping.
+      // On any read failure (status read, missing baby) we fall through to
+      // the existing pop — the success path must NOT be blocked on a stale
+      // status read. NIB-102 fires its analytics events independently on the
+      // controller side; this navigation happens after that and both paths
+      // coexist.
+      final babyId = ref.read(currentBabyIdProvider).valueOrNull;
+      if (babyId != null) {
+        final flagService = ref.read(localFlagServiceProvider);
+        if (!flagService.isProgramCompletionShown(babyId)) {
+          final statusesResult = await ref
+              .read(allergenServiceProvider)
+              .getAllergenStatuses(babyId);
+          if (!context.mounted) return;
+          final statuses = statusesResult.dataOrNull;
+          if (statuses != null) {
+            final allSafe =
+                statuses.isNotEmpty &&
+                statuses.values.every(
+                  (AllergenStatus s) => s == AllergenStatus.safe,
+                );
+            if (allSafe) {
+              await flagService.markProgramCompletionShown(babyId);
+              if (!context.mounted) return;
+              context.goNamed(AppRoute.allergenComplete.name);
+              return;
+            }
+          }
+        }
+      }
+
+      if (!context.mounted) return;
       context.pop(true);
     });
 
