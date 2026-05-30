@@ -91,8 +91,34 @@ class FakeAnalytics implements Analytics {
       _record('subscription_restored');
 
   @override
-  Future<void> logAllergenLogCreated({required String allergenKey}) async =>
-      _record('allergen_log_created', {'allergen_key': allergenKey});
+  Future<void> logAllergenLogCreated({
+    required String allergenKey,
+    bool hasAttachment = false,
+  }) async => _record('allergen_log_created', {
+    'allergen_key': allergenKey,
+    'has_attachment': hasAttachment,
+  });
+
+  @override
+  Future<void> logAllergenLogEdited({
+    required String allergenKey,
+    required bool hasAttachment,
+  }) async => _record('allergen_log_edited', {
+    'allergen_key': allergenKey,
+    'has_attachment': hasAttachment,
+  });
+
+  @override
+  Future<void> logAllergenLogDeleted({required String allergenKey}) async =>
+      _record('allergen_log_deleted', {'allergen_key': allergenKey});
+
+  @override
+  Future<void> logAllergenStartIntroduce({required String allergenKey}) async =>
+      _record('allergen_start_introduce', {'allergen_key': allergenKey});
+
+  @override
+  Future<void> logAllergenSegmentChanged({required String segment}) async =>
+      _record('allergen_segment_changed', {'segment': segment});
 
   @override
   Future<void> logAllergenMarkedSafe({required String allergenKey}) async =>

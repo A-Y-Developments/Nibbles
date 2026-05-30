@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -15,6 +17,7 @@ import 'package:nibbles/src/features/allergen/tracker/widgets/allergen_progress_
 import 'package:nibbles/src/features/allergen/tracker/widgets/reaction_log_row.dart';
 import 'package:nibbles/src/features/allergen/tracker/widgets/start_introduce_card.dart';
 import 'package:nibbles/src/features/allergen/tracker/widgets/tracker_header.dart';
+import 'package:nibbles/src/logging/analytics.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 
 /// Redesigned Allergen Tracker board (NIB-79).
@@ -88,7 +91,7 @@ class _TrackerBodyState extends ConsumerState<_TrackerBody> {
             babyId: widget.babyId,
             state: state,
             segmentIndex: _segmentIndex,
-            onSegmentChanged: (i) => setState(() => _segmentIndex = i),
+            onSegmentChanged: _onSegmentChanged,
             onStartIntroduce: _startIntroduce,
           ),
         ),
@@ -96,7 +99,18 @@ class _TrackerBodyState extends ConsumerState<_TrackerBody> {
     );
   }
 
+  void _onSegmentChanged(int index) {
+    setState(() => _segmentIndex = index);
+    final segment = index == 1 ? 'big_11' : 'ongoing';
+    unawaited(
+      Analytics.instance.logAllergenSegmentChanged(segment: segment),
+    );
+  }
+
   Future<void> _startIntroduce(Allergen allergen) async {
+    unawaited(
+      Analytics.instance.logAllergenStartIntroduce(allergenKey: allergen.key),
+    );
     final logged = await context.pushNamed<bool>(
       AppRoute.allergenLogCreate.name,
       pathParameters: {'allergenKey': allergen.key},

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -14,6 +16,7 @@ import 'package:nibbles/src/features/allergen/detail/allergen_detail_controller.
 import 'package:nibbles/src/features/allergen/log_detail/allergen_log_detail_controller.dart';
 import 'package:nibbles/src/features/allergen/log_detail/allergen_log_detail_state.dart';
 import 'package:nibbles/src/features/allergen/tracker/allergen_tracker_controller.dart';
+import 'package:nibbles/src/logging/analytics.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 
 /// Read-only Allergen Log Detail screen (NIB-127).
@@ -210,6 +213,10 @@ class _LogDetailView extends ConsumerWidget {
       );
       return;
     }
+
+    unawaited(
+      Analytics.instance.logAllergenLogDeleted(allergenKey: allergenKey),
+    );
 
     // Invalidate both upstream lists so a pop to either reflects the delete.
     ref

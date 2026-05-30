@@ -174,10 +174,50 @@ class Analytics {
   // Allergen tracker
   // ---------------------------------------------------------------------------
 
-  Future<void> logAllergenLogCreated({required String allergenKey}) async {
+  Future<void> logAllergenLogCreated({
+    required String allergenKey,
+    bool hasAttachment = false,
+  }) async {
     await _logEvent(
       'allergen_log_created',
+      parameters: {
+        'allergen_key': allergenKey,
+        'has_attachment': hasAttachment,
+      },
+    );
+  }
+
+  Future<void> logAllergenLogEdited({
+    required String allergenKey,
+    required bool hasAttachment,
+  }) async {
+    await _logEvent(
+      'allergen_log_edited',
+      parameters: {
+        'allergen_key': allergenKey,
+        'has_attachment': hasAttachment,
+      },
+    );
+  }
+
+  Future<void> logAllergenLogDeleted({required String allergenKey}) async {
+    await _logEvent(
+      'allergen_log_deleted',
       parameters: {'allergen_key': allergenKey},
+    );
+  }
+
+  Future<void> logAllergenStartIntroduce({required String allergenKey}) async {
+    await _logEvent(
+      'allergen_start_introduce',
+      parameters: {'allergen_key': allergenKey},
+    );
+  }
+
+  Future<void> logAllergenSegmentChanged({required String segment}) async {
+    await _logEvent(
+      'allergen_segment_changed',
+      parameters: {'segment': segment},
     );
   }
 
