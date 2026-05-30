@@ -58,6 +58,34 @@ void main() {
       expect(tester.widget<AppPillButton>(cta).onPressed, isNull);
     });
 
+    testWidgets('CTA stays disabled when end date is before start date', (
+      tester,
+    ) async {
+      await _pump(tester, babyName: 'Lily');
+
+      final cta = find.widgetWithText(AppPillButton, 'Create meal plan');
+
+      // Pick start = 20.
+      await tester.tap(find.text('Select start date'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('20').first);
+      await tester.pumpAndSettle();
+
+      // Pick end = 10 (before start).
+      await tester.tap(find.text('Select end date'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('10').first);
+      await tester.pumpAndSettle();
+
+      // CTA must remain disabled: production code rejects end < start
+      // (either by auto-clearing the invalid end or by gating the validator).
+      expect(
+        tester.widget<AppPillButton>(cta).onPressed,
+        isNull,
+        reason: 'CTA must stay disabled when end < start.',
+      );
+    });
+
     testWidgets('tapping a date field opens the inline calendar', (
       tester,
     ) async {
