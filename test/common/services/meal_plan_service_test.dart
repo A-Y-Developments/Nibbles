@@ -210,4 +210,146 @@ void main() {
       expect(result.dataOrNull, isEmpty);
     });
   });
+
+  // ---------------------------------------------------------------------------
+  // NIB-59: getRolling7
+  // ---------------------------------------------------------------------------
+
+  group('MealPlanService.getRolling7', () {
+    test('passes (today, today+6) to repo.getEntriesInRange', () async {
+      final today = DateTime(2026, 5, 30);
+      final expectedEnd = today.add(const Duration(days: 6));
+      when(
+        () => mockMealPlanRepo.getEntriesInRange(any(), any(), any()),
+      ).thenAnswer((_) async => const Result.success([]));
+
+      final result = await sut.getRolling7(_babyId, today: today);
+
+      expect(result.isSuccess, isTrue);
+      verify(
+        () => mockMealPlanRepo.getEntriesInRange(_babyId, today, expectedEnd),
+      ).called(1);
+    });
+
+    test('normalizes today to date-only (strips time)', () async {
+      final raw = DateTime(2026, 5, 30, 14, 32, 11);
+      final expectedStart = DateTime(2026, 5, 30);
+      final expectedEnd = expectedStart.add(const Duration(days: 6));
+      when(
+        () => mockMealPlanRepo.getEntriesInRange(any(), any(), any()),
+      ).thenAnswer((_) async => const Result.success([]));
+
+      await sut.getRolling7(_babyId, today: raw);
+
+      verify(
+        () => mockMealPlanRepo.getEntriesInRange(
+          _babyId,
+          expectedStart,
+          expectedEnd,
+        ),
+      ).called(1);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // NIB-59: appendMealsToRange — APPEND, not replace.
+  // ---------------------------------------------------------------------------
+
+  group('MealPlanService.appendMealsToRange', () {
+    test(
+      'maps dayOffset to startDate+offset and calls repo.appendBulk',
+      () async {
+        final start = DateTime(2026, 5, 30);
+        final end = start.add(const Duration(days: 6));
+        when(() => mockMealPlanRepo.appendBulk(any())).thenAnswer(
+          (_) async => const Result.success([]),
+        );
+
+        final result = await sut.appendMealsToRange(
+          babyId: _babyId,
+          startDate: start,
+          endDate: end,
+          assignments: const [
+            RecipeAssignment(recipeId: 'r1', dayOffset: 0),
+            RecipeAssignment(recipeId: 'r2', dayOffset: 3),
+            RecipeAssignment(recipeId: 'r3', dayOffset: 6),
+          ],
+        );
+
+        expect(result.isSuccess, isTrue);
+        final captured = verify(
+          () => mockMealPlanRepo.appendBulk(captureAny()),
+        ).captured.single as List<MealPlanEntryInsert>;
+        expect(captured, hasLength(3));
+        expect(captured[0].recipeId, 'r1');
+        expect(captured[0].planDate, start);
+        expect(captured[1].recipeId, 'r2');
+        expect(captured[1].planDate, start.add(const Duration(days: 3)));
+        expect(captured[2].recipeId, 'r3');
+        expect(captured[2].planDate, end);
+        // Never uses upsert/clear before insert — pure APPEND.
+        verifyNever(() => mockMealPlanRepo.deleteRange(any(), any(), any()));
+        verifyNever(() => mockMealPlanRepo.clearWeek(any(), any(), any()));
+      },
+    );
+
+    test(
+      'rejects assignments with out-of-range dayOffset as Failure',
+      () async {
+        final start = DateTime(2026, 5, 30);
+        final end = start.add(const Duration(days: 6));
+
+        final result = await sut.appendMealsToRange(
+          babyId: _babyId,
+          startDate: start,
+          endDate: end,
+          assignments: const [RecipeAssignment(recipeId: 'r1', dayOffset: 7)],
+        );
+
+        expect(result.isFailure, isTrue);
+        verifyNever(() => mockMealPlanRepo.appendBulk(any()));
+      },
+    );
+
+    test('empty assignments short-circuits to Success([])', () async {
+      final start = DateTime(2026, 5, 30);
+      final end = start.add(const Duration(days: 6));
+
+      final result = await sut.appendMealsToRange(
+        babyId: _babyId,
+        startDate: start,
+        endDate: end,
+        assignments: const [],
+      );
+
+      expect(result.isSuccess, isTrue);
+      expect(result.dataOrNull, isEmpty);
+      verifyNever(() => mockMealPlanRepo.appendBulk(any()));
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // NIB-59: clearRange
+  // ---------------------------------------------------------------------------
+
+  group('MealPlanService.clearRange', () {
+    test('delegates to repo.deleteRange with date-only bounds', () async {
+      final start = DateTime(2026, 5, 30, 9);
+      final end = DateTime(2026, 6, 5, 23, 59);
+      when(
+        () => mockMealPlanRepo.deleteRange(any(), any(), any()),
+      ).thenAnswer((_) async => const Result.success(null));
+
+      final result = await sut.clearRange(_babyId, start, end);
+
+      expect(result.isSuccess, isTrue);
+      verify(
+        () => mockMealPlanRepo.deleteRange(
+          _babyId,
+          DateTime(2026, 5, 30),
+          DateTime(2026, 6, 5),
+        ),
+      ).called(1);
+    });
+  });
 }

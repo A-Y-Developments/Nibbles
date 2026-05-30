@@ -7,6 +7,23 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'meal_plan_repository.g.dart';
 
+/// Insert payload for [MealPlanRepository.appendBulk] — one row per recipe
+/// assignment. Pure INSERT (no upsert / no onConflict) so duplicates are
+/// allowed; this is what makes bulk-add APPEND-semantic per NIB-120.
+class MealPlanEntryInsert {
+  const MealPlanEntryInsert({
+    required this.babyId,
+    required this.recipeId,
+    required this.planDate,
+    this.mealTime,
+  });
+
+  final String babyId;
+  final String recipeId;
+  final DateTime planDate;
+  final TimeOfDay? mealTime;
+}
+
 abstract interface class MealPlanRepository {
   /// MEAL-01: Fetch all meal_plan_entries for baby within
   /// [weekStart]..[weekEnd].
@@ -14,6 +31,14 @@ abstract interface class MealPlanRepository {
     String babyId,
     DateTime weekStart,
     DateTime weekEnd,
+  );
+
+  /// NIB-59: Range query — fetch entries for baby within
+  /// [startDate]..[endDate] inclusive. Used by `getRolling7` in the service.
+  Future<Result<List<MealPlanEntry>>> getEntriesInRange(
+    String babyId,
+    DateTime startDate,
+    DateTime endDate,
   );
 
   /// MEAL-02: Insert a new meal entry for [planDate].
@@ -25,11 +50,23 @@ abstract interface class MealPlanRepository {
     TimeOfDay? mealTime,
   );
 
+  /// NIB-59: Bulk INSERT (APPEND, not upsert) — duplicates allowed.
+  Future<Result<List<MealPlanEntry>>> appendBulk(
+    List<MealPlanEntryInsert> entries,
+  );
+
   /// MEAL-03: Delete all entries for baby within [weekStart]..[weekEnd].
   Future<Result<void>> clearWeek(
     String babyId,
     DateTime weekStart,
     DateTime weekEnd,
+  );
+
+  /// NIB-59: Delete all entries for baby within [startDate]..[endDate].
+  Future<Result<void>> deleteRange(
+    String babyId,
+    DateTime startDate,
+    DateTime endDate,
   );
 
   /// MEAL-04: Delete a single meal plan entry by ID.
@@ -50,14 +87,21 @@ class MealPlanRepositoryImpl implements MealPlanRepository {
     String babyId,
     DateTime weekStart,
     DateTime weekEnd,
+  ) => getEntriesInRange(babyId, weekStart, weekEnd);
+
+  @override
+  Future<Result<List<MealPlanEntry>>> getEntriesInRange(
+    String babyId,
+    DateTime startDate,
+    DateTime endDate,
   ) async {
     try {
       final data = await _supabase
           .from('meal_plan_entries')
           .select()
           .eq('baby_id', babyId)
-          .gte('plan_date', _formatDate(weekStart))
-          .lte('plan_date', _formatDate(weekEnd))
+          .gte('plan_date', _formatDate(startDate))
+          .lte('plan_date', _formatDate(endDate))
           .order('plan_date');
 
       return Result.success(
@@ -103,18 +147,60 @@ class MealPlanRepositoryImpl implements MealPlanRepository {
   }
 
   @override
+  Future<Result<List<MealPlanEntry>>> appendBulk(
+    List<MealPlanEntryInsert> entries,
+  ) async {
+    if (entries.isEmpty) return const Result.success([]);
+    try {
+      final payload = entries
+          .map(
+            (e) => <String, dynamic>{
+              'baby_id': e.babyId,
+              'recipe_id': e.recipeId,
+              'plan_date': _formatDate(e.planDate),
+              if (e.mealTime != null) 'meal_time': _formatTime(e.mealTime!),
+            },
+          )
+          .toList();
+
+      final data = await _supabase
+          .from('meal_plan_entries')
+          .insert(payload)
+          .select();
+
+      return Result.success(
+        (data as List<dynamic>)
+            .cast<Map<String, dynamic>>()
+            .map(_entryFromRow)
+            .toList(),
+      );
+    } on PostgrestException catch (e) {
+      return Result.failure(ServerException(e.message));
+    } on Object {
+      return const Result.failure(UnknownException());
+    }
+  }
+
+  @override
   Future<Result<void>> clearWeek(
     String babyId,
     DateTime weekStart,
     DateTime weekEnd,
+  ) => deleteRange(babyId, weekStart, weekEnd);
+
+  @override
+  Future<Result<void>> deleteRange(
+    String babyId,
+    DateTime startDate,
+    DateTime endDate,
   ) async {
     try {
       await _supabase
           .from('meal_plan_entries')
           .delete()
           .eq('baby_id', babyId)
-          .gte('plan_date', _formatDate(weekStart))
-          .lte('plan_date', _formatDate(weekEnd));
+          .gte('plan_date', _formatDate(startDate))
+          .lte('plan_date', _formatDate(endDate));
 
       return const Result.success(null);
     } on PostgrestException catch (e) {
