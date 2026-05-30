@@ -617,4 +617,80 @@ void main() {
       expect(result.isFailure, isTrue);
     });
   });
+
+  // ---------------------------------------------------------------------------
+  // Post-edit / post-delete recompute regression (NIB-110)
+  //
+  // Proves the per-allergen status is RE-DERIVED from the current set of logs
+  // on every read — never cached. After updateLog flips one egg log to a
+  // reaction, the status flips from safe → flagged. After deleteLog removes
+  // one of three clean logs, the status falls back from safe → inProgress.
+  // ---------------------------------------------------------------------------
+
+  group('AllergenService post-edit/delete recompute', () {
+    test(
+      'flipping one of three clean egg logs to hadReaction=true via '
+      'updateAllergenLog re-derives egg status as flagged on the next read',
+      () async {
+        // Mock repo: in-memory log store that updateLog mutates in place so
+        // the next getLogs call returns the post-update set.
+        final store = <AllergenLog>[
+          _makeLog(id: 'e1', allergenKey: 'egg'),
+          _makeLog(id: 'e2', allergenKey: 'egg'),
+          _makeLog(id: 'e3', allergenKey: 'egg'),
+        ];
+        when(
+          () => mockRepo.getLogs(any()),
+        ).thenAnswer((_) async => Result.success(List.of(store)));
+        when(() => mockRepo.updateLog(any())).thenAnswer((invocation) async {
+          final updated = invocation.positionalArguments.first as AllergenLog;
+          final idx = store.indexWhere((l) => l.id == updated.id);
+          if (idx >= 0) store[idx] = updated;
+          return Result.success(updated);
+        });
+
+        final beforeResult = await sut.getAllergenStatuses(_babyId);
+        expect(beforeResult.dataOrNull!['egg'], AllergenStatus.safe);
+
+        final updateResult = await sut.updateAllergenLog(
+          log: store.first.copyWith(hadReaction: true),
+        );
+        expect(updateResult.isSuccess, isTrue);
+
+        final afterResult = await sut.getAllergenStatuses(_babyId);
+        expect(afterResult.dataOrNull!['egg'], AllergenStatus.flagged);
+        verify(() => mockRepo.updateLog(any())).called(1);
+      },
+    );
+
+    test(
+      'deleting one of three clean egg logs via deleteAllergenLog '
+      're-derives egg status as inProgress on the next read',
+      () async {
+        final store = <AllergenLog>[
+          _makeLog(id: 'e1', allergenKey: 'egg'),
+          _makeLog(id: 'e2', allergenKey: 'egg'),
+          _makeLog(id: 'e3', allergenKey: 'egg'),
+        ];
+        when(
+          () => mockRepo.getLogs(any()),
+        ).thenAnswer((_) async => Result.success(List.of(store)));
+        when(() => mockRepo.deleteLog(any())).thenAnswer((invocation) async {
+          final id = invocation.positionalArguments.first as String;
+          store.removeWhere((l) => l.id == id);
+          return const Result.success(null);
+        });
+
+        final beforeResult = await sut.getAllergenStatuses(_babyId);
+        expect(beforeResult.dataOrNull!['egg'], AllergenStatus.safe);
+
+        final deleteResult = await sut.deleteAllergenLog(logId: 'e1');
+        expect(deleteResult.isSuccess, isTrue);
+
+        final afterResult = await sut.getAllergenStatuses(_babyId);
+        expect(afterResult.dataOrNull!['egg'], AllergenStatus.inProgress);
+        verify(() => mockRepo.deleteLog('e1')).called(1);
+      },
+    );
+  });
 }
