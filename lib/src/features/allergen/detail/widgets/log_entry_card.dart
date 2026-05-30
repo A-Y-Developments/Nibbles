@@ -1,295 +1,124 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
+import 'package:nibbles/src/common/components/cards/app_card.dart';
+import 'package:nibbles/src/common/components/chips/app_chip.dart';
 import 'package:nibbles/src/common/domain/entities/allergen_log.dart';
-import 'package:nibbles/src/common/domain/entities/reaction_detail.dart';
-import 'package:nibbles/src/common/domain/enums/emoji_taste.dart';
-import 'package:nibbles/src/common/domain/enums/reaction_severity.dart';
 
-class LogEntryCard extends StatefulWidget {
+/// Reaction-Log row card.
+///
+/// Per spec 9 — baby avatar (initial in greenTint circle), 'Log N',
+/// Safe/Unsafe pill (from `hadReaction`), notes preview, optional
+/// attachment chip (from `attachmentTitle`), chevron.
+///
+/// Rows are NON-TAPPABLE — no read-only log-detail route exists yet.
+/// Follow-up: make rows tappable once a log-detail route lands.
+class LogEntryCard extends StatelessWidget {
   const LogEntryCard({
     required this.log,
-    required this.dayNumber,
-    this.reactionDetail,
-    this.signedPhotoUrl,
+    required this.logNumber,
+    required this.babyInitial,
     super.key,
   });
 
   final AllergenLog log;
-  final int dayNumber;
-  final ReactionDetail? reactionDetail;
-  final String? signedPhotoUrl;
-
-  @override
-  State<LogEntryCard> createState() => _LogEntryCardState();
-}
-
-class _LogEntryCardState extends State<LogEntryCard> {
-  bool _expanded = false;
-
-  static const _weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
-  static const _months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-
-  String _formatDate(DateTime date) {
-    final weekday = _weekdays[date.weekday - 1];
-    final month = _months[date.month - 1];
-    return '$weekday, ${date.day} $month';
-  }
+  final int logNumber;
+  final String babyInitial;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final hasReaction = widget.log.hadReaction;
+    final hadReaction = log.hadReaction;
+    final notes = log.notes;
+    final attachment = log.attachmentTitle;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppSizes.sm),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        border: Border.all(color: AppColors.divider),
-      ),
-      child: Column(
-        children: [
-          InkWell(
-            onTap: hasReaction
-                ? () => setState(() => _expanded = !_expanded)
-                : null,
-            borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-            child: Padding(
-              padding: const EdgeInsets.all(AppSizes.cardPadding),
-              child: Row(
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSizes.sm),
+      child: AppCard(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _BabyAvatar(initial: babyInitial),
+            const SizedBox(width: AppSizes.sp12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Day badge
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceVariant,
-                      borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      'D${widget.dayNumber}',
-                      style: textTheme.labelSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Log $logNumber',
+                          style: textTheme.titleSmall,
+                        ),
                       ),
-                    ),
+                      const SizedBox(width: AppSizes.sm),
+                      AppChip(
+                        label: hadReaction ? 'Unsafe' : 'Safe',
+                        tone: hadReaction ? AppChipTone.flag : AppChipTone.safe,
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: AppSizes.md),
-                  // Date + taste
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _formatDate(widget.log.logDate),
-                          style: textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          _tasteLabel(
-                            widget.log.emojiTaste ?? EmojiTaste.neutral,
-                          ),
-                          style: textTheme.bodySmall?.copyWith(
-                            color: AppColors.subtext,
-                          ),
-                        ),
-                      ],
+                  if (notes != null && notes.isNotEmpty) ...[
+                    const SizedBox(height: AppSizes.xs),
+                    Text(
+                      notes,
+                      style: textTheme.bodySmall?.copyWith(
+                        color: AppColors.fgMuted,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                  // Reaction dot
-                  Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: hasReaction
-                          ? AppColors.allergenFlagged
-                          : AppColors.allergenSafe,
-                    ),
-                  ),
-                  if (hasReaction) ...[
-                    const SizedBox(width: AppSizes.xs),
-                    Icon(
-                      _expanded
-                          ? Icons.keyboard_arrow_up
-                          : Icons.keyboard_arrow_down,
-                      size: AppSizes.iconSm,
-                      color: AppColors.subtext,
+                  ],
+                  if (attachment != null && attachment.isNotEmpty) ...[
+                    const SizedBox(height: AppSizes.sm),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: AppChip(
+                        label: attachment,
+                        tone: AppChipTone.mute,
+                        icon: const Icon(Icons.attach_file_rounded),
+                      ),
                     ),
                   ],
                 ],
               ),
             ),
-          ),
-          if (_expanded && widget.reactionDetail != null)
-            _ReactionDetailExpanded(detail: widget.reactionDetail!),
-          if (widget.signedPhotoUrl != null)
-            _PhotoThumbnail(url: widget.signedPhotoUrl!),
-        ],
+            const SizedBox(width: AppSizes.sm),
+            const Icon(
+              Icons.chevron_right_rounded,
+              size: AppSizes.iconMd,
+              color: AppColors.fgFaint,
+            ),
+          ],
+        ),
       ),
     );
   }
-
-  String _tasteLabel(EmojiTaste taste) => switch (taste) {
-    EmojiTaste.love => 'Love it 😍',
-    EmojiTaste.neutral => 'Neutral 😐',
-    EmojiTaste.dislike => 'Dislike 😣',
-  };
 }
 
-class _ReactionDetailExpanded extends StatelessWidget {
-  const _ReactionDetailExpanded({required this.detail});
-  final ReactionDetail detail;
+class _BabyAvatar extends StatelessWidget {
+  const _BabyAvatar({required this.initial});
+
+  final String initial;
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(
-        AppSizes.cardPadding,
-        0,
-        AppSizes.cardPadding,
-        AppSizes.cardPadding,
-      ),
+      width: AppSizes.avatarSm,
+      height: AppSizes.avatarSm,
       decoration: const BoxDecoration(
-        border: Border(top: BorderSide(color: AppColors.divider)),
+        color: AppColors.greenTint,
+        shape: BoxShape.circle,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: AppSizes.sm),
-          Row(
-            children: [
-              const Icon(
-                Icons.warning_amber_rounded,
-                size: AppSizes.iconSm,
-                color: AppColors.allergenFlagged,
-              ),
-              const SizedBox(width: AppSizes.xs),
-              Text(
-                'Reaction — ${_severityLabel(detail.severity)}',
-                style: textTheme.labelMedium?.copyWith(
-                  color: AppColors.allergenFlagged,
-                ),
-              ),
-            ],
-          ),
-          if (detail.symptoms.isNotEmpty) ...[
-            const SizedBox(height: AppSizes.xs),
-            Wrap(
-              spacing: AppSizes.xs,
-              runSpacing: AppSizes.xs,
-              children: detail.symptoms
-                  .map(
-                    (String s) => Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSizes.sm,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.allergenFlagged.withAlpha(26),
-                        borderRadius: BorderRadius.circular(
-                          AppSizes.radiusFull,
-                        ),
-                      ),
-                      child: Text(
-                        s,
-                        style: textTheme.bodySmall?.copyWith(
-                          color: AppColors.allergenFlagged,
-                        ),
-                      ),
-                    ),
-                  )
-                  .toList(),
+      alignment: Alignment.center,
+      child: Text(
+        initial,
+        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: AppColors.greenDeep,
+              fontWeight: FontWeight.w700,
             ),
-          ],
-          if (detail.notes != null && detail.notes!.isNotEmpty) ...[
-            const SizedBox(height: AppSizes.xs),
-            Text(
-              detail.notes!,
-              style: textTheme.bodySmall?.copyWith(color: AppColors.subtext),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  String _severityLabel(ReactionSeverity s) => switch (s) {
-    ReactionSeverity.mild => 'Mild',
-    ReactionSeverity.moderate => 'Moderate',
-    ReactionSeverity.severe => 'Severe',
-  };
-}
-
-class _PhotoThumbnail extends StatelessWidget {
-  const _PhotoThumbnail({required this.url});
-  final String url;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSizes.cardPadding,
-        0,
-        AppSizes.cardPadding,
-        AppSizes.cardPadding,
-      ),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: GestureDetector(
-          onTap: () => _showFullScreen(context),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-            child: Image.network(
-              url,
-              width: 64,
-              height: 64,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showFullScreen(BuildContext context) {
-    showDialog<void>(
-      context: context,
-      builder: (_) => Dialog.fullscreen(
-        backgroundColor: Colors.black,
-        child: Stack(
-          children: [
-            Center(child: InteractiveViewer(child: Image.network(url))),
-            Positioned(
-              top: MediaQuery.of(context).padding.top + 8,
-              right: 8,
-              child: IconButton(
-                icon: const Icon(Icons.close, color: Colors.white, size: 28),
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
