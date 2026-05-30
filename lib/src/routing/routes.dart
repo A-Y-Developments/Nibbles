@@ -30,6 +30,8 @@ import 'package:nibbles/src/features/recipe/detail/recipe_detail_screen.dart';
 import 'package:nibbles/src/features/recipe/library/recipe_library_screen.dart';
 import 'package:nibbles/src/features/shopping_list/shopping_list_screen.dart';
 import 'package:nibbles/src/features/splash/splash_screen.dart';
+import 'package:nibbles/src/features/starting_guide/starting_guide_article_screen.dart';
+import 'package:nibbles/src/features/starting_guide/starting_guide_hub_screen.dart';
 import 'package:nibbles/src/features/subscription/paywall/paywall_screen.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -359,6 +361,25 @@ GoRouter goRouter(Ref ref) {
                 path: AppRoute.recipeLibrary.path,
                 name: AppRoute.recipeLibrary.name,
                 builder: (context, state) => const RecipeLibraryScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'guide',
+                    name: AppRoute.startingGuide.name,
+                    parentNavigatorKey: rootNavigatorKey,
+                    builder: (context, state) => const StartingGuideHubScreen(),
+                    routes: [
+                      GoRoute(
+                        path: ':slug',
+                        name: AppRoute.startingGuideArticle.name,
+                        parentNavigatorKey: rootNavigatorKey,
+                        builder: (context, state) =>
+                            StartingGuideArticleScreen(
+                          slug: state.pathParameters['slug'] ?? '',
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ],
           ),
