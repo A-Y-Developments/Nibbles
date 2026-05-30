@@ -7,7 +7,7 @@ part of 'profile_edit_controller.dart';
 // **************************************************************************
 
 String _$profileEditControllerHash() =>
-    r'3185aab61a5adb76bfff9222e99fe8a8d515b5ff';
+    r'80eeb05bf4c12705fd8c6ecacd1ad6ff2026f09f';
 
 /// Copied from Dart SDK
 class _SystemHash {

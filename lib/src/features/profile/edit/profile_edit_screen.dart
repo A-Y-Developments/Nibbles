@@ -300,7 +300,7 @@ class _EditAvatar extends StatelessWidget {
           child: const Center(
             child: Icon(
               Icons.child_care_rounded,
-              size: 64,
+              size: AppSizes.xxxl,
               color: AppColors.cream,
             ),
           ),

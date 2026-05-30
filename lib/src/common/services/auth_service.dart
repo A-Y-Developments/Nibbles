@@ -29,6 +29,11 @@ class AuthService extends _$AuthService {
 
   bool get isLoggedIn => state;
 
+  /// Currently authenticated user's email, or `null` if no session is active.
+  /// Pass-through to [AuthRepository.currentUserEmail] so Controllers/Screens
+  /// don't import `supabase_flutter` directly.
+  String? get currentUserEmail => _repo.currentUserEmail;
+
   Stream<AuthState> get authStateStream => _repo.authStateStream;
 
   Future<Result<void>> signUp(String email, String password) async {

@@ -57,6 +57,12 @@ abstract interface class AuthRepository {
   /// email to the new address; the change only takes effect after the user
   /// clicks the link. Returns `Success(null)` once the request is accepted.
   Future<Result<void>> updateEmail(String newEmail);
+
+  /// Current authenticated user's email, or `null` if no session is active.
+  /// Read synchronously from the Supabase session — Repository layer keeps
+  /// the Supabase SDK behind this interface so upstream callers
+  /// (Service / Controller / Screen) never import it directly.
+  String? get currentUserEmail;
   bool get isLoggedIn;
   Stream<AuthState> get authStateStream;
 }
@@ -92,6 +98,9 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   bool get isLoggedIn => _supabase.auth.currentSession != null;
+
+  @override
+  String? get currentUserEmail => _supabase.auth.currentUser?.email;
 
   @override
   Stream<AuthState> get authStateStream => _supabase.auth.onAuthStateChange;
