@@ -18,7 +18,7 @@ final _privateConstructorUsedError = UnsupportedError(
 /// @nodoc
 mixin _$FeedbackState {
   String get message => throw _privateConstructorUsedError;
-  bool get isSubmitting => throw _privateConstructorUsedError;
+  FeedbackPhase get phase => throw _privateConstructorUsedError;
   String? get errorMessage => throw _privateConstructorUsedError;
 
   /// Create a copy of FeedbackState
@@ -35,7 +35,7 @@ abstract class $FeedbackStateCopyWith<$Res> {
     $Res Function(FeedbackState) then,
   ) = _$FeedbackStateCopyWithImpl<$Res, FeedbackState>;
   @useResult
-  $Res call({String message, bool isSubmitting, String? errorMessage});
+  $Res call({String message, FeedbackPhase phase, String? errorMessage});
 }
 
 /// @nodoc
@@ -54,7 +54,7 @@ class _$FeedbackStateCopyWithImpl<$Res, $Val extends FeedbackState>
   @override
   $Res call({
     Object? message = null,
-    Object? isSubmitting = null,
+    Object? phase = null,
     Object? errorMessage = freezed,
   }) {
     return _then(
@@ -63,10 +63,10 @@ class _$FeedbackStateCopyWithImpl<$Res, $Val extends FeedbackState>
                 ? _value.message
                 : message // ignore: cast_nullable_to_non_nullable
                       as String,
-            isSubmitting: null == isSubmitting
-                ? _value.isSubmitting
-                : isSubmitting // ignore: cast_nullable_to_non_nullable
-                      as bool,
+            phase: null == phase
+                ? _value.phase
+                : phase // ignore: cast_nullable_to_non_nullable
+                      as FeedbackPhase,
             errorMessage: freezed == errorMessage
                 ? _value.errorMessage
                 : errorMessage // ignore: cast_nullable_to_non_nullable
@@ -86,7 +86,7 @@ abstract class _$$FeedbackStateImplCopyWith<$Res>
   ) = __$$FeedbackStateImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String message, bool isSubmitting, String? errorMessage});
+  $Res call({String message, FeedbackPhase phase, String? errorMessage});
 }
 
 /// @nodoc
@@ -104,7 +104,7 @@ class __$$FeedbackStateImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? message = null,
-    Object? isSubmitting = null,
+    Object? phase = null,
     Object? errorMessage = freezed,
   }) {
     return _then(
@@ -113,10 +113,10 @@ class __$$FeedbackStateImplCopyWithImpl<$Res>
             ? _value.message
             : message // ignore: cast_nullable_to_non_nullable
                   as String,
-        isSubmitting: null == isSubmitting
-            ? _value.isSubmitting
-            : isSubmitting // ignore: cast_nullable_to_non_nullable
-                  as bool,
+        phase: null == phase
+            ? _value.phase
+            : phase // ignore: cast_nullable_to_non_nullable
+                  as FeedbackPhase,
         errorMessage: freezed == errorMessage
             ? _value.errorMessage
             : errorMessage // ignore: cast_nullable_to_non_nullable
@@ -131,7 +131,7 @@ class __$$FeedbackStateImplCopyWithImpl<$Res>
 class _$FeedbackStateImpl implements _FeedbackState {
   const _$FeedbackStateImpl({
     this.message = '',
-    this.isSubmitting = false,
+    this.phase = FeedbackPhase.idle,
     this.errorMessage,
   });
 
@@ -140,13 +140,13 @@ class _$FeedbackStateImpl implements _FeedbackState {
   final String message;
   @override
   @JsonKey()
-  final bool isSubmitting;
+  final FeedbackPhase phase;
   @override
   final String? errorMessage;
 
   @override
   String toString() {
-    return 'FeedbackState(message: $message, isSubmitting: $isSubmitting, errorMessage: $errorMessage)';
+    return 'FeedbackState(message: $message, phase: $phase, errorMessage: $errorMessage)';
   }
 
   @override
@@ -155,15 +155,13 @@ class _$FeedbackStateImpl implements _FeedbackState {
         (other.runtimeType == runtimeType &&
             other is _$FeedbackStateImpl &&
             (identical(other.message, message) || other.message == message) &&
-            (identical(other.isSubmitting, isSubmitting) ||
-                other.isSubmitting == isSubmitting) &&
+            (identical(other.phase, phase) || other.phase == phase) &&
             (identical(other.errorMessage, errorMessage) ||
                 other.errorMessage == errorMessage));
   }
 
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, message, isSubmitting, errorMessage);
+  int get hashCode => Object.hash(runtimeType, message, phase, errorMessage);
 
   /// Create a copy of FeedbackState
   /// with the given fields replaced by the non-null parameter values.
@@ -177,14 +175,14 @@ class _$FeedbackStateImpl implements _FeedbackState {
 abstract class _FeedbackState implements FeedbackState {
   const factory _FeedbackState({
     final String message,
-    final bool isSubmitting,
+    final FeedbackPhase phase,
     final String? errorMessage,
   }) = _$FeedbackStateImpl;
 
   @override
   String get message;
   @override
-  bool get isSubmitting;
+  FeedbackPhase get phase;
   @override
   String? get errorMessage;
 

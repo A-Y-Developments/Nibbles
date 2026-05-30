@@ -75,7 +75,7 @@ void main() {
         expect(crashCapture.calls, isEmpty);
 
         final state = container.read(feedbackControllerProvider);
-        expect(state.isSubmitting, isFalse);
+        expect(state.phase, FeedbackPhase.success);
         expect(state.errorMessage, isNull);
       },
     );
@@ -92,7 +92,7 @@ void main() {
 
         expect(ok, isFalse);
         final state = container.read(feedbackControllerProvider);
-        expect(state.isSubmitting, isFalse);
+        expect(state.phase, FeedbackPhase.idle);
         expect(state.errorMessage, 'save failed');
 
         expect(crashCapture.calls, hasLength(1));
@@ -128,8 +128,8 @@ void main() {
         );
         expect(crashCapture.calls, isEmpty);
         expect(
-          container.read(feedbackControllerProvider).isSubmitting,
-          isFalse,
+          container.read(feedbackControllerProvider).phase,
+          FeedbackPhase.idle,
         );
       },
     );
