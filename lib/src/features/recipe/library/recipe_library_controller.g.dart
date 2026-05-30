@@ -7,7 +7,7 @@ part of 'recipe_library_controller.dart';
 // **************************************************************************
 
 String _$recipeLibraryControllerHash() =>
-    r'40f19a72ba8e5d33fa117b06a02df66b35b86b20';
+    r'0924bca0fc73d5402be8bf6455ca646c764637fb';
 
 /// Copied from Dart SDK
 class _SystemHash {

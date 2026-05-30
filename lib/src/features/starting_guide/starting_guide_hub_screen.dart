@@ -11,6 +11,7 @@ import 'package:nibbles/src/features/starting_guide/constants/articles.dart';
 import 'package:nibbles/src/features/starting_guide/starting_guide_controller.dart';
 import 'package:nibbles/src/features/starting_guide/widgets/article_card.dart';
 import 'package:nibbles/src/features/starting_guide/widgets/guide_back_button.dart';
+import 'package:nibbles/src/logging/analytics.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 
 /// Starting Guide hub — the content index reachable from the Recipe Library
@@ -39,6 +40,12 @@ class _StartingGuideHubScreenState
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       unawaited(ref.read(localFlagServiceProvider).markStartingGuideSeen());
+      // TODO(NIB-53): pass `source` via GoRouter `extra` so we can distinguish
+      // hub vs article entry points instead of always firing 'unknown'.
+      unawaited(Analytics.instance.logStartingGuideOpened(source: 'unknown'));
+      unawaited(
+        Analytics.instance.logScreenView(screenName: 'starting_guide_hub'),
+      );
     });
   }
 

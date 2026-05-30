@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/domain/entities/allergen_log.dart';
@@ -88,7 +90,12 @@ class RecipeDetailController extends _$RecipeDetailController {
     state = AsyncData(current.copyWith(isAddingToMealPlan: false));
 
     if (result.isSuccess) {
-      await Analytics.instance.logRecipeAddedToMealPlan(recipeId: recipeId);
+      unawaited(
+        Analytics.instance.logRecipeAddedToMealPlan(
+          recipeId: recipeId,
+          dayCount: normalized.length,
+        ),
+      );
     }
 
     return result;
@@ -106,6 +113,16 @@ class RecipeDetailController extends _$RecipeDetailController {
         .addFromRecipe(babyId, recipeId, selectedNames);
 
     state = AsyncData(current.copyWith(isAddingToShoppingList: false));
+
+    if (result.isSuccess) {
+      unawaited(
+        Analytics.instance.logRecipeAddedToShoppingList(
+          recipeId: recipeId,
+          itemCount: selectedNames.length,
+        ),
+      );
+    }
+
     return result;
   }
 

@@ -151,8 +151,36 @@ class FakeAnalytics implements Analytics {
       _record('recipe_viewed', {'recipe_id': recipeId});
 
   @override
-  Future<void> logRecipeAddedToMealPlan({required String recipeId}) async =>
-      _record('recipe_added_to_meal_plan', {'recipe_id': recipeId});
+  Future<void> logRecipeAddedToMealPlan({
+    required String recipeId,
+    int dayCount = 1,
+  }) async => _record('recipe_added_to_meal_plan', {
+    'recipe_id': recipeId,
+    'day_count': dayCount,
+  });
+
+  @override
+  Future<void> logRecipeAddedToShoppingList({
+    required String recipeId,
+    required int itemCount,
+  }) async => _record('recipe_added_to_shopping_list', {
+    'recipe_id': recipeId,
+    'item_count': itemCount,
+  });
+
+  @override
+  Future<void> logRecipeSearch({int? queryLength}) async => _record(
+    'recipe_search',
+    {if (queryLength != null) 'query_length': queryLength},
+  );
+
+  @override
+  Future<void> logStartingGuideOpened({required String source}) async =>
+      _record('starting_guide_opened', {'source': source});
+
+  @override
+  Future<void> logStartingGuideArticleViewed({required String slug}) async =>
+      _record('starting_guide_article_viewed', {'slug': slug});
 
   @override
   Future<void> logMealPlanViewed({required int dayCount}) async =>

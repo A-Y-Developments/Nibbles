@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,6 +12,7 @@ import 'package:nibbles/src/features/starting_guide/widgets/guide_back_button.da
 import 'package:nibbles/src/features/starting_guide/widgets/guide_cta_pill.dart';
 import 'package:nibbles/src/features/starting_guide/widgets/guide_hero_card.dart';
 import 'package:nibbles/src/features/starting_guide/widgets/numbered_step.dart';
+import 'package:nibbles/src/logging/analytics.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 
 /// Single Starting Guide article screen.
@@ -21,10 +24,31 @@ import 'package:nibbles/src/routing/route_enums.dart';
 ///
 /// If the slug doesn't match any article we fall back to a tiny not-found
 /// scaffold rather than crashing — protects against a malformed deeplink.
-class StartingGuideArticleScreen extends ConsumerWidget {
+class StartingGuideArticleScreen extends ConsumerStatefulWidget {
   const StartingGuideArticleScreen({required this.slug, super.key});
 
   final String slug;
+
+  @override
+  ConsumerState<StartingGuideArticleScreen> createState() =>
+      _StartingGuideArticleScreenState();
+}
+
+class _StartingGuideArticleScreenState
+    extends ConsumerState<StartingGuideArticleScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(
+        Analytics.instance.logStartingGuideArticleViewed(slug: widget.slug),
+      );
+      unawaited(
+        Analytics.instance.logScreenView(screenName: 'starting_guide_article'),
+      );
+    });
+  }
 
   void _onBack(BuildContext context) {
     if (context.canPop()) {
@@ -49,7 +73,7 @@ class StartingGuideArticleScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final guideAsync = ref.watch(startingGuideControllerProvider);
 
     return Scaffold(
@@ -60,7 +84,7 @@ class StartingGuideArticleScreen extends ConsumerWidget {
         data: (state) {
           GuideArticle? article;
           for (final a in state.articles) {
-            if (a.slug == slug) {
+            if (a.slug == widget.slug) {
               article = a;
               break;
             }
