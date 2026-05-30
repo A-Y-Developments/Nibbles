@@ -24,6 +24,10 @@ enum AppRoute {
   forgotPassword(path: '/auth/forgot-password', name: 'forgot-password'),
   resetPassword(path: '/auth/reset-password', name: 'reset-password'),
   paywall(path: '/subscription/paywall', name: 'paywall'),
+  subscriptionSuccess(
+    path: '/subscription/success',
+    name: 'subscription-success',
+  ),
   home(path: '/home', name: 'home'),
   mealPlan(path: '/home/meal', name: 'meal-plan'),
   mealPlanMap(path: '/home/meal/map', name: 'meal-plan-map'),

@@ -34,6 +34,7 @@ import 'package:nibbles/src/features/splash/splash_screen.dart';
 import 'package:nibbles/src/features/starting_guide/starting_guide_article_screen.dart';
 import 'package:nibbles/src/features/starting_guide/starting_guide_hub_screen.dart';
 import 'package:nibbles/src/features/subscription/paywall/paywall_screen.dart';
+import 'package:nibbles/src/features/subscription/success/subscription_success_screen.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -222,6 +223,14 @@ GoRouter goRouter(Ref ref) {
         path: AppRoute.paywall.path,
         name: AppRoute.paywall.name,
         builder: (context, state) => const PaywallScreen(),
+      ),
+      // NIB-130 — passive post-purchase transition. Kept off `gatedPaths` so a
+      // logged-in/onboarding-done user can reach it directly from the paywall
+      // (NIB-55) or the all-plans picker (NIB-61).
+      GoRoute(
+        path: AppRoute.subscriptionSuccess.path,
+        name: AppRoute.subscriptionSuccess.name,
+        builder: (context, state) => const SubscriptionSuccessScreen(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
