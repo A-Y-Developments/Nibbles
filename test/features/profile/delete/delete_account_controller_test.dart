@@ -18,11 +18,31 @@ class _MockAuthRepository extends Mock implements AuthRepository {}
 
 class _MockLocalFlagService extends Mock implements LocalFlagService {}
 
+/// Captures the (reason, information, error string) tuple recorded by the
+/// controller's non-fatal Crashlytics path so NIB-99 can assert the P1
+/// telemetry payload without touching real Firebase.
+class _CrashCapture {
+  final List<({String? reason, List<String>? information, String error})>
+      calls = [];
+
+  Future<void> record(
+    Object error,
+    StackTrace stack, {
+    String? reason,
+    List<String>? information,
+  }) async {
+    calls.add(
+      (reason: reason, information: information, error: error.toString()),
+    );
+  }
+}
+
 void main() {
   late _MockAccountRepository mockAccountRepo;
   late _MockAuthRepository mockAuthRepo;
   late _MockLocalFlagService mockFlags;
   late FakeAnalytics fakeAnalytics;
+  late _CrashCapture crashCapture;
   late ProviderContainer container;
 
   setUp(() {
@@ -30,6 +50,7 @@ void main() {
     mockAuthRepo = _MockAuthRepository();
     mockFlags = _MockLocalFlagService();
     fakeAnalytics = FakeAnalytics();
+    crashCapture = _CrashCapture();
 
     when(() => mockAuthRepo.isLoggedIn).thenReturn(true);
     when(
@@ -45,10 +66,10 @@ void main() {
         authRepositoryProvider.overrideWithValue(mockAuthRepo),
         localFlagServiceProvider.overrideWithValue(mockFlags),
         analyticsProvider.overrideWithValue(fakeAnalytics),
-        // No-op Crashlytics recorder — tests assert behaviour, not non-fatal
-        // payload (NIB-99 owns the recorder payload coverage).
+        // NIB-99: capturing recorder so payload (reason + information) is
+        // asserted alongside the failure path.
         deleteAccountCrashRecorderProvider.overrideWithValue(
-          (_, __, {String? reason, List<String>? information}) async {},
+          crashCapture.record,
         ),
       ],
     )
@@ -67,12 +88,16 @@ void main() {
 
   group('DeleteAccountController.submit', () {
     test(
-      'success: calls deleteAccount → clearAll → signOut and returns true',
+      'success: calls deleteAccount → clearAll → signOut, records '
+      'logAccountDeletionCompleted, returns true',
       () async {
         when(() => mockAccountRepo.requestAccountDeletion(any()))
             .thenAnswer((_) async => const Result.success(null));
 
         final ok = await readController().submit('Privacy concerns');
+
+        // Drain pending fire-and-forget analytics microtasks.
+        await Future<void>.delayed(Duration.zero);
 
         expect(ok, isTrue);
         verify(
@@ -80,19 +105,27 @@ void main() {
         ).called(1);
         verify(mockFlags.clearAll).called(1);
         verify(() => mockAuthRepo.signOut()).called(1);
+
+        expect(
+          fakeAnalytics.eventNames,
+          contains('account_deletion_completed'),
+        );
+        expect(crashCapture.calls, isEmpty);
       },
     );
 
     test(
-      'failure: sets errorMessage, returns false, does NOT clear flags or '
-      'sign out',
+      'failure: sets errorMessage, records crash with reason + '
+      'information=[reason=<reason>], returns false, does NOT clear flags '
+      'or sign out',
       () async {
         when(() => mockAccountRepo.requestAccountDeletion(any())).thenAnswer(
           (_) async =>
               const Result.failure(ServerException('deletion failed')),
         );
 
-        final ok = await readController().submit('Other');
+        const reason = 'Other';
+        final ok = await readController().submit(reason);
 
         expect(ok, isFalse);
         final state = container.read(deleteAccountControllerProvider);
@@ -100,6 +133,18 @@ void main() {
         expect(state.errorMessage, 'deletion failed');
         verifyNever(mockFlags.clearAll);
         verifyNever(() => mockAuthRepo.signOut());
+
+        expect(crashCapture.calls, hasLength(1));
+        final crash = crashCapture.calls.single;
+        expect(crash.reason, 'profile_account_deletion_failure');
+        expect(crash.information, equals(['reason=$reason']));
+        expect(crash.error, contains('profile_account_deletion_failure'));
+        expect(crash.error, contains('deletion failed'));
+
+        expect(
+          fakeAnalytics.eventNames,
+          isNot(contains('account_deletion_completed')),
+        );
       },
     );
 
