@@ -108,89 +108,98 @@ class _ProfileContent extends ConsumerWidget {
 
     void goBack() => context.canPop() ? context.pop() : context.go('/home');
 
+    // Figma audit (node 1189:10278): screen background is
+    // linear-gradient(152.612deg, #FFFCD5 19.168%, #F5F5F5 50%) (Grad-1).
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          SafeArea(
-            bottom: false,
-            child: ColoredBox(
-              color: AppColors.butterSoft,
-              child: Column(
-                children: [
-                  ProfileHeader(onBack: goBack),
-                  ProfileAvatarCard(
-                    name: baby.name,
-                    ageLabel: _ageLabel(baby.dateOfBirth),
-                    onEdit: () => context.pushNamed(
-                      AppRoute.profileEdit.name,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+      body: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            // 152.612deg in CSS ≈ Alignment(sinθ, -cosθ).
+            // sin(152.612°) ≈ 0.460, cos(152.612°) ≈ -0.888.
+            begin: Alignment(-0.460, 0.888),
+            end: Alignment(0.460, -0.888),
+            stops: [0.19168, 0.5],
+            colors: [AppColors.butterSoft, Color(0xFFF5F5F5)],
           ),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(
-                AppSizes.pagePaddingH,
-                AppSizes.md,
-                AppSizes.pagePaddingH,
-                AppSizes.pagePaddingV,
+        ),
+        child: SafeArea(
+          bottom: false,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              ProfileHeader(onBack: goBack),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSizes.md,
+                    0,
+                    AppSizes.md,
+                    AppSizes.pagePaddingV,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      ProfileAvatarCard(
+                        name: baby.name,
+                        ageLabel: _ageLabel(baby.dateOfBirth),
+                        onEdit: () => context.pushNamed(
+                          AppRoute.profileEdit.name,
+                        ),
+                      ),
+                      const PremiumTeaserCard(),
+                      const SizedBox(height: AppSizes.lg),
+                      SettingsRow(
+                        key: const Key('profile_manage_subscription_row'),
+                        title: 'Manage Subscription',
+                        subtitle: state.subscriptionLabel ?? 'No Subscription',
+                        // TODO(NIB-73): push paywall when ticket ships.
+                        onTap: () => _showComingSoon(
+                          context,
+                          'Subscription management coming soon.',
+                        ),
+                      ),
+                      const SizedBox(height: AppSizes.sp12),
+                      SettingsRow(
+                        key: const Key('profile_feedback_row'),
+                        title: 'Give Feedback',
+                        onTap: () =>
+                            context.pushNamed(AppRoute.profileFeedback.name),
+                      ),
+                      const SizedBox(height: AppSizes.sp12),
+                      SettingsRow(
+                        key: const Key('profile_sign_out_button'),
+                        title: 'Sign out',
+                        onTap: () => _confirmSignOut(context, ref),
+                      ),
+                      const SizedBox(height: AppSizes.sp12),
+                      SettingsRow(
+                        key: const Key('profile_delete_account_row'),
+                        title: 'Delete account',
+                        danger: true,
+                        onTap: () => showDeleteAccountOverlay(context),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const PremiumTeaserCard(),
-                  const SizedBox(height: AppSizes.md + 2),
-                  SettingsRow(
-                    key: const Key('profile_manage_subscription_row'),
-                    title: 'Manage Subscription',
-                    subtitle: state.subscriptionLabel ?? 'No Subscription',
-                    // TODO(NIB-73): push paywall when ticket ships.
-                    onTap: () => _showComingSoon(
-                      context,
-                      'Subscription management coming soon.',
-                    ),
-                  ),
-                  const SizedBox(height: AppSizes.sp12),
-                  SettingsRow(
-                    key: const Key('profile_feedback_row'),
-                    title: 'Give Feedback',
-                    onTap: () =>
-                        context.pushNamed(AppRoute.profileFeedback.name),
-                  ),
-                  const SizedBox(height: AppSizes.sp12),
-                  SettingsRow(
-                    key: const Key('profile_sign_out_button'),
-                    title: 'Sign out',
-                    onTap: () => _confirmSignOut(context, ref),
-                  ),
-                  const SizedBox(height: AppSizes.sp12),
-                  SettingsRow(
-                    key: const Key('profile_delete_account_row'),
-                    title: 'Delete account',
-                    danger: true,
-                    onTap: () => showDeleteAccountOverlay(context),
-                  ),
-                ],
-              ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
   String _ageLabel(DateTime dob) {
+    // Figma audit (node 1189:12442) verbatim: "6 month 88 days" — i.e. "month"
+    // singular regardless of count, "days" plural regardless of count.
     final now = DateTime.now();
     final totalMonths = (now.year - dob.year) * 12 + now.month - dob.month;
     final months = totalMonths < 0 ? 0 : totalMonths;
     final monthStart = DateTime(now.year, now.month - months, dob.day);
     final days = now.difference(monthStart).inDays;
     final clampedDays = days < 0 ? 0 : days;
-    return '$months months $clampedDays days';
+    return '$months month $clampedDays days';
   }
 
   void _showComingSoon(BuildContext context, String message) {

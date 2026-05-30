@@ -3,11 +3,14 @@ import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 
-/// Static premium teaser card — butter-soft surface, scaled-down `nibbles`
-/// wordmark, butter crown badge, body copy.
+/// Static premium teaser card — Figma node 1200:10685.
 ///
-/// Static for MVP (NIB-73 wires the paywall push). Mirrors
-/// `design/ui_kits/nibbles_mobile/ProfileScreen.jsx` premium card.
+/// Layout: vertical column. Top row holds the scaled-down `nibbles` wordmark
+/// (~79x19) and the Nibble crown badge (26x26) at gap 12; below sits the
+/// upsell body copy.
+/// Surface = Nibble-primary-cream (#fffcd5 / `butterSoft`), 1px
+/// Nibble-primary-Lime (#eaec8c / `butter`) border, radius 10, padding 12.
+/// Static for MVP (NIB-73 wires the paywall push).
 class PremiumTeaserCard extends StatelessWidget {
   const PremiumTeaserCard({super.key});
 
@@ -24,36 +27,40 @@ class PremiumTeaserCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.butterSoft,
-        borderRadius: BorderRadius.circular(AppSizes.radiusXl),
+        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+        border: Border.all(color: AppColors.butter),
       ),
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.md,
-        vertical: AppSizes.md - 2,
-      ),
-      child: Row(
+      padding: const EdgeInsets.all(AppSizes.sp12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('nibbles', style: wordmark),
-          const SizedBox(width: AppSizes.sm - 2),
-          Container(
-            width: 26,
-            height: 26,
-            decoration: BoxDecoration(
-              color: AppColors.butter,
-              borderRadius: BorderRadius.circular(AppSizes.sm),
-            ),
-            child: const Icon(
-              Icons.workspace_premium_rounded,
-              size: 18,
-              color: AppColors.greenDeep,
-            ),
-          ),
-          const SizedBox(width: AppSizes.sp12 + 2),
-          Expanded(
-            child: Text(
-              'Unlock premium personalized guidance and exclusive recipes.',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: AppColors.fgDefault,
+          Row(
+            children: [
+              Text('nibbles', style: wordmark),
+              const SizedBox(width: AppSizes.sp12),
+              Container(
+                width: 26,
+                height: 26,
+                decoration: BoxDecoration(
+                  color: AppColors.butter,
+                  borderRadius: BorderRadius.circular(AppSizes.sm),
+                ),
+                child: const Icon(
+                  Icons.workspace_premium_rounded,
+                  size: 18,
+                  color: AppColors.greenDeep,
+                ),
               ),
+            ],
+          ),
+          const SizedBox(height: AppSizes.sp12),
+          // Body/Regular — Figtree 400 15/22.
+          Text(
+            'Unlock premium personalized guidance and exclusive recipes.',
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: AppColors.text,
+              fontSize: 15,
+              height: 22 / 15,
             ),
           ),
         ],
