@@ -78,7 +78,7 @@ class BrowseMealRecipeCard extends StatelessWidget {
                   children: [
                     Text(
                       recipe.title,
-                      style: textTheme.labelLarge?.copyWith(fontSize: 13),
+                      style: textTheme.labelMedium,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -194,13 +194,13 @@ class _UnsafeBadge extends StatelessWidget {
           const Icon(
             Icons.warning_amber_rounded,
             size: 12,
-            color: AppColors.destructive,
+            color: AppColors.flagFg,
           ),
           const SizedBox(width: 2),
           Text(
             'Flagged',
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: AppColors.destructive,
+              color: AppColors.flagFg,
               letterSpacing: 0,
             ),
           ),
@@ -264,14 +264,14 @@ class BrowseMealRecipeRow extends StatelessWidget {
                           const Icon(
                             Icons.warning_amber_rounded,
                             size: 13,
-                            color: AppColors.destructive,
+                            color: AppColors.flagFg,
                           ),
                           const SizedBox(width: AppSizes.xs),
                           Expanded(
                             child: Text(
                               'Not safe: ${_formatFlaggedTags(flaggedTags)}',
                               style: textTheme.bodySmall?.copyWith(
-                                color: AppColors.destructive,
+                                color: AppColors.flagFg,
                                 fontWeight: FontWeight.w600,
                               ),
                               maxLines: 1,
