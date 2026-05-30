@@ -270,7 +270,7 @@ class __$$MealPlanStateImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$MealPlanStateImpl extends _MealPlanState {
+class _$MealPlanStateImpl implements _MealPlanState {
   const _$MealPlanStateImpl({
     required this.windowStart,
     required this.windowEnd,
@@ -284,8 +284,7 @@ class _$MealPlanStateImpl extends _MealPlanState {
   }) : _entries = entries,
        _expanded = expanded,
        _recipes = recipes,
-       _flaggedAllergenKeys = flaggedAllergenKeys,
-       super._();
+       _flaggedAllergenKeys = flaggedAllergenKeys;
 
   @override
   final DateTime windowStart;
@@ -388,7 +387,7 @@ class _$MealPlanStateImpl extends _MealPlanState {
       __$$MealPlanStateImplCopyWithImpl<_$MealPlanStateImpl>(this, _$identity);
 }
 
-abstract class _MealPlanState extends MealPlanState {
+abstract class _MealPlanState implements MealPlanState {
   const factory _MealPlanState({
     required final DateTime windowStart,
     required final DateTime windowEnd,
@@ -400,7 +399,6 @@ abstract class _MealPlanState extends MealPlanState {
     final AllergenBoardItem? currentAllergenBoardItem,
     final AllergenProgramState? programState,
   }) = _$MealPlanStateImpl;
-  const _MealPlanState._() : super._();
 
   @override
   DateTime get windowStart;

@@ -167,27 +167,4 @@ class MealPlanController extends _$MealPlanController {
     ref.invalidateSelf();
     return true;
   }
-
-  // ---------------------------------------------------------------------------
-  // Backwards-compat shims for the pre-rewrite screen (NIB-69 removes these).
-  // ---------------------------------------------------------------------------
-
-  // TODO(NIB-69): remove after screen rewrite — accordion replaces the strip.
-  void selectDate(DateTime date) {}
-
-  // TODO(NIB-69): remove after screen rewrite — accordion replaces the toggle.
-  void toggleCalendar() {}
-
-  // TODO(NIB-69): remove after screen rewrite — rolling-7 doesn't navigate.
-  void previousWeek() {}
-
-  // TODO(NIB-69): remove after screen rewrite — rolling-7 doesn't navigate.
-  void nextWeek() {}
-
-  // TODO(NIB-69): remove after screen rewrite — use [clearRange] instead.
-  Future<bool> clearWeek() async {
-    final state = this.state.valueOrNull;
-    if (state == null) return false;
-    return clearRange(state.windowStart, state.windowEnd);
-  }
 }
