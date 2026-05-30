@@ -28,6 +28,10 @@ enum AppRoute {
     path: '/subscription/success',
     name: 'subscription-success',
   ),
+  manageSubscription(
+    path: '/subscription/manage',
+    name: 'manage-subscription',
+  ),
   home(path: '/home', name: 'home'),
   mealPlan(path: '/home/meal', name: 'meal-plan'),
   mealPlanMap(path: '/home/meal/map', name: 'meal-plan-map'),

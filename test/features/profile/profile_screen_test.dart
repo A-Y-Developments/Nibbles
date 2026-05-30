@@ -116,6 +116,7 @@ class _FakeProfileController extends ProfileController {
 
 const _editStubKey = Key('stub_profile_edit');
 const _feedbackStubKey = Key('stub_profile_feedback');
+const _manageSubscriptionStubKey = Key('stub_manage_subscription');
 
 GoRouter _router() => GoRouter(
       initialLocation: '/home/profile',
@@ -126,8 +127,8 @@ GoRouter _router() => GoRouter(
           builder: (_, __) => const ProfileScreen(),
         ),
         // Stub destinations: keep nav assertable without booting the real
-        // ProfileEdit / Feedback subtrees (which would try to read providers
-        // we don't mock here).
+        // ProfileEdit / Feedback / ManageSubscription subtrees (which would
+        // try to read providers we don't mock here).
         GoRoute(
           path: '/home/profile/edit',
           name: AppRoute.profileEdit.name,
@@ -142,6 +143,14 @@ GoRouter _router() => GoRouter(
           builder: (_, __) => const Scaffold(
             key: _feedbackStubKey,
             body: Center(child: Text('FEEDBACK STUB')),
+          ),
+        ),
+        GoRoute(
+          path: '/subscription/manage',
+          name: AppRoute.manageSubscription.name,
+          builder: (_, __) => const Scaffold(
+            key: _manageSubscriptionStubKey,
+            body: Center(child: Text('MANAGE SUBSCRIPTION STUB')),
           ),
         ),
       ],
@@ -281,7 +290,7 @@ void main() {
   // -------------------------------------------------------------------------
 
   testWidgets(
-    "tapping 'Manage Subscription' surfaces the 'coming soon' SnackBar",
+    "tapping 'Manage Subscription' pushes /subscription/manage",
     (tester) async {
       await tester.binding.setSurfaceSize(const Size(400, 1200));
       addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -293,9 +302,10 @@ void main() {
 
       await tester
           .tap(find.byKey(const Key('profile_manage_subscription_row')));
-      await tester.pump(); // SnackBar transition starts on the next frame.
+      await tester.pumpAndSettle();
 
-      expect(find.textContaining('coming soon'), findsOneWidget);
+      expect(find.byKey(_manageSubscriptionStubKey), findsOneWidget);
+      expect(find.text('MANAGE SUBSCRIPTION STUB'), findsOneWidget);
     },
   );
 
