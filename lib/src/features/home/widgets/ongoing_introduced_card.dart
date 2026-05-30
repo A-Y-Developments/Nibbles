@@ -51,7 +51,7 @@ class OngoingIntroducedCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Ongoing introduced',
+          'ONGOING INTRODUCED',
           style: AppTypography.textTheme.labelSmall?.copyWith(
             color: AppColors.fgFaint,
           ),

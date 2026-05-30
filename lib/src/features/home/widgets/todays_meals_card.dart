@@ -130,7 +130,7 @@ class _CoverageBanner extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.butterSoft,
-        borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+        borderRadius: BorderRadius.circular(AppSizes.radiusXl),
       ),
       padding: const EdgeInsets.symmetric(
         horizontal: AppSizes.md - 2,
