@@ -1,30 +1,28 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:nibbles/src/common/domain/entities/allergen_board_item.dart';
-import 'package:nibbles/src/common/domain/entities/allergen_program_state.dart';
-import 'package:nibbles/src/common/domain/enums/emoji_taste.dart';
-import 'package:nibbles/src/common/domain/enums/reaction_severity.dart';
+import 'package:nibbles/src/common/domain/entities/allergen.dart';
+import 'package:nibbles/src/common/domain/entities/allergen_log.dart';
+import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
 
 part 'allergen_tracker_state.freezed.dart';
 
+/// State for the redesigned Allergen Tracker board (NIB-79).
+///
+/// Post-NIB-126 the per-allergen status is derived from logs via
+/// `AllergenService.getAllergenStatuses`. There is no longer a locked
+/// sequence or `currentAllergenKey` — every `notStarted` allergen can be
+/// introduced via the Start Introduce CTA.
 @freezed
 class AllergenTrackerState with _$AllergenTrackerState {
   const factory AllergenTrackerState({
-    required List<AllergenBoardItem> boardItems,
-    required AllergenProgramState programState,
-    required List<RecentLogEntry> recentLogs,
-  }) = _AllergenTrackerState;
-}
+    /// All 9 canonical allergens ordered by `sequenceOrder` (display order).
+    required List<Allergen> allergens,
 
-@freezed
-class RecentLogEntry with _$RecentLogEntry {
-  const factory RecentLogEntry({
-    required String allergenKey,
-    required String allergenName,
-    required String allergenEmoji,
-    required DateTime logDate,
-    required DateTime createdAt,
-    required EmojiTaste taste,
-    required bool hadReaction,
-    required ReactionSeverity? severity,
-  }) = _RecentLogEntry;
+    /// `kAllergenKeys` → derived [AllergenStatus]. Guaranteed to contain
+    /// every canonical key.
+    required Map<String, AllergenStatus> statuses,
+
+    /// All logs for the baby, sorted oldest → newest by `createdAt`.
+    /// Used to render the per-card 0/3 progress and the Reaction Log list.
+    required List<AllergenLog> logs,
+  }) = _AllergenTrackerState;
 }

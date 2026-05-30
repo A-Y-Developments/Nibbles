@@ -3,16 +3,29 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
-import 'package:nibbles/src/common/domain/entities/allergen_board_item.dart';
+import 'package:nibbles/src/common/components/components.dart';
+import 'package:nibbles/src/common/domain/entities/allergen.dart';
 import 'package:nibbles/src/common/domain/entities/allergen_log.dart';
+import 'package:nibbles/src/common/domain/entities/baby.dart';
 import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
-import 'package:nibbles/src/common/domain/enums/emoji_taste.dart';
-import 'package:nibbles/src/common/domain/enums/reaction_severity.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
+import 'package:nibbles/src/features/allergen/log/allergen_log_sheet.dart';
 import 'package:nibbles/src/features/allergen/tracker/allergen_tracker_controller.dart';
 import 'package:nibbles/src/features/allergen/tracker/allergen_tracker_state.dart';
+import 'package:nibbles/src/features/allergen/tracker/widgets/allergen_progress_card.dart';
+import 'package:nibbles/src/features/allergen/tracker/widgets/reaction_log_row.dart';
+import 'package:nibbles/src/features/allergen/tracker/widgets/start_introduce_card.dart';
+import 'package:nibbles/src/features/allergen/tracker/widgets/tracker_header.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 
+/// Redesigned Allergen Tracker board (NIB-79).
+///
+/// Layout: butter-soft header + segmented control (`Ongoing` | `Big 11`) with
+/// a coral progress ring (safeCount / 9) and stat columns above it. The
+/// Ongoing tab lists allergens with at least one log (inProgress/safe/flagged)
+/// followed by a Reaction Log list. The Big 11 tab is a long-scrolling
+/// grouped list of all 9 canonical allergens — Not-Started ones expose a
+/// Start Introduce CTA that opens the existing log capture sheet.
 class AllergenTrackerScreen extends ConsumerWidget {
   const AllergenTrackerScreen({super.key});
 
@@ -21,14 +34,18 @@ class AllergenTrackerScreen extends ConsumerWidget {
     final babyIdAsync = ref.watch(currentBabyIdProvider);
 
     return babyIdAsync.when(
-      loading: () =>
-          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      loading: () => const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: CircularProgressIndicator()),
+      ),
       error: (_, __) => const Scaffold(
+        backgroundColor: AppColors.background,
         body: Center(child: Text('Could not load baby profile.')),
       ),
       data: (babyId) {
         if (babyId == null) {
           return const Scaffold(
+            backgroundColor: AppColors.background,
             body: Center(child: Text('No baby profile found.')),
           );
         }
@@ -38,641 +55,416 @@ class AllergenTrackerScreen extends ConsumerWidget {
   }
 }
 
-class _TrackerBody extends ConsumerWidget {
+class _TrackerBody extends ConsumerStatefulWidget {
   const _TrackerBody({required this.babyId});
 
   final String babyId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final trackerAsync = ref.watch(allergenTrackerControllerProvider(babyId));
+  ConsumerState<_TrackerBody> createState() => _TrackerBodyState();
+}
 
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        backgroundColor: AppColors.background,
-        appBar: AppBar(
-          backgroundColor: AppColors.surface,
-          elevation: 0,
-          title: Text(
-            'Allergen Tracker',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          bottom: const TabBar(
-            labelColor: AppColors.primary,
-            unselectedLabelColor: AppColors.subtext,
-            indicatorColor: AppColors.primary,
-            tabs: [
-              Tab(text: 'Overview'),
-              Tab(text: 'All Allergens'),
-            ],
-          ),
-        ),
-        body: trackerAsync.when(
+class _TrackerBodyState extends ConsumerState<_TrackerBody> {
+  // 0 = Ongoing, 1 = Big 11. Held locally — never persisted.
+  int _segmentIndex = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final trackerAsync = ref.watch(
+      allergenTrackerControllerProvider(widget.babyId),
+    );
+
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        bottom: false,
+        child: trackerAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSizes.pagePaddingH),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Could not load tracker.',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: AppSizes.sm),
-                  FilledButton(
-                    onPressed: () => ref.invalidate(
-                      allergenTrackerControllerProvider(babyId),
-                    ),
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
+          error: (err, _) => _ErrorState(
+            onRetry: () => ref.invalidate(
+              allergenTrackerControllerProvider(widget.babyId),
             ),
           ),
-          data: (state) => TabBarView(
-            children: [
-              _OverviewTab(state: state, babyId: babyId),
-              _BoardTab(state: state, babyId: babyId),
-            ],
+          data: (state) => _TrackerContent(
+            babyId: widget.babyId,
+            state: state,
+            segmentIndex: _segmentIndex,
+            onSegmentChanged: (i) => setState(() => _segmentIndex = i),
+            onStartIntroduce: _startIntroduce,
           ),
         ),
       ),
     );
   }
+
+  Future<void> _startIntroduce(Allergen allergen) async {
+    final logged = await showAllergenLogSheet(
+      context,
+      babyId: widget.babyId,
+      allergenKey: allergen.key,
+      allergenName: allergen.name,
+      allergenEmoji: allergen.emoji,
+    );
+
+    if ((logged ?? false) && mounted) {
+      ref.invalidate(allergenTrackerControllerProvider(widget.babyId));
+    }
+  }
 }
 
-// ---------------------------------------------------------------------------
-// AL-01 — Overview Tab
-// ---------------------------------------------------------------------------
+class _ErrorState extends StatelessWidget {
+  const _ErrorState({required this.onRetry});
 
-class _OverviewTab extends StatelessWidget {
-  const _OverviewTab({required this.state, required this.babyId});
+  final VoidCallback onRetry;
 
-  final AllergenTrackerState state;
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(AppSizes.pagePaddingH),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            'Could not load tracker.',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: AppSizes.md),
+          AppPillButton(
+            label: 'Retry',
+            onPressed: onRetry,
+            size: AppPillButtonSize.small,
+            expand: false,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TrackerContent extends ConsumerWidget {
+  const _TrackerContent({
+    required this.babyId,
+    required this.state,
+    required this.segmentIndex,
+    required this.onSegmentChanged,
+    required this.onStartIntroduce,
+  });
+
   final String babyId;
-
-  int get _introducedCount => state.boardItems
-      .where(
-        (b) =>
-            b.status == AllergenStatus.safe ||
-            b.status == AllergenStatus.flagged,
-      )
-      .length;
+  final AllergenTrackerState state;
+  final int segmentIndex;
+  final ValueChanged<int> onSegmentChanged;
+  final void Function(Allergen allergen) onStartIntroduce;
 
   int get _safeCount =>
-      state.boardItems.where((b) => b.status == AllergenStatus.safe).length;
+      state.statuses.values.where((s) => s == AllergenStatus.safe).length;
 
   int get _flaggedCount =>
-      state.boardItems.where((b) => b.status == AllergenStatus.flagged).length;
+      state.statuses.values.where((s) => s == AllergenStatus.flagged).length;
 
-  bool get _hasAnyLogs => state.boardItems.any((b) => b.logs.isNotEmpty);
+  int get _notTriedCount => state.statuses.values
+      .where((s) => s == AllergenStatus.notStarted)
+      .length;
 
-  int get _currentLogCount {
-    final currentKey = state.programState.currentAllergenKey;
-    final currentItem = state.boardItems
-        .where((b) => b.allergen.key == currentKey)
-        .firstOrNull;
-    return currentItem?.logs.length ?? 0;
-  }
-
-  AllergenBoardItem? get _currentItem {
-    final currentKey = state.programState.currentAllergenKey;
-    return state.boardItems
-        .where((b) => b.allergen.key == currentKey)
-        .firstOrNull;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.pagePaddingH,
-        vertical: AppSizes.pagePaddingV,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Progress circle
-          Center(
-            child: _ProgressCircle(introduced: _introducedCount, total: 9),
-          ),
-          const SizedBox(height: AppSizes.lg),
-
-          // Stat chips
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _StatChip(
-                label: 'Safe',
-                count: _safeCount,
-                color: AppColors.allergenSafe,
-              ),
-              const SizedBox(width: AppSizes.md),
-              _StatChip(
-                label: 'Flagged',
-                count: _flaggedCount,
-                color: AppColors.allergenFlagged,
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSizes.lg),
-
-          // Today's checklist card
-          if (!_hasAnyLogs)
-            _EmptyState(currentItem: _currentItem)
-          else
-            _CurrentAllergenCard(
-              currentItem: _currentItem,
-              logCount: _currentLogCount,
-            ),
-
-          // Recent logs (all exposures)
-          if (state.recentLogs.isNotEmpty) ...[
-            const SizedBox(height: AppSizes.lg),
-            Text('Recent Logs', style: textTheme.titleMedium),
-            const SizedBox(height: AppSizes.sm),
-            ...state.recentLogs.map(
-              (entry) => _LogRow(
-                entry: entry,
-                onTap: () => context.pushNamed(
-                  AppRoute.allergenDetail.name,
-                  pathParameters: {'allergenKey': entry.allergenKey},
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _ProgressCircle extends StatelessWidget {
-  const _ProgressCircle({required this.introduced, required this.total});
-
-  final int introduced;
-  final int total;
-
-  @override
-  Widget build(BuildContext context) {
-    final progress = total > 0 ? introduced / total : 0.0;
-    final textTheme = Theme.of(context).textTheme;
-
-    return SizedBox(
-      width: 160,
-      height: 160,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          SizedBox.expand(
-            child: CircularProgressIndicator(
-              value: progress,
-              strokeWidth: 12,
-              backgroundColor: AppColors.divider,
-              valueColor: const AlwaysStoppedAnimation<Color>(
-                AppColors.primary,
-              ),
-            ),
-          ),
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '$introduced/$total',
-                style: textTheme.headlineMedium?.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              Text('introduced', style: textTheme.bodySmall),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatChip extends StatelessWidget {
-  const _StatChip({
-    required this.label,
-    required this.count,
-    required this.color,
-  });
-
-  final String label;
-  final int count;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.md,
-        vertical: AppSizes.sm,
-      ),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-        border: Border.all(color: color.withValues(alpha: 0.4)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 8,
-            height: 8,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-          ),
-          const SizedBox(width: AppSizes.xs),
-          Text(
-            '$count $label',
-            style: Theme.of(
-              context,
-            ).textTheme.labelMedium?.copyWith(color: color),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState({required this.currentItem});
-
-  final AllergenBoardItem? currentItem;
-
-  @override
-  Widget build(BuildContext context) {
-    final emoji = currentItem?.allergen.emoji ?? '🥜';
-    final name = currentItem?.allergen.name ?? 'Peanut';
-
-    return Container(
-      padding: const EdgeInsets.all(AppSizes.cardPadding),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceVariant,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-      ),
-      child: Column(
-        children: [
-          Text(emoji, style: const TextStyle(fontSize: 40)),
-          const SizedBox(height: AppSizes.sm),
-          Text(
-            'Start your allergen journey!',
-            style: Theme.of(context).textTheme.titleSmall,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: AppSizes.xs),
-          Text(
-            'Begin with $emoji $name.',
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: AppColors.subtext),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CurrentAllergenCard extends StatelessWidget {
-  const _CurrentAllergenCard({
-    required this.currentItem,
-    required this.logCount,
-  });
-
-  final AllergenBoardItem? currentItem;
-  final int logCount;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final emoji = currentItem?.allergen.emoji ?? '';
-    final name = currentItem?.allergen.name ?? 'Current Allergen';
-    final isComplete = logCount >= 3;
-
-    return Container(
-      padding: const EdgeInsets.all(AppSizes.cardPadding),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        border: Border.all(color: AppColors.divider),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Text(emoji, style: const TextStyle(fontSize: 32)),
-          const SizedBox(width: AppSizes.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Current allergen', style: textTheme.bodySmall),
-                const SizedBox(height: 2),
-                Text(name, style: textTheme.titleMedium),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSizes.sm,
-              vertical: AppSizes.xs,
-            ),
-            decoration: BoxDecoration(
-              color: isComplete
-                  ? AppColors.allergenSafe.withValues(alpha: 0.12)
-                  : AppColors.surfaceVariant,
-              borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-            ),
-            child: Text(
-              '$logCount of 3 logged',
-              style: textTheme.labelSmall?.copyWith(
-                color: isComplete ? AppColors.allergenSafe : AppColors.subtext,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LogRow extends StatelessWidget {
-  const _LogRow({required this.entry, required this.onTap});
-
-  final RecentLogEntry entry;
-  final VoidCallback onTap;
-
-  String get _tasteEmoji => switch (entry.taste) {
-    EmojiTaste.love => '😍',
-    EmojiTaste.neutral => '😐',
-    EmojiTaste.dislike => '😣',
-  };
-
-  String get _badgeLabel {
-    if (!entry.hadReaction) return 'No Reaction';
-    return switch (entry.severity) {
-      ReactionSeverity.mild => 'Mild',
-      ReactionSeverity.moderate => 'Moderate',
-      ReactionSeverity.severe => 'Severe',
-      null => 'Reaction',
-    };
-  }
-
-  Color get _badgeColor {
-    if (!entry.hadReaction) return AppColors.allergenSafe;
-    return switch (entry.severity) {
-      ReactionSeverity.mild => AppColors.warning,
-      ReactionSeverity.moderate => AppColors.secondary,
-      ReactionSeverity.severe => AppColors.allergenFlagged,
-      null => AppColors.subtext,
-    };
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final date = entry.logDate;
-    final dateStr =
-        '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSizes.sm),
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSizes.cardPadding,
-            vertical: AppSizes.sm,
-          ),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-            border: Border.all(color: AppColors.divider),
-          ),
-          child: Row(
-            children: [
-              Text(entry.allergenEmoji, style: const TextStyle(fontSize: 20)),
-              const SizedBox(width: AppSizes.sm),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(entry.allergenName, style: textTheme.labelLarge),
-                    Row(
-                      children: [
-                        Text(dateStr, style: textTheme.bodySmall),
-                        const SizedBox(width: AppSizes.xs),
-                        Text(_tasteEmoji, style: const TextStyle(fontSize: 14)),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSizes.sm,
-                  vertical: 3,
-                ),
-                decoration: BoxDecoration(
-                  color: _badgeColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-                ),
-                child: Text(
-                  _badgeLabel,
-                  style: textTheme.labelSmall?.copyWith(color: _badgeColor),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// AL-02 — Board Tab
-// ---------------------------------------------------------------------------
-
-class _BoardTab extends ConsumerWidget {
-  const _BoardTab({required this.state, required this.babyId});
-
-  final AllergenTrackerState state;
-  final String babyId;
+  bool get _isBig11 => segmentIndex == 1;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currentKey = state.programState.currentAllergenKey;
+    // Baby is needed for the Reaction Log row avatar. The currentBabyIdProvider
+    // upstream already guarantees a baby exists; we read it again here for the
+    // initial. Falls back to a neutral glyph when the read is still in flight.
+    final babyAsync = ref.watch(_currentBabyProvider);
+    final babyInitial = babyAsync.maybeWhen(
+      data: (b) => (b?.name.isNotEmpty ?? false)
+          ? b!.name[0].toUpperCase()
+          : '?',
+      orElse: () => '?',
+    );
 
-    return ListView.separated(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.pagePaddingH,
-        vertical: AppSizes.pagePaddingV,
-      ),
-      itemCount: state.boardItems.length,
-      separatorBuilder: (_, __) => const SizedBox(height: AppSizes.sm),
-      itemBuilder: (context, index) {
-        final item = state.boardItems[index];
-        final isCurrent = item.allergen.key == currentKey;
-        return _AllergenBoardRow(
-          item: item,
-          isCurrent: isCurrent,
-          onTap: () => context.pushNamed(
-            AppRoute.allergenDetail.name,
-            pathParameters: {'allergenKey': item.allergen.key},
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(child: _TrackerAppBar(onBack: () => context.pop())),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSizes.pagePaddingH,
+              AppSizes.sm,
+              AppSizes.pagePaddingH,
+              AppSizes.sp12,
+            ),
+            child: TrackerHeader(
+              safeCount: _safeCount,
+              flaggedCount: _flaggedCount,
+              notTriedCount: _notTriedCount,
+              showNotTried: _isBig11,
+            ),
           ),
-        );
-      },
+        ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSizes.pagePaddingH,
+            ),
+            child: AppSegmentedControl(
+              segments: const ['Ongoing', 'Big 11'],
+              selectedIndex: segmentIndex,
+              onChanged: onSegmentChanged,
+            ),
+          ),
+        ),
+        const SliverToBoxAdapter(child: SizedBox(height: AppSizes.md)),
+        if (_isBig11)
+          _Big11List(
+            allergens: state.allergens,
+            statuses: state.statuses,
+            logs: state.logs,
+            onStartIntroduce: onStartIntroduce,
+            onAllergenTap: (a) => _openAllergenDetail(context, a.key),
+          )
+        else
+          _OngoingList(
+            babyId: babyId,
+            babyInitial: babyInitial,
+            allergens: state.allergens,
+            statuses: state.statuses,
+            logs: state.logs,
+            onAllergenTap: (a) => _openAllergenDetail(context, a.key),
+          ),
+        const SliverToBoxAdapter(child: SizedBox(height: AppSizes.xl)),
+      ],
+    );
+  }
+
+  void _openAllergenDetail(BuildContext context, String allergenKey) {
+    context.pushNamed(
+      AppRoute.allergenDetail.name,
+      pathParameters: {'allergenKey': allergenKey},
     );
   }
 }
 
-class _AllergenBoardRow extends StatelessWidget {
-  const _AllergenBoardRow({
-    required this.item,
-    required this.isCurrent,
-    required this.onTap,
+/// Local provider used to fetch the Baby for the Reaction Log avatar initial.
+/// Scoped here because the tracker is the only consumer that needs the full
+/// Baby object (the rest of the screen only needs the id).
+final _currentBabyProvider = FutureProvider.autoDispose<Baby?>((ref) async {
+  final service = ref.watch(babyProfileServiceProvider);
+  return service.getBaby();
+});
+
+class _TrackerAppBar extends StatelessWidget {
+  const _TrackerAppBar({required this.onBack});
+
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSizes.pagePaddingH - 4,
+        AppSizes.sm,
+        AppSizes.pagePaddingH - 4,
+        0,
+      ),
+      child: Row(
+        children: [
+          AppRoundButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded),
+            onPressed: onBack,
+            semanticLabel: 'Back',
+          ),
+          Expanded(
+            child: Text(
+              'Allergen Tracker',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                color: AppColors.fgStrong,
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSizes.roundButton),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Ongoing tab — allergens with at least one log + Reaction Log feed.
+// ---------------------------------------------------------------------------
+
+class _OngoingList extends StatelessWidget {
+  const _OngoingList({
+    required this.babyId,
+    required this.babyInitial,
+    required this.allergens,
+    required this.statuses,
+    required this.logs,
+    required this.onAllergenTap,
   });
 
-  final AllergenBoardItem item;
-  final bool isCurrent;
-  final VoidCallback onTap;
+  final String babyId;
+  final String babyInitial;
+  final List<Allergen> allergens;
+  final Map<String, AllergenStatus> statuses;
+  final List<AllergenLog> logs;
+  final void Function(Allergen) onAllergenTap;
 
-  Color get _statusColor {
-    return switch (item.status) {
-      AllergenStatus.safe => AppColors.allergenSafe,
-      AllergenStatus.flagged => AppColors.allergenFlagged,
-      AllergenStatus.inProgress => AppColors.allergenInProgress,
-      AllergenStatus.notStarted => AppColors.allergenNotStarted,
-    };
-  }
-
-  String get _statusLabel {
-    return switch (item.status) {
-      AllergenStatus.safe => 'Safe',
-      AllergenStatus.flagged => 'Flagged',
-      AllergenStatus.inProgress => 'In Progress',
-      AllergenStatus.notStarted => 'Not Started',
-    };
-  }
+  List<Allergen> get _ongoing => allergens
+      .where(
+        (a) =>
+            (statuses[a.key] ?? AllergenStatus.notStarted) !=
+            AllergenStatus.notStarted,
+      )
+      .toList(growable: false);
 
   @override
   Widget build(BuildContext context) {
+    final ongoing = _ongoing;
     final textTheme = Theme.of(context).textTheme;
 
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(AppSizes.cardPadding),
-        decoration: BoxDecoration(
-          color: isCurrent
-              ? AppColors.primary.withValues(alpha: 0.06)
-              : AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          border: Border.all(
-            color: isCurrent ? AppColors.primary : AppColors.divider,
-            width: isCurrent ? 1.5 : 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            // Emoji + name
-            Text(item.allergen.emoji, style: const TextStyle(fontSize: 24)),
-            const SizedBox(width: AppSizes.sm),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(item.allergen.name, style: textTheme.labelLarge),
-                      if (isCurrent) ...[
-                        const SizedBox(width: AppSizes.xs),
-                        Text(
-                          '→ Current',
-                          style: textTheme.labelSmall?.copyWith(
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: AppSizes.xs),
-                  // 3 day-slot dot indicators
-                  Row(
-                    children: List.generate(3, (i) {
-                      final log = i < item.logs.length ? item.logs[i] : null;
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 6),
-                        child: _DotIndicator(log: log),
-                      );
-                    }),
-                  ),
-                ],
+    if (ongoing.isEmpty && logs.isEmpty) {
+      return const SliverToBoxAdapter(child: _OngoingEmptyState());
+    }
+
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSizes.pagePaddingH),
+      sliver: SliverList(
+        delegate: SliverChildListDelegate(<Widget>[
+          if (ongoing.isNotEmpty) ...[
+            Text('In progress', style: textTheme.titleMedium),
+            const SizedBox(height: AppSizes.sm),
+            for (final a in ongoing) ...[
+              AllergenProgressCard(
+                allergen: a,
+                status: statuses[a.key] ?? AllergenStatus.notStarted,
+                cleanLogCount: logs
+                    .where((l) => l.allergenKey == a.key && !l.hadReaction)
+                    .length,
+                totalLogCount:
+                    logs.where((l) => l.allergenKey == a.key).length,
+                onTap: () => onAllergenTap(a),
               ),
-            ),
-            const SizedBox(width: AppSizes.sm),
-            // Status badge
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSizes.sm,
-                vertical: 4,
-              ),
-              decoration: BoxDecoration(
-                color: _statusColor.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-              ),
-              child: Text(
-                _statusLabel,
-                style: textTheme.labelSmall?.copyWith(color: _statusColor),
-              ),
-            ),
+              const SizedBox(height: AppSizes.sm),
+            ],
+            const SizedBox(height: AppSizes.sm),
           ],
-        ),
+          if (logs.isNotEmpty) ...[
+            Text('Reaction Log', style: textTheme.titleMedium),
+            const SizedBox(height: AppSizes.sm),
+            for (final entry in _reverseIndexed(logs)) ...[
+              ReactionLogRow(
+                log: entry.log,
+                logIndex: entry.index,
+                babyInitial: babyInitial,
+                // TODO(NIB-93): route to read-only log detail when that
+                // screen exists; for now we route to the allergen detail.
+                onTap: () => onAllergenTap(
+                  _allergenForKey(entry.log.allergenKey),
+                ),
+              ),
+              const SizedBox(height: AppSizes.sm),
+            ],
+          ],
+        ]),
+      ),
+    );
+  }
+
+  Allergen _allergenForKey(String key) =>
+      allergens.firstWhere((a) => a.key == key);
+
+  /// Returns logs newest-first while keeping a deterministic 1-based "Log N"
+  /// numbering. N is the position in the original (oldest-first) sequence,
+  /// so newer logs show higher numbers regardless of display order.
+  Iterable<_IndexedLog> _reverseIndexed(List<AllergenLog> sorted) sync* {
+    for (var i = sorted.length - 1; i >= 0; i--) {
+      yield _IndexedLog(log: sorted[i], index: i + 1);
+    }
+  }
+}
+
+class _IndexedLog {
+  const _IndexedLog({required this.log, required this.index});
+  final AllergenLog log;
+  final int index;
+}
+
+class _OngoingEmptyState extends StatelessWidget {
+  const _OngoingEmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: AppSizes.pagePaddingH,
+        vertical: AppSizes.lg,
+      ),
+      child: EmptyState(
+        title: 'No introductions yet',
+        subtitle:
+            'Switch to Big 11 to choose an allergen and tap '
+            "'Start Introduce' to begin.",
       ),
     );
   }
 }
 
-class _DotIndicator extends StatelessWidget {
-  const _DotIndicator({required this.log});
+// ---------------------------------------------------------------------------
+// Big 11 tab — long-scrolling grouped list of all 9 canonical allergens.
+// ---------------------------------------------------------------------------
 
-  final AllergenLog? log;
+class _Big11List extends StatelessWidget {
+  const _Big11List({
+    required this.allergens,
+    required this.statuses,
+    required this.logs,
+    required this.onStartIntroduce,
+    required this.onAllergenTap,
+  });
+
+  final List<Allergen> allergens;
+  final Map<String, AllergenStatus> statuses;
+  final List<AllergenLog> logs;
+  final void Function(Allergen) onStartIntroduce;
+  final void Function(Allergen) onAllergenTap;
 
   @override
   Widget build(BuildContext context) {
-    if (log == null) {
-      return Container(
-        width: 12,
-        height: 12,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(color: AppColors.allergenNotStarted, width: 1.5),
-        ),
-      );
-    }
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSizes.pagePaddingH),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            final allergen = allergens[index];
+            final status =
+                statuses[allergen.key] ?? AllergenStatus.notStarted;
+            final card = status == AllergenStatus.notStarted
+                ? StartIntroduceCard(
+                    allergen: allergen,
+                    onStartIntroduce: () => onStartIntroduce(allergen),
+                  )
+                : AllergenProgressCard(
+                    allergen: allergen,
+                    status: status,
+                    cleanLogCount: logs
+                        .where(
+                          (l) =>
+                              l.allergenKey == allergen.key && !l.hadReaction,
+                        )
+                        .length,
+                    totalLogCount: logs
+                        .where((l) => l.allergenKey == allergen.key)
+                        .length,
+                    onTap: () => onAllergenTap(allergen),
+                  );
 
-    return Container(
-      width: 12,
-      height: 12,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: log!.hadReaction
-            ? AppColors.allergenFlagged
-            : AppColors.allergenSafe,
+            return Padding(
+              padding: const EdgeInsets.only(bottom: AppSizes.sm),
+              child: card,
+            );
+          },
+          childCount: allergens.length,
+        ),
       ),
     );
   }

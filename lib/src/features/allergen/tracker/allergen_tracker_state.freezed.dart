@@ -17,9 +17,17 @@ final _privateConstructorUsedError = UnsupportedError(
 
 /// @nodoc
 mixin _$AllergenTrackerState {
-  List<AllergenBoardItem> get boardItems => throw _privateConstructorUsedError;
-  AllergenProgramState get programState => throw _privateConstructorUsedError;
-  List<RecentLogEntry> get recentLogs => throw _privateConstructorUsedError;
+  /// All 9 canonical allergens ordered by `sequenceOrder` (display order).
+  List<Allergen> get allergens => throw _privateConstructorUsedError;
+
+  /// `kAllergenKeys` → derived [AllergenStatus]. Guaranteed to contain
+  /// every canonical key.
+  Map<String, AllergenStatus> get statuses =>
+      throw _privateConstructorUsedError;
+
+  /// All logs for the baby, sorted oldest → newest by `createdAt`.
+  /// Used to render the per-card 0/3 progress and the Reaction Log list.
+  List<AllergenLog> get logs => throw _privateConstructorUsedError;
 
   /// Create a copy of AllergenTrackerState
   /// with the given fields replaced by the non-null parameter values.
@@ -36,12 +44,10 @@ abstract class $AllergenTrackerStateCopyWith<$Res> {
   ) = _$AllergenTrackerStateCopyWithImpl<$Res, AllergenTrackerState>;
   @useResult
   $Res call({
-    List<AllergenBoardItem> boardItems,
-    AllergenProgramState programState,
-    List<RecentLogEntry> recentLogs,
+    List<Allergen> allergens,
+    Map<String, AllergenStatus> statuses,
+    List<AllergenLog> logs,
   });
-
-  $AllergenProgramStateCopyWith<$Res> get programState;
 }
 
 /// @nodoc
@@ -62,37 +68,27 @@ class _$AllergenTrackerStateCopyWithImpl<
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? boardItems = null,
-    Object? programState = null,
-    Object? recentLogs = null,
+    Object? allergens = null,
+    Object? statuses = null,
+    Object? logs = null,
   }) {
     return _then(
       _value.copyWith(
-            boardItems: null == boardItems
-                ? _value.boardItems
-                : boardItems // ignore: cast_nullable_to_non_nullable
-                      as List<AllergenBoardItem>,
-            programState: null == programState
-                ? _value.programState
-                : programState // ignore: cast_nullable_to_non_nullable
-                      as AllergenProgramState,
-            recentLogs: null == recentLogs
-                ? _value.recentLogs
-                : recentLogs // ignore: cast_nullable_to_non_nullable
-                      as List<RecentLogEntry>,
+            allergens: null == allergens
+                ? _value.allergens
+                : allergens // ignore: cast_nullable_to_non_nullable
+                      as List<Allergen>,
+            statuses: null == statuses
+                ? _value.statuses
+                : statuses // ignore: cast_nullable_to_non_nullable
+                      as Map<String, AllergenStatus>,
+            logs: null == logs
+                ? _value.logs
+                : logs // ignore: cast_nullable_to_non_nullable
+                      as List<AllergenLog>,
           )
           as $Val,
     );
-  }
-
-  /// Create a copy of AllergenTrackerState
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @pragma('vm:prefer-inline')
-  $AllergenProgramStateCopyWith<$Res> get programState {
-    return $AllergenProgramStateCopyWith<$Res>(_value.programState, (value) {
-      return _then(_value.copyWith(programState: value) as $Val);
-    });
   }
 }
 
@@ -106,13 +102,10 @@ abstract class _$$AllergenTrackerStateImplCopyWith<$Res>
   @override
   @useResult
   $Res call({
-    List<AllergenBoardItem> boardItems,
-    AllergenProgramState programState,
-    List<RecentLogEntry> recentLogs,
+    List<Allergen> allergens,
+    Map<String, AllergenStatus> statuses,
+    List<AllergenLog> logs,
   });
-
-  @override
-  $AllergenProgramStateCopyWith<$Res> get programState;
 }
 
 /// @nodoc
@@ -129,24 +122,24 @@ class __$$AllergenTrackerStateImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? boardItems = null,
-    Object? programState = null,
-    Object? recentLogs = null,
+    Object? allergens = null,
+    Object? statuses = null,
+    Object? logs = null,
   }) {
     return _then(
       _$AllergenTrackerStateImpl(
-        boardItems: null == boardItems
-            ? _value._boardItems
-            : boardItems // ignore: cast_nullable_to_non_nullable
-                  as List<AllergenBoardItem>,
-        programState: null == programState
-            ? _value.programState
-            : programState // ignore: cast_nullable_to_non_nullable
-                  as AllergenProgramState,
-        recentLogs: null == recentLogs
-            ? _value._recentLogs
-            : recentLogs // ignore: cast_nullable_to_non_nullable
-                  as List<RecentLogEntry>,
+        allergens: null == allergens
+            ? _value._allergens
+            : allergens // ignore: cast_nullable_to_non_nullable
+                  as List<Allergen>,
+        statuses: null == statuses
+            ? _value._statuses
+            : statuses // ignore: cast_nullable_to_non_nullable
+                  as Map<String, AllergenStatus>,
+        logs: null == logs
+            ? _value._logs
+            : logs // ignore: cast_nullable_to_non_nullable
+                  as List<AllergenLog>,
       ),
     );
   }
@@ -156,33 +149,53 @@ class __$$AllergenTrackerStateImplCopyWithImpl<$Res>
 
 class _$AllergenTrackerStateImpl implements _AllergenTrackerState {
   const _$AllergenTrackerStateImpl({
-    required final List<AllergenBoardItem> boardItems,
-    required this.programState,
-    required final List<RecentLogEntry> recentLogs,
-  }) : _boardItems = boardItems,
-       _recentLogs = recentLogs;
+    required final List<Allergen> allergens,
+    required final Map<String, AllergenStatus> statuses,
+    required final List<AllergenLog> logs,
+  }) : _allergens = allergens,
+       _statuses = statuses,
+       _logs = logs;
 
-  final List<AllergenBoardItem> _boardItems;
+  /// All 9 canonical allergens ordered by `sequenceOrder` (display order).
+  final List<Allergen> _allergens;
+
+  /// All 9 canonical allergens ordered by `sequenceOrder` (display order).
   @override
-  List<AllergenBoardItem> get boardItems {
-    if (_boardItems is EqualUnmodifiableListView) return _boardItems;
+  List<Allergen> get allergens {
+    if (_allergens is EqualUnmodifiableListView) return _allergens;
     // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(_boardItems);
+    return EqualUnmodifiableListView(_allergens);
   }
 
+  /// `kAllergenKeys` → derived [AllergenStatus]. Guaranteed to contain
+  /// every canonical key.
+  final Map<String, AllergenStatus> _statuses;
+
+  /// `kAllergenKeys` → derived [AllergenStatus]. Guaranteed to contain
+  /// every canonical key.
   @override
-  final AllergenProgramState programState;
-  final List<RecentLogEntry> _recentLogs;
-  @override
-  List<RecentLogEntry> get recentLogs {
-    if (_recentLogs is EqualUnmodifiableListView) return _recentLogs;
+  Map<String, AllergenStatus> get statuses {
+    if (_statuses is EqualUnmodifiableMapView) return _statuses;
     // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(_recentLogs);
+    return EqualUnmodifiableMapView(_statuses);
+  }
+
+  /// All logs for the baby, sorted oldest → newest by `createdAt`.
+  /// Used to render the per-card 0/3 progress and the Reaction Log list.
+  final List<AllergenLog> _logs;
+
+  /// All logs for the baby, sorted oldest → newest by `createdAt`.
+  /// Used to render the per-card 0/3 progress and the Reaction Log list.
+  @override
+  List<AllergenLog> get logs {
+    if (_logs is EqualUnmodifiableListView) return _logs;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_logs);
   }
 
   @override
   String toString() {
-    return 'AllergenTrackerState(boardItems: $boardItems, programState: $programState, recentLogs: $recentLogs)';
+    return 'AllergenTrackerState(allergens: $allergens, statuses: $statuses, logs: $logs)';
   }
 
   @override
@@ -191,23 +204,19 @@ class _$AllergenTrackerStateImpl implements _AllergenTrackerState {
         (other.runtimeType == runtimeType &&
             other is _$AllergenTrackerStateImpl &&
             const DeepCollectionEquality().equals(
-              other._boardItems,
-              _boardItems,
+              other._allergens,
+              _allergens,
             ) &&
-            (identical(other.programState, programState) ||
-                other.programState == programState) &&
-            const DeepCollectionEquality().equals(
-              other._recentLogs,
-              _recentLogs,
-            ));
+            const DeepCollectionEquality().equals(other._statuses, _statuses) &&
+            const DeepCollectionEquality().equals(other._logs, _logs));
   }
 
   @override
   int get hashCode => Object.hash(
     runtimeType,
-    const DeepCollectionEquality().hash(_boardItems),
-    programState,
-    const DeepCollectionEquality().hash(_recentLogs),
+    const DeepCollectionEquality().hash(_allergens),
+    const DeepCollectionEquality().hash(_statuses),
+    const DeepCollectionEquality().hash(_logs),
   );
 
   /// Create a copy of AllergenTrackerState
@@ -225,17 +234,24 @@ class _$AllergenTrackerStateImpl implements _AllergenTrackerState {
 
 abstract class _AllergenTrackerState implements AllergenTrackerState {
   const factory _AllergenTrackerState({
-    required final List<AllergenBoardItem> boardItems,
-    required final AllergenProgramState programState,
-    required final List<RecentLogEntry> recentLogs,
+    required final List<Allergen> allergens,
+    required final Map<String, AllergenStatus> statuses,
+    required final List<AllergenLog> logs,
   }) = _$AllergenTrackerStateImpl;
 
+  /// All 9 canonical allergens ordered by `sequenceOrder` (display order).
   @override
-  List<AllergenBoardItem> get boardItems;
+  List<Allergen> get allergens;
+
+  /// `kAllergenKeys` → derived [AllergenStatus]. Guaranteed to contain
+  /// every canonical key.
   @override
-  AllergenProgramState get programState;
+  Map<String, AllergenStatus> get statuses;
+
+  /// All logs for the baby, sorted oldest → newest by `createdAt`.
+  /// Used to render the per-card 0/3 progress and the Reaction Log list.
   @override
-  List<RecentLogEntry> get recentLogs;
+  List<AllergenLog> get logs;
 
   /// Create a copy of AllergenTrackerState
   /// with the given fields replaced by the non-null parameter values.
@@ -243,307 +259,4 @@ abstract class _AllergenTrackerState implements AllergenTrackerState {
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$AllergenTrackerStateImplCopyWith<_$AllergenTrackerStateImpl>
   get copyWith => throw _privateConstructorUsedError;
-}
-
-/// @nodoc
-mixin _$RecentLogEntry {
-  String get allergenKey => throw _privateConstructorUsedError;
-  String get allergenName => throw _privateConstructorUsedError;
-  String get allergenEmoji => throw _privateConstructorUsedError;
-  DateTime get logDate => throw _privateConstructorUsedError;
-  DateTime get createdAt => throw _privateConstructorUsedError;
-  EmojiTaste get taste => throw _privateConstructorUsedError;
-  bool get hadReaction => throw _privateConstructorUsedError;
-  ReactionSeverity? get severity => throw _privateConstructorUsedError;
-
-  /// Create a copy of RecentLogEntry
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  $RecentLogEntryCopyWith<RecentLogEntry> get copyWith =>
-      throw _privateConstructorUsedError;
-}
-
-/// @nodoc
-abstract class $RecentLogEntryCopyWith<$Res> {
-  factory $RecentLogEntryCopyWith(
-    RecentLogEntry value,
-    $Res Function(RecentLogEntry) then,
-  ) = _$RecentLogEntryCopyWithImpl<$Res, RecentLogEntry>;
-  @useResult
-  $Res call({
-    String allergenKey,
-    String allergenName,
-    String allergenEmoji,
-    DateTime logDate,
-    DateTime createdAt,
-    EmojiTaste taste,
-    bool hadReaction,
-    ReactionSeverity? severity,
-  });
-}
-
-/// @nodoc
-class _$RecentLogEntryCopyWithImpl<$Res, $Val extends RecentLogEntry>
-    implements $RecentLogEntryCopyWith<$Res> {
-  _$RecentLogEntryCopyWithImpl(this._value, this._then);
-
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
-
-  /// Create a copy of RecentLogEntry
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? allergenKey = null,
-    Object? allergenName = null,
-    Object? allergenEmoji = null,
-    Object? logDate = null,
-    Object? createdAt = null,
-    Object? taste = null,
-    Object? hadReaction = null,
-    Object? severity = freezed,
-  }) {
-    return _then(
-      _value.copyWith(
-            allergenKey: null == allergenKey
-                ? _value.allergenKey
-                : allergenKey // ignore: cast_nullable_to_non_nullable
-                      as String,
-            allergenName: null == allergenName
-                ? _value.allergenName
-                : allergenName // ignore: cast_nullable_to_non_nullable
-                      as String,
-            allergenEmoji: null == allergenEmoji
-                ? _value.allergenEmoji
-                : allergenEmoji // ignore: cast_nullable_to_non_nullable
-                      as String,
-            logDate: null == logDate
-                ? _value.logDate
-                : logDate // ignore: cast_nullable_to_non_nullable
-                      as DateTime,
-            createdAt: null == createdAt
-                ? _value.createdAt
-                : createdAt // ignore: cast_nullable_to_non_nullable
-                      as DateTime,
-            taste: null == taste
-                ? _value.taste
-                : taste // ignore: cast_nullable_to_non_nullable
-                      as EmojiTaste,
-            hadReaction: null == hadReaction
-                ? _value.hadReaction
-                : hadReaction // ignore: cast_nullable_to_non_nullable
-                      as bool,
-            severity: freezed == severity
-                ? _value.severity
-                : severity // ignore: cast_nullable_to_non_nullable
-                      as ReactionSeverity?,
-          )
-          as $Val,
-    );
-  }
-}
-
-/// @nodoc
-abstract class _$$RecentLogEntryImplCopyWith<$Res>
-    implements $RecentLogEntryCopyWith<$Res> {
-  factory _$$RecentLogEntryImplCopyWith(
-    _$RecentLogEntryImpl value,
-    $Res Function(_$RecentLogEntryImpl) then,
-  ) = __$$RecentLogEntryImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call({
-    String allergenKey,
-    String allergenName,
-    String allergenEmoji,
-    DateTime logDate,
-    DateTime createdAt,
-    EmojiTaste taste,
-    bool hadReaction,
-    ReactionSeverity? severity,
-  });
-}
-
-/// @nodoc
-class __$$RecentLogEntryImplCopyWithImpl<$Res>
-    extends _$RecentLogEntryCopyWithImpl<$Res, _$RecentLogEntryImpl>
-    implements _$$RecentLogEntryImplCopyWith<$Res> {
-  __$$RecentLogEntryImplCopyWithImpl(
-    _$RecentLogEntryImpl _value,
-    $Res Function(_$RecentLogEntryImpl) _then,
-  ) : super(_value, _then);
-
-  /// Create a copy of RecentLogEntry
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? allergenKey = null,
-    Object? allergenName = null,
-    Object? allergenEmoji = null,
-    Object? logDate = null,
-    Object? createdAt = null,
-    Object? taste = null,
-    Object? hadReaction = null,
-    Object? severity = freezed,
-  }) {
-    return _then(
-      _$RecentLogEntryImpl(
-        allergenKey: null == allergenKey
-            ? _value.allergenKey
-            : allergenKey // ignore: cast_nullable_to_non_nullable
-                  as String,
-        allergenName: null == allergenName
-            ? _value.allergenName
-            : allergenName // ignore: cast_nullable_to_non_nullable
-                  as String,
-        allergenEmoji: null == allergenEmoji
-            ? _value.allergenEmoji
-            : allergenEmoji // ignore: cast_nullable_to_non_nullable
-                  as String,
-        logDate: null == logDate
-            ? _value.logDate
-            : logDate // ignore: cast_nullable_to_non_nullable
-                  as DateTime,
-        createdAt: null == createdAt
-            ? _value.createdAt
-            : createdAt // ignore: cast_nullable_to_non_nullable
-                  as DateTime,
-        taste: null == taste
-            ? _value.taste
-            : taste // ignore: cast_nullable_to_non_nullable
-                  as EmojiTaste,
-        hadReaction: null == hadReaction
-            ? _value.hadReaction
-            : hadReaction // ignore: cast_nullable_to_non_nullable
-                  as bool,
-        severity: freezed == severity
-            ? _value.severity
-            : severity // ignore: cast_nullable_to_non_nullable
-                  as ReactionSeverity?,
-      ),
-    );
-  }
-}
-
-/// @nodoc
-
-class _$RecentLogEntryImpl implements _RecentLogEntry {
-  const _$RecentLogEntryImpl({
-    required this.allergenKey,
-    required this.allergenName,
-    required this.allergenEmoji,
-    required this.logDate,
-    required this.createdAt,
-    required this.taste,
-    required this.hadReaction,
-    required this.severity,
-  });
-
-  @override
-  final String allergenKey;
-  @override
-  final String allergenName;
-  @override
-  final String allergenEmoji;
-  @override
-  final DateTime logDate;
-  @override
-  final DateTime createdAt;
-  @override
-  final EmojiTaste taste;
-  @override
-  final bool hadReaction;
-  @override
-  final ReactionSeverity? severity;
-
-  @override
-  String toString() {
-    return 'RecentLogEntry(allergenKey: $allergenKey, allergenName: $allergenName, allergenEmoji: $allergenEmoji, logDate: $logDate, createdAt: $createdAt, taste: $taste, hadReaction: $hadReaction, severity: $severity)';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$RecentLogEntryImpl &&
-            (identical(other.allergenKey, allergenKey) ||
-                other.allergenKey == allergenKey) &&
-            (identical(other.allergenName, allergenName) ||
-                other.allergenName == allergenName) &&
-            (identical(other.allergenEmoji, allergenEmoji) ||
-                other.allergenEmoji == allergenEmoji) &&
-            (identical(other.logDate, logDate) || other.logDate == logDate) &&
-            (identical(other.createdAt, createdAt) ||
-                other.createdAt == createdAt) &&
-            (identical(other.taste, taste) || other.taste == taste) &&
-            (identical(other.hadReaction, hadReaction) ||
-                other.hadReaction == hadReaction) &&
-            (identical(other.severity, severity) ||
-                other.severity == severity));
-  }
-
-  @override
-  int get hashCode => Object.hash(
-    runtimeType,
-    allergenKey,
-    allergenName,
-    allergenEmoji,
-    logDate,
-    createdAt,
-    taste,
-    hadReaction,
-    severity,
-  );
-
-  /// Create a copy of RecentLogEntry
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$RecentLogEntryImplCopyWith<_$RecentLogEntryImpl> get copyWith =>
-      __$$RecentLogEntryImplCopyWithImpl<_$RecentLogEntryImpl>(
-        this,
-        _$identity,
-      );
-}
-
-abstract class _RecentLogEntry implements RecentLogEntry {
-  const factory _RecentLogEntry({
-    required final String allergenKey,
-    required final String allergenName,
-    required final String allergenEmoji,
-    required final DateTime logDate,
-    required final DateTime createdAt,
-    required final EmojiTaste taste,
-    required final bool hadReaction,
-    required final ReactionSeverity? severity,
-  }) = _$RecentLogEntryImpl;
-
-  @override
-  String get allergenKey;
-  @override
-  String get allergenName;
-  @override
-  String get allergenEmoji;
-  @override
-  DateTime get logDate;
-  @override
-  DateTime get createdAt;
-  @override
-  EmojiTaste get taste;
-  @override
-  bool get hadReaction;
-  @override
-  ReactionSeverity? get severity;
-
-  /// Create a copy of RecentLogEntry
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$RecentLogEntryImplCopyWith<_$RecentLogEntryImpl> get copyWith =>
-      throw _privateConstructorUsedError;
 }
