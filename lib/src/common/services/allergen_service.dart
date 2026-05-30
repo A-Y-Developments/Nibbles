@@ -83,20 +83,31 @@ class AllergenService {
   /// Saves an allergen log. Multiple logs per day are allowed.
   /// If [photo] is provided, uploads it first; photo upload failure is P2
   /// (log saves without photo, caller should show a toast).
+  ///
+  /// [emojiTaste], [notes], [attachmentTitle], [attachmentDescription] and
+  /// [logDate] are part of the redesigned NIB-124 capture model. They are
+  /// optional so existing M3 callers stay compatible while the new flow is
+  /// being built (NIB-125 / NIB-126). [reactionDetail] is legacy and only
+  /// written when supplied by the M3 capture screens.
   Future<Result<AllergenLog>> saveAllergenLog({
     required String babyId,
     required String allergenKey,
-    required EmojiTaste emojiTaste,
     required bool hadReaction,
+    EmojiTaste? emojiTaste,
+    String? notes,
+    String? attachmentTitle,
+    String? attachmentDescription,
+    DateTime? logDate,
     ReactionDetail? reactionDetail,
     File? photo,
   }) async {
-    final today = DateTime.now();
+    final now = DateTime.now();
+    final effectiveLogDate = logDate ?? now;
 
     // Upload photo if provided (P2 — failure is non-blocking).
     String? photoPath;
     if (photo != null) {
-      final ts = today.millisecondsSinceEpoch;
+      final ts = now.millisecondsSinceEpoch;
       final uploadPath = '$babyId/${ts}_$allergenKey.jpg';
       final uploadResult = await _storage.uploadFile(
         _photoBucket,
@@ -114,10 +125,13 @@ class AllergenService {
         id: '',
         babyId: babyId,
         allergenKey: allergenKey,
-        emojiTaste: emojiTaste,
         hadReaction: hadReaction,
-        logDate: today,
-        createdAt: today,
+        logDate: effectiveLogDate,
+        createdAt: now,
+        emojiTaste: emojiTaste,
+        notes: notes,
+        attachmentTitle: attachmentTitle,
+        attachmentDescription: attachmentDescription,
         photoUrl: photoPath,
       ),
     );

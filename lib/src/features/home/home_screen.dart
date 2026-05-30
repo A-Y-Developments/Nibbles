@@ -644,7 +644,9 @@ class _IntroductionDots extends StatelessWidget {
             child: filled
                 ? Center(
                     child: Text(
-                      isReaction ? '⚠️' : _tasteEmoji(log.emojiTaste),
+                      isReaction
+                          ? '⚠️'
+                          : _tasteEmoji(log.emojiTaste ?? EmojiTaste.neutral),
                       style: const TextStyle(fontSize: 14),
                     ),
                   )

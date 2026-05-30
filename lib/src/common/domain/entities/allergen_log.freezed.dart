@@ -20,10 +20,13 @@ mixin _$AllergenLog {
   String get id => throw _privateConstructorUsedError;
   String get babyId => throw _privateConstructorUsedError;
   String get allergenKey => throw _privateConstructorUsedError;
-  EmojiTaste get emojiTaste => throw _privateConstructorUsedError;
   bool get hadReaction => throw _privateConstructorUsedError;
   DateTime get logDate => throw _privateConstructorUsedError;
   DateTime get createdAt => throw _privateConstructorUsedError;
+  EmojiTaste? get emojiTaste => throw _privateConstructorUsedError;
+  String? get notes => throw _privateConstructorUsedError;
+  String? get attachmentTitle => throw _privateConstructorUsedError;
+  String? get attachmentDescription => throw _privateConstructorUsedError;
   String? get photoUrl => throw _privateConstructorUsedError;
 
   /// Create a copy of AllergenLog
@@ -44,10 +47,13 @@ abstract class $AllergenLogCopyWith<$Res> {
     String id,
     String babyId,
     String allergenKey,
-    EmojiTaste emojiTaste,
     bool hadReaction,
     DateTime logDate,
     DateTime createdAt,
+    EmojiTaste? emojiTaste,
+    String? notes,
+    String? attachmentTitle,
+    String? attachmentDescription,
     String? photoUrl,
   });
 }
@@ -70,10 +76,13 @@ class _$AllergenLogCopyWithImpl<$Res, $Val extends AllergenLog>
     Object? id = null,
     Object? babyId = null,
     Object? allergenKey = null,
-    Object? emojiTaste = null,
     Object? hadReaction = null,
     Object? logDate = null,
     Object? createdAt = null,
+    Object? emojiTaste = freezed,
+    Object? notes = freezed,
+    Object? attachmentTitle = freezed,
+    Object? attachmentDescription = freezed,
     Object? photoUrl = freezed,
   }) {
     return _then(
@@ -90,10 +99,6 @@ class _$AllergenLogCopyWithImpl<$Res, $Val extends AllergenLog>
                 ? _value.allergenKey
                 : allergenKey // ignore: cast_nullable_to_non_nullable
                       as String,
-            emojiTaste: null == emojiTaste
-                ? _value.emojiTaste
-                : emojiTaste // ignore: cast_nullable_to_non_nullable
-                      as EmojiTaste,
             hadReaction: null == hadReaction
                 ? _value.hadReaction
                 : hadReaction // ignore: cast_nullable_to_non_nullable
@@ -106,6 +111,22 @@ class _$AllergenLogCopyWithImpl<$Res, $Val extends AllergenLog>
                 ? _value.createdAt
                 : createdAt // ignore: cast_nullable_to_non_nullable
                       as DateTime,
+            emojiTaste: freezed == emojiTaste
+                ? _value.emojiTaste
+                : emojiTaste // ignore: cast_nullable_to_non_nullable
+                      as EmojiTaste?,
+            notes: freezed == notes
+                ? _value.notes
+                : notes // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            attachmentTitle: freezed == attachmentTitle
+                ? _value.attachmentTitle
+                : attachmentTitle // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            attachmentDescription: freezed == attachmentDescription
+                ? _value.attachmentDescription
+                : attachmentDescription // ignore: cast_nullable_to_non_nullable
+                      as String?,
             photoUrl: freezed == photoUrl
                 ? _value.photoUrl
                 : photoUrl // ignore: cast_nullable_to_non_nullable
@@ -129,10 +150,13 @@ abstract class _$$AllergenLogImplCopyWith<$Res>
     String id,
     String babyId,
     String allergenKey,
-    EmojiTaste emojiTaste,
     bool hadReaction,
     DateTime logDate,
     DateTime createdAt,
+    EmojiTaste? emojiTaste,
+    String? notes,
+    String? attachmentTitle,
+    String? attachmentDescription,
     String? photoUrl,
   });
 }
@@ -154,10 +178,13 @@ class __$$AllergenLogImplCopyWithImpl<$Res>
     Object? id = null,
     Object? babyId = null,
     Object? allergenKey = null,
-    Object? emojiTaste = null,
     Object? hadReaction = null,
     Object? logDate = null,
     Object? createdAt = null,
+    Object? emojiTaste = freezed,
+    Object? notes = freezed,
+    Object? attachmentTitle = freezed,
+    Object? attachmentDescription = freezed,
     Object? photoUrl = freezed,
   }) {
     return _then(
@@ -174,10 +201,6 @@ class __$$AllergenLogImplCopyWithImpl<$Res>
             ? _value.allergenKey
             : allergenKey // ignore: cast_nullable_to_non_nullable
                   as String,
-        emojiTaste: null == emojiTaste
-            ? _value.emojiTaste
-            : emojiTaste // ignore: cast_nullable_to_non_nullable
-                  as EmojiTaste,
         hadReaction: null == hadReaction
             ? _value.hadReaction
             : hadReaction // ignore: cast_nullable_to_non_nullable
@@ -190,6 +213,22 @@ class __$$AllergenLogImplCopyWithImpl<$Res>
             ? _value.createdAt
             : createdAt // ignore: cast_nullable_to_non_nullable
                   as DateTime,
+        emojiTaste: freezed == emojiTaste
+            ? _value.emojiTaste
+            : emojiTaste // ignore: cast_nullable_to_non_nullable
+                  as EmojiTaste?,
+        notes: freezed == notes
+            ? _value.notes
+            : notes // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        attachmentTitle: freezed == attachmentTitle
+            ? _value.attachmentTitle
+            : attachmentTitle // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        attachmentDescription: freezed == attachmentDescription
+            ? _value.attachmentDescription
+            : attachmentDescription // ignore: cast_nullable_to_non_nullable
+                  as String?,
         photoUrl: freezed == photoUrl
             ? _value.photoUrl
             : photoUrl // ignore: cast_nullable_to_non_nullable
@@ -206,10 +245,13 @@ class _$AllergenLogImpl implements _AllergenLog {
     required this.id,
     required this.babyId,
     required this.allergenKey,
-    required this.emojiTaste,
     required this.hadReaction,
     required this.logDate,
     required this.createdAt,
+    this.emojiTaste,
+    this.notes,
+    this.attachmentTitle,
+    this.attachmentDescription,
     this.photoUrl,
   });
 
@@ -220,19 +262,25 @@ class _$AllergenLogImpl implements _AllergenLog {
   @override
   final String allergenKey;
   @override
-  final EmojiTaste emojiTaste;
-  @override
   final bool hadReaction;
   @override
   final DateTime logDate;
   @override
   final DateTime createdAt;
   @override
+  final EmojiTaste? emojiTaste;
+  @override
+  final String? notes;
+  @override
+  final String? attachmentTitle;
+  @override
+  final String? attachmentDescription;
+  @override
   final String? photoUrl;
 
   @override
   String toString() {
-    return 'AllergenLog(id: $id, babyId: $babyId, allergenKey: $allergenKey, emojiTaste: $emojiTaste, hadReaction: $hadReaction, logDate: $logDate, createdAt: $createdAt, photoUrl: $photoUrl)';
+    return 'AllergenLog(id: $id, babyId: $babyId, allergenKey: $allergenKey, hadReaction: $hadReaction, logDate: $logDate, createdAt: $createdAt, emojiTaste: $emojiTaste, notes: $notes, attachmentTitle: $attachmentTitle, attachmentDescription: $attachmentDescription, photoUrl: $photoUrl)';
   }
 
   @override
@@ -244,13 +292,18 @@ class _$AllergenLogImpl implements _AllergenLog {
             (identical(other.babyId, babyId) || other.babyId == babyId) &&
             (identical(other.allergenKey, allergenKey) ||
                 other.allergenKey == allergenKey) &&
-            (identical(other.emojiTaste, emojiTaste) ||
-                other.emojiTaste == emojiTaste) &&
             (identical(other.hadReaction, hadReaction) ||
                 other.hadReaction == hadReaction) &&
             (identical(other.logDate, logDate) || other.logDate == logDate) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
+            (identical(other.emojiTaste, emojiTaste) ||
+                other.emojiTaste == emojiTaste) &&
+            (identical(other.notes, notes) || other.notes == notes) &&
+            (identical(other.attachmentTitle, attachmentTitle) ||
+                other.attachmentTitle == attachmentTitle) &&
+            (identical(other.attachmentDescription, attachmentDescription) ||
+                other.attachmentDescription == attachmentDescription) &&
             (identical(other.photoUrl, photoUrl) ||
                 other.photoUrl == photoUrl));
   }
@@ -261,10 +314,13 @@ class _$AllergenLogImpl implements _AllergenLog {
     id,
     babyId,
     allergenKey,
-    emojiTaste,
     hadReaction,
     logDate,
     createdAt,
+    emojiTaste,
+    notes,
+    attachmentTitle,
+    attachmentDescription,
     photoUrl,
   );
 
@@ -282,10 +338,13 @@ abstract class _AllergenLog implements AllergenLog {
     required final String id,
     required final String babyId,
     required final String allergenKey,
-    required final EmojiTaste emojiTaste,
     required final bool hadReaction,
     required final DateTime logDate,
     required final DateTime createdAt,
+    final EmojiTaste? emojiTaste,
+    final String? notes,
+    final String? attachmentTitle,
+    final String? attachmentDescription,
     final String? photoUrl,
   }) = _$AllergenLogImpl;
 
@@ -296,13 +355,19 @@ abstract class _AllergenLog implements AllergenLog {
   @override
   String get allergenKey;
   @override
-  EmojiTaste get emojiTaste;
-  @override
   bool get hadReaction;
   @override
   DateTime get logDate;
   @override
   DateTime get createdAt;
+  @override
+  EmojiTaste? get emojiTaste;
+  @override
+  String? get notes;
+  @override
+  String? get attachmentTitle;
+  @override
+  String? get attachmentDescription;
   @override
   String? get photoUrl;
 

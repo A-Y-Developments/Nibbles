@@ -92,7 +92,7 @@ class AllergenLogController extends _$AllergenLogController {
     final result = await service.saveAllergenLog(
       babyId: babyId,
       allergenKey: allergenKey,
-      emojiTaste: state.taste!,
+      emojiTaste: state.taste,
       hadReaction: state.hadReaction,
       reactionDetail: reactionDetail,
       photo: state.photoPath != null ? File(state.photoPath!) : null,
