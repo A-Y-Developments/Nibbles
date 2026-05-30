@@ -165,11 +165,42 @@ void main() {
         findsOneWidget,
       );
 
-      // Verbatim copy from the spec for the 3rd box.
+      // Verbatim copy from the Figma audit for the 3rd box (no trailing
+      // period — matches baby-setup-lt6mo-1/report.md byte-for-byte).
       expect(
         find.text(
           'I accept full responsibility for my decision to start solids '
-          'before 6 months.',
+          'before 6 months',
+        ),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'renders the verbatim Figma copy for boxes 0 and 1 (both age variants '
+    'share these two strings — pinned to guard against future paraphrase)',
+    (tester) async {
+      final dob = DateTime.now().subtract(const Duration(days: 30 * 18));
+      final container = _makeContainer(
+        babyProfile: babyProfile,
+        flags: flags,
+        dob: dob,
+      );
+      await _pumpConsent(tester, container: container);
+
+      expect(
+        find.text(
+          'I understand that Nibbles shares general educational '
+          'information, not medical advice, and that parents make the '
+          'final decisions for their baby',
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.text(
+          'I confirm I have received medical clearance and understand '
+          'the above',
         ),
         findsOneWidget,
       );
