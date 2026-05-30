@@ -85,12 +85,12 @@ class BrowseMealSearchField extends StatelessWidget {
         textInputAction: TextInputAction.search,
         decoration: InputDecoration(
           hintText: 'Search recipes',
-          prefixIcon: const Icon(Icons.search, color: AppColors.hint),
+          prefixIcon: const Icon(Icons.search, color: AppColors.greenDeep),
           filled: true,
           fillColor: AppColors.bgInput,
           border: OutlineInputBorder(
             borderSide: BorderSide.none,
-            borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+            borderRadius: BorderRadius.circular(AppSizes.radiusFull),
           ),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: AppSizes.md,

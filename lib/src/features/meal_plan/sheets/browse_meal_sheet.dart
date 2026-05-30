@@ -489,7 +489,7 @@ class _StickyAddBar extends StatelessWidget {
             backgroundColor: AppColors.primary,
             foregroundColor: AppColors.onPrimary,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+              borderRadius: BorderRadius.circular(AppSizes.radiusFull),
             ),
           ),
           child: Text(
