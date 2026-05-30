@@ -48,20 +48,15 @@ class StatRingCard extends StatelessWidget {
   /// Canonical allergen board length — see `.claude/rules/domain.md`.
   static const int _allergenTotal = 9;
 
-  /// True when the active program has at least one allergen currently being
-  /// introduced (drives the second summary chip).
-  bool get _hasActiveProgramAllergens => inProgressCount > 0;
-
   @override
   Widget build(BuildContext context) {
+    // Chip tone matches `HomeScreen.jsx` (neutral / coral-soft) — the
+    // screen-level composition outranks the generic catalogue here.
+    // 'Active Program Allergens' renders unconditionally per spec — only
+    // 'Iron Rich' is gated on the optional [hasIronRichRecipes] arg.
     final chips = <Widget>[
-      if (hasIronRichRecipes)
-        const AppChip(label: '✓ Iron Rich', tone: AppChipTone.safe),
-      if (_hasActiveProgramAllergens)
-        const AppChip(
-          label: '✓ Active Program Allergens',
-          tone: AppChipTone.safe,
-        ),
+      if (hasIronRichRecipes) const AppChip(label: '✓ Iron Rich'),
+      const AppChip(label: '✓ Active Program Allergens'),
     ];
 
     return Container(

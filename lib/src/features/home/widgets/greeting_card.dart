@@ -26,12 +26,9 @@ class GreetingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.zero,
-      child: Text(
-        _greeting(DateTime.now()),
-        style: AppTypography.textTheme.titleLarge,
-      ),
+    return Text(
+      _greeting(DateTime.now()),
+      style: AppTypography.textTheme.titleLarge,
     );
   }
 
