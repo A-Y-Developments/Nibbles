@@ -1,0 +1,132 @@
+import 'dart:async';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
+import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
+import 'package:nibbles/src/common/domain/entities/baby.dart';
+import 'package:nibbles/src/common/domain/enums/gender.dart';
+import 'package:nibbles/src/common/services/baby_profile_service.dart';
+import 'package:nibbles/src/features/onboarding/onboarding_controller.dart';
+
+class _MockBabyProfileService extends Mock implements BabyProfileService {}
+
+final _fakeBaby = Baby(
+  id: 'baby-001',
+  userId: 'user-001',
+  name: 'Lily',
+  dateOfBirth: DateTime(2025, 6),
+  gender: Gender.preferNotToSay,
+  onboardingCompleted: false,
+);
+
+ProviderContainer _makeContainer(BabyProfileService service) {
+  final container = ProviderContainer(
+    overrides: [babyProfileServiceProvider.overrideWithValue(service)],
+  );
+  addTearDown(container.dispose);
+  return container;
+}
+
+/// NIB-105 — submit timing/flag contract for `OnboardingController.submit`.
+///
+/// `onboarding_controller_test.dart` already covers the BOOLEAN return of
+/// `submit` on success / failure / pre-condition violation. This file pins
+/// the IN-FLIGHT shape (`isSubmitting` flips at the right edges) so the
+/// consent widget can safely gate its CTA on `state.isSubmitting`.
+void main() {
+  late _MockBabyProfileService babyProfile;
+
+  setUp(() {
+    babyProfile = _MockBabyProfileService();
+  });
+
+  test(
+    'submit flips isSubmitting true on entry, false on success completion',
+    () async {
+      final completer = Completer<Result<Baby>>();
+      when(
+        () => babyProfile.createBaby(any(), any()),
+      ).thenAnswer((_) => completer.future);
+
+      final container = _makeContainer(babyProfile);
+      final controller = container.read(onboardingControllerProvider.notifier)
+        ..updateName('Lily')
+        ..updateDob(DateTime(2025, 6));
+
+      expect(
+        container.read(onboardingControllerProvider).isSubmitting,
+        isFalse,
+        reason: 'starts idle',
+      );
+
+      final pending = controller.submit();
+      // Mid-flight: the createBaby future has not resolved yet, isSubmitting
+      // must be observable so the consent widget can disable its CTA.
+      expect(
+        container.read(onboardingControllerProvider).isSubmitting,
+        isTrue,
+      );
+
+      completer.complete(Result.success(_fakeBaby));
+      await pending;
+
+      expect(
+        container.read(onboardingControllerProvider).isSubmitting,
+        isFalse,
+      );
+    },
+  );
+
+  test(
+    'submit flips isSubmitting back to false on failure (so the user can '
+    'retry from the inline P1 surface)',
+    () async {
+      when(() => babyProfile.createBaby(any(), any())).thenAnswer(
+        (_) async => const Result.failure(NetworkException('offline')),
+      );
+
+      final container = _makeContainer(babyProfile);
+      final controller = container.read(onboardingControllerProvider.notifier)
+        ..updateName('Lily')
+        ..updateDob(DateTime(2025, 6));
+
+      await controller.submit();
+
+      final state = container.read(onboardingControllerProvider);
+      expect(state.isSubmitting, isFalse);
+      expect(state.submitErrorMessage, 'offline');
+    },
+  );
+
+  test(
+    'submit clears any prior submitErrorMessage on entry (retry path)',
+    () async {
+      var calls = 0;
+      when(() => babyProfile.createBaby(any(), any())).thenAnswer((_) async {
+        calls++;
+        if (calls == 1) return const Result.failure(NetworkException('boom'));
+        return Result.success(_fakeBaby);
+      });
+
+      final container = _makeContainer(babyProfile);
+      final controller = container.read(onboardingControllerProvider.notifier)
+        ..updateName('Lily')
+        ..updateDob(DateTime(2025, 6));
+
+      await controller.submit();
+      expect(
+        container.read(onboardingControllerProvider).submitErrorMessage,
+        'boom',
+      );
+
+      final ok = await controller.submit();
+      expect(ok, isTrue);
+      expect(
+        container.read(onboardingControllerProvider).submitErrorMessage,
+        isNull,
+      );
+    },
+  );
+}
