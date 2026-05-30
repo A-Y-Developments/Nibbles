@@ -154,6 +154,7 @@ class _CoverageBanner extends StatelessWidget {
               "Today's meals balance allergens and nutrition.",
               style: AppTypography.textTheme.labelMedium?.copyWith(
                 color: AppColors.fgStrong,
+                fontWeight: FontWeight.w700,
                 height: 1.3,
               ),
             ),
@@ -205,7 +206,7 @@ class _MealRow extends StatelessWidget {
                 alignment: Alignment.center,
                 child: const Text(
                   '🍲',
-                  style: TextStyle(fontSize: 24, height: 1),
+                  style: TextStyle(fontSize: 26, height: 1),
                 ),
               ),
               const SizedBox(width: AppSizes.sp12),
