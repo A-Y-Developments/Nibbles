@@ -160,9 +160,10 @@ class _ResultCard extends StatelessWidget {
     final petalColor = ready ? AppColors.butterSoft : AppColors.greenTint;
     final coreColor = ready ? AppColors.greenDeep : AppColors.butter;
     final fgStrong = ready ? AppColors.greenDeep : AppColors.cream;
-    final fgSoft = ready
-        ? AppColors.greenDeep.withAlpha(204)
-        : AppColors.cream.withAlpha(230);
+    // Eyebrow uses the same on-card tone as the headline so the row reads as a
+    // single typographic pair — both tokens are kit foreground colors, no
+    // inline opacity. Sage card -> cream-on-green; butter card -> greenDeep.
+    final fgEyebrow = ready ? AppColors.greenDeep : AppColors.onGreen;
     final eyebrow = ready ? 'New Journey Unlock!' : 'Almost there';
     final headline = ready
         ? '$firstName is ready for solids at this time'
@@ -192,12 +193,11 @@ class _ResultCard extends StatelessWidget {
             _ScoreBadge(signsMet: signsMet, ready: ready),
             const SizedBox(height: AppSizes.md),
             Text(
-              eyebrow,
+              // Overline token (labelSmall): 10/700 h1.20 ls0.6 per kit —
+              // includes letterSpacing, no inline override needed.
+              eyebrow.toUpperCase(),
               textAlign: TextAlign.center,
-              style: textTheme.labelMedium?.copyWith(
-                color: fgSoft,
-                letterSpacing: 0.6,
-              ),
+              style: textTheme.labelSmall?.copyWith(color: fgEyebrow),
             ),
             const SizedBox(height: AppSizes.xs),
             Text(
