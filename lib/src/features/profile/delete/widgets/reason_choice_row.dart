@@ -11,8 +11,8 @@ import 'package:nibbles/src/app/themes/app_typography.dart';
 /// Parkinsans SemiBold 15/22 Black (#2c2c2c) label.
 ///
 /// Selected (engineering-derived affordance; Figma canvas only shows the
-/// default state): deepens fill to butter, adds green-deep label color, and
-/// shows a trailing check glyph.
+/// default state): deepens fill to butter and shifts the label to
+/// green-deep — fill-only, no trailing glyph (Figma doesn't show one).
 class ReasonChoiceRow extends StatelessWidget {
   const ReasonChoiceRow({
     required this.label,
@@ -43,27 +43,15 @@ class ReasonChoiceRow extends StatelessWidget {
           child: Padding(
             // Figma: padding 12 on all sides.
             padding: const EdgeInsets.all(AppSizes.sp12),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    label,
-                    style: AppTypography.button.copyWith(
-                      fontFamily: FontFamily.parkinsans,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: fg,
-                      height: 22 / 15,
-                    ),
-                  ),
-                ),
-                if (selected)
-                  const Icon(
-                    Icons.check_circle,
-                    size: AppSizes.iconSm + 2,
-                    color: AppColors.greenDeep,
-                  ),
-              ],
+            child: Text(
+              label,
+              style: AppTypography.button.copyWith(
+                fontFamily: FontFamily.parkinsans,
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: fg,
+                height: 22 / 15,
+              ),
             ),
           ),
         ),

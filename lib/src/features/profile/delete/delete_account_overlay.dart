@@ -210,18 +210,28 @@ class _SheetHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Figma close affordance: 34x33 pill (radius 30), left-aligned.
     return Align(
       alignment: Alignment.centerLeft,
-      child: IconButton(
-        key: const Key('delete_account_close_button'),
-        icon: const Icon(Icons.close, size: AppSizes.iconMd),
-        color: AppColors.text,
-        onPressed: onClose,
-        tooltip: 'Close',
-        padding: EdgeInsets.zero,
-        constraints: const BoxConstraints(
-          minWidth: AppSizes.roundButtonSm,
-          minHeight: AppSizes.roundButtonSm,
+      child: SizedBox(
+        width: 34,
+        height: 33,
+        child: IconButton(
+          key: const Key('delete_account_close_button'),
+          icon: const Icon(Icons.close, size: AppSizes.iconMd),
+          color: AppColors.text,
+          onPressed: onClose,
+          tooltip: 'Close',
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(
+            minWidth: 34,
+            minHeight: 33,
+          ),
+          style: IconButton.styleFrom(
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(30)),
+            ),
+          ),
         ),
       ),
     );
@@ -233,35 +243,30 @@ class _BrandLockup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // TODO(NIB-78): swap to real Figma SVG when asset added to assets/svgs/.
+    // Spec: Nibbles wordmark (node 869:7532) 173x42 + Nibble-Icon-2 mascot
+    // (node 1216:11960) 42x42. SVGs aren't in the repo yet — use neutral
+    // placeholder boxes so we don't ship the crown emoji.
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Figma wordmark: 173x42 — render as Parkinsans Bold, Black (#2c2c2c).
-        Text(
-          'nibbles',
-          style: AppTypography.brandWordmark.copyWith(
-            fontSize: 36,
-            color: AppColors.text,
-            letterSpacing: -0.72,
+        Container(
+          key: const Key('delete_account_wordmark_placeholder'),
+          width: 173,
+          height: 42,
+          decoration: BoxDecoration(
+            color: AppColors.borderSoft,
+            borderRadius: BorderRadius.circular(AppSizes.radiusSm),
           ),
         ),
         const SizedBox(width: AppSizes.sp12),
-        // Figma Nibble-Icon-2 mascot: 42x42 lime square with crown glyph.
         Container(
+          key: const Key('delete_account_mascot_placeholder'),
           width: 42,
           height: 42,
-          alignment: Alignment.center,
           decoration: BoxDecoration(
             color: AppColors.butter,
             borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-          ),
-          child: const Text(
-            '👑',
-            style: TextStyle(
-              fontFamily: FontFamily.parkinsans,
-              fontSize: 22,
-              height: 1,
-            ),
           ),
         ),
       ],
