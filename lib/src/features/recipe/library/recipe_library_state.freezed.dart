@@ -17,8 +17,11 @@ final _privateConstructorUsedError = UnsupportedError(
 
 /// @nodoc
 mixin _$RecipeLibraryState {
-  List<RecipeSection> get sections => throw _privateConstructorUsedError;
+  Map<String, List<Recipe>> get recipesByCategory =>
+      throw _privateConstructorUsedError;
+  String? get ongoingAllergenKey => throw _privateConstructorUsedError;
   Set<String> get flaggedAllergenKeys => throw _privateConstructorUsedError;
+  bool get isStartingGuideSeen => throw _privateConstructorUsedError;
 
   /// Create a copy of RecipeLibraryState
   /// with the given fields replaced by the non-null parameter values.
@@ -34,7 +37,12 @@ abstract class $RecipeLibraryStateCopyWith<$Res> {
     $Res Function(RecipeLibraryState) then,
   ) = _$RecipeLibraryStateCopyWithImpl<$Res, RecipeLibraryState>;
   @useResult
-  $Res call({List<RecipeSection> sections, Set<String> flaggedAllergenKeys});
+  $Res call({
+    Map<String, List<Recipe>> recipesByCategory,
+    String? ongoingAllergenKey,
+    Set<String> flaggedAllergenKeys,
+    bool isStartingGuideSeen,
+  });
 }
 
 /// @nodoc
@@ -51,17 +59,30 @@ class _$RecipeLibraryStateCopyWithImpl<$Res, $Val extends RecipeLibraryState>
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({Object? sections = null, Object? flaggedAllergenKeys = null}) {
+  $Res call({
+    Object? recipesByCategory = null,
+    Object? ongoingAllergenKey = freezed,
+    Object? flaggedAllergenKeys = null,
+    Object? isStartingGuideSeen = null,
+  }) {
     return _then(
       _value.copyWith(
-            sections: null == sections
-                ? _value.sections
-                : sections // ignore: cast_nullable_to_non_nullable
-                      as List<RecipeSection>,
+            recipesByCategory: null == recipesByCategory
+                ? _value.recipesByCategory
+                : recipesByCategory // ignore: cast_nullable_to_non_nullable
+                      as Map<String, List<Recipe>>,
+            ongoingAllergenKey: freezed == ongoingAllergenKey
+                ? _value.ongoingAllergenKey
+                : ongoingAllergenKey // ignore: cast_nullable_to_non_nullable
+                      as String?,
             flaggedAllergenKeys: null == flaggedAllergenKeys
                 ? _value.flaggedAllergenKeys
                 : flaggedAllergenKeys // ignore: cast_nullable_to_non_nullable
                       as Set<String>,
+            isStartingGuideSeen: null == isStartingGuideSeen
+                ? _value.isStartingGuideSeen
+                : isStartingGuideSeen // ignore: cast_nullable_to_non_nullable
+                      as bool,
           )
           as $Val,
     );
@@ -77,7 +98,12 @@ abstract class _$$RecipeLibraryStateImplCopyWith<$Res>
   ) = __$$RecipeLibraryStateImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({List<RecipeSection> sections, Set<String> flaggedAllergenKeys});
+  $Res call({
+    Map<String, List<Recipe>> recipesByCategory,
+    String? ongoingAllergenKey,
+    Set<String> flaggedAllergenKeys,
+    bool isStartingGuideSeen,
+  });
 }
 
 /// @nodoc
@@ -93,17 +119,30 @@ class __$$RecipeLibraryStateImplCopyWithImpl<$Res>
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({Object? sections = null, Object? flaggedAllergenKeys = null}) {
+  $Res call({
+    Object? recipesByCategory = null,
+    Object? ongoingAllergenKey = freezed,
+    Object? flaggedAllergenKeys = null,
+    Object? isStartingGuideSeen = null,
+  }) {
     return _then(
       _$RecipeLibraryStateImpl(
-        sections: null == sections
-            ? _value._sections
-            : sections // ignore: cast_nullable_to_non_nullable
-                  as List<RecipeSection>,
+        recipesByCategory: null == recipesByCategory
+            ? _value._recipesByCategory
+            : recipesByCategory // ignore: cast_nullable_to_non_nullable
+                  as Map<String, List<Recipe>>,
+        ongoingAllergenKey: freezed == ongoingAllergenKey
+            ? _value.ongoingAllergenKey
+            : ongoingAllergenKey // ignore: cast_nullable_to_non_nullable
+                  as String?,
         flaggedAllergenKeys: null == flaggedAllergenKeys
             ? _value._flaggedAllergenKeys
             : flaggedAllergenKeys // ignore: cast_nullable_to_non_nullable
                   as Set<String>,
+        isStartingGuideSeen: null == isStartingGuideSeen
+            ? _value.isStartingGuideSeen
+            : isStartingGuideSeen // ignore: cast_nullable_to_non_nullable
+                  as bool,
       ),
     );
   }
@@ -113,19 +152,24 @@ class __$$RecipeLibraryStateImplCopyWithImpl<$Res>
 
 class _$RecipeLibraryStateImpl implements _RecipeLibraryState {
   const _$RecipeLibraryStateImpl({
-    required final List<RecipeSection> sections,
+    required final Map<String, List<Recipe>> recipesByCategory,
+    this.ongoingAllergenKey,
     final Set<String> flaggedAllergenKeys = const <String>{},
-  }) : _sections = sections,
+    this.isStartingGuideSeen = false,
+  }) : _recipesByCategory = recipesByCategory,
        _flaggedAllergenKeys = flaggedAllergenKeys;
 
-  final List<RecipeSection> _sections;
+  final Map<String, List<Recipe>> _recipesByCategory;
   @override
-  List<RecipeSection> get sections {
-    if (_sections is EqualUnmodifiableListView) return _sections;
+  Map<String, List<Recipe>> get recipesByCategory {
+    if (_recipesByCategory is EqualUnmodifiableMapView)
+      return _recipesByCategory;
     // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(_sections);
+    return EqualUnmodifiableMapView(_recipesByCategory);
   }
 
+  @override
+  final String? ongoingAllergenKey;
   final Set<String> _flaggedAllergenKeys;
   @override
   @JsonKey()
@@ -137,8 +181,12 @@ class _$RecipeLibraryStateImpl implements _RecipeLibraryState {
   }
 
   @override
+  @JsonKey()
+  final bool isStartingGuideSeen;
+
+  @override
   String toString() {
-    return 'RecipeLibraryState(sections: $sections, flaggedAllergenKeys: $flaggedAllergenKeys)';
+    return 'RecipeLibraryState(recipesByCategory: $recipesByCategory, ongoingAllergenKey: $ongoingAllergenKey, flaggedAllergenKeys: $flaggedAllergenKeys, isStartingGuideSeen: $isStartingGuideSeen)';
   }
 
   @override
@@ -146,18 +194,27 @@ class _$RecipeLibraryStateImpl implements _RecipeLibraryState {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$RecipeLibraryStateImpl &&
-            const DeepCollectionEquality().equals(other._sections, _sections) &&
+            const DeepCollectionEquality().equals(
+              other._recipesByCategory,
+              _recipesByCategory,
+            ) &&
+            (identical(other.ongoingAllergenKey, ongoingAllergenKey) ||
+                other.ongoingAllergenKey == ongoingAllergenKey) &&
             const DeepCollectionEquality().equals(
               other._flaggedAllergenKeys,
               _flaggedAllergenKeys,
-            ));
+            ) &&
+            (identical(other.isStartingGuideSeen, isStartingGuideSeen) ||
+                other.isStartingGuideSeen == isStartingGuideSeen));
   }
 
   @override
   int get hashCode => Object.hash(
     runtimeType,
-    const DeepCollectionEquality().hash(_sections),
+    const DeepCollectionEquality().hash(_recipesByCategory),
+    ongoingAllergenKey,
     const DeepCollectionEquality().hash(_flaggedAllergenKeys),
+    isStartingGuideSeen,
   );
 
   /// Create a copy of RecipeLibraryState
@@ -174,180 +231,25 @@ class _$RecipeLibraryStateImpl implements _RecipeLibraryState {
 
 abstract class _RecipeLibraryState implements RecipeLibraryState {
   const factory _RecipeLibraryState({
-    required final List<RecipeSection> sections,
+    required final Map<String, List<Recipe>> recipesByCategory,
+    final String? ongoingAllergenKey,
     final Set<String> flaggedAllergenKeys,
+    final bool isStartingGuideSeen,
   }) = _$RecipeLibraryStateImpl;
 
   @override
-  List<RecipeSection> get sections;
+  Map<String, List<Recipe>> get recipesByCategory;
+  @override
+  String? get ongoingAllergenKey;
   @override
   Set<String> get flaggedAllergenKeys;
+  @override
+  bool get isStartingGuideSeen;
 
   /// Create a copy of RecipeLibraryState
   /// with the given fields replaced by the non-null parameter values.
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$RecipeLibraryStateImplCopyWith<_$RecipeLibraryStateImpl> get copyWith =>
-      throw _privateConstructorUsedError;
-}
-
-/// @nodoc
-mixin _$RecipeSection {
-  String get title => throw _privateConstructorUsedError;
-  List<Recipe> get recipes => throw _privateConstructorUsedError;
-
-  /// Create a copy of RecipeSection
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  $RecipeSectionCopyWith<RecipeSection> get copyWith =>
-      throw _privateConstructorUsedError;
-}
-
-/// @nodoc
-abstract class $RecipeSectionCopyWith<$Res> {
-  factory $RecipeSectionCopyWith(
-    RecipeSection value,
-    $Res Function(RecipeSection) then,
-  ) = _$RecipeSectionCopyWithImpl<$Res, RecipeSection>;
-  @useResult
-  $Res call({String title, List<Recipe> recipes});
-}
-
-/// @nodoc
-class _$RecipeSectionCopyWithImpl<$Res, $Val extends RecipeSection>
-    implements $RecipeSectionCopyWith<$Res> {
-  _$RecipeSectionCopyWithImpl(this._value, this._then);
-
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
-
-  /// Create a copy of RecipeSection
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? title = null, Object? recipes = null}) {
-    return _then(
-      _value.copyWith(
-            title: null == title
-                ? _value.title
-                : title // ignore: cast_nullable_to_non_nullable
-                      as String,
-            recipes: null == recipes
-                ? _value.recipes
-                : recipes // ignore: cast_nullable_to_non_nullable
-                      as List<Recipe>,
-          )
-          as $Val,
-    );
-  }
-}
-
-/// @nodoc
-abstract class _$$RecipeSectionImplCopyWith<$Res>
-    implements $RecipeSectionCopyWith<$Res> {
-  factory _$$RecipeSectionImplCopyWith(
-    _$RecipeSectionImpl value,
-    $Res Function(_$RecipeSectionImpl) then,
-  ) = __$$RecipeSectionImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call({String title, List<Recipe> recipes});
-}
-
-/// @nodoc
-class __$$RecipeSectionImplCopyWithImpl<$Res>
-    extends _$RecipeSectionCopyWithImpl<$Res, _$RecipeSectionImpl>
-    implements _$$RecipeSectionImplCopyWith<$Res> {
-  __$$RecipeSectionImplCopyWithImpl(
-    _$RecipeSectionImpl _value,
-    $Res Function(_$RecipeSectionImpl) _then,
-  ) : super(_value, _then);
-
-  /// Create a copy of RecipeSection
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? title = null, Object? recipes = null}) {
-    return _then(
-      _$RecipeSectionImpl(
-        title: null == title
-            ? _value.title
-            : title // ignore: cast_nullable_to_non_nullable
-                  as String,
-        recipes: null == recipes
-            ? _value._recipes
-            : recipes // ignore: cast_nullable_to_non_nullable
-                  as List<Recipe>,
-      ),
-    );
-  }
-}
-
-/// @nodoc
-
-class _$RecipeSectionImpl implements _RecipeSection {
-  const _$RecipeSectionImpl({
-    required this.title,
-    required final List<Recipe> recipes,
-  }) : _recipes = recipes;
-
-  @override
-  final String title;
-  final List<Recipe> _recipes;
-  @override
-  List<Recipe> get recipes {
-    if (_recipes is EqualUnmodifiableListView) return _recipes;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(_recipes);
-  }
-
-  @override
-  String toString() {
-    return 'RecipeSection(title: $title, recipes: $recipes)';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$RecipeSectionImpl &&
-            (identical(other.title, title) || other.title == title) &&
-            const DeepCollectionEquality().equals(other._recipes, _recipes));
-  }
-
-  @override
-  int get hashCode => Object.hash(
-    runtimeType,
-    title,
-    const DeepCollectionEquality().hash(_recipes),
-  );
-
-  /// Create a copy of RecipeSection
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$RecipeSectionImplCopyWith<_$RecipeSectionImpl> get copyWith =>
-      __$$RecipeSectionImplCopyWithImpl<_$RecipeSectionImpl>(this, _$identity);
-}
-
-abstract class _RecipeSection implements RecipeSection {
-  const factory _RecipeSection({
-    required final String title,
-    required final List<Recipe> recipes,
-  }) = _$RecipeSectionImpl;
-
-  @override
-  String get title;
-  @override
-  List<Recipe> get recipes;
-
-  /// Create a copy of RecipeSection
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$RecipeSectionImplCopyWith<_$RecipeSectionImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

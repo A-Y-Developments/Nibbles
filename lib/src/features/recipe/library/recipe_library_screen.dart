@@ -1,15 +1,35 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nibbles/src/app/constants/allergen_emoji.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
+import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/features/recipe/library/recipe_library_controller.dart';
 import 'package:nibbles/src/features/recipe/library/recipe_library_state.dart';
+import 'package:nibbles/src/features/recipe/library/widgets/library_header.dart';
+import 'package:nibbles/src/features/recipe/library/widgets/read_guide_banner.dart';
+import 'package:nibbles/src/features/recipe/library/widgets/recipe_category_row.dart';
 import 'package:nibbles/src/features/recipe/library/widgets/recipe_grid_card.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 
+/// Recipe Library screen (RC-01, NIB-53 reskin).
+///
+/// Reskins the previous SliverGrid layout to a butter-wash [LibraryHeader] +
+/// vertical stack of horizontal [RecipeCategoryRow]s, driven by
+/// `RecipeService.getRecipesByCategory`. A first-launch [ReadGuideBanner]
+/// appears above the first row when `LocalFlagService.isStartingGuideSeen()`
+/// is `false`. Section order:
+///   1. (optional) 'Recommendation for {ongoing allergen}' — recipes from
+///      any category whose `allergenTags` contain the in-progress allergen.
+///   2. One row per category in the order returned by the service.
+///
+/// Allergen-level recipe flagging is preserved via [RecipeGridCard]'s
+/// `flaggedAllergenKeys` prop.
 class RecipeLibraryScreen extends ConsumerWidget {
   const RecipeLibraryScreen({super.key});
 
@@ -19,17 +39,17 @@ class RecipeLibraryScreen extends ConsumerWidget {
 
     return babyIdAsync.when(
       loading: () => const Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: AppColors.cream,
         body: Center(child: CircularProgressIndicator()),
       ),
       error: (_, __) => const Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: AppColors.cream,
         body: Center(child: Text('Could not load baby profile.')),
       ),
       data: (babyId) {
         if (babyId == null) {
           return const Scaffold(
-            backgroundColor: AppColors.background,
+            backgroundColor: AppColors.cream,
             body: Center(child: Text('No baby profile found.')),
           );
         }
@@ -58,55 +78,68 @@ class _RecipeLibraryBodyState extends ConsumerState<_RecipeLibraryBody> {
     super.dispose();
   }
 
+  void _openStartingGuide() {
+    // TODO(NIB-94): replace SnackBar with `context.pushNamed(
+    //   AppRoute.startingGuide.name)` once the Starting Guide route lands.
+    // Route is not registered yet so we cannot reference it here without
+    // breaking analyze.
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(
+        const SnackBar(
+          content: Text('Starting Guide coming soon'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+  }
+
+  void _onBookmarkTap() {
+    // Per NIB-53 spec point 7: the bookmark just navigates (or shows the
+    // SnackBar). Only the 'Read Guide' CTA inside the banner marks the
+    // starting_guide_seen flag.
+    _openStartingGuide();
+  }
+
+  void _onReadGuideTap() {
+    unawaited(
+      ref
+          .read(recipeLibraryControllerProvider(widget.babyId).notifier)
+          .markStartingGuideSeen(),
+    );
+    _openStartingGuide();
+  }
+
+  Future<void> _refresh() => ref
+      .read(recipeLibraryControllerProvider(widget.babyId).notifier)
+      .refresh();
+
   @override
   Widget build(BuildContext context) {
-    final recipesAsync = ref.watch(
+    final libraryAsync = ref.watch(
       recipeLibraryControllerProvider(widget.babyId),
     );
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.surface,
-        elevation: 0,
-        title: Text('Recipes', style: Theme.of(context).textTheme.titleLarge),
-      ),
+      backgroundColor: AppColors.cream,
       body: Column(
         children: [
-          _SearchBar(
-            controller: _searchController,
-            onChanged: (q) => setState(() => _searchQuery = q.trim()),
+          LibraryHeader(
+            searchController: _searchController,
+            searchValue: _searchQuery,
+            onSearchChanged: (q) =>
+                setState(() => _searchQuery = q.trim()),
+            onBookmarkTap: _onBookmarkTap,
           ),
           Expanded(
-            child: recipesAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (_, __) => RefreshIndicator(
-                onRefresh: () => ref
-                    .read(
-                      recipeLibraryControllerProvider(widget.babyId).notifier,
-                    )
-                    .refresh(),
-                child: ListView(
-                  children: [
-                    SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.6,
-                      child: const Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(AppSizes.lg),
-                          child: Text(
-                            "Couldn't load recipes. Pull down to retry.",
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            child: libraryAsync.when(
+              loading: () =>
+                  const Center(child: CircularProgressIndicator()),
+              error: (_, __) => _ErrorView(onRetry: _refresh),
               data: (state) => _RecipeContent(
-                babyId: widget.babyId,
                 state: state,
                 searchQuery: _searchQuery,
+                onReadGuideTap: _onReadGuideTap,
+                onRefresh: _refresh,
               ),
             ),
           ),
@@ -116,160 +149,179 @@ class _RecipeLibraryBodyState extends ConsumerState<_RecipeLibraryBody> {
   }
 }
 
-class _SearchBar extends StatelessWidget {
-  const _SearchBar({required this.controller, required this.onChanged});
-
-  final TextEditingController controller;
-  final ValueChanged<String> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: AppColors.surface,
-      padding: const EdgeInsets.fromLTRB(
-        AppSizes.pagePaddingH,
-        AppSizes.xs,
-        AppSizes.pagePaddingH,
-        AppSizes.sm,
-      ),
-      child: TextField(
-        controller: controller,
-        onChanged: onChanged,
-        textInputAction: TextInputAction.search,
-        decoration: InputDecoration(
-          hintText: 'Search recipes...',
-          prefixIcon: const Icon(Icons.search, size: AppSizes.iconMd),
-          suffixIcon: controller.text.isNotEmpty
-              ? IconButton(
-                  icon: const Icon(Icons.clear, size: AppSizes.iconSm),
-                  onPressed: () {
-                    controller.clear();
-                    onChanged('');
-                  },
-                )
-              : null,
-          filled: true,
-          fillColor: AppColors.surfaceVariant,
-          contentPadding: const EdgeInsets.symmetric(vertical: AppSizes.sm),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-            borderSide: BorderSide.none,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _RecipeContent extends ConsumerWidget {
+class _RecipeContent extends StatelessWidget {
   const _RecipeContent({
-    required this.babyId,
     required this.state,
     required this.searchQuery,
+    required this.onReadGuideTap,
+    required this.onRefresh,
   });
 
-  final String babyId;
   final RecipeLibraryState state;
   final String searchQuery;
+  final VoidCallback onReadGuideTap;
+  final Future<void> Function() onRefresh;
 
-  List<Recipe> _filteredRecipes() {
+  List<Recipe> get _allRecipes => state.recipesByCategory.values
+      .expand((rs) => rs)
+      .toSet()
+      .toList();
+
+  List<Recipe> get _filteredRecipes {
     final q = searchQuery.toLowerCase();
-    final all = state.sections.expand((s) => s.recipes).toSet().toList();
-    return all
+    return _allRecipes
         .where(
           (r) =>
               r.title.toLowerCase().contains(q) ||
-              r.allergenTags.any((t) => t.toLowerCase().contains(q)),
+              r.allergenTags.any((t) => t.toLowerCase().contains(q)) ||
+              r.nutritionTags.any((t) => t.toLowerCase().contains(q)),
         )
         .toList();
   }
 
+  List<Recipe> get _recommendations {
+    final key = state.ongoingAllergenKey;
+    if (key == null) return const [];
+    return _allRecipes.where((r) => r.allergenTags.contains(key)).toList();
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     if (searchQuery.isNotEmpty) {
       return _SearchResults(
-        recipes: _filteredRecipes(),
+        recipes: _filteredRecipes,
         query: searchQuery,
         flaggedAllergenKeys: state.flaggedAllergenKeys,
       );
     }
 
-    if (state.sections.isEmpty) {
+    if (state.recipesByCategory.isEmpty) {
       return RefreshIndicator(
-        onRefresh: () => ref
-            .read(recipeLibraryControllerProvider(babyId).notifier)
-            .refresh(),
-        child: ListView(
-          children: [
-            SizedBox(
-              height: MediaQuery.of(context).size.height * 0.6,
-              child: const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(AppSizes.lg),
-                  child: Text(
-                    'No recipes available right now. '
-                    'Check back after completing more allergen steps.',
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-            ),
-          ],
+        onRefresh: onRefresh,
+        child: _EmptyView(
+          isStartingGuideSeen: state.isStartingGuideSeen,
+          onReadGuideTap: onReadGuideTap,
         ),
       );
     }
 
+    final ongoingKey = state.ongoingAllergenKey;
+    final recommendations = _recommendations;
+
     return RefreshIndicator(
-      onRefresh: () =>
-          ref.read(recipeLibraryControllerProvider(babyId).notifier).refresh(),
-      child: CustomScrollView(
-        slivers: [
-          for (final section in state.sections) ...[
-            SliverToBoxAdapter(
+      onRefresh: onRefresh,
+      child: ListView(
+        children: [
+          if (!state.isStartingGuideSeen)
+            ReadGuideBanner(onTap: onReadGuideTap),
+          if (ongoingKey != null && recommendations.isNotEmpty)
+            RecipeCategoryRow(
+              title: 'Recommendation for ${_displayName(ongoingKey)} '
+                  '${AllergenEmoji.get(ongoingKey)}',
+              recipes: recommendations,
+              flaggedAllergenKeys: state.flaggedAllergenKeys,
+            ),
+          for (final entry in state.recipesByCategory.entries)
+            if (entry.value.isNotEmpty)
+              RecipeCategoryRow(
+                title: entry.key,
+                recipes: entry.value,
+                flaggedAllergenKeys: state.flaggedAllergenKeys,
+              ),
+          const SizedBox(height: AppSizes.xl),
+        ],
+      ),
+    );
+  }
+
+  static const _allergenNames = {
+    'peanut': 'Peanut',
+    'egg': 'Egg',
+    'dairy': 'Dairy',
+    'tree_nuts': 'Tree Nuts',
+    'sesame': 'Sesame',
+    'soy': 'Soy',
+    'wheat': 'Wheat',
+    'fish': 'Fish',
+    'shellfish': 'Shellfish',
+  };
+
+  static String _displayName(String key) => _allergenNames[key] ?? key;
+}
+
+class _ErrorView extends StatelessWidget {
+  const _ErrorView({required this.onRetry});
+
+  final Future<void> Function() onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return RefreshIndicator(
+      onRefresh: onRetry,
+      child: ListView(
+        children: [
+          SizedBox(
+            height: MediaQuery.of(context).size.height * 0.6,
+            child: Center(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSizes.pagePaddingH,
-                  AppSizes.lg,
-                  AppSizes.pagePaddingH,
-                  AppSizes.sm,
-                ),
+                padding: const EdgeInsets.all(AppSizes.lg),
                 child: Text(
-                  section.title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: AppColors.text,
-                    fontWeight: FontWeight.w700,
+                  "Couldn't load recipes. Pull down to retry.",
+                  textAlign: TextAlign.center,
+                  style: AppTypography.textTheme.bodyMedium?.copyWith(
+                    color: AppColors.fgMuted,
                   ),
                 ),
               ),
             ),
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSizes.pagePaddingH,
-              ),
-              sliver: SliverGrid(
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  final recipe = section.recipes[index];
-                  return RecipeGridCard(
-                    recipe: recipe,
-                    flaggedAllergenKeys: state.flaggedAllergenKeys,
-                    onTap: () => context.pushNamed(
-                      AppRoute.recipeDetail.name,
-                      pathParameters: {'recipeId': recipe.id},
-                    ),
-                  );
-                }, childCount: section.recipes.length),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: AppSizes.sm,
-                  mainAxisSpacing: AppSizes.sm,
-                  childAspectRatio: 0.78,
-                ),
-              ),
-            ),
-          ],
-          const SliverToBoxAdapter(child: SizedBox(height: AppSizes.xl)),
+          ),
         ],
       ),
+    );
+  }
+}
+
+class _EmptyView extends StatelessWidget {
+  const _EmptyView({
+    required this.isStartingGuideSeen,
+    required this.onReadGuideTap,
+  });
+
+  final bool isStartingGuideSeen;
+  final VoidCallback onReadGuideTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      children: [
+        if (!isStartingGuideSeen) ReadGuideBanner(onTap: onReadGuideTap),
+        SizedBox(
+          height: MediaQuery.of(context).size.height * 0.5,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSizes.lg),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'No recipes yet',
+                    style: AppTypography.emptyStateTitle,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: AppSizes.sm),
+                  Text(
+                    'Check back after completing more allergen steps.',
+                    textAlign: TextAlign.center,
+                    style: AppTypography.textTheme.bodyMedium?.copyWith(
+                      color: AppColors.fgMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -293,10 +345,10 @@ class _SearchResults extends StatelessWidget {
           padding: const EdgeInsets.all(AppSizes.lg),
           child: Text(
             'No recipes found for "$query".',
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: AppColors.subtext),
             textAlign: TextAlign.center,
+            style: AppTypography.textTheme.bodyMedium?.copyWith(
+              color: AppColors.fgMuted,
+            ),
           ),
         ),
       );
@@ -305,15 +357,15 @@ class _SearchResults extends StatelessWidget {
     return GridView.builder(
       padding: const EdgeInsets.fromLTRB(
         AppSizes.pagePaddingH,
-        AppSizes.sm,
+        AppSizes.md,
         AppSizes.pagePaddingH,
         AppSizes.xl,
       ),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        crossAxisSpacing: AppSizes.sm,
-        mainAxisSpacing: AppSizes.sm,
-        childAspectRatio: 0.78,
+        crossAxisSpacing: AppSizes.sp12,
+        mainAxisSpacing: AppSizes.sp12,
+        childAspectRatio: 158 / 220,
       ),
       itemCount: recipes.length,
       itemBuilder: (context, index) {

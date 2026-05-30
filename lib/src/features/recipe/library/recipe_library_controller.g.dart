@@ -7,7 +7,7 @@ part of 'recipe_library_controller.dart';
 // **************************************************************************
 
 String _$recipeLibraryControllerHash() =>
-    r'958401f32aed68ebdaf967ddde16999639208a73';
+    r'f1d4e66df0fe4a1d0f08daa4e7bf0d382402ca99';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -37,17 +37,53 @@ abstract class _$RecipeLibraryController
   FutureOr<RecipeLibraryState> build(String babyId);
 }
 
-/// See also [RecipeLibraryController].
+/// Controller for the Recipe Library screen (RC-01, NIB-53 reskin).
+///
+/// Drives off [RecipeService.getRecipesByCategory] (NIB-129) for the main
+/// category grouping, [AllergenService.getAllergenStatuses] for the
+/// ongoing-allergen recommendation header, and
+/// [RecipeService.getFlaggedAllergenKeys] for the 'Not safe' card treatment.
+/// The first-launch 'Read Guide' banner state is read synchronously from
+/// [LocalFlagService.isStartingGuideSeen].
+///
+/// Copied from [RecipeLibraryController].
 @ProviderFor(RecipeLibraryController)
 const recipeLibraryControllerProvider = RecipeLibraryControllerFamily();
 
-/// See also [RecipeLibraryController].
+/// Controller for the Recipe Library screen (RC-01, NIB-53 reskin).
+///
+/// Drives off [RecipeService.getRecipesByCategory] (NIB-129) for the main
+/// category grouping, [AllergenService.getAllergenStatuses] for the
+/// ongoing-allergen recommendation header, and
+/// [RecipeService.getFlaggedAllergenKeys] for the 'Not safe' card treatment.
+/// The first-launch 'Read Guide' banner state is read synchronously from
+/// [LocalFlagService.isStartingGuideSeen].
+///
+/// Copied from [RecipeLibraryController].
 class RecipeLibraryControllerFamily
     extends Family<AsyncValue<RecipeLibraryState>> {
-  /// See also [RecipeLibraryController].
+  /// Controller for the Recipe Library screen (RC-01, NIB-53 reskin).
+  ///
+  /// Drives off [RecipeService.getRecipesByCategory] (NIB-129) for the main
+  /// category grouping, [AllergenService.getAllergenStatuses] for the
+  /// ongoing-allergen recommendation header, and
+  /// [RecipeService.getFlaggedAllergenKeys] for the 'Not safe' card treatment.
+  /// The first-launch 'Read Guide' banner state is read synchronously from
+  /// [LocalFlagService.isStartingGuideSeen].
+  ///
+  /// Copied from [RecipeLibraryController].
   const RecipeLibraryControllerFamily();
 
-  /// See also [RecipeLibraryController].
+  /// Controller for the Recipe Library screen (RC-01, NIB-53 reskin).
+  ///
+  /// Drives off [RecipeService.getRecipesByCategory] (NIB-129) for the main
+  /// category grouping, [AllergenService.getAllergenStatuses] for the
+  /// ongoing-allergen recommendation header, and
+  /// [RecipeService.getFlaggedAllergenKeys] for the 'Not safe' card treatment.
+  /// The first-launch 'Read Guide' banner state is read synchronously from
+  /// [LocalFlagService.isStartingGuideSeen].
+  ///
+  /// Copied from [RecipeLibraryController].
   RecipeLibraryControllerProvider call(String babyId) {
     return RecipeLibraryControllerProvider(babyId);
   }
@@ -74,14 +110,32 @@ class RecipeLibraryControllerFamily
   String? get name => r'recipeLibraryControllerProvider';
 }
 
-/// See also [RecipeLibraryController].
+/// Controller for the Recipe Library screen (RC-01, NIB-53 reskin).
+///
+/// Drives off [RecipeService.getRecipesByCategory] (NIB-129) for the main
+/// category grouping, [AllergenService.getAllergenStatuses] for the
+/// ongoing-allergen recommendation header, and
+/// [RecipeService.getFlaggedAllergenKeys] for the 'Not safe' card treatment.
+/// The first-launch 'Read Guide' banner state is read synchronously from
+/// [LocalFlagService.isStartingGuideSeen].
+///
+/// Copied from [RecipeLibraryController].
 class RecipeLibraryControllerProvider
     extends
         AutoDisposeAsyncNotifierProviderImpl<
           RecipeLibraryController,
           RecipeLibraryState
         > {
-  /// See also [RecipeLibraryController].
+  /// Controller for the Recipe Library screen (RC-01, NIB-53 reskin).
+  ///
+  /// Drives off [RecipeService.getRecipesByCategory] (NIB-129) for the main
+  /// category grouping, [AllergenService.getAllergenStatuses] for the
+  /// ongoing-allergen recommendation header, and
+  /// [RecipeService.getFlaggedAllergenKeys] for the 'Not safe' card treatment.
+  /// The first-launch 'Read Guide' banner state is read synchronously from
+  /// [LocalFlagService.isStartingGuideSeen].
+  ///
+  /// Copied from [RecipeLibraryController].
   RecipeLibraryControllerProvider(String babyId)
     : this._internal(
         () => RecipeLibraryController()..babyId = babyId,

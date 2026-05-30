@@ -78,6 +78,20 @@ class LocalFlagService {
   /// flip is durable BEFORE we route to `/home/allergen/complete`.
   Future<void> markProgramCompletionShown(String babyId) =>
       _box.put('program_completion_shown_$babyId', true);
+
+  // ---------------------------------------------------------------------------
+  // Recipe Library — first-launch 'Read Guide' banner flag (NIB-53)
+  // ---------------------------------------------------------------------------
+
+  /// Returns `true` if the user has dismissed the Recipe Library first-launch
+  /// 'Read Guide' banner (by tapping its CTA or the bookmark in the header).
+  bool isStartingGuideSeen() =>
+      _box.get('starting_guide_seen', defaultValue: false) as bool;
+
+  /// Marks the Starting Guide as seen. Awaited so the banner stays dismissed
+  /// across the same frame's rebuild.
+  Future<void> markStartingGuideSeen() =>
+      _box.put('starting_guide_seen', true);
 }
 
 @riverpod
