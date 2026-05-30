@@ -92,6 +92,25 @@ class LocalFlagService {
   /// across the same frame's rebuild.
   Future<void> markStartingGuideSeen() =>
       _box.put('starting_guide_seen', true);
+
+  // ---------------------------------------------------------------------------
+  // Account deletion (NIB-85 / NIB-120)
+  // ---------------------------------------------------------------------------
+
+  /// Set by the profile delete-account flow (NIB-78) BEFORE the auth
+  /// `signOut()` call so the router/splash can treat the session as deleted
+  /// even if a stale Supabase session is still cached.
+  bool isAccountDeleted() =>
+      _box.get('account_deleted', defaultValue: false) as bool;
+
+  /// Awaitable so the flag is durable before signOut() races.
+  Future<void> setAccountDeleted() => _box.put('account_deleted', true);
+
+  /// Wipes every key in the `local_flags` box. Called by the delete-account
+  /// flow BEFORE signing out so that re-registering on the same device
+  /// replays onboarding from scratch (no stale `onboarding_*_done`,
+  /// `program_completion_shown_*`, `starting_guide_seen`, etc.).
+  Future<void> clearAll() => _box.clear();
 }
 
 @riverpod
