@@ -45,8 +45,11 @@ class _FakeAuthService extends AuthService {
 
 /// The first reason in the hardcoded `_kReasons` list inside the overlay —
 /// used here so taps on `delete_reason_0` map back to a predictable
-/// `submit(reason)` arg.
-const _firstReasonLabel = "I'm not getting value from the app";
+/// `submit(reason)` arg. Verbatim from Figma 1216:11954 (NIB-78).
+const _firstReasonLabel = 'I achieved my goal already';
+
+/// Verbatim heading from Figma 1216:11963.
+const _headingText = 'Tell us why you want to delete your account';
 
 Widget _wrap(List<Override> overrides) {
   return ProviderScope(
@@ -128,7 +131,7 @@ void main() {
       await _openSheet(tester);
 
       // Sheet content rendered.
-      expect(find.text('Why are you leaving us?'), findsOneWidget);
+      expect(find.text(_headingText), findsOneWidget);
 
       final continueBtn = tester.widget<AppPillButton>(
         find.byKey(const Key('delete_account_continue_button')),
@@ -215,7 +218,7 @@ void main() {
       await tester.pumpWidget(_wrap(overrides()));
       await _openSheet(tester);
 
-      expect(find.text('Why are you leaving us?'), findsOneWidget);
+      expect(find.text(_headingText), findsOneWidget);
 
       // Cancel sits at the bottom of the sheet's SingleChildScrollView and
       // can land off-screen on a 800x600 surface.
@@ -227,7 +230,7 @@ void main() {
       await tester.tap(find.byKey(const Key('delete_account_cancel_button')));
       await tester.pumpAndSettle();
 
-      expect(find.text('Why are you leaving us?'), findsNothing);
+      expect(find.text(_headingText), findsNothing);
       // Cancel must NOT have run any destructive plumbing.
       verifyNever(() => mockAccountRepo.requestAccountDeletion(any()));
       verifyNever(mockFlags.clearAll);
@@ -243,12 +246,12 @@ void main() {
       await tester.pumpWidget(_wrap(overrides()));
       await _openSheet(tester);
 
-      expect(find.text('Why are you leaving us?'), findsOneWidget);
+      expect(find.text(_headingText), findsOneWidget);
 
       await tester.tap(find.byKey(const Key('delete_account_close_button')));
       await tester.pumpAndSettle();
 
-      expect(find.text('Why are you leaving us?'), findsNothing);
+      expect(find.text(_headingText), findsNothing);
     },
     timeout: _testTimeout,
   );

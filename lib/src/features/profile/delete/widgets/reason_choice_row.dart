@@ -5,9 +5,14 @@ import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 
 /// Single-select button-choice row used in the Delete Account overlay
-/// (Figma 1216:11954). Mirrors kit `.pillbtn--ghost` semantics — butter-soft
-/// fill, Parkinsans 600 label, full-width pill — but pre-selected the fill
-/// deepens to `butter` and the label/border darkens for affordance.
+/// (Figma 1216:11954 / component 1207:11246).
+///
+/// Default: butter-soft (#fffcd5) fill, no border, 12px padding, radius 10,
+/// Parkinsans SemiBold 15/22 Black (#2c2c2c) label.
+///
+/// Selected (engineering-derived affordance; Figma canvas only shows the
+/// default state): deepens fill to butter, adds green-deep label color, and
+/// shows a trailing check glyph.
 class ReasonChoiceRow extends StatelessWidget {
   const ReasonChoiceRow({
     required this.label,
@@ -23,30 +28,21 @@ class ReasonChoiceRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final fill = selected ? AppColors.butter : AppColors.butterSoft;
-    final fg = selected ? AppColors.greenDeep : AppColors.fgDefault;
-    final borderColor = selected
-        ? AppColors.greenDeep
-        : AppColors.borderSoft;
+    final fg = selected ? AppColors.greenDeep : AppColors.text;
 
     return Material(
       color: fill,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-        side: BorderSide(
-          color: borderColor,
-          width: selected ? 1.5 : 1,
-        ),
+        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
       ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
         child: SizedBox(
           width: double.infinity,
           child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSizes.md,
-              vertical: AppSizes.sp12 + 2,
-            ),
+            // Figma: padding 12 on all sides.
+            padding: const EdgeInsets.all(AppSizes.sp12),
             child: Row(
               children: [
                 Expanded(
@@ -57,7 +53,7 @@ class ReasonChoiceRow extends StatelessWidget {
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                       color: fg,
-                      height: 1.294,
+                      height: 22 / 15,
                     ),
                   ),
                 ),
