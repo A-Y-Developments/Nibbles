@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
-import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/brand/quatrefoil.dart';
 import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
 import 'package:nibbles/src/common/components/buttons/app_round_button.dart';
@@ -11,17 +10,24 @@ import 'package:nibbles/src/features/onboarding/onboarding_controller.dart';
 import 'package:nibbles/src/features/onboarding/onboarding_state.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 
-/// Short labels for the 5 developmental signs surfaced on the result card.
-/// Index aligns with `readinessAnswers` on [OnboardingState] (set by the
-/// readiness screen). Kept terse — the question form lives on the readiness
-/// step; this screen summarizes.
+/// Verbatim sign labels lifted from the Figma audit
+/// (.figma-audit/onboarding/readiness-{ready,not-ready}/report.md).
+///
+/// The audit's item 1 string concatenates two distinct signs ("Can sit upright
+/// with minimal support. Good head and neck control (can hold head steady)") —
+/// flagged as a copy-paste defect in both frames. We render the head-control
+/// half on row 0 to match index 0 of `readinessAnswers` (head control), and
+/// keep the remaining four strings verbatim.
 const List<String> _signLabels = [
-  'Holds head steady',
+  'Good head and neck control (can hold head steady)',
   'Sits upright with minimal support',
-  'Tongue-thrust reflex gone',
-  'Shows interest in food',
-  'Brings objects to mouth',
+  "Loss of the tongue-thrust reflex (doesn't automatically push food out).",
+  'Shows interest in food (watching, reaching, opening mouth).',
+  'Can bring objects to their mouth.',
 ];
+
+/// Majority gate per NIB-120: ready iff at least this many signs are met.
+const int readinessReadyThreshold = 3;
 
 /// NIB-91 — Readiness RESULT screen.
 ///
@@ -29,10 +35,13 @@ const List<String> _signLabels = [
 /// and renders one of two variants based on `signsMet >= 3` (NIB-120 majority
 /// gate). Soft-warn UX: Next routes to `/onboarding/consent` in BOTH variants.
 ///
-/// * READY (signs_met >= 3): butter card, all 5 signs rendered with a green
-///   check, "New Journey Unlock!" headline.
-/// * NOT-READY (signs_met < 3): sage card, each sign rendered with the
-///   per-answer check or cross, "not ready" headline.
+/// Layout matches Figma 1255:11893 / 1029:8508:
+/// * Title (+ eyebrow on ready) at the top above the hero.
+/// * Hero quatrefoil cluster overlaps the top of the lime card.
+/// * Card carries the "Readiness Signs" header row + salmon X/5 chip and the
+///   5 sign rows with per-answer check/cross icons (ready variant renders all
+///   rows as passed regardless of per-answer values).
+/// * Bottom row: butter `AppRoundButton` (back) + primary `AppPillButton` Next.
 ///
 /// Back routes to `/onboarding/readiness` — the readiness screen `go`s here so
 /// the navigator stack typically can't pop; `goNamed` preserves the hoisted
@@ -61,52 +70,72 @@ class OnboardingResultScreen extends ConsumerWidget {
     final signsMet = answers.where((a) => a ?? false).length;
     final ready = signsMet >= readinessReadyThreshold;
 
+    final textTheme = Theme.of(context).textTheme;
+
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        leadingWidth: AppSizes.roundButton + AppSizes.md,
-        leading: Padding(
-          padding: const EdgeInsets.only(left: AppSizes.md),
-          child: Center(
-            child: AppRoundButton(
-              icon: const Icon(Icons.arrow_back_rounded),
-              tone: AppRoundButtonTone.butter,
-              semanticLabel: 'Back',
-              onPressed: () => _onBack(context),
-            ),
-          ),
-        ),
-      ),
       body: SafeArea(
-        top: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSizes.pagePaddingH,
-            AppSizes.sm,
-            AppSizes.pagePaddingH,
-            AppSizes.pagePaddingV,
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSizes.pagePaddingH,
+            vertical: AppSizes.pagePaddingV,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(
                 child: SingleChildScrollView(
-                  child: _ResultCard(
-                    firstName: firstName,
-                    answers: answers,
-                    signsMet: signsMet,
-                    ready: ready,
+                  child: Column(
+                    children: [
+                      if (ready) ...[
+                        Text(
+                          'New Journey Unlock!',
+                          textAlign: TextAlign.center,
+                          style: textTheme.titleSmall?.copyWith(
+                            color: AppColors.fgStrong,
+                          ),
+                        ),
+                        const SizedBox(height: AppSizes.sm),
+                      ],
+                      Text(
+                        ready
+                            ? '$firstName is ready for solids at this time'
+                            : '$firstName is not ready for solids at this time',
+                        textAlign: TextAlign.center,
+                        style: textTheme.headlineSmall?.copyWith(
+                          color: AppColors.fgStrong,
+                        ),
+                      ),
+                      const SizedBox(height: AppSizes.xl),
+                      _HeroCard(
+                        signsMet: signsMet,
+                        answers: answers,
+                        ready: ready,
+                      ),
+                    ],
                   ),
                 ),
               ),
-              const SizedBox(height: AppSizes.lg),
-              AppPillButton(
-                key: const Key('onboarding_result_next'),
-                label: 'Next',
-                onPressed: () =>
-                    context.goNamed(AppRoute.onboardingConsent.name),
+              const SizedBox(height: AppSizes.md),
+              Row(
+                children: [
+                  AppRoundButton(
+                    key: const Key('onboarding_result_back'),
+                    icon: const Icon(Icons.arrow_back_rounded),
+                    tone: AppRoundButtonTone.butter,
+                    semanticLabel: 'Back',
+                    onPressed: () => _onBack(context),
+                  ),
+                  const SizedBox(width: AppSizes.sp12),
+                  Expanded(
+                    child: AppPillButton(
+                      key: const Key('onboarding_result_next'),
+                      label: 'Next',
+                      onPressed: () =>
+                          context.goNamed(AppRoute.onboardingConsent.name),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -126,9 +155,6 @@ class OnboardingResultScreen extends ConsumerWidget {
   }
 
   void _onBack(BuildContext context) {
-    // Readiness `go`s here, so the stack typically can't pop. Fall through to
-    // a named nav so back consistently returns to the questionnaire; the
-    // hoisted controller (keepAlive) preserves the captured answers.
     if (context.canPop()) {
       context.pop();
       return;
@@ -137,105 +163,105 @@ class OnboardingResultScreen extends ConsumerWidget {
   }
 }
 
-/// Majority gate per NIB-120: ready iff at least this many signs are met.
-const int readinessReadyThreshold = 3;
-
-class _ResultCard extends StatelessWidget {
-  const _ResultCard({
-    required this.firstName,
-    required this.answers,
+/// Hero cluster + lime card composition. Stack overlaps the brand mark on the
+/// top edge of the card so it visually punches through the lime panel — matches
+/// the Figma 1255:11893 / 1029:8508 layering.
+class _HeroCard extends StatelessWidget {
+  const _HeroCard({
     required this.signsMet,
+    required this.answers,
     required this.ready,
   });
 
-  final String firstName;
-  final List<bool?> answers;
   final int signsMet;
+  final List<bool?> answers;
+  final bool ready;
+
+  static const double _heroSize = 96;
+
+  @override
+  Widget build(BuildContext context) {
+    // Overlap = half the hero so the lower hemisphere sits inside the card.
+    const overlap = _heroSize / 2;
+    return Stack(
+      clipBehavior: Clip.none,
+      alignment: Alignment.topCenter,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: overlap),
+          child: _SignsCard(
+            signsMet: signsMet,
+            answers: answers,
+            ready: ready,
+          ),
+        ),
+        const Quatrefoil(
+          coreColor: AppColors.greenSoft,
+        ),
+      ],
+    );
+  }
+}
+
+class _SignsCard extends StatelessWidget {
+  const _SignsCard({
+    required this.signsMet,
+    required this.answers,
+    required this.ready,
+  });
+
+  final int signsMet;
+  final List<bool?> answers;
   final bool ready;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final cardColor = ready ? AppColors.butter : AppColors.green;
-    final petalColor = ready ? AppColors.butterSoft : AppColors.greenTint;
-    final coreColor = ready ? AppColors.greenDeep : AppColors.butter;
-    final fgStrong = ready ? AppColors.greenDeep : AppColors.cream;
-    // Eyebrow uses the same on-card tone as the headline so the row reads as a
-    // single typographic pair — both tokens are kit foreground colors, no
-    // inline opacity. Sage card -> cream-on-green; butter card -> greenDeep.
-    final fgEyebrow = ready ? AppColors.greenDeep : AppColors.onGreen;
-    final eyebrow = ready ? 'New Journey Unlock!' : 'Almost there';
-    final headline = ready
-        ? '$firstName is ready for solids at this time'
-        : '$firstName is not ready for solids at this time';
-
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: cardColor,
+        color: AppColors.butter,
         borderRadius: BorderRadius.circular(AppSizes.radius2xl),
-        boxShadow: AppSizes.shadowCardLifted,
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
           AppSizes.lg,
-          AppSizes.xl,
+          // Top padding makes room for the hero overlap (half the hero) + the
+          // card's internal lg gutter so the header sits below the hero.
+          AppSizes.lg + (_HeroCard._heroSize / 2),
           AppSizes.lg,
           AppSizes.lg,
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Quatrefoil(
-              size: AppSizes.xxxl,
-              petalColor: petalColor,
-              coreColor: coreColor,
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Readiness Signs',
+                    style: textTheme.titleSmall?.copyWith(
+                      color: AppColors.fgDefault,
+                    ),
+                  ),
+                ),
+                _ScoreChip(
+                  signsMet: signsMet,
+                  total: _signLabels.length,
+                ),
+              ],
             ),
             const SizedBox(height: AppSizes.md),
-            _ScoreBadge(signsMet: signsMet, ready: ready),
-            const SizedBox(height: AppSizes.md),
-            Text(
-              // Overline token (labelSmall): 10/700 h1.20 ls0.6 per kit —
-              // includes letterSpacing, no inline override needed.
-              eyebrow.toUpperCase(),
-              textAlign: TextAlign.center,
-              style: textTheme.labelSmall?.copyWith(color: fgEyebrow),
-            ),
-            const SizedBox(height: AppSizes.xs),
-            Text(
-              headline,
-              textAlign: TextAlign.center,
-              style: textTheme.displaySmall?.copyWith(color: fgStrong),
-            ),
-            const SizedBox(height: AppSizes.lg),
-            DecoratedBox(
-              decoration: BoxDecoration(
-                color: AppColors.cream,
-                borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+            for (var i = 0; i < _signLabels.length; i++) ...[
+              _SignRow(
+                // Ready variant: all rows render as positive per spec — the
+                // X/5 chip still reflects `signsMet` so the user sees their
+                // actual score.
+                positive: ready || (answers[i] ?? false),
+                label: _signLabels[i],
               ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSizes.md,
-                  vertical: AppSizes.sp12,
-                ),
-                child: Column(
-                  children: List<Widget>.generate(_signLabels.length, (i) {
-                    // Ready variant: all rows render as positive (green check)
-                    // per spec Step 3, regardless of per-answer values. The
-                    // X/5 badge still reflects `signsMet` so the user sees
-                    // their actual score.
-                    final isPositive = ready || (answers[i] ?? false);
-                    return Padding(
-                      padding: EdgeInsets.only(
-                        top: i == 0 ? 0 : AppSizes.sp12,
-                      ),
-                      child: _SignRow(
-                        label: _signLabels[i],
-                        positive: isPositive,
-                      ),
-                    );
-                  }),
-                ),
-              ),
-            ),
+              if (i < _signLabels.length - 1)
+                const SizedBox(height: AppSizes.md),
+            ],
           ],
         ),
       ),
@@ -243,29 +269,30 @@ class _ResultCard extends StatelessWidget {
   }
 }
 
-class _ScoreBadge extends StatelessWidget {
-  const _ScoreBadge({required this.signsMet, required this.ready});
+class _ScoreChip extends StatelessWidget {
+  const _ScoreChip({required this.signsMet, required this.total});
 
   final int signsMet;
-  final bool ready;
+  final int total;
 
   @override
   Widget build(BuildContext context) {
-    final bg = ready ? AppColors.greenDeep : AppColors.butter;
-    final fg = ready ? AppColors.cream : AppColors.greenDeep;
+    final textTheme = Theme.of(context).textTheme;
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: bg,
+        color: AppColors.coralSoft,
         borderRadius: BorderRadius.circular(AppSizes.radiusFull),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
+          horizontal: AppSizes.sp12,
           vertical: AppSizes.xs,
         ),
         child: Text(
-          '$signsMet / ${_signLabels.length} signs',
-          style: AppTypography.bodyBold.copyWith(color: fg),
+          '$signsMet/$total',
+          style: textTheme.labelMedium?.copyWith(
+            color: AppColors.coralDeep,
+          ),
         ),
       ),
     );
@@ -273,34 +300,41 @@ class _ScoreBadge extends StatelessWidget {
 }
 
 class _SignRow extends StatelessWidget {
-  const _SignRow({required this.label, required this.positive});
+  const _SignRow({required this.positive, required this.label});
 
-  final String label;
   final bool positive;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
-    final markBg = positive ? AppColors.greenTint : AppColors.destructiveSoft;
-    final markFg = positive ? AppColors.greenDeep : AppColors.destructive;
+    final textTheme = Theme.of(context).textTheme;
     final icon = positive ? Icons.check_rounded : Icons.close_rounded;
-
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          width: AppSizes.iconMd,
-          height: AppSizes.iconMd,
-          decoration: BoxDecoration(
-            color: markBg,
+          width: AppSizes.iconLg,
+          height: AppSizes.iconLg,
+          decoration: const BoxDecoration(
+            color: AppColors.cream,
             shape: BoxShape.circle,
           ),
-          child: Icon(icon, color: markFg, size: AppSizes.iconSm),
+          child: Icon(
+            icon,
+            size: AppSizes.iconSm,
+            color: AppColors.greenDeep,
+          ),
         ),
         const SizedBox(width: AppSizes.sp12),
         Expanded(
-          child: Text(
-            label,
-            style: AppTypography.bodyBold.copyWith(
-              color: AppColors.fgDefault,
+          child: Padding(
+            // Nudge label down so it visually centers against the icon circle.
+            padding: const EdgeInsets.only(top: AppSizes.xs),
+            child: Text(
+              label,
+              style: textTheme.bodyLarge?.copyWith(
+                color: AppColors.fgDefault,
+              ),
             ),
           ),
         ),
