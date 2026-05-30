@@ -5,12 +5,16 @@ import 'package:nibbles/src/common/components/components.dart';
 
 /// Header block above the segmented control on the Allergen Tracker.
 ///
-/// Renders the coral progress ring (safeCount / 9) on the left and a vertical
-/// stack of stat columns on the right. The visible columns are decided by
-/// the caller via [showNotTried] — `Not Tried` is rendered on the Big 11 tab
-/// only (per spec rule 8).
+/// Figma frames 1089:17373 (Ongoing) / 1116:18287 (Big 11):
+///  - Centred coral progress ring (introduced / 9) above
+///  - Horizontal row of stat columns (big black number + grey label)
+///
+/// Visible columns:
+///  - Ongoing tab → "Safe foods" + "Not Safe"
+///  - Big 11 tab → adds "Not Tried"
 class TrackerHeader extends StatelessWidget {
   const TrackerHeader({
+    required this.introducedCount,
     required this.safeCount,
     required this.flaggedCount,
     required this.notTriedCount,
@@ -18,43 +22,29 @@ class TrackerHeader extends StatelessWidget {
     super.key,
   });
 
+  /// Number of allergens with any logged exposure. Drives the ring fill —
+  /// matches the Figma `1/9` numerator (Allergen Tracker open question
+  /// resolved per ticket: "introduced count").
+  final int introducedCount;
   final int safeCount;
   final int flaggedCount;
   final int notTriedCount;
   final bool showNotTried;
 
+  static const int _totalAllergens = 9;
+
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        AppProgressRing(value: safeCount, max: 9),
-        const SizedBox(width: AppSizes.lg),
-        Expanded(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _StatRow(
-                label: 'Safe',
-                value: safeCount,
-                color: AppColors.safeFg,
-              ),
-              const SizedBox(height: AppSizes.sm),
-              _StatRow(
-                label: 'Not Safe',
-                value: flaggedCount,
-                color: AppColors.flagFg,
-              ),
-              if (showNotTried) ...[
-                const SizedBox(height: AppSizes.sm),
-                _StatRow(
-                  label: 'Not Tried',
-                  value: notTriedCount,
-                  color: AppColors.fgMuted,
-                ),
-              ],
-            ],
-          ),
+        AppProgressRing(value: introducedCount, max: _totalAllergens),
+        const SizedBox(height: AppSizes.md),
+        _StatRow(
+          showNotTried: showNotTried,
+          safeCount: safeCount,
+          flaggedCount: flaggedCount,
+          notTriedCount: notTriedCount,
         ),
       ],
     );
@@ -63,36 +53,58 @@ class TrackerHeader extends StatelessWidget {
 
 class _StatRow extends StatelessWidget {
   const _StatRow({
-    required this.label,
-    required this.value,
-    required this.color,
+    required this.showNotTried,
+    required this.safeCount,
+    required this.flaggedCount,
+    required this.notTriedCount,
   });
 
-  final String label;
+  final bool showNotTried;
+  final int safeCount;
+  final int flaggedCount;
+  final int notTriedCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: _StatColumn(value: safeCount, label: 'Safe foods'),
+        ),
+        Expanded(
+          child: _StatColumn(value: flaggedCount, label: 'Not Safe'),
+        ),
+        if (showNotTried)
+          Expanded(
+            child: _StatColumn(value: notTriedCount, label: 'Not Tried'),
+          ),
+      ],
+    );
+  }
+}
+
+class _StatColumn extends StatelessWidget {
+  const _StatColumn({required this.value, required this.label});
+
   final int value;
-  final Color color;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-
-    return Row(
+    return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          width: AppSizes.sm,
-          height: AppSizes.sm,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
-        const SizedBox(width: AppSizes.sm),
-        Expanded(
-          child: Text(
-            label,
-            style: textTheme.bodyMedium?.copyWith(color: AppColors.fgMuted),
-          ),
-        ),
         Text(
           '$value',
-          style: textTheme.titleMedium?.copyWith(color: color),
+          style: textTheme.displaySmall?.copyWith(color: AppColors.fgStrong),
+        ),
+        const SizedBox(height: AppSizes.xs),
+        Text(
+          label,
+          style: textTheme.bodySmall?.copyWith(color: AppColors.fgFaint),
         ),
       ],
     );

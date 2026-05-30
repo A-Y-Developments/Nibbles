@@ -22,12 +22,14 @@ import 'package:nibbles/src/routing/route_enums.dart';
 
 /// Redesigned Allergen Tracker board (NIB-79).
 ///
-/// Layout: butter-soft header + segmented control (`Ongoing` | `Big 11`) with
-/// a coral progress ring (safeCount / 9) and stat columns above it. The
-/// Ongoing tab lists allergens with at least one log (inProgress/safe/flagged)
-/// followed by a Reaction Log list. The Big 11 tab is a long-scrolling
-/// grouped list of all 9 canonical allergens — Not-Started ones expose a
-/// Start Introduce CTA that opens the existing log capture sheet.
+/// Figma frames 1089:17373 (Ongoing tab) / 1116:18287 (Big 11 tab):
+///  - Butter→grey gradient background (Grad-1)
+///  - "Allergen Trackers" title (verbatim — plural)
+///  - Coral progress ring (introduced / 9) + horizontal stat columns
+///  - Segmented control "Ongoing " | "Big 11" (no nav transition)
+///  - Ongoing tab → "Allergen Exposure" section (See All → Big 11)
+///                 + "Reaction Log" feed of recent rows
+///  - Big 11 tab → grouped sections "Already Tried" / "Ongoing" / "Not Tried"
 class AllergenTrackerScreen extends ConsumerWidget {
   const AllergenTrackerScreen({super.key});
 
@@ -36,19 +38,16 @@ class AllergenTrackerScreen extends ConsumerWidget {
     final babyIdAsync = ref.watch(currentBabyIdProvider);
 
     return babyIdAsync.when(
-      loading: () => const Scaffold(
-        backgroundColor: AppColors.background,
-        body: Center(child: CircularProgressIndicator()),
+      loading: () => const _GradientScaffold(
+        child: Center(child: CircularProgressIndicator()),
       ),
-      error: (_, __) => const Scaffold(
-        backgroundColor: AppColors.background,
-        body: Center(child: Text('Could not load baby profile.')),
+      error: (_, __) => const _GradientScaffold(
+        child: Center(child: Text('Could not load baby profile.')),
       ),
       data: (babyId) {
         if (babyId == null) {
-          return const Scaffold(
-            backgroundColor: AppColors.background,
-            body: Center(child: Text('No baby profile found.')),
+          return const _GradientScaffold(
+            child: Center(child: Text('No baby profile found.')),
           );
         }
         return _TrackerBody(babyId: babyId);
@@ -76,9 +75,8 @@ class _TrackerBodyState extends ConsumerState<_TrackerBody> {
       allergenTrackerControllerProvider(widget.babyId),
     );
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
+    return _GradientScaffold(
+      child: SafeArea(
         bottom: false,
         child: trackerAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
@@ -92,6 +90,7 @@ class _TrackerBodyState extends ConsumerState<_TrackerBody> {
             state: state,
             segmentIndex: _segmentIndex,
             onSegmentChanged: _onSegmentChanged,
+            onSeeAll: () => _onSegmentChanged(1),
             onStartIntroduce: _startIntroduce,
           ),
         ),
@@ -100,6 +99,7 @@ class _TrackerBodyState extends ConsumerState<_TrackerBody> {
   }
 
   void _onSegmentChanged(int index) {
+    if (index == _segmentIndex) return;
     setState(() => _segmentIndex = index);
     final segment = index == 1 ? 'big_11' : 'ongoing';
     unawaited(
@@ -119,6 +119,36 @@ class _TrackerBodyState extends ConsumerState<_TrackerBody> {
     if ((logged ?? false) && mounted) {
       ref.invalidate(allergenTrackerControllerProvider(widget.babyId));
     }
+  }
+}
+
+/// Scaffold with the Figma "Grad-1" butter→light-grey gradient.
+///
+/// Approximates CSS `linear-gradient(~135deg, #FFFCD5 19.168%, #F5F5F5 50%)`
+/// (the two Figma frames differ slightly — 148.769deg vs 134.875deg —
+/// the difference is immaterial; we pick a single token-canonical angle).
+class _GradientScaffold extends StatelessWidget {
+  const _GradientScaffold({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            // ~135° (top-left → bottom-right).
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            stops: [0.19168, 0.5],
+            colors: [AppColors.butterSoft, Color(0xFFF5F5F5)],
+          ),
+        ),
+        child: child,
+      ),
+    );
   }
 }
 
@@ -157,6 +187,7 @@ class _TrackerContent extends ConsumerWidget {
     required this.state,
     required this.segmentIndex,
     required this.onSegmentChanged,
+    required this.onSeeAll,
     required this.onStartIntroduce,
   });
 
@@ -164,6 +195,7 @@ class _TrackerContent extends ConsumerWidget {
   final AllergenTrackerState state;
   final int segmentIndex;
   final ValueChanged<int> onSegmentChanged;
+  final VoidCallback onSeeAll;
   final void Function(Allergen allergen) onStartIntroduce;
 
   int get _safeCount =>
@@ -174,6 +206,11 @@ class _TrackerContent extends ConsumerWidget {
 
   int get _notTriedCount => state.statuses.values
       .where((s) => s == AllergenStatus.notStarted)
+      .length;
+
+  /// "Introduced" = anything past `notStarted`. Drives the ring numerator.
+  int get _introducedCount => state.statuses.values
+      .where((s) => s != AllergenStatus.notStarted)
       .length;
 
   bool get _isBig11 => segmentIndex == 1;
@@ -200,9 +237,10 @@ class _TrackerContent extends ConsumerWidget {
               AppSizes.pagePaddingH,
               AppSizes.sm,
               AppSizes.pagePaddingH,
-              AppSizes.sp12,
+              AppSizes.md,
             ),
             child: TrackerHeader(
+              introducedCount: _introducedCount,
               safeCount: _safeCount,
               flaggedCount: _flaggedCount,
               notTriedCount: _notTriedCount,
@@ -215,8 +253,9 @@ class _TrackerContent extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(
               horizontal: AppSizes.pagePaddingH,
             ),
+            // Verbatim: "Ongoing " preserves the trailing space.
             child: AppSegmentedControl(
-              segments: const ['Ongoing', 'Big 11'],
+              segments: const ['Ongoing ', 'Big 11'],
               selectedIndex: segmentIndex,
               onChanged: onSegmentChanged,
             ),
@@ -224,7 +263,7 @@ class _TrackerContent extends ConsumerWidget {
         ),
         const SliverToBoxAdapter(child: SizedBox(height: AppSizes.md)),
         if (_isBig11)
-          _Big11List(
+          _Big11Sections(
             allergens: state.allergens,
             statuses: state.statuses,
             logs: state.logs,
@@ -239,6 +278,7 @@ class _TrackerContent extends ConsumerWidget {
             statuses: state.statuses,
             logs: state.logs,
             onAllergenTap: (a) => _openAllergenDetail(context, a.key),
+            onSeeAll: onSeeAll,
           ),
         const SliverToBoxAdapter(child: SizedBox(height: AppSizes.xl)),
       ],
@@ -284,7 +324,8 @@ class _TrackerAppBar extends StatelessWidget {
           ),
           Expanded(
             child: Text(
-              'Allergen Tracker',
+              // Verbatim Figma copy: plural "Trackers".
+              'Allergen Trackers',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
                 color: AppColors.fgStrong,
@@ -298,8 +339,53 @@ class _TrackerAppBar extends StatelessWidget {
   }
 }
 
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.title, this.trailing});
+
+  final String title;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSizes.sm),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              title,
+              style: textTheme.titleSmall?.copyWith(color: AppColors.fgStrong),
+            ),
+          ),
+          if (trailing != null) trailing!,
+        ],
+      ),
+    );
+  }
+}
+
+class _SeeAllLink extends StatelessWidget {
+  const _SeeAllLink({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onPressed,
+      child: Text(
+        'See All',
+        style: textTheme.bodyMedium?.copyWith(color: AppColors.fgFaint),
+      ),
+    );
+  }
+}
+
 // ---------------------------------------------------------------------------
-// Ongoing tab — allergens with at least one log + Reaction Log feed.
+// Ongoing tab — "Allergen Exposure" + Reaction Log feed.
 // ---------------------------------------------------------------------------
 
 class _OngoingList extends StatelessWidget {
@@ -310,6 +396,7 @@ class _OngoingList extends StatelessWidget {
     required this.statuses,
     required this.logs,
     required this.onAllergenTap,
+    required this.onSeeAll,
   });
 
   final String babyId;
@@ -318,8 +405,9 @@ class _OngoingList extends StatelessWidget {
   final Map<String, AllergenStatus> statuses;
   final List<AllergenLog> logs;
   final void Function(Allergen) onAllergenTap;
+  final VoidCallback onSeeAll;
 
-  List<Allergen> get _ongoing => allergens
+  List<Allergen> get _exposed => allergens
       .where(
         (a) =>
             (statuses[a.key] ?? AllergenStatus.notStarted) !=
@@ -329,10 +417,9 @@ class _OngoingList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ongoing = _ongoing;
-    final textTheme = Theme.of(context).textTheme;
+    final exposed = _exposed;
 
-    if (ongoing.isEmpty && logs.isEmpty) {
+    if (exposed.isEmpty && logs.isEmpty) {
       return const SliverToBoxAdapter(child: _OngoingEmptyState());
     }
 
@@ -340,10 +427,12 @@ class _OngoingList extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: AppSizes.pagePaddingH),
       sliver: SliverList(
         delegate: SliverChildListDelegate(<Widget>[
-          if (ongoing.isNotEmpty) ...[
-            Text('In progress', style: textTheme.titleMedium),
-            const SizedBox(height: AppSizes.sm),
-            for (final a in ongoing) ...[
+          if (exposed.isNotEmpty) ...[
+            _SectionHeader(
+              title: 'Allergen Exposure',
+              trailing: _SeeAllLink(onPressed: onSeeAll),
+            ),
+            for (final a in exposed) ...[
               AllergenProgressCard(
                 allergen: a,
                 status: statuses[a.key] ?? AllergenStatus.notStarted,
@@ -359,8 +448,7 @@ class _OngoingList extends StatelessWidget {
             const SizedBox(height: AppSizes.sm),
           ],
           if (logs.isNotEmpty) ...[
-            Text('Reaction Log', style: textTheme.titleMedium),
-            const SizedBox(height: AppSizes.sm),
+            const _SectionHeader(title: 'Reaction Log'),
             for (final entry in _reverseIndexed(logs)) ...[
               Builder(
                 builder: (context) => ReactionLogRow(
@@ -421,11 +509,11 @@ class _OngoingEmptyState extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Big 11 tab — long-scrolling grouped list of all 9 canonical allergens.
+// Big 11 tab — 3 labelled sections (Already Tried / Ongoing / Not Tried).
 // ---------------------------------------------------------------------------
 
-class _Big11List extends StatelessWidget {
-  const _Big11List({
+class _Big11Sections extends StatelessWidget {
+  const _Big11Sections({
     required this.allergens,
     required this.statuses,
     required this.logs,
@@ -439,43 +527,88 @@ class _Big11List extends StatelessWidget {
   final void Function(Allergen) onStartIntroduce;
   final void Function(Allergen) onAllergenTap;
 
+  /// "Already Tried" = safe or flagged (introduction concluded one way or
+  /// another). Matches Figma 1116:18287 which groups completed-Safe under
+  /// this header (no separate "Flagged" group; flagged still surfaces a
+  /// Flagged chip on the card).
+  List<Allergen> get _alreadyTried => allergens
+      .where((a) {
+        final s = statuses[a.key] ?? AllergenStatus.notStarted;
+        return s == AllergenStatus.safe || s == AllergenStatus.flagged;
+      })
+      .toList(growable: false);
+
+  List<Allergen> get _ongoing => allergens
+      .where(
+        (a) =>
+            (statuses[a.key] ?? AllergenStatus.notStarted) ==
+            AllergenStatus.inProgress,
+      )
+      .toList(growable: false);
+
+  List<Allergen> get _notTried => allergens
+      .where(
+        (a) =>
+            (statuses[a.key] ?? AllergenStatus.notStarted) ==
+            AllergenStatus.notStarted,
+      )
+      .toList(growable: false);
+
+  AllergenProgressCard _progressCard(Allergen allergen) {
+    final status = statuses[allergen.key] ?? AllergenStatus.notStarted;
+    return AllergenProgressCard(
+      allergen: allergen,
+      status: status,
+      cleanLogCount: logs
+          .where((l) => l.allergenKey == allergen.key && !l.hadReaction)
+          .length,
+      totalLogCount:
+          logs.where((l) => l.allergenKey == allergen.key).length,
+      onTap: () => onAllergenTap(allergen),
+    );
+  }
+
+  StartIntroduceCard _notTriedCard(Allergen allergen) {
+    return StartIntroduceCard(
+      allergen: allergen,
+      onStartIntroduce: () => onStartIntroduce(allergen),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final tried = _alreadyTried;
+    final ongoing = _ongoing;
+    final notTried = _notTried;
+
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: AppSizes.pagePaddingH),
       sliver: SliverList(
-        delegate: SliverChildBuilderDelegate(
-          (context, index) {
-            final allergen = allergens[index];
-            final status =
-                statuses[allergen.key] ?? AllergenStatus.notStarted;
-            final card = status == AllergenStatus.notStarted
-                ? StartIntroduceCard(
-                    allergen: allergen,
-                    onStartIntroduce: () => onStartIntroduce(allergen),
-                  )
-                : AllergenProgressCard(
-                    allergen: allergen,
-                    status: status,
-                    cleanLogCount: logs
-                        .where(
-                          (l) =>
-                              l.allergenKey == allergen.key && !l.hadReaction,
-                        )
-                        .length,
-                    totalLogCount: logs
-                        .where((l) => l.allergenKey == allergen.key)
-                        .length,
-                    onTap: () => onAllergenTap(allergen),
-                  );
-
-            return Padding(
-              padding: const EdgeInsets.only(bottom: AppSizes.sm),
-              child: card,
-            );
-          },
-          childCount: allergens.length,
-        ),
+        delegate: SliverChildListDelegate(<Widget>[
+          if (tried.isNotEmpty) ...[
+            const _SectionHeader(title: 'Already Tried'),
+            for (final a in tried) ...[
+              _progressCard(a),
+              const SizedBox(height: AppSizes.sm),
+            ],
+            const SizedBox(height: AppSizes.sm),
+          ],
+          if (ongoing.isNotEmpty) ...[
+            const _SectionHeader(title: 'Ongoing'),
+            for (final a in ongoing) ...[
+              _progressCard(a),
+              const SizedBox(height: AppSizes.sm),
+            ],
+            const SizedBox(height: AppSizes.sm),
+          ],
+          if (notTried.isNotEmpty) ...[
+            const _SectionHeader(title: 'Not Tried'),
+            for (final a in notTried) ...[
+              _notTriedCard(a),
+              const SizedBox(height: AppSizes.sm),
+            ],
+          ],
+        ]),
       ),
     );
   }
