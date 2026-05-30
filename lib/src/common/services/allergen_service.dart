@@ -12,6 +12,7 @@ import 'package:nibbles/src/common/domain/entities/allergen_program_state.dart';
 import 'package:nibbles/src/common/domain/entities/reaction_detail.dart';
 import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
 import 'package:nibbles/src/common/domain/enums/emoji_taste.dart';
+import 'package:nibbles/src/common/services/helpers/derive_allergen_status.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'allergen_service.g.dart';
@@ -285,11 +286,42 @@ class AllergenService {
   /// - any hadReaction  → [AllergenStatus.flagged]
   /// - 3+ no reaction   → [AllergenStatus.safe]  (NEVER `completed`)
   /// - 1–2 no reaction  → [AllergenStatus.inProgress]
-  AllergenStatus deriveStatus(List<AllergenLog> logs) {
-    if (logs.isEmpty) return AllergenStatus.notStarted;
-    if (logs.any((l) => l.hadReaction)) return AllergenStatus.flagged;
-    if (logs.length >= 3) return AllergenStatus.safe;
-    return AllergenStatus.inProgress;
+  ///
+  /// Thin wrapper around the pure top-level [deriveStatusForLogs] helper —
+  /// kept so existing call sites stay compatible.
+  AllergenStatus deriveStatus(List<AllergenLog> logs) =>
+      deriveStatusForLogs(logs);
+
+  /// Returns a map of every one of the 9 canonical allergen keys to its
+  /// derived [AllergenStatus] for [babyId].
+  ///
+  /// Per NIB-120 the per-allergen status is derived from `allergen_logs`,
+  /// not from `allergen_program_state`. The 9 keys (peanut → … → shellfish)
+  /// remain the displayed ORDER; advancement is no longer locked to that
+  /// sequence.
+  ///
+  /// Every key in [kAllergenKeys] is guaranteed to be present in the result
+  /// map; allergens with no logs default to [AllergenStatus.notStarted].
+  Future<Result<Map<String, AllergenStatus>>> getAllergenStatuses(
+    String babyId,
+  ) async {
+    final logsResult = await _repo.getLogs(babyId);
+    if (logsResult.isFailure) {
+      return Result.failure(logsResult.errorOrNull!);
+    }
+
+    final allLogs = logsResult.dataOrNull!;
+    final byKey = <String, List<AllergenLog>>{};
+    for (final log in allLogs) {
+      (byKey[log.allergenKey] ??= <AllergenLog>[]).add(log);
+    }
+
+    final statuses = <String, AllergenStatus>{
+      for (final key in kAllergenKeys)
+        key: deriveStatusForLogs(byKey[key] ?? const <AllergenLog>[]),
+    };
+
+    return Result.success(statuses);
   }
 
   /// Returns all 9 allergens ordered by sequence_order.

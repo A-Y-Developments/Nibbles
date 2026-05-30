@@ -15,6 +15,7 @@ import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
 import 'package:nibbles/src/common/domain/enums/emoji_taste.dart';
 import 'package:nibbles/src/common/domain/enums/reaction_severity.dart';
 import 'package:nibbles/src/common/services/allergen_service.dart';
+import 'package:nibbles/src/common/services/helpers/derive_allergen_status.dart';
 
 class MockAllergenRepository extends Mock implements AllergenRepository {}
 
@@ -273,6 +274,69 @@ void main() {
       );
 
       final result = await sut.getAllergenBoardSummary(_babyId);
+
+      expect(result.isFailure, isTrue);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // getAllergenStatuses (NIB-126: derived from logs, not program state)
+  // ---------------------------------------------------------------------------
+
+  group('AllergenService.getAllergenStatuses', () {
+    test(
+      'returns every canonical allergen key with the correct derived status '
+      'and defaults absent allergens to notStarted',
+      () async {
+        final eggReaction = _makeLog(
+          id: 'log-e1',
+          allergenKey: 'egg',
+          hadReaction: true,
+        );
+        final dairyClean1 = _makeLog(id: 'log-d1', allergenKey: 'dairy');
+        final dairyClean2 = _makeLog(id: 'log-d2', allergenKey: 'dairy');
+        final dairyClean3 = _makeLog(id: 'log-d3', allergenKey: 'dairy');
+        final peanutClean = _makeLog(id: 'log-p1');
+
+        when(() => mockRepo.getLogs(any())).thenAnswer(
+          (_) async => Result.success([
+            eggReaction,
+            dairyClean1,
+            dairyClean2,
+            dairyClean3,
+            peanutClean,
+          ]),
+        );
+
+        final result = await sut.getAllergenStatuses(_babyId);
+
+        expect(result.isSuccess, isTrue);
+        final statuses = result.dataOrNull!;
+        // Every canonical key is present.
+        for (final key in kAllergenKeys) {
+          expect(statuses.containsKey(key), isTrue, reason: 'missing $key');
+        }
+        // 3 clean dairy logs → safe.
+        expect(statuses['dairy'], AllergenStatus.safe);
+        // 1 reaction-flagged egg log → flagged.
+        expect(statuses['egg'], AllergenStatus.flagged);
+        // 1 clean peanut log → inProgress.
+        expect(statuses['peanut'], AllergenStatus.inProgress);
+        // Untouched allergens default to notStarted.
+        expect(statuses['shellfish'], AllergenStatus.notStarted);
+        expect(statuses['fish'], AllergenStatus.notStarted);
+        // Only the bare-minimum repo call is used (no Supabase, no state read).
+        verify(() => mockRepo.getLogs(_babyId)).called(1);
+        verifyNever(() => mockRepo.getProgramState(any()));
+      },
+    );
+
+    test('propagates repository failure', () async {
+      when(() => mockRepo.getLogs(any())).thenAnswer(
+        (_) async => const Result.failure(ServerException('DB error')),
+      );
+
+      final result = await sut.getAllergenStatuses(_babyId);
 
       expect(result.isFailure, isTrue);
     });
