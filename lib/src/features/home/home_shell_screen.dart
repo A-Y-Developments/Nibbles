@@ -60,8 +60,11 @@ class _HomeShellScreenState extends ConsumerState<HomeShellScreen> {
           labelTextStyle: WidgetStateProperty.resolveWith((states) {
             final selected = states.contains(WidgetState.selected);
             return TextStyle(
-              color: selected ? AppColors.greenDeep : AppColors.fgFaint,
+              fontFamily: 'Parkinsans',
+              fontSize: 10,
+              height: 1,
               fontWeight: FontWeight.w700,
+              color: selected ? AppColors.greenDeep : AppColors.fgFaint,
             );
           }),
         ),
