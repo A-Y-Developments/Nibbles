@@ -16,6 +16,8 @@ class Recipe with _$Recipe {
     required String howToServe,
     String? notes,
     String? thumbnailUrl,
+    @Default(<String>[]) List<String> nutritionTags,
+    String? category,
   }) = _Recipe;
 
   factory Recipe.fromJson(Map<String, dynamic> json) => _$RecipeFromJson(json);

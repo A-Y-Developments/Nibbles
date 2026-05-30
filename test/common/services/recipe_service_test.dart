@@ -29,16 +29,22 @@ AllergenLog _makeLog({
   createdAt: _now,
 );
 
-Recipe _makeRecipe({String id = 'r1', List<String> allergenTags = const []}) =>
-    Recipe(
-      id: id,
-      title: 'Test Recipe $id',
-      ageRange: '6m+',
-      allergenTags: allergenTags,
-      ingredients: const [],
-      steps: const ['Step 1'],
-      howToServe: 'Serve warm.',
-    );
+Recipe _makeRecipe({
+  String id = 'r1',
+  List<String> allergenTags = const [],
+  List<String> nutritionTags = const [],
+  String? category,
+}) => Recipe(
+  id: id,
+  title: 'Test Recipe $id',
+  ageRange: '6m+',
+  allergenTags: allergenTags,
+  ingredients: const [],
+  steps: const ['Step 1'],
+  howToServe: 'Serve warm.',
+  nutritionTags: nutritionTags,
+  category: category,
+);
 
 void main() {
   late MockRecipeRepository mockRecipeRepo;
@@ -272,6 +278,91 @@ void main() {
       );
 
       final result = await sut.getRecipeById('r-missing');
+
+      expect(result.isFailure, isTrue);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // getRecipesByCategory
+  // ---------------------------------------------------------------------------
+
+  group('RecipeService.getRecipesByCategory', () {
+    test('buckets recipes by category; null/empty land in Other', () async {
+      when(
+        () => mockAllergenRepo.getLogs(_babyId),
+      ).thenAnswer((_) async => const Result.success([]));
+      when(() => mockRecipeRepo.getAllRecipes()).thenAnswer(
+        (_) async => Result.success([
+          _makeRecipe(category: 'Purees'),
+          _makeRecipe(id: 'r2', category: 'Purees'),
+          _makeRecipe(id: 'r3', category: 'Finger Foods'),
+          _makeRecipe(id: 'r4'),
+          _makeRecipe(id: 'r5', category: ''),
+        ]),
+      );
+
+      final result = await sut.getRecipesByCategory(_babyId);
+
+      expect(result.isSuccess, isTrue);
+      final grouped = result.dataOrNull!;
+      expect(
+        grouped.keys,
+        containsAll(<String>['Purees', 'Finger Foods', 'Other']),
+      );
+      expect(grouped['Purees'], hasLength(2));
+      expect(grouped['Finger Foods'], hasLength(1));
+      expect(grouped['Other'], hasLength(2));
+    });
+
+    test('repo failure → propagates', () async {
+      when(
+        () => mockAllergenRepo.getLogs(_babyId),
+      ).thenAnswer((_) async => const Result.success([]));
+      when(() => mockRecipeRepo.getAllRecipes()).thenAnswer(
+        (_) async => const Result.failure(ServerException('DB error')),
+      );
+
+      final result = await sut.getRecipesByCategory(_babyId);
+
+      expect(result.isFailure, isTrue);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // getRecipesByNutritionTag
+  // ---------------------------------------------------------------------------
+
+  group('RecipeService.getRecipesByNutritionTag', () {
+    test('returns only recipes whose nutrition_tags contain the tag', () async {
+      when(
+        () => mockAllergenRepo.getLogs(_babyId),
+      ).thenAnswer((_) async => const Result.success([]));
+      when(() => mockRecipeRepo.getAllRecipes()).thenAnswer(
+        (_) async => Result.success([
+          _makeRecipe(nutritionTags: ['Iron-rich', 'Quick']),
+          _makeRecipe(id: 'r2', nutritionTags: ['Quick']),
+          _makeRecipe(id: 'r3'),
+        ]),
+      );
+
+      final result = await sut.getRecipesByNutritionTag(_babyId, 'Iron-rich');
+
+      expect(result.isSuccess, isTrue);
+      final recipes = result.dataOrNull!;
+      expect(recipes, hasLength(1));
+      expect(recipes.first.id, 'r1');
+    });
+
+    test('repo failure → propagates', () async {
+      when(
+        () => mockAllergenRepo.getLogs(_babyId),
+      ).thenAnswer((_) async => const Result.success([]));
+      when(() => mockRecipeRepo.getAllRecipes()).thenAnswer(
+        (_) async => const Result.failure(ServerException('DB error')),
+      );
+
+      final result = await sut.getRecipesByNutritionTag(_babyId, 'Iron-rich');
 
       expect(result.isFailure, isTrue);
     });

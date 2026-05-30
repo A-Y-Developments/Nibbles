@@ -89,6 +89,42 @@ class RecipeService {
   Future<Result<Recipe>> getRecipeById(String recipeId) =>
       _recipeRepo.getRecipeById(recipeId);
 
+  /// Groups recipes by category. Recipes with null/empty category land in the
+  /// 'Other' bucket. Failures from [getAllRecipes] propagate unchanged.
+  Future<Result<Map<String, List<Recipe>>>> getRecipesByCategory(
+    String babyId,
+  ) async {
+    final result = await getAllRecipes(babyId);
+    if (result.isFailure) {
+      return Result.failure(result.errorOrNull!);
+    }
+
+    final grouped = <String, List<Recipe>>{};
+    for (final recipe in result.dataOrNull!) {
+      final key = (recipe.category == null || recipe.category!.isEmpty)
+          ? 'Other'
+          : recipe.category!;
+      grouped.putIfAbsent(key, () => <Recipe>[]).add(recipe);
+    }
+    return Result.success(grouped);
+  }
+
+  /// Returns recipes whose [Recipe.nutritionTags] contain [tag] (case-sensitive
+  /// exact match). Failures from [getAllRecipes] propagate unchanged.
+  Future<Result<List<Recipe>>> getRecipesByNutritionTag(
+    String babyId,
+    String tag,
+  ) async {
+    final result = await getAllRecipes(babyId);
+    if (result.isFailure) {
+      return Result.failure(result.errorOrNull!);
+    }
+    final filtered = result.dataOrNull!
+        .where((r) => r.nutritionTags.contains(tag))
+        .toList();
+    return Result.success(filtered);
+  }
+
   /// Returns the set of allergen keys for which [babyId] has had a reaction.
   Future<Result<Set<String>>> getFlaggedAllergenKeys(String babyId) async {
     final logsResult = await _allergenRepo.getLogs(babyId);
