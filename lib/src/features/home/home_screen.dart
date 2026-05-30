@@ -17,7 +17,6 @@ import 'package:nibbles/src/common/domain/enums/emoji_taste.dart';
 import 'package:nibbles/src/common/services/allergen_service.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/features/allergen/log/allergen_log_controller.dart';
-import 'package:nibbles/src/features/allergen/log/allergen_log_sheet.dart';
 import 'package:nibbles/src/features/home/home_controller.dart';
 import 'package:nibbles/src/features/home/home_state.dart';
 import 'package:nibbles/src/features/recipe/library/widgets/recipe_grid_card.dart';
@@ -259,18 +258,16 @@ class _HomeContent extends ConsumerWidget {
     final boardItem = state.currentAllergenBoardItem;
     if (boardItem == null) return;
 
-    final logged = await showAllergenLogSheet(
-      context,
-      babyId: babyId,
-      allergenKey: boardItem.allergen.key,
-      allergenName: boardItem.allergen.name,
-      allergenEmoji: boardItem.allergen.emoji,
+    final logged = await context.pushNamed<bool>(
+      AppRoute.allergenLogCreate.name,
+      pathParameters: {'allergenKey': boardItem.allergen.key},
     );
 
     if (logged ?? false) {
       ref.invalidate(homeControllerProvider(babyId));
 
-      // If a reaction was logged, show GP referral dialog.
+      // If a reaction was logged, show GP referral dialog. The capture
+      // controller is keepAlive so its last state survives the route pop.
       final logState = ref.read(allergenLogControllerProvider);
       if (logState.hadReaction == true && context.mounted) {
         await showDialog<void>(

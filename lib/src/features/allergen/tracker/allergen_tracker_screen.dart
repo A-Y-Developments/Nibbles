@@ -9,7 +9,6 @@ import 'package:nibbles/src/common/domain/entities/allergen_log.dart';
 import 'package:nibbles/src/common/domain/entities/baby.dart';
 import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
-import 'package:nibbles/src/features/allergen/log/allergen_log_sheet.dart';
 import 'package:nibbles/src/features/allergen/tracker/allergen_tracker_controller.dart';
 import 'package:nibbles/src/features/allergen/tracker/allergen_tracker_state.dart';
 import 'package:nibbles/src/features/allergen/tracker/widgets/allergen_progress_card.dart';
@@ -98,12 +97,9 @@ class _TrackerBodyState extends ConsumerState<_TrackerBody> {
   }
 
   Future<void> _startIntroduce(Allergen allergen) async {
-    final logged = await showAllergenLogSheet(
-      context,
-      babyId: widget.babyId,
-      allergenKey: allergen.key,
-      allergenName: allergen.name,
-      allergenEmoji: allergen.emoji,
+    final logged = await context.pushNamed<bool>(
+      AppRoute.allergenLogCreate.name,
+      pathParameters: {'allergenKey': allergen.key},
     );
 
     if ((logged ?? false) && mounted) {
@@ -352,14 +348,18 @@ class _OngoingList extends StatelessWidget {
             Text('Reaction Log', style: textTheme.titleMedium),
             const SizedBox(height: AppSizes.sm),
             for (final entry in _reverseIndexed(logs)) ...[
-              ReactionLogRow(
-                log: entry.log,
-                logIndex: entry.index,
-                babyInitial: babyInitial,
-                // TODO(NIB-93): route to read-only log detail when that
-                // screen exists; for now we route to the allergen detail.
-                onTap: () => onAllergenTap(
-                  _allergenForKey(entry.log.allergenKey),
+              Builder(
+                builder: (context) => ReactionLogRow(
+                  log: entry.log,
+                  logIndex: entry.index,
+                  babyInitial: babyInitial,
+                  onTap: () => context.pushNamed(
+                    AppRoute.allergenLogDetail.name,
+                    pathParameters: {
+                      'allergenKey': entry.log.allergenKey,
+                      'logId': entry.log.id,
+                    },
+                  ),
                 ),
               ),
               const SizedBox(height: AppSizes.sm),
@@ -369,9 +369,6 @@ class _OngoingList extends StatelessWidget {
       ),
     );
   }
-
-  Allergen _allergenForKey(String key) =>
-      allergens.firstWhere((a) => a.key == key);
 
   /// Returns logs newest-first while keeping a deterministic 1-based "Log N"
   /// numbering. N is the position in the original (oldest-first) sequence,

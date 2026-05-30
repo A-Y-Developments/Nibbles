@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
@@ -12,7 +13,7 @@ import 'package:nibbles/src/features/allergen/detail/widgets/detail_header_card.
 import 'package:nibbles/src/features/allergen/detail/widgets/detail_segment_bar.dart';
 import 'package:nibbles/src/features/allergen/detail/widgets/log_entry_card.dart';
 import 'package:nibbles/src/features/allergen/detail/widgets/reaction_log_header.dart';
-import 'package:nibbles/src/features/allergen/log/allergen_log_sheet.dart';
+import 'package:nibbles/src/routing/route_enums.dart';
 
 class AllergenDetailScreen extends ConsumerWidget {
   const AllergenDetailScreen({required this.allergenKey, super.key});
@@ -83,12 +84,9 @@ class _AllergenDetailView extends ConsumerWidget {
       : state.babyName.characters.first.toUpperCase();
 
   Future<void> _onAddPressed(BuildContext context, WidgetRef ref) async {
-    final saved = await showAllergenLogSheet(
-      context,
-      babyId: state.babyId,
-      allergenKey: state.allergen.key,
-      allergenName: state.allergen.name,
-      allergenEmoji: state.allergen.emoji,
+    final saved = await context.pushNamed<bool>(
+      AppRoute.allergenLogCreate.name,
+      pathParameters: {'allergenKey': state.allergen.key},
     );
     if (saved ?? false) {
       ref.invalidate(allergenDetailControllerProvider(allergenKey));
@@ -144,6 +142,13 @@ class _AllergenDetailView extends ConsumerWidget {
                 log: e.value,
                 logNumber: e.key + 1,
                 babyInitial: _babyInitial,
+                onTap: () => context.pushNamed(
+                  AppRoute.allergenLogDetail.name,
+                  pathParameters: {
+                    'allergenKey': allergenKey,
+                    'logId': e.value.id,
+                  },
+                ),
               ),
             )
           else

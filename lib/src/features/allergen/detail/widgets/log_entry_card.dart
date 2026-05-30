@@ -11,19 +11,20 @@ import 'package:nibbles/src/common/domain/entities/allergen_log.dart';
 /// Safe/Unsafe pill (from `hadReaction`), notes preview, optional
 /// attachment chip (from `attachmentTitle`), chevron.
 ///
-/// Rows are NON-TAPPABLE — no read-only log-detail route exists yet.
-/// Follow-up: make rows tappable once a log-detail route lands.
+/// Rows route to the read-only log detail via [onTap] (NIB-127).
 class LogEntryCard extends StatelessWidget {
   const LogEntryCard({
     required this.log,
     required this.logNumber,
     required this.babyInitial,
+    this.onTap,
     super.key,
   });
 
   final AllergenLog log;
   final int logNumber;
   final String babyInitial;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -35,6 +36,7 @@ class LogEntryCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSizes.sm),
       child: AppCard(
+        onTap: onTap,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
