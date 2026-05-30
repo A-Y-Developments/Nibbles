@@ -10,6 +10,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:nibbles/firebase_options.dart';
 import 'package:nibbles/src/app.dart';
 import 'package:nibbles/src/app/config/flavor_config.dart';
+import 'package:nibbles/src/app/qa_bypass.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -52,6 +53,11 @@ Future<void> bootstrap({required Flavor flavor}) async {
   await Hive.openBox<String>('allergens');
   await Hive.openBox<dynamic>('local_flags');
 
+  // 3a. QA bypass — when `--dart-define=NIBBLES_QA_BYPASS=true` is set, pre-
+  // populate the four onboarding flags so the GoRouter redirect reaches
+  // `/home` without auth. No-op when the flag is false.
+  await seedQaLocalFlags();
+
   // 4. Firebase init (firebase options wired in NIB-3)
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
@@ -76,5 +82,10 @@ Future<void> bootstrap({required Flavor flavor}) async {
       : FlavorConfig.instance.revenueCatGoogleKey;
   await Purchases.configure(PurchasesConfiguration(revenueCatKey));
 
-  runApp(const ProviderScope(child: App()));
+  runApp(
+    ProviderScope(
+      overrides: qaBypassOverrides(),
+      child: const App(),
+    ),
+  );
 }
