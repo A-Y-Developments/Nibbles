@@ -26,6 +26,7 @@ enum AppRoute {
   paywall(path: '/subscription/paywall', name: 'paywall'),
   home(path: '/home', name: 'home'),
   mealPlan(path: '/home/meal', name: 'meal-plan'),
+  mealPlanMap(path: '/home/meal/map', name: 'meal-plan-map'),
   shoppingList(path: '/home/shopping-list', name: 'shopping-list'),
   recipeLibrary(path: '/home/recipe', name: 'recipe-library'),
   allergenTracker(path: '/home/allergen/tracker', name: 'allergen-tracker'),
