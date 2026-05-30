@@ -91,6 +91,13 @@ class FakeAnalytics implements Analytics {
       _record('subscription_restored');
 
   @override
+  Future<void> logAllPlansViewed() async => _record('all_plans_viewed');
+
+  @override
+  Future<void> logPlanSelected({required String period}) async =>
+      _record('plan_selected', {'period': period});
+
+  @override
   Future<void> logAllergenLogCreated({
     required String allergenKey,
     bool hasAttachment = false,
