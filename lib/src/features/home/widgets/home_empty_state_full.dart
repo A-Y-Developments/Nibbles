@@ -119,7 +119,7 @@ class ReadyToStartCard extends StatelessWidget {
             "Track allergen introductions and plan baby's meals.",
             textAlign: TextAlign.center,
             style: textTheme.bodyLarge?.copyWith(
-              color: AppColors.fgDefault,
+              color: AppColors.fgFaint,
             ),
           ),
           const SizedBox(height: AppSizes.lg),

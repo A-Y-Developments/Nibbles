@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
+import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
 import 'package:nibbles/src/common/components/cards/app_card.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
@@ -50,19 +51,17 @@ class HomeNoMealsState extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
+          const Text(
             'No Meals Mapped Yet',
             textAlign: TextAlign.center,
-            style: textTheme.displaySmall?.copyWith(
-              color: AppColors.fgStrong,
-            ),
+            style: AppTypography.emptyStateTitle,
           ),
           const SizedBox(height: AppSizes.sm),
           Text(
             "Tap below to add today's first meal.",
             textAlign: TextAlign.center,
-            style: textTheme.bodyLarge?.copyWith(
-              color: AppColors.fgMuted,
+            style: textTheme.bodySmall?.copyWith(
+              color: AppColors.fgFaint,
             ),
           ),
           const SizedBox(height: AppSizes.md),
