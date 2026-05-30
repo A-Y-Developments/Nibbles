@@ -7,10 +7,11 @@ import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
 
 /// Card for an allergen the user is currently introducing or has finished.
 ///
-/// Variants:
-///  - [AllergenStatus.inProgress] — coral linear bar (N/3).
-///  - [AllergenStatus.safe]       — green linear bar (3/3) + Safe chip.
-///  - [AllergenStatus.flagged]    — coral bar filled, plus a Flagged chip.
+/// Visual spec — Figma frames 1089:17373 / 1116:18287 (board) +
+/// AllergenProgres instances 1525:20068 (Safe) / 1525:19423 (Ongoing):
+///  - Allergen icon (coralSoft circle) · name · status pill
+///  - "N/3 times " subhead (Figma copy — trailing space preserved)
+///  - 3-segment progress bar (filled segments = clean log count)
 class AllergenProgressCard extends StatelessWidget {
   const AllergenProgressCard({
     required this.allergen,
@@ -24,35 +25,35 @@ class AllergenProgressCard extends StatelessWidget {
   final Allergen allergen;
   final AllergenStatus status;
 
-  /// Logs without `hadReaction == true`. Drives the 0/3 bar fill.
+  /// Logs without `hadReaction == true`. Drives the segmented bar fill.
   final int cleanLogCount;
 
-  /// All logs for this allergen (used for "Log N total" caption).
+  /// All logs for this allergen (used for the "N total logs" caption).
   final int totalLogCount;
 
   final VoidCallback onTap;
 
-  AppLinearProgressVariant get _variant {
+  AppSegmentedProgressTone get _barTone {
     switch (status) {
       case AllergenStatus.safe:
-        return AppLinearProgressVariant.green;
+        return AppSegmentedProgressTone.green;
       case AllergenStatus.flagged:
+        return AppSegmentedProgressTone.flag;
       case AllergenStatus.inProgress:
       case AllergenStatus.notStarted:
-        return AppLinearProgressVariant.coral;
+        return AppSegmentedProgressTone.green;
     }
   }
 
-  /// 0..1 — clamps clean logs at 3 (the "introduced" target).
-  double get _progress => (cleanLogCount.clamp(0, 3)) / 3;
-
-  Widget? get _trailingChip {
+  Widget? _trailingChip() {
     switch (status) {
       case AllergenStatus.safe:
         return const AppChip(label: 'Safe', tone: AppChipTone.safe);
       case AllergenStatus.flagged:
         return const AppChip(label: 'Flagged', tone: AppChipTone.flag);
       case AllergenStatus.inProgress:
+        // Salmon-ghost pill: AppChipTone.neutral is the salmon-ghost token.
+        return const AppChip(label: 'Ongoing');
       case AllergenStatus.notStarted:
         return null;
     }
@@ -61,59 +62,60 @@ class AllergenProgressCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final trailingChip = _trailingChip;
+    final trailingChip = _trailingChip();
+    final clamped = cleanLogCount.clamp(0, 3);
 
     return AppCard(
       onTap: onTap,
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: AppSizes.avatarMd,
-            height: AppSizes.avatarMd,
-            decoration: const BoxDecoration(
-              color: AppColors.coralSoft,
-              shape: BoxShape.circle,
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              allergen.emoji,
-              style: const TextStyle(fontSize: 24, height: 1),
-            ),
-          ),
-          const SizedBox(width: AppSizes.sp12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
+          Row(
+            children: [
+              Container(
+                width: AppSizes.avatarMd,
+                height: AppSizes.avatarMd,
+                decoration: const BoxDecoration(
+                  color: AppColors.coralSoft,
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  allergen.emoji,
+                  style: const TextStyle(fontSize: 24, height: 1),
+                ),
+              ),
+              const SizedBox(width: AppSizes.sp12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Expanded(
-                      child: Text(
-                        allergen.name,
-                        style: textTheme.labelLarge,
+                    Text(allergen.name, style: textTheme.titleSmall),
+                    const SizedBox(height: 2),
+                    Text(
+                      // Figma verbatim: keeps the trailing space on "N/3 times ".
+                      '$clamped/3 times ',
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: AppColors.fgMuted,
                       ),
                     ),
-                    if (trailingChip != null) trailingChip,
                   ],
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  '${cleanLogCount.clamp(0, 3)}/3 times',
-                  style: textTheme.bodySmall,
-                ),
-                const SizedBox(height: AppSizes.sm),
-                AppLinearProgress(value: _progress, variant: _variant),
-                if (totalLogCount > cleanLogCount) ...[
-                  const SizedBox(height: AppSizes.xs),
-                  Text(
-                    '$totalLogCount log${totalLogCount == 1 ? '' : 's'} total',
-                    style: textTheme.bodySmall,
-                  ),
-                ],
-              ],
-            ),
+              ),
+              if (trailingChip != null) trailingChip,
+            ],
           ),
+          const SizedBox(height: AppSizes.sp12),
+          AppSegmentedProgressBar(filledCount: clamped, tone: _barTone),
+          if (totalLogCount > cleanLogCount) ...[
+            const SizedBox(height: AppSizes.xs),
+            Text(
+              '$totalLogCount log${totalLogCount == 1 ? '' : 's'} total',
+              style: textTheme.bodySmall,
+            ),
+          ],
         ],
       ),
     );

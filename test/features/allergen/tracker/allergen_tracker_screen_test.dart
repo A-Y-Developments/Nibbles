@@ -217,29 +217,38 @@ void main() {
         await tester.pumpWidget(buildSubject(_PushRecorder()));
         await tester.pumpAndSettle();
 
-        // Ongoing: in progress / flagged / safe allergens shown by name.
-        expect(find.text('In progress'), findsOneWidget);
+        // Ongoing tab section header and See All link present.
+        expect(find.text('Allergen Exposure'), findsOneWidget);
+        expect(find.text('See All'), findsOneWidget);
+        // "Safe foods" stat column is shown on Ongoing tab.
+        expect(find.text('Safe foods'), findsOneWidget);
         // Big 11 stat column is hidden in Ongoing → no Not Tried label.
         expect(find.text('Not Tried'), findsNothing);
-        // Reaction Log list rendered for the single reaction log.
-        expect(find.text('Reaction Log'), findsOneWidget);
+        // Reaction Log list rendered for the logged entries (may be below
+        // the fold depending on test viewport, so allow off-screen).
+        expect(
+          find.text('Reaction Log', skipOffstage: false),
+          findsOneWidget,
+        );
 
         // Switch to Big 11 tab.
         await tester.tap(find.text('Big 11'));
         await tester.pumpAndSettle();
 
-        // SliverList builds lazily — only on-screen cards exist in the
-        // widget tree. Assert at least one StartIntroduceCard renders for
-        // the not-started allergens; exact counts are verified via the stat
-        // columns below.
-        expect(find.byType(StartIntroduceCard), findsWidgets);
+        // Big 11 grouped sections.
+        expect(find.text('Already Tried'), findsOneWidget);
+        // Big 11 "Ongoing" header is hidden (no in-progress allergens here).
+        expect(find.text('Not Tried'), findsWidgets);
+        // SliverList builds lazily — some StartIntroduceCards may be below
+        // the fold. skipOffstage: false to include them.
+        expect(
+          find.byType(StartIntroduceCard, skipOffstage: false),
+          findsWidgets,
+        );
         // Stat-column labels — Not Safe + Not Tried are unique strings on
-        // Big 11. ("Safe" also appears on each safe-status pill so we use
-        // the unambiguous Not Safe / Not Tried labels.)
+        // Big 11.
         expect(find.text('Not Safe'), findsOneWidget);
-        expect(find.text('Not Tried'), findsOneWidget);
-        // Stat-column numeric values: 6 not-tried (Not Safe=1 also shows
-        // '1' next to it). Assert each is present at least once.
+        // Stat-column numeric values: 6 not-tried, 1 flagged, 2 safe.
         expect(find.text('6'), findsWidgets);
         expect(find.text('1'), findsWidgets);
         expect(find.text('2'), findsWidgets);
@@ -259,8 +268,8 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('No introductions yet'), findsOneWidget);
-        // No In-Progress section header.
-        expect(find.text('In progress'), findsNothing);
+        // No Allergen Exposure section header in empty state.
+        expect(find.text('Allergen Exposure'), findsNothing);
       },
     );
 
@@ -290,6 +299,34 @@ void main() {
         expect(recorder.lastName, AppRoute.allergenLogCreate.name);
         // First alphabetically-displayed allergen in sequence order is peanut.
         expect(recorder.lastPathParams?['allergenKey'], 'peanut');
+      },
+    );
+
+    testWidgets(
+      'See All link on Ongoing tab switches segment to Big 11 (no nav)',
+      (tester) async {
+        stubReads(
+          statuses: {
+            'peanut': AllergenStatus.safe,
+            for (final a in _allergens.skip(1))
+              a.key: AllergenStatus.notStarted,
+          },
+          logs: [_makeLog(id: 'p1', allergenKey: 'peanut')],
+        );
+
+        await tester.pumpWidget(buildSubject(_PushRecorder()));
+        await tester.pumpAndSettle();
+
+        // Pre-tap: Ongoing tab content is showing the Allergen Exposure header.
+        expect(find.text('Allergen Exposure'), findsOneWidget);
+        expect(find.text('Already Tried'), findsNothing);
+
+        await tester.tap(find.text('See All'));
+        await tester.pumpAndSettle();
+
+        // After tapping See All, Big 11 sections are shown.
+        expect(find.text('Already Tried'), findsOneWidget);
+        expect(find.text('Allergen Exposure'), findsNothing);
       },
     );
   });
