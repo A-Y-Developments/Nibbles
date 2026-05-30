@@ -98,7 +98,47 @@ void main() {
   );
 
   testWidgets(
-    'confirm-mismatch shows inline error preserved from the redesign',
+    'shows guidance helper under both fields in the initial state '
+    '(Figma 971:10136)',
+    (tester) async {
+      await tester.pumpWidget(
+        _wrap(const ResetPasswordScreen(), buildOverrides()),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Password must be at least 8 characters'),
+        findsNWidgets(3),
+      );
+    },
+  );
+
+  testWidgets(
+    'shows "Password is too short" under both fields when password is short '
+    '(Figma 971:10148)',
+    (tester) async {
+      await tester.pumpWidget(
+        _wrap(const ResetPasswordScreen(), buildOverrides()),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.byKey(const Key('reset_password_new_field')),
+        'short',
+      );
+      await tester.enterText(
+        find.byKey(const Key('reset_password_confirm_field')),
+        'short',
+      );
+      await tester.pump();
+
+      expect(find.text('Password is too short'), findsNWidgets(2));
+    },
+  );
+
+  testWidgets(
+    "shows \"Password doesn't match\" helper on retype when values differ "
+    '(Figma 971:10160)',
     (tester) async {
       await tester.pumpWidget(
         _wrap(const ResetPasswordScreen(), buildOverrides()),
@@ -115,7 +155,7 @@ void main() {
       );
       await tester.pump();
 
-      expect(find.text('Passwords do not match.'), findsOneWidget);
+      expect(find.text("Password doesn't match"), findsOneWidget);
     },
   );
 
