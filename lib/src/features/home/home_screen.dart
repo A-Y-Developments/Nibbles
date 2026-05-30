@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
@@ -14,6 +17,8 @@ import 'package:nibbles/src/features/home/widgets/home_header.dart';
 import 'package:nibbles/src/features/home/widgets/ongoing_introduced_card.dart';
 import 'package:nibbles/src/features/home/widgets/stat_ring_card.dart';
 import 'package:nibbles/src/features/home/widgets/todays_meals_card.dart';
+import 'package:nibbles/src/logging/analytics.dart';
+import 'package:nibbles/src/routing/route_enums.dart';
 
 /// NIB-86 scaffold.
 ///
@@ -22,11 +27,43 @@ import 'package:nibbles/src/features/home/widgets/todays_meals_card.dart';
 /// implementations land in NIB-65 (header + greeting + stat ring), NIB-77
 /// (ongoing card + day chips + today's meals + guidance) and NIB-96
 /// (empty-state variants).
-class HomeScreen extends ConsumerWidget {
+///
+/// Converted to [ConsumerStatefulWidget] in NIB-106 so `initState` can fire
+/// `logScreenView('home')` once on mount via a post-frame callback.
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Emit screen_view('home') once on the first frame. Guarded + unawaited
+    // so an uninitialised Firebase / analytics hiccup never throws into the
+    // frame callback (mirrors splash_screen.dart).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(_logScreenView());
+    });
+  }
+
+  Future<void> _logScreenView() async {
+    try {
+      await Analytics.instance.logScreenView(screenName: 'home');
+    } on Object catch (_) {
+      // Analytics is best-effort; never surface to the UI.
+    }
+  }
+
+  void _onCreateFirstMeal() {
+    unawaited(Analytics.instance.logHomeCreateFirstMealTapped());
+    context.goNamed(AppRoute.mealPlan.name);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final babyIdAsync = ref.watch(currentBabyIdProvider);
 
     return babyIdAsync.when(
@@ -36,21 +73,27 @@ class HomeScreen extends ConsumerWidget {
       ),
       data: (babyId) {
         if (babyId == null) {
-          return const Scaffold(
+          return Scaffold(
             backgroundColor: AppColors.background,
-            body: SafeArea(child: HomeEmptyStateFull()),
+            body: SafeArea(
+              child: HomeEmptyStateFull(onCreateMealPlan: _onCreateFirstMeal),
+            ),
           );
         }
-        return _HomeBody(babyId: babyId);
+        return _HomeBody(
+          babyId: babyId,
+          onCreateFirstMeal: _onCreateFirstMeal,
+        );
       },
     );
   }
 }
 
 class _HomeBody extends ConsumerWidget {
-  const _HomeBody({required this.babyId});
+  const _HomeBody({required this.babyId, required this.onCreateFirstMeal});
 
   final String babyId;
+  final VoidCallback onCreateFirstMeal;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -62,15 +105,19 @@ class _HomeBody extends ConsumerWidget {
         message: err is AppException ? err.message : 'Something went wrong.',
         onRetry: () => ref.invalidate(homeControllerProvider(babyId)),
       ),
-      data: (state) => _HomeContent(state: state),
+      data: (state) => _HomeContent(
+        state: state,
+        onCreateFirstMeal: onCreateFirstMeal,
+      ),
     );
   }
 }
 
 class _HomeContent extends StatelessWidget {
-  const _HomeContent({required this.state});
+  const _HomeContent({required this.state, required this.onCreateFirstMeal});
 
   final HomeState state;
+  final VoidCallback onCreateFirstMeal;
 
   @override
   Widget build(BuildContext context) {
@@ -81,7 +128,10 @@ class _HomeContent extends StatelessWidget {
       return Scaffold(
         backgroundColor: AppColors.background,
         body: SafeArea(
-          child: HomeEmptyStateFull(babyName: baby?.name),
+          child: HomeEmptyStateFull(
+            babyName: baby?.name,
+            onCreateMealPlan: onCreateFirstMeal,
+          ),
         ),
       );
     }

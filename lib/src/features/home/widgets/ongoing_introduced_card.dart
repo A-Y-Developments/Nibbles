@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/constants/allergen_emoji.dart';
@@ -6,6 +8,7 @@ import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
 import 'package:nibbles/src/common/services/helpers/derive_allergen_status.dart';
+import 'package:nibbles/src/logging/analytics.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 
 /// Home — Ongoing-introduced card (NIB-77, Figma 1242:10616).
@@ -62,8 +65,14 @@ class OngoingIntroducedCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppSizes.radiusXl),
           child: InkWell(
             borderRadius: BorderRadius.circular(AppSizes.radiusXl),
-            onTap: () =>
-                context.pushNamed(AppRoute.allergenTracker.name),
+            onTap: () {
+              unawaited(
+                Analytics.instance.logHomeOngoingAllergenTapped(
+                  allergenKey: key,
+                ),
+              );
+              context.pushNamed(AppRoute.allergenTracker.name);
+            },
             child: Ink(
               decoration: BoxDecoration(
                 color: AppColors.surface,

@@ -414,6 +414,23 @@ class Analytics {
   }
 
   // ---------------------------------------------------------------------------
+  // Home (NIB-106) — non-PII only: allergen_key + intent taps.
+  // ---------------------------------------------------------------------------
+
+  Future<void> logHomeOngoingAllergenTapped({
+    required String allergenKey,
+  }) async {
+    await _logEvent(
+      'home_ongoing_allergen_tapped',
+      parameters: {'allergen_key': allergenKey},
+    );
+  }
+
+  Future<void> logHomeCreateFirstMealTapped() async {
+    await _logEvent('home_create_first_meal_tapped');
+  }
+
+  // ---------------------------------------------------------------------------
   // Screen tracking
   // ---------------------------------------------------------------------------
 

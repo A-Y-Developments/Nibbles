@@ -254,6 +254,17 @@ class FakeAnalytics implements Analytics {
       _record('meal_plan_add_to_shop_list', {'day_count': dayCount});
 
   @override
+  Future<void> logHomeOngoingAllergenTapped({
+    required String allergenKey,
+  }) async => _record('home_ongoing_allergen_tapped', {
+    'allergen_key': allergenKey,
+  });
+
+  @override
+  Future<void> logHomeCreateFirstMealTapped() async =>
+      _record('home_create_first_meal_tapped');
+
+  @override
   Future<void> logScreenView({required String screenName}) async =>
       _record('screen_view', {'screen_name': screenName});
 }

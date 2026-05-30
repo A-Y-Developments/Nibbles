@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/domain/entities/meal_plan_entry.dart';
+import 'package:nibbles/src/logging/analytics.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 
 /// Home — Today's meals card (NIB-77, Figma 1242:10630).
@@ -184,10 +187,15 @@ class _MealRow extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-        onTap: () => context.pushNamed(
-          AppRoute.recipeDetail.name,
-          pathParameters: {'recipeId': entry.recipeId},
-        ),
+        onTap: () {
+          unawaited(
+            Analytics.instance.logRecipeViewed(recipeId: entry.recipeId),
+          );
+          context.pushNamed(
+            AppRoute.recipeDetail.name,
+            pathParameters: {'recipeId': entry.recipeId},
+          );
+        },
         child: Padding(
           padding: const EdgeInsets.all(AppSizes.xs),
           child: Row(
