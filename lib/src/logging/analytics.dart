@@ -268,6 +268,105 @@ class Analytics {
   }
 
   // ---------------------------------------------------------------------------
+  // Meal Plan (NIB-109) — non-PII only: recipe IDs, ISO date strings, counts.
+  // ---------------------------------------------------------------------------
+
+  Future<void> logMealPlanViewed({required int dayCount}) async {
+    await _logEvent('meal_plan_viewed', parameters: {'day_count': dayCount});
+  }
+
+  Future<void> logMealPlanDayExpanded({required String dayOffsetIso}) async {
+    await _logEvent(
+      'meal_plan_day_expanded',
+      parameters: {'day_offset_iso': dayOffsetIso},
+    );
+  }
+
+  Future<void> logMealPlanDayCollapsed({required String dayOffsetIso}) async {
+    await _logEvent(
+      'meal_plan_day_collapsed',
+      parameters: {'day_offset_iso': dayOffsetIso},
+    );
+  }
+
+  Future<void> logMealPlanAddDateTapped() async {
+    await _logEvent('meal_plan_add_date_tapped');
+  }
+
+  Future<void> logMealPlanRecipeAssigned({
+    required String recipeId,
+    required String dayOffsetIso,
+  }) async {
+    await _logEvent(
+      'meal_plan_recipe_assigned',
+      parameters: {'recipe_id': recipeId, 'day_offset_iso': dayOffsetIso},
+    );
+  }
+
+  Future<void> logMealPlanRecipeRemoved({required String recipeId}) async {
+    await _logEvent(
+      'meal_plan_recipe_removed',
+      parameters: {'recipe_id': recipeId},
+    );
+  }
+
+  Future<void> logMealPrepCreateStarted() async {
+    await _logEvent('meal_prep_create_started');
+  }
+
+  Future<void> logMealPrepRangeSelected({required int days}) async {
+    await _logEvent('meal_prep_range_selected', parameters: {'days': days});
+  }
+
+  Future<void> logMealPrepBrowseSelected({required String recipeId}) async {
+    await _logEvent(
+      'meal_prep_browse_selected',
+      parameters: {'recipe_id': recipeId},
+    );
+  }
+
+  Future<void> logMealPrepBrowseDeselected({required String recipeId}) async {
+    await _logEvent(
+      'meal_prep_browse_deselected',
+      parameters: {'recipe_id': recipeId},
+    );
+  }
+
+  Future<void> logMealPrepMappingAssigned({
+    required String recipeId,
+    required String dayOffsetIso,
+  }) async {
+    await _logEvent(
+      'meal_prep_mapping_assigned',
+      parameters: {'recipe_id': recipeId, 'day_offset_iso': dayOffsetIso},
+    );
+  }
+
+  Future<void> logMealPrepCommitted({
+    required int recipeCount,
+    required int dayCount,
+  }) async {
+    await _logEvent(
+      'meal_prep_committed',
+      parameters: {'recipe_count': recipeCount, 'day_count': dayCount},
+    );
+  }
+
+  Future<void> logMealPlanClearWeekConfirmed({required int dayCount}) async {
+    await _logEvent(
+      'meal_plan_clear_week_confirmed',
+      parameters: {'day_count': dayCount},
+    );
+  }
+
+  Future<void> logMealPlanAddToShopList({required int dayCount}) async {
+    await _logEvent(
+      'meal_plan_add_to_shop_list',
+      parameters: {'day_count': dayCount},
+    );
+  }
+
+  // ---------------------------------------------------------------------------
   // Screen tracking
   // ---------------------------------------------------------------------------
 

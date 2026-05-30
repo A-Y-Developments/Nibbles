@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nibbles/src/app/constants/allergen_emoji.dart';
@@ -12,6 +14,7 @@ import 'package:nibbles/src/common/services/helpers/derive_allergen_status.dart'
 import 'package:nibbles/src/common/services/recipe_service.dart';
 import 'package:nibbles/src/features/meal_plan/sheets/widgets/browse_meal_recipe_card.dart';
 import 'package:nibbles/src/features/meal_plan/sheets/widgets/recommendation_carousel_section.dart';
+import 'package:nibbles/src/logging/analytics.dart';
 
 /// Bottom sheet shown via [showModalBottomSheet]. Returns the picked recipes
 /// or null on cancel. Multi-select Browse Meal sheet for the meal-plan
@@ -143,11 +146,14 @@ class _BrowseMealSheetState extends ConsumerState<_BrowseMealSheet> {
 
   void _toggleRecipe(Recipe r) {
     if (_isUnsafe(r)) return;
+    final analytics = ref.read(analyticsProvider);
     setState(() {
       if (_selectedRecipeIds.contains(r.id)) {
         _selectedRecipeIds.remove(r.id);
+        unawaited(analytics.logMealPrepBrowseDeselected(recipeId: r.id));
       } else {
         _selectedRecipeIds.add(r.id);
+        unawaited(analytics.logMealPrepBrowseSelected(recipeId: r.id));
       }
     });
   }
