@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
 import 'package:nibbles/src/common/services/allergen_service.dart';
@@ -5,6 +7,7 @@ import 'package:nibbles/src/common/services/helpers/derive_allergen_status.dart'
 import 'package:nibbles/src/common/services/local_flag_service.dart';
 import 'package:nibbles/src/common/services/recipe_service.dart';
 import 'package:nibbles/src/features/recipe/library/recipe_library_state.dart';
+import 'package:nibbles/src/logging/analytics.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'recipe_library_controller.g.dart';
@@ -79,6 +82,12 @@ class RecipeLibraryController extends _$RecipeLibraryController {
     if (current == null) return;
     final trimmed = query.trim();
     if (trimmed == current.searchQuery) return;
+    final wasEmpty = current.searchQuery.isEmpty;
     state = AsyncData(current.copyWith(searchQuery: trimmed));
+    if (wasEmpty && trimmed.isNotEmpty) {
+      unawaited(
+        Analytics.instance.logRecipeSearch(queryLength: trimmed.length),
+      );
+    }
   }
 }

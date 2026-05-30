@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
@@ -16,14 +18,31 @@ import 'package:nibbles/src/features/recipe/detail/widgets/recipe_banner_card.da
 import 'package:nibbles/src/features/recipe/detail/widgets/recipe_hero.dart';
 import 'package:nibbles/src/features/recipe/detail/widgets/recipe_tip_card.dart';
 import 'package:nibbles/src/features/recipe/detail/widgets/storage_card_row.dart';
+import 'package:nibbles/src/logging/analytics.dart';
 
-class RecipeDetailScreen extends ConsumerWidget {
+class RecipeDetailScreen extends ConsumerStatefulWidget {
   const RecipeDetailScreen({required this.recipeId, super.key});
 
   final String recipeId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<RecipeDetailScreen> createState() => _RecipeDetailScreenState();
+}
+
+class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(
+        Analytics.instance.logRecipeViewed(recipeId: widget.recipeId),
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final babyIdAsync = ref.watch(currentBabyIdProvider);
 
     return babyIdAsync.when(
@@ -42,7 +61,7 @@ class RecipeDetailScreen extends ConsumerWidget {
             body: Center(child: Text('No baby profile found.')),
           );
         }
-        return _RecipeDetailBody(babyId: babyId, recipeId: recipeId);
+        return _RecipeDetailBody(babyId: babyId, recipeId: widget.recipeId);
       },
     );
   }

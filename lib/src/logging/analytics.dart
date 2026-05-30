@@ -260,10 +260,57 @@ class Analytics {
     await _logEvent('recipe_viewed', parameters: {'recipe_id': recipeId});
   }
 
-  Future<void> logRecipeAddedToMealPlan({required String recipeId}) async {
+  Future<void> logRecipeAddedToMealPlan({
+    required String recipeId,
+    int dayCount = 1,
+  }) async {
     await _logEvent(
       'recipe_added_to_meal_plan',
-      parameters: {'recipe_id': recipeId},
+      parameters: {'recipe_id': recipeId, 'day_count': dayCount},
+    );
+  }
+
+  Future<void> logRecipeAddedToShoppingList({
+    required String recipeId,
+    required int itemCount,
+  }) async {
+    await _logEvent(
+      'recipe_added_to_shopping_list',
+      parameters: {'recipe_id': recipeId, 'item_count': itemCount},
+    );
+  }
+
+  /// Fires when the recipe library search query transitions from empty to
+  /// non-empty. NO `query` param (PII). [queryLength] is optional and bucketed
+  /// only by character count.
+  Future<void> logRecipeSearch({int? queryLength}) async {
+    await _logEvent(
+      'recipe_search',
+      parameters: {
+        if (queryLength != null) 'query_length': queryLength,
+      },
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Starting Guide
+  // ---------------------------------------------------------------------------
+
+  /// Fires when the Starting Guide hub mounts. [source] is one of
+  /// 'hub' / 'article' / 'unknown'.
+  // TODO(NIB-53): callers should pass `source` via GoRouter `extra` so we can
+  // distinguish hub vs article entry points.
+  Future<void> logStartingGuideOpened({required String source}) async {
+    await _logEvent(
+      'starting_guide_opened',
+      parameters: {'source': source},
+    );
+  }
+
+  Future<void> logStartingGuideArticleViewed({required String slug}) async {
+    await _logEvent(
+      'starting_guide_article_viewed',
+      parameters: {'slug': slug},
     );
   }
 
