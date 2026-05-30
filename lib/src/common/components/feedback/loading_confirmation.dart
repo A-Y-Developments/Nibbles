@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
-import 'package:nibbles/src/common/components/brand/quatrefoil.dart';
+import 'package:nibbles/src/common/components/brand/petal_blob.dart';
 
 /// Two-phase composition used by passive loading -> "You all set!"
 /// confirmation screens.
@@ -55,7 +55,7 @@ class LoadingConfirmation extends StatelessWidget {
           child: Stack(
             alignment: Alignment.center,
             children: [
-              _PetalBlob(key: blobKey),
+              PetalBlob(key: blobKey),
               _PhaseLabel(
                 phase: phase,
                 successLabel: successLabel,
@@ -65,55 +65,6 @@ class LoadingConfirmation extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-/// Layered petal mark mimicking the Figma `LoadingAnimation` frame: a pale
-/// outer quatrefoil + a sage inner quatrefoil + a soft butter glow dot at
-/// the core (the bare circle reads as flat without the glow).
-class _PetalBlob extends StatelessWidget {
-  const _PetalBlob({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: AppSizes.avatarXl * 1.84,
-      height: AppSizes.avatarXl * 1.84,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // Outer pale-butter petal blob (spec petal layer 1+2 composite).
-          const Quatrefoil(
-            size: AppSizes.avatarXl * 1.84,
-            coreColor: AppColors.butter,
-          ),
-          // Inner sage petal — smaller, scales down to ~52% of outer.
-          const Quatrefoil(
-            size: AppSizes.avatarXl * 0.96,
-            petalColor: AppColors.green,
-            coreColor: AppColors.greenDeep,
-          ),
-          // Soft butter glow dot at the center (spec blurred lime dot).
-          DecoratedBox(
-            decoration: BoxDecoration(
-              color: AppColors.butter,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.butter.withValues(alpha: 0.9),
-                  blurRadius: AppSizes.sm,
-                  spreadRadius: AppSizes.xs,
-                ),
-              ],
-            ),
-            child: const SizedBox(
-              width: AppSizes.sp12 * 1.4,
-              height: AppSizes.sp12 * 1.4,
-            ),
-          ),
-        ],
       ),
     );
   }

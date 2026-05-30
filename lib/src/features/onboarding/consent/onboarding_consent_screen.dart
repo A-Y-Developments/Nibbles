@@ -9,20 +9,28 @@ import 'package:nibbles/src/features/onboarding/onboarding_controller.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 import 'package:nibbles/src/utils/age_in_months.dart';
 
-/// Consent / housekeeping — final onboarding stage.
+/// Consent / housekeeping — final onboarding stage (NIB-100).
 ///
-/// Per NIB-100 (Figma 971:10184 / 971:10198): Quatrefoil + title1 +
-/// age-gated checkbox list (2 boxes if baby is >= 6 months old; 3 boxes if
-/// younger, with an extra "full responsibility" acknowledgement). CTA is
-/// disabled until every box is checked. Consent itself is EPHEMERAL per
-/// NIB-120 — checkbox state lives in this widget only, never persisted.
+/// Figma nodes: 971:10184 (>=6mo, empty) / 971:10215 (>=6mo, checked) /
+/// 971:10198 (<6mo, empty) / 971:10229 (<6mo, checked).
 ///
-/// Submit path: validates name/DOB via [OnboardingController.submit] which
-/// creates the baby via the baby-profile service. On success this screen
-/// sets `onboarding_done` + navigates to `/home` (the GoRouter redirect
-/// cannot fire without the flag and nothing else flips it). On failure the
-/// inline P1 error from `state.submitErrorMessage` is shown with a Retry
-/// button.
+/// Composition (top → bottom):
+///   - Title `Before we start, some housekeeping`
+///   - Brand `PetalBlob` (shared with baby-setup-loading)
+///   - Age-gated checkbox list (2 boxes when baby >= 6mo, 3 when younger —
+///     extra row carries the "full responsibility" early-solids clause)
+///   - Bottom row: butter `AppRoundButton` (back) + primary CTA
+///     `Check confirmation` (disabled) → `Yes, I Understand` (enabled)
+///
+/// All checkbox copy is verbatim from the Figma audit (no trailing periods,
+/// matches the spec strings byte-for-byte).
+///
+/// Consent itself is EPHEMERAL per NIB-120 — checkbox state lives in this
+/// widget only, never persisted. Submit path validates name/DOB via
+/// [OnboardingController.submit] which creates the baby via the baby-profile
+/// service. On success this screen sets `onboarding_done` + navigates to
+/// `/home`. On failure the inline P1 error from `state.submitErrorMessage`
+/// is shown with a Retry button.
 class OnboardingConsentScreen extends ConsumerStatefulWidget {
   const OnboardingConsentScreen({super.key});
 
@@ -65,6 +73,16 @@ class _OnboardingConsentScreenState
     context.goNamed(AppRoute.home.name);
   }
 
+  void _onBack() {
+    if (context.canPop()) {
+      context.pop();
+      return;
+    }
+    // Defensive fall-through: result is the previous stage in the new flow
+    // (NIB-51). The hoisted controller (keepAlive) preserves answers.
+    context.goNamed(AppRoute.onboardingResult.name);
+  }
+
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
@@ -80,18 +98,7 @@ class _OnboardingConsentScreenState
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        leading: Navigator.of(context).canPop()
-            ? IconButton(
-                icon: const Icon(Icons.arrow_back_rounded),
-                onPressed: () => Navigator.of(context).pop(),
-              )
-            : null,
-      ),
       body: SafeArea(
-        top: false,
         child: Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: AppSizes.pagePaddingH,
@@ -100,12 +107,13 @@ class _OnboardingConsentScreenState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Center(child: Quatrefoil()),
-              const SizedBox(height: AppSizes.lg),
               Text(
                 'Before we start, some housekeeping',
+                textAlign: TextAlign.center,
                 style: textTheme.displaySmall,
               ),
+              const SizedBox(height: AppSizes.lg),
+              const Center(child: PetalBlob(size: 180)),
               const SizedBox(height: AppSizes.xl),
               Expanded(
                 child: SingleChildScrollView(
@@ -115,12 +123,12 @@ class _OnboardingConsentScreenState
                       for (var i = 0; i < _checks.length; i++) ...[
                         _ConsentCheckboxRow(
                           key: Key('onboarding_consent_checkbox_$i'),
-                          label: _labelFor(i, _checks.length),
+                          label: _labelFor(i),
                           value: _checks[i],
                           onChanged: (v) => _toggle(i, value: v),
                         ),
                         if (i < _checks.length - 1)
-                          const SizedBox(height: AppSizes.md),
+                          const SizedBox(height: AppSizes.sm),
                       ],
                       if (errorMessage != null) ...[
                         const SizedBox(height: AppSizes.md),
@@ -135,10 +143,24 @@ class _OnboardingConsentScreenState
                 ),
               ),
               const SizedBox(height: AppSizes.md),
-              AppPillButton(
-                key: const Key('onboarding_consent_submit'),
-                label: ctaLabel,
-                onPressed: canConfirm ? _onConfirm : null,
+              Row(
+                children: [
+                  AppRoundButton(
+                    key: const Key('onboarding_consent_back'),
+                    icon: const Icon(Icons.arrow_back_rounded),
+                    tone: AppRoundButtonTone.butter,
+                    semanticLabel: 'Back',
+                    onPressed: _onBack,
+                  ),
+                  const SizedBox(width: AppSizes.sp12),
+                  Expanded(
+                    child: AppPillButton(
+                      key: const Key('onboarding_consent_submit'),
+                      label: ctaLabel,
+                      onPressed: canConfirm ? _onConfirm : null,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -147,27 +169,31 @@ class _OnboardingConsentScreenState
     );
   }
 
-  /// Copy for each checkbox row. Index 2 only renders when [count] == 3 (baby
-  /// younger than 6 months) and carries the early-solids acknowledgement.
-  String _labelFor(int index, int count) {
+  /// Verbatim copy for each checkbox row from the Figma audit
+  /// (.figma-audit/onboarding/baby-setup-{gt6mo,lt6mo}-1/report.md).
+  ///
+  /// Index 2 only renders when `_checks.length == 3` (baby younger than
+  /// 6 months) and carries the early-solids responsibility acknowledgement.
+  String _labelFor(int index) {
     switch (index) {
       case 0:
-        return 'I understand Nibbles is guidance, not medical advice.';
+        return 'I understand that Nibbles shares general educational '
+            'information, not medical advice, and that parents make the '
+            'final decisions for their baby';
       case 1:
-        return 'I will watch my baby closely during meals and stop if anything '
-            "doesn't feel right.";
+        return 'I confirm I have received medical clearance and understand '
+            'the above';
       case 2:
-        // Only shown when count == 3 — verbatim from the spec.
         return 'I accept full responsibility for my decision to start solids '
-            'before 6 months.';
+            'before 6 months';
       default:
         return '';
     }
   }
 }
 
-/// Row composed of [AppCheckbox] + label text. Tapping the label toggles the
-/// checkbox so the whole row is a hit target (kit pattern).
+/// Row composed of [AppCheckbox] + label text. Tapping the row toggles the
+/// checkbox so the whole label is a hit target (kit pattern).
 class _ConsentCheckboxRow extends StatelessWidget {
   const _ConsentCheckboxRow({
     required this.label,
@@ -193,7 +219,7 @@ class _ConsentCheckboxRow extends StatelessWidget {
           children: [
             Padding(
               // Nudge the checkbox down so it visually aligns with the first
-              // line of label text (label has a 22pt line-height; checkbox 24).
+              // line of label text.
               padding: const EdgeInsets.only(top: 2),
               child: AppCheckbox(
                 value: value,
@@ -204,7 +230,7 @@ class _ConsentCheckboxRow extends StatelessWidget {
             Expanded(
               child: Text(
                 label,
-                style: textTheme.bodyLarge?.copyWith(
+                style: textTheme.bodyMedium?.copyWith(
                   color: AppColors.fgDefault,
                 ),
               ),
@@ -217,7 +243,7 @@ class _ConsentCheckboxRow extends StatelessWidget {
 }
 
 /// P1 inline error surface — destructive-tinted panel with a Retry affordance.
-/// Retry is null while submit is in-flight or the boxes are unchecked, so the
+/// Retry is null while submit is in-flight or the boxes are unchecked so the
 /// user can't fire a duplicate submit mid-request.
 class _InlineError extends StatelessWidget {
   const _InlineError({

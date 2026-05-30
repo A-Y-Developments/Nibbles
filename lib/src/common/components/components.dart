@@ -3,6 +3,7 @@
 library;
 
 export 'brand/brand_logo.dart';
+export 'brand/petal_blob.dart';
 export 'brand/quatrefoil.dart';
 export 'buttons/app_pill_button.dart';
 export 'buttons/app_round_button.dart';
