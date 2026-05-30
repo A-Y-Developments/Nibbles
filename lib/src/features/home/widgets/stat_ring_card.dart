@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:nibbles/gen/fonts.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
@@ -180,11 +179,7 @@ class _StatRing extends StatelessWidget {
                   const SizedBox(width: AppSizes.sp2),
                   Text(
                     max,
-                    style: const TextStyle(
-                      fontFamily: FontFamily.parkinsans,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      height: 1,
+                    style: AppTypography.textTheme.bodySmall?.copyWith(
                       color: AppColors.fgFaint,
                     ),
                   ),
