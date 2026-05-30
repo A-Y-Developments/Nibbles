@@ -1,23 +1,37 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:nibbles/src/app/constants/allergen_emoji.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
-import 'package:nibbles/src/common/domain/entities/allergen_board_item.dart';
-import 'package:nibbles/src/common/domain/entities/allergen_log.dart';
+import 'package:nibbles/src/app/themes/app_typography.dart';
+import 'package:nibbles/src/common/domain/entities/baby.dart';
 import 'package:nibbles/src/common/domain/entities/meal_plan_entry.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
+import 'package:nibbles/src/common/services/meal_plan_service.dart';
+import 'package:nibbles/src/features/meal_plan/map/map_meals_state.dart';
 import 'package:nibbles/src/features/meal_plan/meal_plan_controller.dart';
 import 'package:nibbles/src/features/meal_plan/meal_plan_state.dart';
+import 'package:nibbles/src/features/meal_plan/sheets/browse_meal_sheet.dart';
+import 'package:nibbles/src/features/meal_plan/widgets/add_date_pill.dart';
 import 'package:nibbles/src/features/meal_plan/widgets/add_to_shopping_list_modal.dart';
-import 'package:nibbles/src/features/meal_plan/widgets/recipe_select_modal.dart';
+import 'package:nibbles/src/features/meal_plan/widgets/clear_confirm_dialog.dart';
+import 'package:nibbles/src/features/meal_plan/widgets/day_accordion_card.dart';
+import 'package:nibbles/src/features/meal_plan/widgets/meal_plan_empty_state.dart';
+import 'package:nibbles/src/features/meal_plan/widgets/meal_plan_header.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
-import 'package:table_calendar/table_calendar.dart';
+import 'package:nibbles/src/utils/age_in_months.dart';
 
+/// Screen-level overflow menu actions (Figma 971:7999).
+enum _ScreenMenuAction { addToShopList, createMealPrep, clearCurrentWeek }
+
+/// Rewritten Meal Plan screen (NIB-69).
+///
+/// Renders a butter-gradient [MealPlanHeader] + a vertical list of
+/// [DayAccordionCard]s + an '+ Add Date' footer (or a [MealPlanEmptyState]
+/// when there are no entries). Consumes NIB-87's [showBrowseMealSheet],
+/// NIB-95's `AppRoute.mealPlanMap` + [MapMealsArgs], and NIB-103's
+/// [showClearMealPlanConfirm].
 class MealPlanScreen extends ConsumerWidget {
   const MealPlanScreen({super.key});
 
@@ -45,125 +59,182 @@ class MealPlanScreen extends ConsumerWidget {
 
 // ---------------------------------------------------------------------------
 
-class _MealPlanBody extends ConsumerWidget {
+class _MealPlanBody extends ConsumerStatefulWidget {
   const _MealPlanBody({required this.babyId});
 
   final String babyId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final controllerAsync = ref.watch(mealPlanControllerProvider(babyId));
-    final notifier = ref.read(mealPlanControllerProvider(babyId).notifier);
+  ConsumerState<_MealPlanBody> createState() => _MealPlanBodyState();
+}
+
+class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
+  /// Local override that extends the visible window beyond the controller's
+  /// `windowEnd`. '+ Add Date' increments this by 1 day. Cleared when the
+  /// controller state changes window (e.g. invalidate on the day rollover).
+  DateTime? _extraEnd;
+
+  @override
+  Widget build(BuildContext context) {
+    final controllerAsync = ref.watch(
+      mealPlanControllerProvider(widget.babyId),
+    );
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: controllerAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => _ErrorView(
-          onRetry: () => ref.invalidate(mealPlanControllerProvider(babyId)),
+        error: (_, __) => _ErrorView(
+          onRetry: () =>
+              ref.invalidate(mealPlanControllerProvider(widget.babyId)),
         ),
-        data: (state) => _MealPlanContent(
-          babyId: babyId,
-          state: state,
-          notifier: notifier,
-          onAddMeal: (date) => _openRecipeSelect(context, ref, date),
-          onRemoveEntry: (entry) => _removeEntry(context, ref, entry),
-          onClearDay: (date) => _confirmClearDay(context, ref, date),
-          onOpenShoppingList: () => _openShoppingListModal(context, ref, state),
-        ),
+        data: _build,
       ),
     );
   }
 
-  Future<void> _openRecipeSelect(
-    BuildContext context,
-    WidgetRef ref,
-    DateTime date,
-  ) async {
-    final recipe = await showModalBottomSheet<Recipe>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppSizes.radiusLg),
-        ),
-      ),
-      builder: (_) => RecipeSelectModal(babyId: babyId),
+  Widget _build(MealPlanState state) {
+    final baby = state.baby;
+    if (baby == null) {
+      return const Center(child: Text('No baby profile found.'));
+    }
+    if (state.entries.isEmpty) {
+      return MealPlanEmptyState(
+        babyName: baby.name,
+        onCreateMealPlan: _onCreateMealPlanFromEmpty,
+      );
+    }
+    return _PopulatedView(
+      babyId: widget.babyId,
+      state: state,
+      baby: baby,
+      effectiveWindowEnd: _effectiveWindowEnd(state),
+      onAddDate: _onAddDate,
+      onScreenMenuSelected: _onScreenMenuSelected,
+      onDayAdd: _onDayAdd,
+      onDayMenuSelected: _onDayMenuSelected,
+      onToggleExpanded: (day) => ref
+          .read(mealPlanControllerProvider(widget.babyId).notifier)
+          .toggleExpanded(day),
+      onRecipeTap: _onRecipeTap,
     );
+  }
 
-    if (recipe == null) return;
-    if (!context.mounted) return;
+  DateTime _effectiveWindowEnd(MealPlanState state) {
+    final extra = _extraEnd;
+    if (extra == null) return state.windowEnd;
+    return extra.isAfter(state.windowEnd) ? extra : state.windowEnd;
+  }
 
+  void _onAddDate() {
+    final state = ref
+        .read(mealPlanControllerProvider(widget.babyId))
+        .valueOrNull;
+    if (state == null) return;
+    setState(() {
+      final current = _effectiveWindowEnd(state);
+      _extraEnd = current.add(const Duration(days: 1));
+    });
+  }
+
+  Future<void> _onCreateMealPlanFromEmpty(DateTimeRange range) async {
+    final picked = await showBrowseMealSheet(
+      context,
+      babyId: widget.babyId,
+      startDate: range.start,
+      endDate: range.end,
+    );
+    if (picked == null || picked.isEmpty) return;
+    if (!mounted) return;
+    await _pushMapMeals(picked, range.start, range.end);
+  }
+
+  Future<void> _onDayAdd(DateTime day) async {
+    final picked = await showBrowseMealSheet(
+      context,
+      babyId: widget.babyId,
+      startDate: day,
+      endDate: day,
+    );
+    if (picked == null || picked.isEmpty) return;
+    if (!mounted) return;
+
+    final assignments = [
+      for (final r in picked)
+        RecipeAssignment(recipeId: r.id, dayOffset: 0),
+    ];
     final ok = await ref
-        .read(mealPlanControllerProvider(babyId).notifier)
-        .assignRecipe(date, recipe.id);
-    if (!ok && context.mounted) {
+        .read(mealPlanControllerProvider(widget.babyId).notifier)
+        .appendBulkPrep(
+          startDate: day,
+          endDate: day,
+          assignments: assignments,
+        );
+    if (!ok && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Couldn't add to meal plan. Try again.")),
       );
     }
   }
 
-  Future<void> _removeEntry(
-    BuildContext context,
-    WidgetRef ref,
-    MealPlanEntry entry,
-  ) async {
-    final ok = await ref
-        .read(mealPlanControllerProvider(babyId).notifier)
-        .removeEntry(entry.id);
-    if (!ok && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Couldn't remove meal. Try again.")),
-      );
+  Future<void> _onScreenMenuSelected(_ScreenMenuAction action) async {
+    final state = ref
+        .read(mealPlanControllerProvider(widget.babyId))
+        .valueOrNull;
+    if (state == null) return;
+    switch (action) {
+      case _ScreenMenuAction.addToShopList:
+        await _openAddToShoppingList(state.windowStart);
+      case _ScreenMenuAction.createMealPrep:
+        await _onCreateMealPrep(state);
+      case _ScreenMenuAction.clearCurrentWeek:
+        await _onClearWindow(state);
     }
   }
 
-  Future<void> _confirmClearDay(
-    BuildContext context,
-    WidgetRef ref,
-    DateTime date,
+  Future<void> _onDayMenuSelected(
+    DateTime day,
+    DayCardMenuAction action,
   ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Clear meals'),
-        content: const Text(
-          'This will remove all meals for this day. Are you sure?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-            child: const Text('Clear'),
-          ),
-        ],
-      ),
+    final state = ref
+        .read(mealPlanControllerProvider(widget.babyId))
+        .valueOrNull;
+    if (state == null) return;
+    switch (action) {
+      case DayCardMenuAction.addToShopList:
+        await _openAddToShoppingList(day);
+      case DayCardMenuAction.clearCurrentWeek:
+        await _onClearWindow(state);
+    }
+  }
+
+  Future<void> _onCreateMealPrep(MealPlanState state) async {
+    final picked = await showBrowseMealSheet(
+      context,
+      babyId: widget.babyId,
+      startDate: state.windowStart,
+      endDate: _effectiveWindowEnd(state),
     );
+    if (picked == null || picked.isEmpty) return;
+    if (!mounted) return;
+    await _pushMapMeals(picked, state.windowStart, _effectiveWindowEnd(state));
+  }
 
+  Future<void> _onClearWindow(MealPlanState state) async {
+    final confirmed = await showClearMealPlanConfirm(context);
     if (confirmed != true) return;
-    if (!context.mounted) return;
-
+    if (!mounted) return;
     final ok = await ref
-        .read(mealPlanControllerProvider(babyId).notifier)
-        .clearDay(date);
-    if (!ok && context.mounted) {
+        .read(mealPlanControllerProvider(widget.babyId).notifier)
+        .clearRange(state.windowStart, _effectiveWindowEnd(state));
+    if (!ok && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Couldn't clear meals. Try again.")),
       );
     }
   }
 
-  Future<void> _openShoppingListModal(
-    BuildContext context,
-    WidgetRef ref,
-    MealPlanState state,
-  ) async {
+  Future<void> _openAddToShoppingList(DateTime date) async {
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -173,750 +244,187 @@ class _MealPlanBody extends ConsumerWidget {
           top: Radius.circular(AppSizes.radiusLg),
         ),
       ),
-      builder: (_) =>
-          AddToShoppingListModal(babyId: babyId, date: state.selectedDate),
+      builder: (_) => AddToShoppingListModal(babyId: widget.babyId, date: date),
+    );
+  }
+
+  Future<void> _pushMapMeals(
+    List<Recipe> picked,
+    DateTime startDate,
+    DateTime endDate,
+  ) async {
+    final result = await context.pushNamed<bool>(
+      AppRoute.mealPlanMap.name,
+      extra: MapMealsArgs(
+        pickedRecipes: picked,
+        startDate: startDate,
+        endDate: endDate,
+      ),
+    );
+    if ((result ?? false) && mounted) {
+      ref.invalidate(mealPlanControllerProvider(widget.babyId));
+    }
+  }
+
+  void _onRecipeTap(String recipeId) {
+    context.pushNamed(
+      AppRoute.recipeDetail.name,
+      pathParameters: {'recipeId': recipeId},
     );
   }
 }
 
 // ---------------------------------------------------------------------------
-// Main content
+// Populated view
 // ---------------------------------------------------------------------------
 
-class _MealPlanContent extends StatelessWidget {
-  const _MealPlanContent({
+class _PopulatedView extends StatelessWidget {
+  const _PopulatedView({
     required this.babyId,
     required this.state,
-    required this.notifier,
-    required this.onAddMeal,
-    required this.onRemoveEntry,
-    required this.onClearDay,
-    required this.onOpenShoppingList,
+    required this.baby,
+    required this.effectiveWindowEnd,
+    required this.onAddDate,
+    required this.onScreenMenuSelected,
+    required this.onDayAdd,
+    required this.onDayMenuSelected,
+    required this.onToggleExpanded,
+    required this.onRecipeTap,
   });
 
   final String babyId;
   final MealPlanState state;
-  final MealPlanController notifier;
-  final Future<void> Function(DateTime) onAddMeal;
-  final Future<void> Function(MealPlanEntry) onRemoveEntry;
-  final Future<void> Function(DateTime) onClearDay;
-  final VoidCallback onOpenShoppingList;
+  final Baby baby;
+  final DateTime effectiveWindowEnd;
+  final VoidCallback onAddDate;
+  final ValueChanged<_ScreenMenuAction> onScreenMenuSelected;
+  final ValueChanged<DateTime> onDayAdd;
+  final void Function(DateTime, DayCardMenuAction) onDayMenuSelected;
+  final ValueChanged<DateTime> onToggleExpanded;
+  final ValueChanged<String> onRecipeTap;
 
-  static const _months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
+  static DateTime _dateOnly(DateTime dt) =>
+      DateTime(dt.year, dt.month, dt.day);
 
-  String _weekLabel() {
-    final weekEnd = state.weekStart.add(const Duration(days: 6));
-    final sm = _months[state.weekStart.month - 1];
-    final em = _months[weekEnd.month - 1];
-    if (state.weekStart.month == weekEnd.month) {
-      return '${state.weekStart.day} - ${weekEnd.day} $em';
-    }
-    return '${state.weekStart.day} $sm - ${weekEnd.day} $em';
+  /// Match the controller's UTC date-only normalization (see
+  /// `MealPlanController._expandedKey`) so accordion expand state survives
+  /// across rebuilds.
+  static DateTime _expandedKey(DateTime day) =>
+      DateTime.utc(day.year, day.month, day.day);
+
+  List<DateTime> _days() {
+    final start = _dateOnly(state.windowStart);
+    final end = _dateOnly(effectiveWindowEnd);
+    final count = end.difference(start).inDays + 1;
+    return [for (var i = 0; i < count; i++) start.add(Duration(days: i))];
   }
 
-  List<MealPlanEntry> get _selectedMeals => state.meals.where((e) {
-    final ep = DateTime(e.planDate.year, e.planDate.month, e.planDate.day);
-    return ep == state.selectedDate;
-  }).toList();
-
-  String _dayMealLabel() {
-    final today = DateTime.now();
-    final todayOnly = DateTime(today.year, today.month, today.day);
-    if (state.selectedDate == todayOnly) return "Today's Meals";
-    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    final dayLabel = days[state.selectedDate.weekday - 1];
-    return '$dayLabel ${state.selectedDate.day} Meals';
+  List<MealPlanEntry> _entriesForDay(DateTime day) {
+    final key = _dateOnly(day);
+    return state.entries.where((e) {
+      final p = _dateOnly(e.planDate);
+      return p == key;
+    }).toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    final selectedMeals = _selectedMeals;
+    final days = _days();
 
-    return SafeArea(
-      child: CustomScrollView(
-        slivers: [
-          // ── Page title
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSizes.pagePaddingH,
-                AppSizes.pagePaddingV,
-                AppSizes.pagePaddingH,
-                0,
-              ),
-              child: Text(
-                'Meal Plan',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
+    return Column(
+      children: [
+        MealPlanHeader(
+          babyName: baby.name,
+          ageMonths: ageInMonths(baby.dateOfBirth),
+          dayCount: days.length,
+          overflowButton: Builder(
+            builder: (btnContext) => MealPlanOverflowButton(
+              onTap: () => _openScreenMenu(btnContext),
             ),
           ),
-
-          // ── Week nav + calendar toggle
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSizes.xs,
-                AppSizes.xs,
-                AppSizes.xs,
-                0,
-              ),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.chevron_left),
-                    color: AppColors.text,
-                    onPressed: notifier.previousWeek,
-                  ),
-                  Text(
-                    _weekLabel(),
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.chevron_right),
-                    color: AppColors.text,
-                    onPressed: notifier.nextWeek,
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    icon: Icon(
-                      state.calendarExpanded
-                          ? Icons.view_week_outlined
-                          : Icons.calendar_month_outlined,
-                      color: AppColors.subtext,
-                    ),
-                    tooltip: state.calendarExpanded
-                        ? 'Switch to week strip'
-                        : 'Switch to month view',
-                    onPressed: notifier.toggleCalendar,
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // ── Calendar strip or month calendar
-          SliverToBoxAdapter(
-            child: state.calendarExpanded
-                ? _MonthCalendar(
-                    selectedDate: state.selectedDate,
-                    meals: state.meals,
-                    onDaySelected: notifier.selectDate,
-                  )
-                : _DayStrip(
-                    weekStart: state.weekStart,
-                    selectedDate: state.selectedDate,
-                    meals: state.meals,
-                    onDaySelected: notifier.selectDate,
-                  ),
-          ),
-
-          const SliverToBoxAdapter(child: SizedBox(height: AppSizes.lg)),
-
-          // ── Current Allergen section
-          if (state.currentAllergenBoardItem != null) ...[
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSizes.pagePaddingH,
-                ),
-                child: Text(
-                  'Current Allergen',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: AppSizes.sm)),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSizes.pagePaddingH,
-                ),
-                child: _CurrentAllergenCard(
-                  boardItem: state.currentAllergenBoardItem!,
-                ),
-              ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: AppSizes.lg)),
-          ],
-
-          // ── Day meal section header
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSizes.pagePaddingH,
-              ),
-              child: Row(
-                children: [
-                  Text(
-                    _dayMealLabel(),
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const Spacer(),
-                  // Add meal button
-                  IconButton(
-                    onPressed: () => onAddMeal(state.selectedDate),
-                    icon: const Icon(
-                      Icons.add,
-                      color: AppColors.subtext,
-                      size: AppSizes.iconMd,
-                    ),
-                    tooltip: 'Add meal',
-                  ),
-                  // Shopping list shortcut
-                  IconButton(
-                    icon: const Icon(
-                      Icons.shopping_cart_outlined,
-                      color: AppColors.subtext,
-                      size: AppSizes.iconMd,
-                    ),
-                    tooltip: 'Add to shopping list',
-                    onPressed: onOpenShoppingList,
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          const SliverToBoxAdapter(child: SizedBox(height: AppSizes.sm)),
-
-          // ── Meal cards or empty state
-          if (selectedMeals.isEmpty)
-            const SliverToBoxAdapter(child: _EmptyDayState())
-          else
-            SliverList(
-              delegate: SliverChildBuilderDelegate((context, i) {
-                final entry = selectedMeals[i];
-                final recipe = state.recipes[entry.recipeId];
-                return _MealCard(
-                  entry: entry,
-                  recipe: recipe,
-                  flaggedAllergenKeys: state.flaggedAllergenKeys,
-                  onRemove: () => onRemoveEntry(entry),
-                  onTap: () => context.pushNamed(
-                    AppRoute.recipeDetail.name,
-                    pathParameters: {'recipeId': entry.recipeId},
-                  ),
-                );
-              }, childCount: selectedMeals.length),
-            ),
-
-          const SliverToBoxAdapter(child: SizedBox(height: AppSizes.xl)),
-        ],
-      ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Day strip
-// ---------------------------------------------------------------------------
-
-class _DayStrip extends StatelessWidget {
-  const _DayStrip({
-    required this.weekStart,
-    required this.selectedDate,
-    required this.meals,
-    required this.onDaySelected,
-  });
-
-  final DateTime weekStart;
-  final DateTime selectedDate;
-  final List<MealPlanEntry> meals;
-  final ValueChanged<DateTime> onDaySelected;
-
-  static const _dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
-  bool _hasMeal(DateTime dateOnly) => meals.any((e) {
-    final ep = DateTime(e.planDate.year, e.planDate.month, e.planDate.day);
-    return ep == dateOnly;
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 76,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.pagePaddingH,
-          vertical: AppSizes.xs,
         ),
-        itemCount: 7,
-        itemBuilder: (context, i) {
-          final date = weekStart.add(Duration(days: i));
-          final dateOnly = DateTime(date.year, date.month, date.day);
-          final isSelected = dateOnly == selectedDate;
-          final hasMeal = _hasMeal(dateOnly);
-
-          return GestureDetector(
-            onTap: () => onDaySelected(date),
-            child: Container(
-              width: 52,
-              margin: const EdgeInsets.only(right: AppSizes.xs),
-              decoration: BoxDecoration(
-                color: isSelected ? AppColors.text : AppColors.surface,
-                borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-                border: Border.all(
-                  color: isSelected ? AppColors.text : AppColors.divider,
+        Expanded(
+          child: CustomScrollView(
+            slivers: [
+              const SliverToBoxAdapter(child: SizedBox(height: AppSizes.sm)),
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, i) {
+                    final day = days[i];
+                    return DayAccordionCard(
+                      day: day,
+                      entries: _entriesForDay(day),
+                      recipes: state.recipes,
+                      flaggedAllergenKeys: state.flaggedAllergenKeys,
+                      isExpanded: state.expanded[_expandedKey(day)] ?? false,
+                      onToggle: () => onToggleExpanded(day),
+                      onAdd: () => onDayAdd(day),
+                      onRecipeTap: onRecipeTap,
+                      onMenuSelected: (action) =>
+                          onDayMenuSelected(day, action),
+                    );
+                  },
+                  childCount: days.length,
                 ),
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    _dayLabels[date.weekday - 1],
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: isSelected
-                          ? AppColors.onPrimary
-                          : AppColors.subtext,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${date.day}',
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                      color: isSelected ? AppColors.onPrimary : AppColors.text,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Container(
-                    width: 4,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: hasMeal
-                          ? (isSelected
-                                ? AppColors.onPrimary
-                                : AppColors.primary)
-                          : Colors.transparent,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
+              SliverToBoxAdapter(child: AddDatePill(onPressed: onAddDate)),
+              const SliverToBoxAdapter(child: SizedBox(height: AppSizes.xl)),
+            ],
+          ),
+        ),
+      ],
     );
   }
-}
 
-// ---------------------------------------------------------------------------
-// Month calendar
-// ---------------------------------------------------------------------------
+  Future<void> _openScreenMenu(BuildContext context) async {
+    final renderBox = context.findRenderObject() as RenderBox?;
+    final overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox?;
+    if (renderBox == null || overlay == null) return;
 
-class _MonthCalendar extends StatelessWidget {
-  const _MonthCalendar({
-    required this.selectedDate,
-    required this.meals,
-    required this.onDaySelected,
-  });
+    final topRight = renderBox.localToGlobal(
+      Offset(renderBox.size.width, 0),
+      ancestor: overlay,
+    );
+    final position = RelativeRect.fromLTRB(
+      topRight.dx - AppSizes.pagePaddingH * 2,
+      topRight.dy + AppSizes.xxl,
+      AppSizes.pagePaddingH,
+      0,
+    );
 
-  final DateTime selectedDate;
-  final List<MealPlanEntry> meals;
-  final ValueChanged<DateTime> onDaySelected;
-
-  bool _hasMeal(DateTime day) => meals.any((e) {
-    final ep = DateTime(e.planDate.year, e.planDate.month, e.planDate.day);
-    final d = DateTime(day.year, day.month, day.day);
-    return ep == d;
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: AppSizes.pagePaddingH),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
+    final action = await showMenu<_ScreenMenuAction>(
+      context: context,
+      position: position,
+      color: AppColors.surface,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppSizes.radiusLg),
       ),
-      child: TableCalendar(
-        firstDay: DateTime.utc(2020),
-        lastDay: DateTime.utc(2030, 12),
-        focusedDay: selectedDate,
-        selectedDayPredicate: (day) => isSameDay(day, selectedDate),
-        onDaySelected: (selected, _) => onDaySelected(selected),
-        calendarBuilders: CalendarBuilders(
-          markerBuilder: (context, day, events) {
-            if (!_hasMeal(day)) return null;
-            return Positioned(
-              bottom: 4,
-              child: Container(
-                width: 4,
-                height: 4,
-                decoration: const BoxDecoration(
-                  color: AppColors.primary,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            );
-          },
-        ),
-        headerStyle: const HeaderStyle(
-          formatButtonVisible: false,
-          titleCentered: true,
-        ),
-        calendarStyle: CalendarStyle(
-          selectedDecoration: const BoxDecoration(
-            color: AppColors.text,
-            shape: BoxShape.circle,
-          ),
-          todayDecoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.15),
-            shape: BoxShape.circle,
-          ),
-          todayTextStyle: const TextStyle(
-            color: AppColors.primary,
-            fontWeight: FontWeight.w700,
-          ),
-          weekendTextStyle: const TextStyle(color: AppColors.subtext),
-          outsideDaysVisible: false,
-        ),
-        daysOfWeekStyle: const DaysOfWeekStyle(
-          weekdayStyle: TextStyle(
-            color: AppColors.subtext,
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-          ),
-          weekendStyle: TextStyle(
-            color: AppColors.hint,
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
+      items: [
+        PopupMenuItem<_ScreenMenuAction>(
+          value: _ScreenMenuAction.addToShopList,
+          child: Text(
+            'Add to shop list',
+            style: AppTypography.textTheme.bodyMedium,
           ),
         ),
-      ),
+        PopupMenuItem<_ScreenMenuAction>(
+          value: _ScreenMenuAction.createMealPrep,
+          child: Text(
+            'Create new meal prep',
+            style: AppTypography.textTheme.bodyMedium,
+          ),
+        ),
+        PopupMenuItem<_ScreenMenuAction>(
+          value: _ScreenMenuAction.clearCurrentWeek,
+          child: Text(
+            'Clear current week',
+            style: AppTypography.textTheme.bodyMedium,
+          ),
+        ),
+      ],
     );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Current allergen card
-// ---------------------------------------------------------------------------
-
-class _CurrentAllergenCard extends StatelessWidget {
-  const _CurrentAllergenCard({required this.boardItem});
-
-  final AllergenBoardItem boardItem;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final logs = boardItem.logs;
-    final allergen = boardItem.allergen;
-    final dayCount = min(logs.length, 3);
-    final lastLog = logs.isEmpty
-        ? null
-        : (List<AllergenLog>.from(
-            logs,
-          )..sort((a, b) => b.logDate.compareTo(a.logDate))).first;
-
-    final emoji = AllergenEmoji.get(allergen.key);
-
-    return GestureDetector(
-      onTap: () => context.pushNamed(AppRoute.allergenTracker.name),
-      child: Container(
-        padding: const EdgeInsets.all(AppSizes.cardPadding),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-          border: Border.all(color: AppColors.divider),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: AppSizes.avatarMd,
-              height: AppSizes.avatarMd,
-              decoration: BoxDecoration(
-                color: AppColors.surfaceVariant,
-                borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-              ),
-              child: Center(
-                child: Text(emoji, style: const TextStyle(fontSize: 24)),
-              ),
-            ),
-            const SizedBox(width: AppSizes.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Day $dayCount/3',
-                    style: textTheme.bodySmall?.copyWith(
-                      color: AppColors.subtext,
-                    ),
-                  ),
-                  Text(allergen.name, style: textTheme.titleSmall),
-                  if (lastLog != null) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      'Last logged ${_formatDate(lastLog.logDate)}',
-                      style: textTheme.bodySmall?.copyWith(
-                        color: AppColors.hint,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            OutlinedButton(
-              onPressed: () => context.pushNamed(AppRoute.allergenTracker.name),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.text,
-                side: const BorderSide(color: AppColors.divider),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSizes.md,
-                  vertical: AppSizes.xs,
-                ),
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                textStyle: Theme.of(context).textTheme.labelMedium,
-              ),
-              child: const Text('Check Allergen'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  String _formatDate(DateTime date) {
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    return '${date.day} ${months[date.month - 1]}';
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Meal card
-// ---------------------------------------------------------------------------
-
-class _MealCard extends StatelessWidget {
-  const _MealCard({
-    required this.entry,
-    required this.recipe,
-    required this.onRemove,
-    required this.onTap,
-    this.flaggedAllergenKeys = const {},
-  });
-
-  final MealPlanEntry entry;
-  final Recipe? recipe;
-  final VoidCallback onRemove;
-  final VoidCallback onTap;
-  final Set<String> flaggedAllergenKeys;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final title = recipe?.title ?? '…';
-    final allergenCount = recipe?.allergenTags.length ?? 0;
-    final flaggedTags =
-        recipe?.allergenTags.where(flaggedAllergenKeys.contains).toList() ?? [];
-    final isUnsafe = flaggedTags.isNotEmpty;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.symmetric(
-          horizontal: AppSizes.pagePaddingH,
-          vertical: AppSizes.xs,
-        ),
-        padding: const EdgeInsets.all(AppSizes.cardPadding),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          border: isUnsafe
-              ? Border.all(
-                  color: AppColors.allergenFlagged.withValues(alpha: 0.4),
-                )
-              : null,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                // Thumbnail
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-                  child: recipe?.thumbnailUrl != null
-                      ? Image.network(
-                          recipe!.thumbnailUrl!,
-                          width: 56,
-                          height: 56,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => _ThumbnailPlaceholder(),
-                        )
-                      : _ThumbnailPlaceholder(),
-                ),
-                const SizedBox(width: AppSizes.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: textTheme.labelLarge,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      if (allergenCount > 0) ...[
-                        const SizedBox(height: AppSizes.xs),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSizes.sm,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.surfaceVariant,
-                            borderRadius: BorderRadius.circular(
-                              AppSizes.radiusFull,
-                            ),
-                          ),
-                          child: Text(
-                            '$allergenCount Allergen'
-                            '${allergenCount > 1 ? 's' : ''}',
-                            style: textTheme.labelSmall?.copyWith(
-                              color: AppColors.subtext,
-                              fontSize: 11,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                PopupMenuButton<_CardMenuAction>(
-                  icon: const Icon(
-                    Icons.more_vert,
-                    color: AppColors.subtext,
-                    size: AppSizes.iconMd,
-                  ),
-                  onSelected: (action) {
-                    if (action == _CardMenuAction.remove) onRemove();
-                  },
-                  itemBuilder: (_) => const [
-                    PopupMenuItem(
-                      value: _CardMenuAction.remove,
-                      child: Text('Remove'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            if (isUnsafe) ...[
-              const SizedBox(height: AppSizes.xs),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSizes.sm,
-                  vertical: AppSizes.xs,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.allergenFlagged.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.warning_amber_rounded,
-                      size: 14,
-                      color: AppColors.allergenFlagged,
-                    ),
-                    const SizedBox(width: AppSizes.xs),
-                    Expanded(
-                      child: Text(
-                        'Contains flagged allergen: '
-                        '${flaggedTags.map((t) => '${AllergenEmoji.get(t)} '
-                            '${t.replaceAll('_', ' ')}').join(', ')}',
-                        style: textTheme.labelSmall?.copyWith(
-                          color: AppColors.allergenFlagged,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 11,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Thumbnail placeholder
-// ---------------------------------------------------------------------------
-
-class _ThumbnailPlaceholder extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(width: 56, height: 56, color: AppColors.surfaceVariant);
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Empty state
-// ---------------------------------------------------------------------------
-
-class _EmptyDayState extends StatelessWidget {
-  const _EmptyDayState();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.pagePaddingH,
-        vertical: AppSizes.lg,
-      ),
-      child: Center(
-        child: Text(
-          'No meals planned. Tap + Add to get started.',
-          style: Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(color: AppColors.hint),
-          textAlign: TextAlign.center,
-        ),
-      ),
-    );
+    if (action != null) onScreenMenuSelected(action);
   }
 }
 
@@ -939,7 +447,7 @@ class _ErrorView extends StatelessWidget {
           children: [
             Text(
               'Could not load meal plan.',
-              style: Theme.of(context).textTheme.titleMedium,
+              style: AppTypography.textTheme.titleMedium,
             ),
             const SizedBox(height: AppSizes.sm),
             FilledButton(onPressed: onRetry, child: const Text('Retry')),
@@ -949,5 +457,3 @@ class _ErrorView extends StatelessWidget {
     );
   }
 }
-
-enum _CardMenuAction { remove }
