@@ -6,7 +6,7 @@ part of 'profile_controller.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$profileControllerHash() => r'2dd992cda2c8120d7400788eb604e0d856f5eecf';
+String _$profileControllerHash() => r'495d7698b32fc3ba7ce7eeafb8fd6065cbacec91';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -36,16 +36,40 @@ abstract class _$ProfileController
   FutureOr<ProfileState> build(String babyId);
 }
 
-/// See also [ProfileController].
+/// `babyId` is retained on the family for back-compat with
+/// `profile_edit_screen.dart` which still calls
+/// `ref.invalidate(profileControllerProvider(widget.babyId))`. The id itself
+/// is not consumed here — `BabyProfileService.getBaby()` resolves the active
+/// baby from the auth session.
+///
+/// Copied from [ProfileController].
 @ProviderFor(ProfileController)
 const profileControllerProvider = ProfileControllerFamily();
 
-/// See also [ProfileController].
+/// `babyId` is retained on the family for back-compat with
+/// `profile_edit_screen.dart` which still calls
+/// `ref.invalidate(profileControllerProvider(widget.babyId))`. The id itself
+/// is not consumed here — `BabyProfileService.getBaby()` resolves the active
+/// baby from the auth session.
+///
+/// Copied from [ProfileController].
 class ProfileControllerFamily extends Family<AsyncValue<ProfileState>> {
-  /// See also [ProfileController].
+  /// `babyId` is retained on the family for back-compat with
+  /// `profile_edit_screen.dart` which still calls
+  /// `ref.invalidate(profileControllerProvider(widget.babyId))`. The id itself
+  /// is not consumed here — `BabyProfileService.getBaby()` resolves the active
+  /// baby from the auth session.
+  ///
+  /// Copied from [ProfileController].
   const ProfileControllerFamily();
 
-  /// See also [ProfileController].
+  /// `babyId` is retained on the family for back-compat with
+  /// `profile_edit_screen.dart` which still calls
+  /// `ref.invalidate(profileControllerProvider(widget.babyId))`. The id itself
+  /// is not consumed here — `BabyProfileService.getBaby()` resolves the active
+  /// baby from the auth session.
+  ///
+  /// Copied from [ProfileController].
   ProfileControllerProvider call(String babyId) {
     return ProfileControllerProvider(babyId);
   }
@@ -72,11 +96,23 @@ class ProfileControllerFamily extends Family<AsyncValue<ProfileState>> {
   String? get name => r'profileControllerProvider';
 }
 
-/// See also [ProfileController].
+/// `babyId` is retained on the family for back-compat with
+/// `profile_edit_screen.dart` which still calls
+/// `ref.invalidate(profileControllerProvider(widget.babyId))`. The id itself
+/// is not consumed here — `BabyProfileService.getBaby()` resolves the active
+/// baby from the auth session.
+///
+/// Copied from [ProfileController].
 class ProfileControllerProvider
     extends
         AutoDisposeAsyncNotifierProviderImpl<ProfileController, ProfileState> {
-  /// See also [ProfileController].
+  /// `babyId` is retained on the family for back-compat with
+  /// `profile_edit_screen.dart` which still calls
+  /// `ref.invalidate(profileControllerProvider(widget.babyId))`. The id itself
+  /// is not consumed here — `BabyProfileService.getBaby()` resolves the active
+  /// baby from the auth session.
+  ///
+  /// Copied from [ProfileController].
   ProfileControllerProvider(String babyId)
     : this._internal(
         () => ProfileController()..babyId = babyId,
