@@ -166,11 +166,12 @@ class _PhaseLabel extends StatelessWidget {
               ),
             ),
           ),
-          // Success label below the animation. Always laid out so the slot
-          // is reserved during the loading phase too; opacity gates
-          // visibility so there's zero layout shift on transition.
+          // Success label sits just below LOADING so the two captions read
+          // as a tight cluster (Figma: cancel-flow + no-plan refs both show
+          // ~14% gap, not the old ~26%). Slot is always laid out; opacity
+          // gates visibility so there's zero layout shift on transition.
           Align(
-            alignment: const Alignment(0, 0.6),
+            alignment: const Alignment(0, 0.43),
             child: Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: AppSizes.md + AppSizes.sp2,
@@ -183,7 +184,7 @@ class _PhaseLabel extends StatelessWidget {
                   key: successLabelKey,
                   textAlign: TextAlign.center,
                   style: textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                     color: AppColors.text,
                   ),
                 ),
