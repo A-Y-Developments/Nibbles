@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nibbles/src/app/constants/allergen_emoji.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
+import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
 import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
@@ -494,9 +495,8 @@ class _StickyAddBar extends StatelessWidget {
           ),
           child: Text(
             'Add ($count)',
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+            style: AppTypography.button.copyWith(
               color: AppColors.onPrimary,
-              fontWeight: FontWeight.w700,
             ),
           ),
         ),
