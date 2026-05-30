@@ -1,16 +1,25 @@
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/domain/entities/allergen.dart';
-import 'package:nibbles/src/common/domain/entities/allergen_board_item.dart';
 import 'package:nibbles/src/common/domain/entities/allergen_log.dart';
-import 'package:nibbles/src/common/domain/entities/allergen_program_state.dart';
-import 'package:nibbles/src/common/domain/enums/emoji_taste.dart';
-import 'package:nibbles/src/common/domain/enums/reaction_severity.dart';
+import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
 import 'package:nibbles/src/common/services/allergen_service.dart';
 import 'package:nibbles/src/features/allergen/tracker/allergen_tracker_state.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'allergen_tracker_controller.g.dart';
 
+/// Loads the data backing the redesigned Allergen Tracker board.
+///
+/// Composes three reads in parallel:
+///  - `getAllergenStatuses(babyId)` — the authoritative per-allergen status
+///    (NIB-126). Drives the ring, stat columns and per-card badges.
+///  - `getAllergens()`              — name + emoji + display order.
+///  - `getLogs(babyId)`             — raw logs for the Reaction Log list and
+///    the per-card 0/3 progress.
+///
+/// The legacy `getAllergenBoardSummary` + `getProgramState` +
+/// `advanceToNextAllergen` flow is intentionally not used here — the
+/// locked sequence is retired (NIB-120).
 @riverpod
 class AllergenTrackerController extends _$AllergenTrackerController {
   @override
@@ -18,60 +27,29 @@ class AllergenTrackerController extends _$AllergenTrackerController {
     final service = ref.read(allergenServiceProvider);
 
     final (
-      Result<List<AllergenBoardItem>> boardResult,
-      Result<AllergenProgramState> programResult,
+      Result<List<Allergen>> allergensResult,
+      Result<Map<String, AllergenStatus>> statusesResult,
+      Result<List<AllergenLog>> logsResult,
     ) = await (
-      service.getAllergenBoardSummary(babyId),
-      service.getProgramState(babyId),
+      service.getAllergens(),
+      service.getAllergenStatuses(babyId),
+      service.getLogs(babyId),
     ).wait;
 
-    if (boardResult.isFailure) throw boardResult.errorOrNull!;
-    if (programResult.isFailure) throw programResult.errorOrNull!;
+    if (allergensResult.isFailure) throw allergensResult.errorOrNull!;
+    if (statusesResult.isFailure) throw statusesResult.errorOrNull!;
+    if (logsResult.isFailure) throw logsResult.errorOrNull!;
 
-    final boardItems = boardResult.dataOrNull!;
-    final programState = programResult.dataOrNull!;
+    final allergens = List<Allergen>.of(allergensResult.dataOrNull!)
+      ..sort((a, b) => a.sequenceOrder.compareTo(b.sequenceOrder));
 
-    // Collect ALL logs across allergens, sorted by date desc.
-    final allEntries =
-        boardItems
-            .expand(
-              (AllergenBoardItem b) =>
-                  b.logs.map((AllergenLog l) => (allergen: b.allergen, log: l)),
-            )
-            .toList()
-          ..sort(
-            (
-              ({Allergen allergen, AllergenLog log}) a,
-              ({Allergen allergen, AllergenLog log}) b,
-            ) => b.log.createdAt.compareTo(a.log.createdAt),
-          );
-
-    final recent = allEntries.take(5).toList();
-    final recentLogs = <RecentLogEntry>[];
-    for (final entry in recent) {
-      ReactionSeverity? severity;
-      if (entry.log.hadReaction) {
-        final detailResult = await service.getReactionDetail(entry.log.id);
-        severity = detailResult.dataOrNull?.severity;
-      }
-      recentLogs.add(
-        RecentLogEntry(
-          allergenKey: entry.allergen.key,
-          allergenName: entry.allergen.name,
-          allergenEmoji: entry.allergen.emoji,
-          logDate: entry.log.logDate,
-          createdAt: entry.log.createdAt,
-          taste: entry.log.emojiTaste ?? EmojiTaste.neutral,
-          hadReaction: entry.log.hadReaction,
-          severity: severity,
-        ),
-      );
-    }
+    final logs = List<AllergenLog>.of(logsResult.dataOrNull!)
+      ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
 
     return AllergenTrackerState(
-      boardItems: boardItems,
-      programState: programState,
-      recentLogs: recentLogs,
+      allergens: allergens,
+      statuses: statusesResult.dataOrNull!,
+      logs: logs,
     );
   }
 }

@@ -7,7 +7,7 @@ part of 'allergen_tracker_controller.dart';
 // **************************************************************************
 
 String _$allergenTrackerControllerHash() =>
-    r'832f9369b10b71c1b3b002144cc16e6d0b55aaad';
+    r'1500b3df0eba3539b564a0212d62f6eeb0d6ade4';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -37,17 +37,69 @@ abstract class _$AllergenTrackerController
   FutureOr<AllergenTrackerState> build(String babyId);
 }
 
-/// See also [AllergenTrackerController].
+/// Loads the data backing the redesigned Allergen Tracker board.
+///
+/// Composes three reads in parallel:
+///  - `getAllergenStatuses(babyId)` — the authoritative per-allergen status
+///    (NIB-126). Drives the ring, stat columns and per-card badges.
+///  - `getAllergens()`              — name + emoji + display order.
+///  - `getLogs(babyId)`             — raw logs for the Reaction Log list and
+///    the per-card 0/3 progress.
+///
+/// The legacy `getAllergenBoardSummary` + `getProgramState` +
+/// `advanceToNextAllergen` flow is intentionally not used here — the
+/// locked sequence is retired (NIB-120).
+///
+/// Copied from [AllergenTrackerController].
 @ProviderFor(AllergenTrackerController)
 const allergenTrackerControllerProvider = AllergenTrackerControllerFamily();
 
-/// See also [AllergenTrackerController].
+/// Loads the data backing the redesigned Allergen Tracker board.
+///
+/// Composes three reads in parallel:
+///  - `getAllergenStatuses(babyId)` — the authoritative per-allergen status
+///    (NIB-126). Drives the ring, stat columns and per-card badges.
+///  - `getAllergens()`              — name + emoji + display order.
+///  - `getLogs(babyId)`             — raw logs for the Reaction Log list and
+///    the per-card 0/3 progress.
+///
+/// The legacy `getAllergenBoardSummary` + `getProgramState` +
+/// `advanceToNextAllergen` flow is intentionally not used here — the
+/// locked sequence is retired (NIB-120).
+///
+/// Copied from [AllergenTrackerController].
 class AllergenTrackerControllerFamily
     extends Family<AsyncValue<AllergenTrackerState>> {
-  /// See also [AllergenTrackerController].
+  /// Loads the data backing the redesigned Allergen Tracker board.
+  ///
+  /// Composes three reads in parallel:
+  ///  - `getAllergenStatuses(babyId)` — the authoritative per-allergen status
+  ///    (NIB-126). Drives the ring, stat columns and per-card badges.
+  ///  - `getAllergens()`              — name + emoji + display order.
+  ///  - `getLogs(babyId)`             — raw logs for the Reaction Log list and
+  ///    the per-card 0/3 progress.
+  ///
+  /// The legacy `getAllergenBoardSummary` + `getProgramState` +
+  /// `advanceToNextAllergen` flow is intentionally not used here — the
+  /// locked sequence is retired (NIB-120).
+  ///
+  /// Copied from [AllergenTrackerController].
   const AllergenTrackerControllerFamily();
 
-  /// See also [AllergenTrackerController].
+  /// Loads the data backing the redesigned Allergen Tracker board.
+  ///
+  /// Composes three reads in parallel:
+  ///  - `getAllergenStatuses(babyId)` — the authoritative per-allergen status
+  ///    (NIB-126). Drives the ring, stat columns and per-card badges.
+  ///  - `getAllergens()`              — name + emoji + display order.
+  ///  - `getLogs(babyId)`             — raw logs for the Reaction Log list and
+  ///    the per-card 0/3 progress.
+  ///
+  /// The legacy `getAllergenBoardSummary` + `getProgramState` +
+  /// `advanceToNextAllergen` flow is intentionally not used here — the
+  /// locked sequence is retired (NIB-120).
+  ///
+  /// Copied from [AllergenTrackerController].
   AllergenTrackerControllerProvider call(String babyId) {
     return AllergenTrackerControllerProvider(babyId);
   }
@@ -74,14 +126,40 @@ class AllergenTrackerControllerFamily
   String? get name => r'allergenTrackerControllerProvider';
 }
 
-/// See also [AllergenTrackerController].
+/// Loads the data backing the redesigned Allergen Tracker board.
+///
+/// Composes three reads in parallel:
+///  - `getAllergenStatuses(babyId)` — the authoritative per-allergen status
+///    (NIB-126). Drives the ring, stat columns and per-card badges.
+///  - `getAllergens()`              — name + emoji + display order.
+///  - `getLogs(babyId)`             — raw logs for the Reaction Log list and
+///    the per-card 0/3 progress.
+///
+/// The legacy `getAllergenBoardSummary` + `getProgramState` +
+/// `advanceToNextAllergen` flow is intentionally not used here — the
+/// locked sequence is retired (NIB-120).
+///
+/// Copied from [AllergenTrackerController].
 class AllergenTrackerControllerProvider
     extends
         AutoDisposeAsyncNotifierProviderImpl<
           AllergenTrackerController,
           AllergenTrackerState
         > {
-  /// See also [AllergenTrackerController].
+  /// Loads the data backing the redesigned Allergen Tracker board.
+  ///
+  /// Composes three reads in parallel:
+  ///  - `getAllergenStatuses(babyId)` — the authoritative per-allergen status
+  ///    (NIB-126). Drives the ring, stat columns and per-card badges.
+  ///  - `getAllergens()`              — name + emoji + display order.
+  ///  - `getLogs(babyId)`             — raw logs for the Reaction Log list and
+  ///    the per-card 0/3 progress.
+  ///
+  /// The legacy `getAllergenBoardSummary` + `getProgramState` +
+  /// `advanceToNextAllergen` flow is intentionally not used here — the
+  /// locked sequence is retired (NIB-120).
+  ///
+  /// Copied from [AllergenTrackerController].
   AllergenTrackerControllerProvider(String babyId)
     : this._internal(
         () => AllergenTrackerController()..babyId = babyId,
