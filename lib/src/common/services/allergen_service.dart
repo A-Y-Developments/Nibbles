@@ -1,7 +1,9 @@
 import 'dart:io';
 
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:nibbles/src/common/data/repositories/allergen_repository.dart';
 import 'package:nibbles/src/common/data/repositories/storage_repository.dart';
+import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/domain/entities/allergen.dart';
 import 'package:nibbles/src/common/domain/entities/allergen_board_item.dart';
@@ -14,11 +16,21 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'allergen_service.g.dart';
 
+/// Function injected so unit tests don't touch real Crashlytics. Records a
+/// non-fatal diagnostic for a best-effort storage deletion failure.
+typedef AllergenCrashRecorderFn =
+    Future<void> Function(Object error, StackTrace stack, {String? reason});
+
 class AllergenService {
-  const AllergenService(this._repo, this._storage);
+  AllergenService(
+    this._repo,
+    this._storage, {
+    AllergenCrashRecorderFn? crashRecorder,
+  }) : _crashRecorder = crashRecorder ?? _defaultCrashRecorder;
 
   final AllergenRepository _repo;
   final StorageRepository _storage;
+  final AllergenCrashRecorderFn _crashRecorder;
 
   static const _photoBucket = 'allergen-photos';
 
@@ -151,6 +163,77 @@ class AllergenService {
     return Result.success(savedLog);
   }
 
+  /// Updates an existing allergen log. Supports the redesigned Change-Picture
+  /// flow: if [newPhotoLocalPath] is supplied, the new photo is uploaded to
+  /// the allergen-photos bucket first; on a successful upload the log's
+  /// photoUrl is rewritten to the new storage path. An upload failure fails
+  /// the whole update (the row is not modified).
+  ///
+  /// After a successful new upload, [oldPhotoPath] is best-effort deleted
+  /// (P3 — failure is logged to Crashlytics and never propagated, so the
+  /// row update is not blocked by a stale photo). The final UPDATE on
+  /// allergen_logs always runs once we reach it.
+  Future<Result<AllergenLog>> updateAllergenLog({
+    required AllergenLog log,
+    String? newPhotoLocalPath,
+    String? oldPhotoPath,
+  }) async {
+    var effectiveLog = log;
+
+    if (newPhotoLocalPath != null) {
+      final ts = DateTime.now().millisecondsSinceEpoch;
+      final uploadPath = '${log.babyId}/${ts}_${log.allergenKey}.jpg';
+      final uploadResult = await _storage.uploadFile(
+        _photoBucket,
+        uploadPath,
+        File(newPhotoLocalPath),
+      );
+      if (uploadResult.isFailure) {
+        return Result.failure(uploadResult.errorOrNull!);
+      }
+      effectiveLog = log.copyWith(photoUrl: uploadPath);
+
+      if (oldPhotoPath != null && oldPhotoPath.isNotEmpty) {
+        await _deletePhotoBestEffort(
+          oldPhotoPath,
+          reason: 'allergen_update_old_photo',
+        );
+      }
+    }
+
+    return _repo.updateLog(effectiveLog);
+  }
+
+  /// Deletes an allergen log and its associated photo (if any).
+  /// The storage deletion is best-effort (P3 — logged to Crashlytics on
+  /// failure); the row delete always runs.
+  Future<Result<void>> deleteAllergenLog({
+    required String logId,
+    String? photoPath,
+  }) async {
+    if (photoPath != null && photoPath.isNotEmpty) {
+      await _deletePhotoBestEffort(
+        photoPath,
+        reason: 'allergen_delete_photo',
+      );
+    }
+    return _repo.deleteLog(logId);
+  }
+
+  /// Best-effort photo delete: never throws, never returns failure. A
+  /// failure is recorded to Crashlytics as a non-fatal so the row mutation
+  /// can proceed.
+  Future<void> _deletePhotoBestEffort(
+    String path, {
+    required String reason,
+  }) async {
+    final result = await _storage.deleteFile(_photoBucket, path);
+    if (result.isFailure) {
+      final error = result.errorOrNull ?? const UnknownException();
+      await _crashRecorder(error, StackTrace.current, reason: reason);
+    }
+  }
+
   /// Returns a signed URL for a photo stored in the allergen-photos bucket.
   Future<Result<String>> getSignedPhotoUrl(String photoPath) =>
       _storage.getSignedUrl(_photoBucket, photoPath);
@@ -219,6 +302,12 @@ class AllergenService {
     String? allergenKey,
   }) => _repo.getLogs(babyId, allergenKey: allergenKey);
 }
+
+Future<void> _defaultCrashRecorder(
+  Object error,
+  StackTrace stack, {
+  String? reason,
+}) => FirebaseCrashlytics.instance.recordError(error, stack, reason: reason);
 
 @Riverpod(keepAlive: true)
 AllergenService allergenService(

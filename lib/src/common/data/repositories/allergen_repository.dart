@@ -37,6 +37,16 @@ abstract interface class AllergenRepository {
   /// ALLRG-05: Insert allergen_log row.
   Future<Result<AllergenLog>> saveLog(AllergenLog log);
 
+  /// Update an existing allergen_log row by id. Writes the editable fields
+  /// (emoji_taste, had_reaction, notes, attachment_title,
+  /// attachment_description, log_date, photo_url) and returns the refreshed
+  /// row mapped to [AllergenLog].
+  Future<Result<AllergenLog>> updateLog(AllergenLog log);
+
+  /// Deletes an allergen_log row by id. Caller is responsible for cleaning
+  /// up any associated photo via the storage repository.
+  Future<Result<void>> deleteLog(String logId);
+
   /// ALLRG-06: Insert reaction_details row.
   Future<Result<ReactionDetail>> saveReactionDetail(ReactionDetail detail);
 
@@ -176,6 +186,44 @@ class AllergenRepositoryImpl implements AllergenRepository {
           .single();
 
       return Result.success(_logFromRow(data));
+    } on PostgrestException catch (e) {
+      return Result.failure(ServerException(e.message));
+    } on Object {
+      return const Result.failure(UnknownException());
+    }
+  }
+
+  @override
+  Future<Result<AllergenLog>> updateLog(AllergenLog log) async {
+    try {
+      final data = await _supabase
+          .from('allergen_logs')
+          .update({
+            'emoji_taste': log.emojiTaste?.toJson(),
+            'had_reaction': log.hadReaction,
+            'notes': log.notes,
+            'attachment_title': log.attachmentTitle,
+            'attachment_description': log.attachmentDescription,
+            'log_date': _formatDate(log.logDate),
+            'photo_url': log.photoUrl,
+          })
+          .eq('id', log.id)
+          .select()
+          .single();
+
+      return Result.success(_logFromRow(data));
+    } on PostgrestException catch (e) {
+      return Result.failure(ServerException(e.message));
+    } on Object {
+      return const Result.failure(UnknownException());
+    }
+  }
+
+  @override
+  Future<Result<void>> deleteLog(String logId) async {
+    try {
+      await _supabase.from('allergen_logs').delete().eq('id', logId);
+      return const Result.success(null);
     } on PostgrestException catch (e) {
       return Result.failure(ServerException(e.message));
     } on Object {
