@@ -68,12 +68,14 @@ void main() {
   ];
 
   testWidgets(
-    'renders BrandLogo, email + password fields, and submit — NO name field',
+    'renders Quatrefoil logo mark, email + password fields, and submit — NO name field',
     (tester) async {
       await tester.pumpWidget(_wrap(const RegisterScreen(), buildOverrides()));
       await tester.pumpAndSettle();
 
-      expect(find.byType(BrandLogo), findsOneWidget);
+      // NIB-112 redesign uses the quatrefoil-only mark (no wordmark BrandLogo).
+      expect(find.byType(Quatrefoil), findsOneWidget);
+      expect(find.text('Start Your Journey'), findsOneWidget);
       expect(find.byKey(const Key('register_email_field')), findsOneWidget);
       expect(find.byKey(const Key('register_password_field')), findsOneWidget);
       expect(find.byKey(const Key('register_submit_button')), findsOneWidget);
@@ -256,6 +258,30 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Email already in use.'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'renders verbatim Figma copy — title, body, social labels, footer link',
+    (tester) async {
+      await tester.pumpWidget(_wrap(const RegisterScreen(), buildOverrides()));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Start Your Journey'), findsOneWidget);
+      expect(
+        find.text(
+          "Create an account to track your baby's\n"
+          'nutrition and feeding progress.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Email address'), findsWidgets);
+      expect(find.text('Password'), findsWidgets);
+      expect(find.text('Or sign up with'), findsOneWidget);
+      expect(find.text('Sign Up with Google'), findsOneWidget);
+      expect(find.text('Sign Up with Apple Account'), findsOneWidget);
+      expect(find.text('Already have an account?'), findsOneWidget);
+      expect(find.text('Login'), findsOneWidget);
     },
   );
 }
