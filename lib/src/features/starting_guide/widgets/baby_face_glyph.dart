@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 
-/// Round butter-tinted glyph showing a baby face emoji — used as the hero
-/// mark on the Starting Guide hub and as a stand-in for hardcoded article
-/// hero imagery while real illustration is pending.
+/// Round green-deep glyph used as the hero mark on the Starting Guide hub
+/// and as a stand-in for hardcoded article hero imagery while real
+/// illustration is pending.
+///
+/// Aligns with the only kit precedent for this circular badge shape —
+/// `.tip__ico` (kit.css line 108-114): `--color-green-deep` background,
+/// `--color-butter` foreground content.
 class BabyFaceGlyph extends StatelessWidget {
   const BabyFaceGlyph({this.size = 56, super.key});
 
@@ -16,13 +20,14 @@ class BabyFaceGlyph extends StatelessWidget {
       width: size,
       height: size,
       decoration: const BoxDecoration(
-        color: AppColors.butter,
+        color: AppColors.greenDeep,
         shape: BoxShape.circle,
       ),
       alignment: Alignment.center,
-      child: Text(
-        '\u{1F476}',
-        style: TextStyle(fontSize: size * 0.55, height: 1),
+      child: Icon(
+        Icons.child_care_rounded,
+        color: AppColors.butter,
+        size: size * 0.6,
       ),
     );
   }

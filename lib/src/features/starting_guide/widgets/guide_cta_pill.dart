@@ -24,7 +24,9 @@ class GuideCtaPill extends StatelessWidget {
         child: Container(
           height: AppSizes.buttonHeight,
           alignment: Alignment.center,
-          padding: const EdgeInsets.symmetric(horizontal: AppSizes.lg),
+          // Kit `.pillbtn` horizontal padding is 22px — literal because there
+          // is no current token; matches kit.css line 74-80 exactly.
+          padding: const EdgeInsets.symmetric(horizontal: 22),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
@@ -35,9 +37,9 @@ class GuideCtaPill extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontFamily: FontFamily.parkinsans,
-                    fontSize: 15,
+                    fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    height: 1.2,
+                    height: 1,
                     color: AppColors.cream,
                   ),
                 ),

@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 
-/// Rounded-square green-deep back button matching the kit header treatment
-/// (see `components-header.html` — green-deep on cream, 32x32, radius8).
+/// Circular ghost back button matching the kit `.rbtn` spec
+/// (kit.css line 62-71 + PlanAndRecipes.jsx line 18): 32x32 circle,
+/// transparent background, green-deep icon.
 class GuideBackButton extends StatelessWidget {
   const GuideBackButton({required this.onTap, super.key});
 
@@ -12,17 +13,17 @@ class GuideBackButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.greenDeep,
-      borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+      color: Colors.transparent,
+      shape: const CircleBorder(),
       child: InkWell(
-        borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+        customBorder: const CircleBorder(),
         onTap: onTap,
         child: const SizedBox(
           width: AppSizes.roundButtonSm,
           height: AppSizes.roundButtonSm,
           child: Icon(
             Icons.arrow_back_rounded,
-            color: AppColors.onGreen,
+            color: AppColors.greenDeep,
             size: AppSizes.iconMd,
           ),
         ),
