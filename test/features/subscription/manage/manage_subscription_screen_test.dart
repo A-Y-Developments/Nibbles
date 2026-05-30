@@ -222,9 +222,11 @@ void main() {
   );
 
   testWidgets(
-    'subscribed: tapping "Cancel Subscription" surfaces the NIB-82 placeholder',
+    'subscribed: tapping "Cancel Subscription" surfaces the NIB-82 overlay',
     (tester) async {
-      await tester.binding.setSurfaceSize(const Size(400, 1000));
+      // Tall surface so the bottom sheet (92% of viewport) fits the chips
+      // and both CTAs without scrolling.
+      await tester.binding.setSurfaceSize(const Size(400, 1200));
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
       await tester.pumpWidget(
@@ -248,10 +250,12 @@ void main() {
 
       await tester
           .tap(find.byKey(const Key('manage_subscription_cancel_cta')));
-      await tester.pump();
+      await tester.pumpAndSettle();
 
+      // Verbatim sheet heading from Figma 1216:12029 (U+2019 apostrophe).
+      expect(find.text('Tell us why you’re canceling'), findsOneWidget);
       expect(
-        find.textContaining('Cancel subscription flow coming soon'),
+        find.byKey(const Key('cancel_subscription_continue_button')),
         findsOneWidget,
       );
     },
