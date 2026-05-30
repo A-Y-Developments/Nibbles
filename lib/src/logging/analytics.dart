@@ -178,6 +178,26 @@ class Analytics {
     await _logEvent('plan_selected', parameters: {'period': period});
   }
 
+  /// Intent event — fires BEFORE the deep-link to the store subscription page.
+  /// `reason` is the stable snake_case `analyticsKey` from the cancel-reason
+  /// enum, NOT the verbatim UI label (which contains trailing spaces / a
+  /// double space).
+  Future<void> logSubscriptionCancelStarted({required String reason}) async {
+    await _logEvent(
+      'subscription_cancel_started',
+      parameters: {'reason': reason},
+    );
+  }
+
+  /// Selection event — fires the moment the user picks a reason chip. Same
+  /// PII-free `reason` payload as [logSubscriptionCancelStarted].
+  Future<void> logSubscriptionCancelReason({required String reason}) async {
+    await _logEvent(
+      'subscription_cancel_reason',
+      parameters: {'reason': reason},
+    );
+  }
+
   // ---------------------------------------------------------------------------
   // Allergen tracker
   // ---------------------------------------------------------------------------

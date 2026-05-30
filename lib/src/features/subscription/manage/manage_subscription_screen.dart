@@ -10,6 +10,7 @@ import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
 import 'package:nibbles/src/common/components/buttons/app_round_button.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/domain/entities/subscription_info.dart';
+import 'package:nibbles/src/features/subscription/cancel/cancel_subscription_overlay.dart';
 import 'package:nibbles/src/features/subscription/manage/manage_subscription_controller.dart';
 import 'package:nibbles/src/features/subscription/manage/manage_subscription_state.dart';
 import 'package:nibbles/src/logging/analytics.dart';
@@ -162,14 +163,10 @@ class _ManageSubscriptionBody extends StatelessWidget {
   }
 
   void _onCancelPressed(BuildContext context) {
-    // TODO(NIB-82): replace with the cancel-reason bottom sheet
-    // (frame 1216:12019). Until that ships, surface a placeholder so the
-    // CTA is reachable and the screen ships analyze-clean.
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Cancel subscription flow coming soon.'),
-      ),
-    );
+    // NIB-82: surface the cancel-reason bottom sheet (Figma 1216:12019).
+    // The sheet handles its own analytics, the deep-link to the OS
+    // subscription page, and the P2 SnackBar on URL-open failure.
+    unawaited(showCancelSubscriptionOverlay(context));
   }
 }
 

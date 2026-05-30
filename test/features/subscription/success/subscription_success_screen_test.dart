@@ -9,6 +9,8 @@
 // `subscriptionServiceProvider` is overridden via Riverpod (no RC dependency)
 // and durations are advanced via `tester.pump` so the suite is deterministic.
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -36,7 +38,8 @@ GoRouter _routerFor(Widget screen) => GoRouter(
     GoRoute(
       path: AppRoute.home.path,
       name: AppRoute.home.name,
-      builder: (_, __) => const Scaffold(body: Center(child: Text('HOME_STUB'))),
+      builder: (_, __) =>
+          const Scaffold(body: Center(child: Text('HOME_STUB'))),
     ),
   ],
 );
@@ -153,7 +156,7 @@ void main() {
 
       // Attempt to pop from the GoRouter API — the wrapping PopScope sets
       // canPop=false, so the screen stays on the success route.
-      router.routerDelegate.popRoute();
+      unawaited(router.routerDelegate.popRoute());
       await tester.pump();
 
       expect(

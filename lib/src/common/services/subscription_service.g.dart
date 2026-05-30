@@ -6,8 +6,31 @@ part of 'subscription_service.dart';
 // RiverpodGenerator
 // **************************************************************************
 
+String _$subscriptionLaunchUrlHash() =>
+    r'f28a8a524c29f3e3e95e13d6fb5c24c9f7e86d37';
+
+/// Provider for [SubscriptionLaunchUrlFn]. Defaults to the real `launchUrl`
+/// from `url_launcher`; tests override it to assert calls without hitting the
+/// platform channel.
+///
+/// Copied from [subscriptionLaunchUrl].
+@ProviderFor(subscriptionLaunchUrl)
+final subscriptionLaunchUrlProvider =
+    Provider<SubscriptionLaunchUrlFn>.internal(
+      subscriptionLaunchUrl,
+      name: r'subscriptionLaunchUrlProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$subscriptionLaunchUrlHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef SubscriptionLaunchUrlRef = ProviderRef<SubscriptionLaunchUrlFn>;
 String _$subscriptionServiceHash() =>
-    r'c5ece94fd553c4d270b8e630aaf272b43ab7b3cd';
+    r'a2ebb03ff4796ab578383ce67ae09742db7d99f2';
 
 /// Stub SubscriptionService — to be wired through `purchases_flutter` in
 /// NIB-18. State is the entitlement bool used by callers like the post-

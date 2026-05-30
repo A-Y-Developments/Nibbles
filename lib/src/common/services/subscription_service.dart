@@ -1,10 +1,44 @@
+import 'package:flutter/foundation.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/domain/entities/subscription_info.dart';
 import 'package:nibbles/src/common/domain/entities/subscription_offering.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 part 'subscription_service.g.dart';
+
+/// Test-injectable signature for `url_launcher`'s `launchUrl`. Allows the
+/// widget / controller tests to replace the platform call without touching
+/// the method channel. Mirrors the `deleteAccountCrashRecorder` typedef +
+/// provider seam from NIB-78.
+typedef SubscriptionLaunchUrlFn =
+    Future<bool> Function(Uri url, {LaunchMode mode});
+
+Future<bool> _defaultLaunchUrl(
+  Uri url, {
+  LaunchMode mode = LaunchMode.platformDefault,
+}) => launchUrl(url, mode: mode);
+
+/// Provider for [SubscriptionLaunchUrlFn]. Defaults to the real `launchUrl`
+/// from `url_launcher`; tests override it to assert calls without hitting the
+/// platform channel.
+@Riverpod(keepAlive: true)
+SubscriptionLaunchUrlFn subscriptionLaunchUrl(
+  // Specific *Ref types are deprecated; will be Ref in riverpod_generator 3.0.
+  // ignore: deprecated_member_use_from_same_package
+  SubscriptionLaunchUrlRef ref,
+) => _defaultLaunchUrl;
+
+/// Platform-default management URLs. Apps cannot programmatically cancel
+/// App Store / Play subscriptions — the OS owns the cancellation UI. The
+/// https URLs avoid an Info.plist `LSApplicationQueriesSchemes` entry that
+/// `itms-apps://` would otherwise force.
+@visibleForTesting
+const String iosManagementUrl = 'https://apps.apple.com/account/subscriptions';
+@visibleForTesting
+const String androidManagementUrl =
+    'https://play.google.com/store/account/subscriptions';
 
 /// Stub SubscriptionService — to be wired through `purchases_flutter` in
 /// NIB-18. State is the entitlement bool used by callers like the post-
@@ -100,4 +134,39 @@ class SubscriptionService extends _$SubscriptionService {
       NotFoundException('No active subscription found.'),
     );
   }
+
+  /// Opens the OS-managed subscription page (NIB-82). Apps cannot
+  /// programmatically cancel App Store / Play subscriptions, so the cancel
+  /// flow deep-links to the store-owned cancellation UI.
+  ///
+  /// Returns [Failure] when the URL can't be opened — the overlay maps that
+  /// onto a P2 toast ("Couldn't open subscription settings. Try again.") per
+  /// the ticket's error rule. NIB-18 will swap the platform default for
+  /// `customerInfo.managementURL` when RC is wired through.
+  Future<Result<void>> openManagementPage() async {
+    final launchFn = ref.read(subscriptionLaunchUrlProvider);
+    final uri = Uri.parse(_managementUrl);
+    try {
+      final ok = await launchFn(uri, mode: LaunchMode.externalApplication);
+      if (ok) return const Result.success(null);
+      return const Result.failure(
+        UnknownException("Couldn't open subscription settings. Try again."),
+      );
+    } on Object catch (_) {
+      // url_launcher throws PlatformException when the OS rejects the URL.
+      // Surface a P2-friendly message; the underlying exception is logged at
+      // the call site (Crashlytics non-fatal) if needed.
+      return const Result.failure(
+        UnknownException("Couldn't open subscription settings. Try again."),
+      );
+    }
+  }
+
+  /// Resolves the platform-default management URL. iOS / Android only — web
+  /// and desktop fall through to the iOS URL since the app ships
+  /// mobile-only per CLAUDE.md (iOS 15+ / Android 10+).
+  String get _managementUrl =>
+      defaultTargetPlatform == TargetPlatform.android
+          ? androidManagementUrl
+          : iosManagementUrl;
 }
