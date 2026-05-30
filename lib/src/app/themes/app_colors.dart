@@ -63,6 +63,11 @@ abstract final class AppColors {
   static const Color destructive = Color(0xFF851E1E);
   static const Color destructiveSoft = Color(0xFFFFE8E8);
 
+  // Brand burgundy — Nibble-primary-Burgundy.
+  // Used for the login error border + helper text and the Sign Up footer link
+  // (NIB-107 Figma node 971:10029 — token "Nibble-primary-Burgundy").
+  static const Color burgundy = Color(0xFF77393B);
+
   // ── Semantic tokens ───────────────────────────────────────────
   static const Color fgStrong = Color(0xFF2C2C2C);
   static const Color fgDefault = Color(0xFF2D1F17);
