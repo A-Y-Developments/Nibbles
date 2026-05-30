@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nibbles/gen/fonts.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
@@ -88,6 +89,19 @@ class _Glyph extends StatelessWidget {
   }
 }
 
+/// Local display-font CTA style for the 'Read Guide' button.
+///
+/// Matches kit `components-empty-state.html .btn` / `kit.css .pillbtn--sm`:
+/// `700 13px/1 var(--font-display)` (Parkinsans). Defined locally instead of
+/// mutating the shared [AppTypography.button] token (out of scope for NIB-53).
+const TextStyle _readGuideCtaStyle = TextStyle(
+  fontFamily: FontFamily.parkinsans,
+  fontSize: 13,
+  fontWeight: FontWeight.w700,
+  height: 1,
+  color: AppColors.cream,
+);
+
 class _ReadGuideCta extends StatelessWidget {
   const _ReadGuideCta({required this.onTap});
 
@@ -101,8 +115,8 @@ class _ReadGuideCta extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(AppSizes.radiusFull),
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
+        child: const Padding(
+          padding: EdgeInsets.symmetric(
             horizontal: AppSizes.md,
             vertical: AppSizes.sm,
           ),
@@ -111,13 +125,10 @@ class _ReadGuideCta extends StatelessWidget {
             children: [
               Text(
                 'Read Guide',
-                style: AppTypography.button.copyWith(
-                  color: AppColors.cream,
-                  fontSize: 13,
-                ),
+                style: _readGuideCtaStyle,
               ),
-              const SizedBox(width: AppSizes.xs),
-              const Icon(
+              SizedBox(width: AppSizes.xs),
+              Icon(
                 Icons.arrow_forward_rounded,
                 color: AppColors.cream,
                 size: AppSizes.iconSm,
