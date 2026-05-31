@@ -57,6 +57,9 @@ class _ShoppingListSheetState extends State<_ShoppingListSheet> {
   /// Indices removed via the per-row `X`. Cannot be re-added in this session.
   final Set<int> _removed = <int>{};
 
+  /// Guard against double-tap on confirm / close.
+  bool _dismissing = false;
+
   @override
   void initState() {
     super.initState();
@@ -82,6 +85,7 @@ class _ShoppingListSheetState extends State<_ShoppingListSheet> {
   }
 
   void _removeRow(int index) {
+    final name = widget.ingredients[index].name;
     setState(() {
       _removed.add(index);
       _selected.remove(index);
@@ -89,9 +93,19 @@ class _ShoppingListSheetState extends State<_ShoppingListSheet> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
-        const SnackBar(
-          content: Text('Removed.'),
-          duration: Duration(seconds: 2),
+        SnackBar(
+          content: Text('Removed $name'),
+          duration: const Duration(seconds: 3),
+          action: SnackBarAction(
+            label: 'Undo',
+            onPressed: () {
+              if (!mounted) return;
+              setState(() {
+                _removed.remove(index);
+                _selected.add(index);
+              });
+            },
+          ),
         ),
       );
   }
@@ -110,11 +124,23 @@ class _ShoppingListSheetState extends State<_ShoppingListSheet> {
   }
 
   void _confirm() {
+    if (_dismissing) return;
+    _dismissing = true;
     final picked = <String>[
       for (var i = 0; i < widget.ingredients.length; i++)
         if (_selected.contains(i)) widget.ingredients[i].name,
     ];
-    Navigator.of(context).pop(picked);
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop(picked);
+    }
+  }
+
+  void _close() {
+    if (_dismissing) return;
+    _dismissing = true;
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    }
   }
 
   @override
@@ -165,12 +191,11 @@ class _ShoppingListSheetState extends State<_ShoppingListSheet> {
                   IconButton(
                     icon: const Icon(Icons.close, size: AppSizes.iconMd),
                     color: AppColors.fgStrong,
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: _close,
                     tooltip: 'Close',
-                    padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(
-                      minWidth: AppSizes.roundButtonSm,
-                      minHeight: AppSizes.roundButtonSm,
+                      minWidth: AppSizes.xxl,
+                      minHeight: AppSizes.xxl,
                     ),
                   ),
                 ],
@@ -256,40 +281,51 @@ class _IngredientRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Material(
-      color: AppColors.cream,
-      borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-      child: InkWell(
-        onTap: onToggle,
+    return Semantics(
+      container: true,
+      label: name,
+      checked: selected,
+      onTap: onToggle,
+      child: Material(
+        color: AppColors.cream,
         borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSizes.sp12,
-            vertical: AppSizes.sp12,
-          ),
-          decoration: BoxDecoration(
-            color: AppColors.cream,
-            borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-            border: Border.all(color: AppColors.borderSoft),
-          ),
-          child: Row(
-            children: [
-              AppCheckbox(
-                value: selected,
-                onChanged: (_) => onToggle(),
-              ),
-              const SizedBox(width: AppSizes.sp12),
-              Expanded(
-                child: Text(
-                  name,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    color: AppColors.fgDefault,
+        child: InkWell(
+          onTap: onToggle,
+          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSizes.sp12,
+              vertical: AppSizes.sp12,
+            ),
+            decoration: BoxDecoration(
+              color: AppColors.cream,
+              borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+              border: Border.all(color: AppColors.borderSoft),
+            ),
+            child: ExcludeSemantics(
+              child: Row(
+                children: [
+                  AppCheckbox(
+                    value: selected,
+                    onChanged: (_) => onToggle(),
                   ),
-                ),
+                  const SizedBox(width: AppSizes.sp12),
+                  Expanded(
+                    child: Text(
+                      name,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: AppColors.fgDefault,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSizes.sm),
+                  ExcludeSemantics(
+                    excluding: false,
+                    child: _RemoveButton(name: name, onPressed: onRemove),
+                  ),
+                ],
               ),
-              const SizedBox(width: AppSizes.sm),
-              _RemoveButton(onPressed: onRemove),
-            ],
+            ),
           ),
         ),
       ),
@@ -298,8 +334,9 @@ class _IngredientRow extends StatelessWidget {
 }
 
 class _RemoveButton extends StatelessWidget {
-  const _RemoveButton({required this.onPressed});
+  const _RemoveButton({required this.name, required this.onPressed});
 
+  final String name;
   final VoidCallback onPressed;
 
   @override
@@ -309,17 +346,20 @@ class _RemoveButton extends StatelessWidget {
     // Figma rows.
     return Semantics(
       button: true,
-      label: 'Remove',
+      label: 'Remove $name',
       child: InkResponse(
         onTap: onPressed,
-        radius: AppSizes.iconMd,
+        radius: 24,
         child: const SizedBox(
-          width: AppSizes.iconMd,
-          height: AppSizes.iconMd,
-          child: Icon(
-            Icons.close,
-            size: AppSizes.iconSm,
-            color: AppColors.burgundy,
+          width: AppSizes.xxl,
+          height: AppSizes.xxl,
+          child: Center(
+            child: Icon(
+              Icons.close,
+              size: AppSizes.iconSm,
+              color: AppColors.burgundy,
+              semanticLabel: '',
+            ),
           ),
         ),
       ),

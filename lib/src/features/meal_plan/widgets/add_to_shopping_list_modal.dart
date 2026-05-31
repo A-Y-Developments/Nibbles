@@ -149,7 +149,9 @@ class _AddToShoppingListModalState
                     vertical: AppSizes.md,
                   ),
                   child: AppPillButton(
-                    label: 'Add (${_selected.length}) items',
+                    label: _submitting
+                        ? 'Adding...'
+                        : 'Add (${_selected.length}) items',
                     onPressed: _selected.isEmpty || _submitting
                         ? null
                         : _confirm,

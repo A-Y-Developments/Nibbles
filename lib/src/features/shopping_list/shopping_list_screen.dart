@@ -355,21 +355,26 @@ class _AddChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: AppColors.greenDeep,
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        ),
-        alignment: Alignment.center,
-        child: const Icon(
-          Icons.add,
-          color: AppColors.onGreen,
-          size: AppSizes.iconMd,
+    return Semantics(
+      button: true,
+      label: 'Add ingredient',
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: AppColors.greenDeep,
+            borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+          ),
+          alignment: Alignment.center,
+          child: const Icon(
+            Icons.add,
+            color: AppColors.onGreen,
+            size: AppSizes.iconMd,
+            semanticLabel: '',
+          ),
         ),
       ),
     );
@@ -384,18 +389,23 @@ class _OverflowChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 40,
-      height: 40,
-      decoration: BoxDecoration(
-        color: AppColors.greenDeep,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-      ),
-      alignment: Alignment.center,
-      child: const Icon(
-        Icons.more_horiz,
-        color: AppColors.onGreen,
-        size: AppSizes.iconMd,
+    return Semantics(
+      button: true,
+      label: 'More options',
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: AppColors.greenDeep,
+          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+        ),
+        alignment: Alignment.center,
+        child: const Icon(
+          Icons.more_horiz,
+          color: AppColors.onGreen,
+          size: AppSizes.iconMd,
+          semanticLabel: '',
+        ),
       ),
     );
   }
@@ -472,41 +482,55 @@ class _ShoppingItemRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.sp12,
-        vertical: AppSizes.sm,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.cream,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-      ),
-      child: Row(
-        children: [
-          _SquareCheckbox(
-            value: item.isChecked,
-            onTap: onToggle,
-            size: _checkboxSize,
+    return MergeSemantics(
+      child: Semantics(
+        checked: item.isChecked,
+        label: item.name,
+        onTap: onToggle,
+        container: true,
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSizes.sp12,
+            vertical: AppSizes.sm,
           ),
-          const SizedBox(width: AppSizes.sp12),
-          Expanded(
-            child: Text(
-              item.name,
-              style: AppTypography.textTheme.bodyLarge?.copyWith(
-                decoration: item.isChecked ? TextDecoration.lineThrough : null,
-                color: item.isChecked ? AppColors.fgMuted : AppColors.text,
+          decoration: BoxDecoration(
+            color: AppColors.cream,
+            borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+          ),
+          child: Row(
+            children: [
+              _SquareCheckbox(
+                value: item.isChecked,
+                onTap: onToggle,
+                size: _checkboxSize,
               ),
-            ),
+              const SizedBox(width: AppSizes.sp12),
+              Expanded(
+                child: Text(
+                  item.name,
+                  style: AppTypography.textTheme.bodyLarge?.copyWith(
+                    decoration:
+                        item.isChecked ? TextDecoration.lineThrough : null,
+                    color: item.isChecked ? AppColors.fgMuted : AppColors.text,
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSizes.sp12),
+              Semantics(
+                button: true,
+                label: 'Delete ${item.name}',
+                hint: 'Removes this item from the list',
+                child: _CancelChip(onTap: onDelete, size: _cancelChipSize),
+              ),
+            ],
           ),
-          const SizedBox(width: AppSizes.sp12),
-          _CancelChip(onTap: onDelete, size: _cancelChipSize),
-        ],
+        ),
       ),
     );
   }
 }
 
-/// Custom square checkbox — 30x30, greenDeep border, radius 10.
+/// Custom square checkbox — 30x30 visual, 48x48 touch target.
 /// Mirrors Figma 871:7708 (Checkbox/default).
 class _SquareCheckbox extends StatelessWidget {
   const _SquareCheckbox({
@@ -524,24 +548,30 @@ class _SquareCheckbox extends StatelessWidget {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          color: value ? AppColors.greenDeep : AppColors.cream,
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          border: Border.all(color: AppColors.greenDeep, width: 1.5),
+      child: SizedBox(
+        width: AppSizes.xxl,
+        height: AppSizes.xxl,
+        child: Center(
+          child: Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              color: value ? AppColors.greenDeep : AppColors.cream,
+              borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+              border: Border.all(color: AppColors.greenDeep, width: 1.5),
+            ),
+            alignment: Alignment.center,
+            child: value
+                ? const Icon(Icons.check, size: 18, color: AppColors.onGreen)
+                : null,
+          ),
         ),
-        alignment: Alignment.center,
-        child: value
-            ? const Icon(Icons.check, size: 18, color: AppColors.onGreen)
-            : null,
       ),
     );
   }
 }
 
-/// Per-row cancel chip — 37x37, rounded 10, burgundy circle X icon.
+/// Per-row cancel chip — 37x37 visual, 48x48 touch target.
 /// Mirrors Figma 898:18568 (cancel) inside Button-chips wrapper.
 /// Single-tap directly commits delete — no confirm dialog (NIB-81).
 class _CancelChip extends StatelessWidget {
@@ -556,13 +586,20 @@ class _CancelChip extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: SizedBox(
-        width: size,
-        height: size,
-        child: const Center(
-          child: Icon(
-            Icons.cancel,
-            color: AppColors.burgundy,
-            size: AppSizes.iconMd,
+        width: AppSizes.xxl,
+        height: AppSizes.xxl,
+        child: Center(
+          child: SizedBox(
+            width: size,
+            height: size,
+            child: const Center(
+              child: Icon(
+                Icons.cancel,
+                color: AppColors.burgundy,
+                size: AppSizes.iconMd,
+                semanticLabel: '',
+              ),
+            ),
           ),
         ),
       ),
