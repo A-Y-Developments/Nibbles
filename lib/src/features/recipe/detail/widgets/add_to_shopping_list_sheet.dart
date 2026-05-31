@@ -5,16 +5,25 @@ import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
 import 'package:nibbles/src/common/components/controls/app_checkbox.dart';
 import 'package:nibbles/src/common/domain/entities/ingredient.dart';
 
-/// Shows the Add-to-Shopping-List bottom sheet.
+/// Shows the Add-to-Shoplist bottom sheet (NIB-75 — Figma 971:9042 / 971:9204).
 ///
-/// Per Figma node 971:9042 — each row has a leading [AppCheckbox] and a
-/// trailing `X` that permanently removes the ingredient from this add's
-/// candidate list. A bottom toggle flips between Select All / Unselect All
-/// over the remaining (non-removed) rows. The `Add (N)` CTA returns the
-/// selected ingredient names, or `null` on dismiss / cancel.
+/// Layout matches the Figma:
+///   * sheet title "Add to Shoplist" with a close (X) button top-right
+///   * one row per ingredient — leading checkbox + name + trailing burgundy X
+///     that drops the row from this sheet's candidate list
+///   * side-by-side bottom CTAs:
+///       - butter ghost pill — "Unselect All" (when all selected) or
+///         "Select All" (when any are deselected)
+///       - green primary pill — "Add (N)" where N is the live selected count
 ///
-/// Names-only contract — reuses the existing
-/// `ShoppingListService.addFromRecipe` path. No data layer changes.
+/// All rows are pre-selected on open (success-1 state). Tapping "Unselect All"
+/// flips the toggle label and disables the primary CTA (success-2 state).
+///
+/// The verbatim "Mon, 20 - Thu 23 April" date subtitle from the Figma is a
+/// meal-plan-window artifact; recipe-scoped shopping list adds have no date
+/// context, so it is intentionally omitted.
+///
+/// Resolves to the picked ingredient names on confirm, or `null` on dismiss.
 Future<List<String>?> showAddToShoppingListSheet(
   BuildContext context,
   List<Ingredient> ingredients,
@@ -22,10 +31,10 @@ Future<List<String>?> showAddToShoppingListSheet(
   return showModalBottomSheet<List<String>>(
     context: context,
     isScrollControlled: true,
-    backgroundColor: AppColors.surface,
+    backgroundColor: AppColors.butterSoft,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(
-        top: Radius.circular(AppSizes.radiusXl),
+        top: Radius.circular(AppSizes.radius2xl),
       ),
     ),
     builder: (context) => _ShoppingListSheet(ingredients: ingredients),
@@ -51,7 +60,7 @@ class _ShoppingListSheetState extends State<_ShoppingListSheet> {
   @override
   void initState() {
     super.initState();
-    // Default: every row pre-selected.
+    // Default: every row pre-selected (success-1 state).
     _selected = <int>{
       for (var i = 0; i < widget.ingredients.length; i++) i,
     };
@@ -116,6 +125,7 @@ class _ShoppingListSheetState extends State<_ShoppingListSheet> {
       for (var i = 0; i < widget.ingredients.length; i++)
         if (!_removed.contains(i)) i,
     ];
+    final toggleLabel = _allSelected ? 'Unselect All' : 'Select All';
 
     return SafeArea(
       top: false,
@@ -141,26 +151,36 @@ class _ShoppingListSheetState extends State<_ShoppingListSheet> {
               padding: const EdgeInsets.symmetric(
                 horizontal: AppSizes.pagePaddingH,
               ),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Add to Shopping List',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: AppColors.fgStrong,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Add to Shoplist',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: AppColors.fgStrong,
+                      ),
+                    ),
                   ),
-                ),
+                  IconButton(
+                    icon: const Icon(Icons.close, size: AppSizes.iconMd),
+                    color: AppColors.fgStrong,
+                    onPressed: () => Navigator.of(context).pop(),
+                    tooltip: 'Close',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: AppSizes.roundButtonSm,
+                      minHeight: AppSizes.roundButtonSm,
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: AppSizes.sm),
-            const Divider(
-              height: AppSizes.dividerThickness,
-              thickness: AppSizes.dividerThickness,
-              color: AppColors.borderSoft,
-            ),
             Flexible(
               child: ConstrainedBox(
                 constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.5,
+                  maxHeight: MediaQuery.of(context).size.height * 0.6,
                 ),
                 child: visibleIndices.isEmpty
                     ? _EmptyState(theme: theme)
@@ -185,11 +205,6 @@ class _ShoppingListSheetState extends State<_ShoppingListSheet> {
                       ),
               ),
             ),
-            const Divider(
-              height: AppSizes.dividerThickness,
-              thickness: AppSizes.dividerThickness,
-              color: AppColors.borderSoft,
-            ),
             Padding(
               padding: EdgeInsets.fromLTRB(
                 AppSizes.pagePaddingH,
@@ -197,20 +212,22 @@ class _ShoppingListSheetState extends State<_ShoppingListSheet> {
                 AppSizes.pagePaddingH,
                 AppSizes.sp12 + MediaQuery.of(context).padding.bottom,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+              child: Row(
                 children: [
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: _SelectAllToggle(
-                      label: _allSelected ? 'Unselect All' : 'Select All',
-                      onPressed: _remainingCount == 0 ? null : _toggleSelectAll,
+                  Expanded(
+                    child: AppPillButton(
+                      label: toggleLabel,
+                      variant: AppPillButtonVariant.ghost,
+                      onPressed:
+                          _remainingCount == 0 ? null : _toggleSelectAll,
                     ),
                   ),
-                  const SizedBox(height: AppSizes.sm),
-                  AppPillButton(
-                    label: 'Add ($selectedCount)',
-                    onPressed: selectedCount == 0 ? null : _confirm,
+                  const SizedBox(width: AppSizes.sp12),
+                  Expanded(
+                    child: AppPillButton(
+                      label: 'Add ($selectedCount)',
+                      onPressed: selectedCount == 0 ? null : _confirm,
+                    ),
                   ),
                 ],
               ),
@@ -240,7 +257,7 @@ class _IngredientRow extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Material(
-      color: AppColors.surface,
+      color: AppColors.cream,
       borderRadius: BorderRadius.circular(AppSizes.radiusMd),
       child: InkWell(
         onTap: onToggle,
@@ -251,7 +268,7 @@ class _IngredientRow extends StatelessWidget {
             vertical: AppSizes.sp12,
           ),
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: AppColors.cream,
             borderRadius: BorderRadius.circular(AppSizes.radiusMd),
             border: Border.all(color: AppColors.borderSoft),
           ),
@@ -287,56 +304,22 @@ class _RemoveButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Plain X glyph in Nibble-primary-Burgundy (Figma 971:9042 — token
+    // Nibble-primary-Burgundy #77393b). No circular background per the
+    // Figma rows.
     return Semantics(
       button: true,
       label: 'Remove',
       child: InkResponse(
         onTap: onPressed,
-        radius: AppSizes.checkbox,
-        child: Container(
-          width: AppSizes.checkbox,
-          height: AppSizes.checkbox,
-          alignment: Alignment.center,
-          decoration: const BoxDecoration(
-            color: AppColors.destructiveSoft,
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(
-            Icons.close_rounded,
+        radius: AppSizes.iconMd,
+        child: const SizedBox(
+          width: AppSizes.iconMd,
+          height: AppSizes.iconMd,
+          child: Icon(
+            Icons.close,
             size: AppSizes.iconSm,
-            color: AppColors.destructive,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SelectAllToggle extends StatelessWidget {
-  const _SelectAllToggle({required this.label, required this.onPressed});
-
-  final String label;
-  final VoidCallback? onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final disabled = onPressed == null;
-    final color = disabled ? AppColors.fgFaint : AppColors.greenDeep;
-
-    return InkWell(
-      onTap: onPressed,
-      borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.xs,
-          vertical: AppSizes.xs,
-        ),
-        child: Text(
-          label,
-          style: theme.textTheme.labelMedium?.copyWith(
-            color: color,
-            fontWeight: FontWeight.w700,
+            color: AppColors.burgundy,
           ),
         ),
       ),
