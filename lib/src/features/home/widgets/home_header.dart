@@ -31,12 +31,6 @@ class HomeHeader extends StatelessWidget {
   final int ageMonths;
   final VoidCallback? onAvatarTap;
 
-  String get _avatarInitial {
-    final trimmed = babyName.trim();
-    if (trimmed.isEmpty) return '?';
-    return trimmed.characters.first.toUpperCase();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -69,7 +63,7 @@ class HomeHeader extends StatelessWidget {
               ),
             ),
           ),
-          _HeaderAvatar(initial: _avatarInitial, onTap: onAvatarTap),
+          _HeaderAvatar(onTap: onAvatarTap),
         ],
       ),
     );
@@ -104,9 +98,8 @@ class _TodayPill extends StatelessWidget {
 }
 
 class _HeaderAvatar extends StatelessWidget {
-  const _HeaderAvatar({required this.initial, this.onTap});
+  const _HeaderAvatar({this.onTap});
 
-  final String initial;
   final VoidCallback? onTap;
 
   static const double _size = 36;
@@ -117,19 +110,14 @@ class _HeaderAvatar extends StatelessWidget {
       width: _size,
       height: _size,
       alignment: Alignment.center,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.greenDeep,
-        shape: BoxShape.circle,
+        borderRadius: BorderRadius.circular(10),
       ),
-      child: Text(
-        initial,
-        style: const TextStyle(
-          fontFamily: FontFamily.parkinsans,
-          fontSize: 14,
-          fontWeight: FontWeight.w700,
-          height: 1,
-          color: AppColors.cream,
-        ),
+      child: const Icon(
+        Icons.person_outline,
+        size: 20,
+        color: AppColors.cream,
       ),
     );
 
