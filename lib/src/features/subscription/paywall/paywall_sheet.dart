@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:nibbles/gen/fonts.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
@@ -13,6 +14,7 @@ import 'package:nibbles/src/common/domain/entities/subscription_offering.dart';
 import 'package:nibbles/src/features/subscription/paywall/paywall_controller.dart';
 import 'package:nibbles/src/features/subscription/paywall/paywall_state.dart';
 import 'package:nibbles/src/logging/analytics.dart';
+import 'package:nibbles/src/routing/route_enums.dart';
 
 /// Opens [PaywallSheet] as a modal bottom sheet (Figma "Overlay - subsplan",
 /// frame 1216:11727). Top corners are rounded 30 per spec; the sheet is
@@ -71,9 +73,11 @@ class _PaywallSheetState extends ConsumerState<PaywallSheet> {
     if (!mounted) return;
     result.whenOrNull(
       success: (_) {
-        // Pop the sheet on success — the upstream `Go Premium` caller can
-        // route to the subscription success screen if it wants to (NIB-130).
-        Navigator.of(context).pop();
+        // NIB-149 — always advance to the post-purchase transition screen.
+        // Works both for the modal sheet entry (Go Premium button) and the
+        // routed entry from the M2 guard redirect (NIB-144). The success
+        // screen owns the auto-route to /home after a min dwell.
+        context.goNamed(AppRoute.subscriptionSuccess.name);
       },
       failure: (error) {
         _showErrorDialog(
