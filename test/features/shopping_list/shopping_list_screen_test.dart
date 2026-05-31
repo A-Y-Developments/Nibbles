@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:nibbles/src/common/components/controls/app_segmented_control.dart';
+import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/domain/entities/shopping_list_item.dart';
 import 'package:nibbles/src/common/domain/enums/shopping_list_source.dart';
@@ -61,18 +63,35 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
-  // Empty state
+  // Header / chrome
   // ---------------------------------------------------------------------------
 
-  group('ShoppingListScreen - empty state', () {
-    testWidgets('List tab shows empty state when no items', (tester) async {
+  group('ShoppingListScreen - chrome', () {
+    testWidgets('renders Shopping List title + segmented tabs', (tester) async {
       await tester.pumpWidget(_buildSut(mockService));
       await tester.pumpAndSettle();
 
-      expect(
-        find.text("It seems you don't have any shopping list :("),
-        findsOneWidget,
-      );
+      expect(find.text('Shopping List'), findsOneWidget);
+      expect(find.byType(AppSegmentedControl), findsOneWidget);
+      expect(find.text('List'), findsOneWidget);
+      expect(find.text('Bought'), findsOneWidget);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Empty state — Figma 971:9989
+  // ---------------------------------------------------------------------------
+
+  group('ShoppingListScreen - empty state', () {
+    testWidgets('List tab shows verbatim empty-state copy + no CTA', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_buildSut(mockService));
+      await tester.pumpAndSettle();
+
+      expect(find.text("You don't have any list yet"), findsOneWidget);
+      // No browse-recipes CTA in this frame.
+      expect(find.text('Browse recipes to get started'), findsNothing);
     });
   });
 
@@ -113,7 +132,7 @@ void main() {
       expect(find.text('Apples'), findsOneWidget);
       expect(find.text('Bananas'), findsNothing);
 
-      // Switch to Bought tab
+      // Switch to Bought tab via segmented control
       await tester.tap(find.text('Bought'));
       await tester.pumpAndSettle();
 
@@ -123,13 +142,11 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
-  // Check / uncheck
+  // Check / uncheck — tap the square checkbox
   // ---------------------------------------------------------------------------
 
   group('ShoppingListScreen - check', () {
-    testWidgets('tapping checkbox calls checkItem on the service', (
-      tester,
-    ) async {
+    testWidgets('tapping the square checkbox calls checkItem', (tester) async {
       when(
         () => mockService.getItems(any()),
       ).thenAnswer((_) async => Result.success([_makeItem()]));
@@ -140,8 +157,11 @@ void main() {
       await tester.pumpWidget(_buildSut(mockService));
       await tester.pumpAndSettle();
 
-      // Tap the Checkbox widget
-      await tester.tap(find.byType(Checkbox).first);
+      // The square checkbox sits to the left of the row label inside the row
+      // card. Tap roughly at the box's center (~24px left of the label).
+      final apples = find.text('Apples');
+      final rowBox = tester.getRect(apples);
+      await tester.tapAt(Offset(rowBox.left - 24, rowBox.center.dy));
       await tester.pumpAndSettle();
 
       verify(() => mockService.checkItem('item-1')).called(1);
@@ -149,27 +169,13 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
-  // Delete with confirmation dialog
+  // Delete — per-row cancel chip → P2 toast on failure, no confirm dialog
   // ---------------------------------------------------------------------------
 
   group('ShoppingListScreen - delete', () {
-    testWidgets('delete icon tap shows confirmation dialog', (tester) async {
-      when(
-        () => mockService.getItems(any()),
-      ).thenAnswer((_) async => Result.success([_makeItem()]));
-
-      await tester.pumpWidget(_buildSut(mockService));
-      await tester.pumpAndSettle();
-
-      // Tap the trash icon
-      await tester.tap(find.byIcon(Icons.delete_outline).first);
-      await tester.pumpAndSettle();
-
-      expect(find.text('Delete item'), findsOneWidget);
-      expect(find.byType(AlertDialog), findsOneWidget);
-    });
-
-    testWidgets('confirm Yes → deleteItem called', (tester) async {
+    testWidgets('cancel chip directly deletes (no confirm dialog)', (
+      tester,
+    ) async {
       when(
         () => mockService.getItems(any()),
       ).thenAnswer((_) async => Result.success([_makeItem()]));
@@ -180,31 +186,29 @@ void main() {
       await tester.pumpWidget(_buildSut(mockService));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.delete_outline).first);
-      await tester.pumpAndSettle();
-
-      // Tap Yes in dialog
-      await tester.tap(find.text('Yes'));
+      await tester.tap(find.byIcon(Icons.cancel).first);
       await tester.pumpAndSettle();
 
       verify(() => mockService.deleteItem('item-1')).called(1);
+      // No AlertDialog should ever surface.
+      expect(find.byType(AlertDialog), findsNothing);
     });
 
-    testWidgets('confirm No → deleteItem never called', (tester) async {
+    testWidgets('delete failure surfaces P2 toast', (tester) async {
       when(
         () => mockService.getItems(any()),
       ).thenAnswer((_) async => Result.success([_makeItem()]));
+      when(
+        () => mockService.deleteItem(any()),
+      ).thenAnswer((_) async => const Result.failure(UnknownException('boom')));
 
       await tester.pumpWidget(_buildSut(mockService));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.delete_outline).first);
+      await tester.tap(find.byIcon(Icons.cancel).first);
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('No'));
-      await tester.pumpAndSettle();
-
-      verifyNever(() => mockService.deleteItem(any()));
+      expect(find.text("Couldn't delete item. Try again."), findsOneWidget);
     });
   });
 
@@ -217,14 +221,13 @@ void main() {
       await tester.pumpWidget(_buildSut(mockService));
       await tester.pumpAndSettle();
 
-      // Open overflow menu
-      await tester.tap(find.byIcon(Icons.more_vert));
+      // Open overflow menu via the green-deep more_horiz chip.
+      await tester.tap(find.byIcon(Icons.more_horiz));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Clear list'));
+      await tester.tap(find.text('Clear list').last);
       await tester.pumpAndSettle();
 
-      expect(find.text('Clear list'), findsWidgets);
       expect(
         find.text('This will delete all items. Are you sure?'),
         findsOneWidget,
@@ -246,7 +249,7 @@ void main() {
       await tester.pumpWidget(_buildSut(mockService));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.tap(find.byIcon(Icons.more_horiz));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Copy to clipboard'));
@@ -272,7 +275,7 @@ void main() {
       await tester.pumpWidget(_buildSut(mockService));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.tap(find.byIcon(Icons.more_horiz));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Copy to clipboard'));
