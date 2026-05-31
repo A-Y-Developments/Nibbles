@@ -2,13 +2,16 @@
 //
 // Renders the screen by overriding [recipeDetailControllerProvider] with a
 // canned [RecipeDetailState] and asserts:
+//   * the header bar (back chip + "Recipe Detail" title + overflow chip)
 //   * the hero + banner card + ingredients + method blocks are present
 //   * the allergen advisory card maps `safe` → AppChipTone.safe and
-//     `flagged` → AppChipTone.flag (never `.completed`)
+//     `flagged` → AppChipTone.flag (never `.completed`), and shows the
+//     verbatim body line + advisory copy
 //   * the storage / freezer / tip cards are HIDDEN when every state getter is
 //     null (placeholder Recipe state), and render when the getters are
 //     overridden non-null via a `_FakeDetailState`
 //   * the sticky CTA tap opens the multi-day Add-to-Meal-Plan sheet
+//   * the success toast is reachable and shows verbatim Figma copy
 //
 // Firebase platform-interface packages are transitive deps; the public barrels
 // don't re-export FirebaseAnalyticsPlatform/setupFirebaseCoreMocks. Test-only.
@@ -31,6 +34,7 @@ import 'package:nibbles/src/features/recipe/detail/recipe_detail_state.dart';
 import 'package:nibbles/src/features/recipe/detail/widgets/add_to_meal_plan_cta.dart';
 import 'package:nibbles/src/features/recipe/detail/widgets/contains_allergens_card.dart';
 import 'package:nibbles/src/features/recipe/detail/widgets/recipe_banner_card.dart';
+import 'package:nibbles/src/features/recipe/detail/widgets/recipe_detail_header.dart';
 import 'package:nibbles/src/features/recipe/detail/widgets/recipe_hero.dart';
 import 'package:nibbles/src/features/recipe/detail/widgets/recipe_tip_card.dart';
 import 'package:nibbles/src/features/recipe/detail/widgets/storage_card_row.dart';
@@ -40,7 +44,7 @@ const _babyId = 'baby-001';
 const _recipe = Recipe(
   id: 'r1',
   title: 'Avocado Toast',
-  ageRange: '6m+',
+  ageRange: '6+ months',
   allergenTags: ['peanut', 'egg'],
   ingredients: [
     Ingredient(name: 'Avocado', quantity: '1 whole'),
@@ -55,7 +59,7 @@ const _recipe = Recipe(
 const _emptyRecipe = Recipe(
   id: 'r-empty',
   title: 'Plain Carrot',
-  ageRange: '6m+',
+  ageRange: '6+ months',
   allergenTags: [],
   ingredients: [Ingredient(name: 'Carrot', quantity: '1')],
   steps: ['Boil.'],
@@ -188,41 +192,44 @@ void main() {
   });
 
   group('RecipeDetailScreen — base layout', () {
-    testWidgets('renders hero + banner + ingredients + method + sticky CTA', (
-      tester,
-    ) async {
-      const state = RecipeDetailState(
-        recipe: _recipe,
-        currentAllergenKey: 'peanut',
-        allergenStatuses: {
-          'peanut': AllergenStatus.safe,
-          'egg': AllergenStatus.flagged,
-        },
-      );
+    testWidgets(
+      'renders header + hero + banner + ingredients + method + sticky CTA',
+      (tester) async {
+        const state = RecipeDetailState(
+          recipe: _recipe,
+          currentAllergenKey: 'peanut',
+          allergenStatuses: {
+            'peanut': AllergenStatus.safe,
+            'egg': AllergenStatus.flagged,
+          },
+        );
 
-      await _pump(tester, state: state);
+        await _pump(tester, state: state);
 
-      expect(find.byType(RecipeHero), findsOneWidget);
-      expect(find.byType(RecipeBannerCard), findsOneWidget);
-      expect(find.text(_recipe.title), findsWidgets);
-      // 'Fit for {ageRange}' chip in banner card.
-      expect(
-        find.textContaining('Fit for ${_recipe.ageRange}'),
-        findsOneWidget,
-      );
-      // Category chip via banner.
-      expect(find.text('Purees'), findsOneWidget);
-      // Ingredients section header.
-      expect(find.text('Ingredients'), findsOneWidget);
-      // Method section header.
-      expect(find.text('Method'), findsOneWidget);
-      // Sticky CTA at bottom.
-      expect(find.byType(AddToMealPlanCta), findsOneWidget);
-      expect(find.text('Add to Meal Plan'), findsOneWidget);
-    });
+        // Header.
+        expect(find.byType(RecipeDetailHeader), findsOneWidget);
+        expect(find.text('Recipe Detail'), findsOneWidget);
+        // Hero + banner.
+        expect(find.byType(RecipeHero), findsOneWidget);
+        expect(find.byType(RecipeBannerCard), findsOneWidget);
+        expect(find.text(_recipe.title), findsWidgets);
+        // "Best for $ageRange" subtitle line in banner card.
+        expect(
+          find.text('Best for ${_recipe.ageRange}'),
+          findsOneWidget,
+        );
+        // Ingredients section header.
+        expect(find.text('Ingredients'), findsOneWidget);
+        // Method section header.
+        expect(find.text('Method'), findsOneWidget);
+        // Sticky CTA at bottom.
+        expect(find.byType(AddToMealPlanCta), findsOneWidget);
+        expect(find.text('Add to Meal Plan'), findsOneWidget);
+      },
+    );
 
     testWidgets(
-      'ContainsAllergensCard renders when allergenTags is non-empty',
+      'ContainsAllergensCard renders title + body line + verbatim advisory',
       (tester) async {
         const state = RecipeDetailState(
           recipe: _recipe,
@@ -237,6 +244,19 @@ void main() {
 
         expect(find.byType(ContainsAllergensCard), findsOneWidget);
         expect(find.text('Contains allergens'), findsOneWidget);
+        expect(
+          find.text(
+            'This recipe contains the following of the big 11 allergens',
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.text(
+            'Always consult your pediatrician before introducing '
+            'allergens to your baby.',
+          ),
+          findsOneWidget,
+        );
       },
     );
 
@@ -270,8 +290,6 @@ void main() {
 
         await _pump(tester, state: state);
 
-        // Find the two allergen chips inside ContainsAllergensCard. The chip
-        // for 'Peanut' should be tone safe; for 'Egg' tone flag.
         final peanutChip = tester.widget<AppChip>(
           find.descendant(
             of: find.byType(ContainsAllergensCard),
@@ -306,7 +324,7 @@ void main() {
         expect(find.byType(StorageCardRow), findsNothing);
         expect(find.byType(RecipeTipCard), findsNothing);
         // Utensils section is also gated; header should not render.
-        expect(find.text('Utensils'), findsNothing);
+        expect(find.text('Utensils / appliances'), findsNothing);
       },
     );
 
@@ -317,7 +335,7 @@ void main() {
     // list — the production getters are hardcoded to `=> null` in
     // `recipe_detail_state.dart`, so this branch is currently unreachable
     // in-app. Fixing the layout requires modifying `storage_card_row.dart`,
-    // which is out of scope for this test-only ticket (build rule 2).
+    // which is out of scope for this redesign-only ticket.
 
     testWidgets(
       'non-null textureTip and whyThisMeal → RecipeTipCard renders for each',
@@ -335,7 +353,9 @@ void main() {
       },
     );
 
-    testWidgets('non-null utensils → Utensils section renders', (tester) async {
+    testWidgets('non-null utensils → Utensils / appliances section renders', (
+      tester,
+    ) async {
       const state = _FakeDetailState(
         recipe: _emptyRecipe,
         currentAllergenKey: 'peanut',
@@ -344,7 +364,7 @@ void main() {
 
       await _pump(tester, state: state);
 
-      expect(find.text('Utensils'), findsOneWidget);
+      expect(find.text('Utensils / appliances'), findsOneWidget);
       expect(find.text('Spoon'), findsOneWidget);
       expect(find.text('Bowl'), findsOneWidget);
     });
@@ -372,6 +392,38 @@ void main() {
       // The multi-day sheet exposes a 'Days Selected' counter and a 'Close'
       // tooltip — both unique to that sheet.
       expect(find.textContaining('Days Selected'), findsOneWidget);
+    });
+  });
+
+  group('RecipeDetailScreen — success-toast state (Figma node 1474:53362)', () {
+    testWidgets(
+      'AddToMealPlanSuccessBanner renders verbatim Figma copy when shown',
+      (tester) async {
+        // The banner widget is invoked unconditionally — the screen-level
+        // toggle is driven by a private timer that only fires after the
+        // controller's `assignToMealPlan` returns success. Cover the widget
+        // directly to assert verbatim copy.
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: Scaffold(
+              body: AddToMealPlanSuccessBanner(
+                message: 'Succesfully added to meal plan',
+              ),
+            ),
+          ),
+        );
+
+        expect(find.byType(AddToMealPlanSuccessBanner), findsOneWidget);
+        // Verbatim "Succesfully" — sic, matches Figma. Flagged in the PR for
+        // a copy review with the PO.
+        expect(find.text('Succesfully added to meal plan'), findsOneWidget);
+      },
+    );
+
+    test('toast duration default is 3 seconds', () {
+      // Exposed as a @visibleForTesting top-level constant so the auto-dismiss
+      // duration is locked in tests.
+      expect(kAddedToMealPlanToastDuration, const Duration(seconds: 3));
     });
   });
 }

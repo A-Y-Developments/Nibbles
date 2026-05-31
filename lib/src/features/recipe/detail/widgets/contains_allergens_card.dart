@@ -6,12 +6,13 @@ import 'package:nibbles/src/common/components/cards/app_card.dart';
 import 'package:nibbles/src/common/components/chips/app_chip.dart';
 import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
 
-/// "Contains allergens" section — renders a chip per allergen tag plus a
-/// salmon-ghost advisory box telling parents to consult a pediatrician.
+/// "Contains allergens" section — renders a body line, a chip per allergen
+/// tag, and a burgundy-ghost advisory box telling parents to consult a
+/// pediatrician.
 ///
 /// Chip tone uses the canonical status semantics: safe → safe chip,
 /// flagged → flag chip; everything else stays neutral. `.completed` is
-/// never used — see CLAUDE.md.
+/// never used — see CLAUDE.md. Mirrors Figma node 1129:25330.
 class ContainsAllergensCard extends StatelessWidget {
   const ContainsAllergensCard({
     required this.allergenTags,
@@ -64,6 +65,13 @@ class ContainsAllergensCard extends StatelessWidget {
               ),
             ],
           ),
+          const SizedBox(height: AppSizes.xs),
+          Text(
+            'This recipe contains the following of the big 11 allergens',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: AppColors.fgDefault,
+            ),
+          ),
           const SizedBox(height: AppSizes.sm),
           Wrap(
             spacing: AppSizes.xs,
@@ -98,7 +106,7 @@ class _AdvisoryBox extends StatelessWidget {
         vertical: AppSizes.sp12,
       ),
       decoration: BoxDecoration(
-        color: AppColors.coralSoft,
+        color: AppColors.burgundyGhost,
         borderRadius: BorderRadius.circular(AppSizes.radiusLg),
       ),
       child: Row(
@@ -107,13 +115,13 @@ class _AdvisoryBox extends StatelessWidget {
           const Icon(
             Icons.menu_book_outlined,
             size: AppSizes.iconMd,
-            color: AppColors.coralDeep,
+            color: AppColors.burgundy,
           ),
           const SizedBox(width: AppSizes.sm),
           Expanded(
             child: Text(
               'Always consult your pediatrician before introducing '
-              'new allergens.',
+              'allergens to your baby.',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: AppColors.fgDefault,
               ),

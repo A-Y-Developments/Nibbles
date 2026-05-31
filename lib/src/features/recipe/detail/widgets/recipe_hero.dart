@@ -16,7 +16,8 @@ class RecipeHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AspectRatio(
-      aspectRatio: 16 / 9,
+      // Figma node 971:9618 is 402 x 267 (~1.505); approximate to 3/2.
+      aspectRatio: 3 / 2,
       child: imageUrl == null || imageUrl!.isEmpty
           ? const _Fallback()
           : CachedNetworkImage(
