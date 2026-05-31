@@ -52,5 +52,13 @@ class MapMealsState with _$MapMealsState {
     return pickedRecipes.where((r) => ids.contains(r.id)).toList();
   }
 
+  /// Set of days (date-only) that have at least one assignment — drives
+  /// the day-chip "Filled" variant (frame 971:8441).
+  Set<DateTime> filledDays() {
+    return assignments.values
+        .map((d) => DateTime(d.year, d.month, d.day))
+        .toSet();
+  }
+
   static String _dateKey(DateTime dt) => '${dt.year}-${dt.month}-${dt.day}';
 }

@@ -156,18 +156,42 @@ void main() {
     });
 
     testWidgets(
-      '"Mapp Meal Plan" CTA is disabled until at least 1 assignment exists',
+      'floating CTA is absent with 0 assignments, says "Add (N)" while '
+      'partial, and "Complete Mapping" once every picked recipe is assigned',
       (tester) async {
         await pumpMap(tester);
 
-        final cta = find.widgetWithText(FilledButton, 'Mapp Meal Plan');
-        expect(cta, findsOneWidget);
-        expect(tester.widget<FilledButton>(cta).onPressed, isNull);
+        // 0 assignments → no CTA rendered at all.
+        expect(find.byType(FilledButton), findsNothing);
 
+        // 1 of 2 assigned → "Add (1)".
         await tester.tap(find.text(_recipeA.title));
         await tester.pumpAndSettle();
+        expect(
+          find.widgetWithText(FilledButton, 'Add (1)'),
+          findsOneWidget,
+        );
 
-        expect(tester.widget<FilledButton>(cta).onPressed, isNotNull);
+        // 2 of 2 assigned → "Complete Mapping".
+        await tester.tap(find.text(_recipeB.title));
+        await tester.pumpAndSettle();
+        expect(
+          find.widgetWithText(FilledButton, 'Complete Mapping'),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'empty selected-day shows "No Meals Mapped Yet" + drag-drop helper text',
+      (tester) async {
+        await pumpMap(tester);
+
+        expect(find.text('No Meals Mapped Yet'), findsOneWidget);
+        expect(
+          find.text('Drag & drop or click meals below to add them'),
+          findsOneWidget,
+        );
       },
     );
 
@@ -230,11 +254,13 @@ void main() {
       await tester.tap(find.text('Push'));
       await tester.pumpAndSettle();
 
-      // Assign one recipe + commit.
+      // Assign both recipes (so the CTA says "Complete Mapping") + commit.
       await tester.tap(find.text(_recipeA.title));
       await tester.pumpAndSettle();
+      await tester.tap(find.text(_recipeB.title));
+      await tester.pumpAndSettle();
       await tester.tap(
-        find.widgetWithText(FilledButton, 'Mapp Meal Plan'),
+        find.widgetWithText(FilledButton, 'Complete Mapping'),
       );
       await tester.pumpAndSettle();
 
@@ -262,8 +288,10 @@ void main() {
 
         await tester.tap(find.text(_recipeA.title));
         await tester.pumpAndSettle();
+        await tester.tap(find.text(_recipeB.title));
+        await tester.pumpAndSettle();
         await tester.tap(
-          find.widgetWithText(FilledButton, 'Mapp Meal Plan'),
+          find.widgetWithText(FilledButton, 'Complete Mapping'),
         );
         await tester.pumpAndSettle();
 

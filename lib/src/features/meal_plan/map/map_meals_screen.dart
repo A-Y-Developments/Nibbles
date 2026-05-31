@@ -64,6 +64,7 @@ class MapMealsScreen extends ConsumerWidget {
               startDate: state.startDate,
               endDate: state.endDate,
               selectedDay: state.selectedDay,
+              filledDays: state.filledDays(),
               onSelect: notifier.selectDay,
             ),
             const SizedBox(height: AppSizes.md),
@@ -74,16 +75,22 @@ class MapMealsScreen extends ConsumerWidget {
                 ),
                 children: [
                   _SelectedDayHeader(state: state, weekdayNames: _weekdayName),
+                  if (state.recipesForSelectedDay().isNotEmpty) ...[
+                    const SizedBox(height: AppSizes.xs),
+                    Text(
+                      'Drag & drop or click meals below to add them',
+                      style: AppTypography.caption.copyWith(
+                        color: AppColors.fgMuted,
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: AppSizes.sm),
                   SelectedDaySlotList(
                     recipes: state.recipesForSelectedDay(),
                     onRemove: notifier.unassign,
                   ),
                   const SizedBox(height: AppSizes.lg),
-                  Text(
-                    'Meals Picked — ${state.totalCount} selected',
-                    style: AppTypography.sectionTitle,
-                  ),
+                  _MealsPickedHeader(totalCount: state.totalCount),
                   const SizedBox(height: AppSizes.sm),
                   for (var i = 0; i < state.pickedRecipes.length; i++) ...[
                     if (i != 0) const SizedBox(height: AppSizes.sm),
@@ -220,6 +227,33 @@ class _MapMealsAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 }
 
+/// "Meals Picked" section header. Per Figma frames 03–07 the title sits
+/// flush-left and the picked-count chip (`N selected`) sits flush-right
+/// on the same row.
+class _MealsPickedHeader extends StatelessWidget {
+  const _MealsPickedHeader({required this.totalCount});
+
+  final int totalCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const Expanded(
+          child: Text('Meals Picked', style: AppTypography.sectionTitle),
+        ),
+        Text(
+          '$totalCount selected',
+          style: AppTypography.caption.copyWith(
+            color: AppColors.fgMuted,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _SelectedDayHeader extends StatelessWidget {
   const _SelectedDayHeader({required this.state, required this.weekdayNames});
 
@@ -238,6 +272,14 @@ class _SelectedDayHeader extends StatelessWidget {
   }
 }
 
+/// Floating commit bar for the Map Meals Plan screen.
+///
+/// Per the Figma spec (frames 971:8375 → 971:8511) the CTA progresses
+/// through three states based on how many picked recipes are assigned:
+///
+/// * 0 assignments      → bar is hidden (frames 03/04 show no CTA at all)
+/// * 1..N-1 assignments → `Add (<remaining>)`
+/// * N == totalCount    → `Complete Mapping`
 class _CommitBar extends StatelessWidget {
   const _CommitBar({required this.state, required this.onCommit});
 
@@ -246,8 +288,14 @@ class _CommitBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasAssignments = state.assignments.isNotEmpty;
-    final disabled = !hasAssignments || state.isCommitting;
+    final filled = state.filledCount;
+    final total = state.totalCount;
+    if (filled == 0) return const SizedBox.shrink();
+
+    final isComplete = filled >= total;
+    final label = isComplete ? 'Complete Mapping' : 'Add (${total - filled})';
+    final disabled = state.isCommitting;
+
     return SafeArea(
       top: false,
       child: Padding(
@@ -262,9 +310,7 @@ class _CommitBar extends StatelessWidget {
           height: AppSizes.buttonHeight,
           child: FilledButton(
             style: FilledButton.styleFrom(
-              backgroundColor: disabled
-                  ? AppColors.borderMuted
-                  : AppColors.greenDeep,
+              backgroundColor: AppColors.greenDeep,
               foregroundColor: AppColors.onGreen,
               disabledBackgroundColor: AppColors.borderMuted,
               disabledForegroundColor: AppColors.fgFaint,
@@ -282,7 +328,7 @@ class _CommitBar extends StatelessWidget {
                       color: AppColors.onGreen,
                     ),
                   )
-                : Text('Mapp Meal Plan', style: AppTypography.button),
+                : Text(label, style: AppTypography.button),
           ),
         ),
       ),

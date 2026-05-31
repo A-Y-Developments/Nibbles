@@ -5,15 +5,19 @@ import 'package:nibbles/src/app/themes/app_typography.dart';
 
 /// Horizontal day chip row for the Map Meals Plan screen (NIB-95).
 ///
-/// Renders one chip per day in `[startDate, endDate]`. Selected chip uses
-/// [AppColors.greenDeep]; unselected chips show the day abbreviation and
-/// numeric date in muted text on cream.
+/// Renders one chip per day in `[startDate, endDate]`. Each chip renders
+/// in one of three states (Figma frame 971:8441 / CalendarPerday):
+///
+/// * Selected (current chip)        — forestdarkn bg / cream text
+/// * Filled (has any assigned meal) — cream bg / forestdarkn text + check
+/// * Not-selected                   — white bg / forestdarkn text
 class DayChipRow extends StatelessWidget {
   const DayChipRow({
     required this.startDate,
     required this.endDate,
     required this.selectedDay,
     required this.onSelect,
+    this.filledDays = const <DateTime>{},
     super.key,
   });
 
@@ -21,6 +25,10 @@ class DayChipRow extends StatelessWidget {
   final DateTime endDate;
   final DateTime selectedDay;
   final ValueChanged<DateTime> onSelect;
+
+  /// Set of days (date-only) that have at least one assigned meal — used
+  /// to render the "Filled" chip variant.
+  final Set<DateTime> filledDays;
 
   static const _weekdayAbbrev = <int, String>{
     DateTime.monday: 'Mon',
@@ -32,6 +40,21 @@ class DayChipRow extends StatelessWidget {
     DateTime.sunday: 'Sun',
   };
 
+  static const _monthAbbrev = <int, String>{
+    1: 'Jan',
+    2: 'Feb',
+    3: 'Mar',
+    4: 'Apr',
+    5: 'May',
+    6: 'Jun',
+    7: 'Jul',
+    8: 'Aug',
+    9: 'Sep',
+    10: 'Oct',
+    11: 'Nov',
+    12: 'Dec',
+  };
+
   List<DateTime> _days() {
     final start = DateTime(startDate.year, startDate.month, startDate.day);
     final end = DateTime(endDate.year, endDate.month, endDate.day);
@@ -39,7 +62,7 @@ class DayChipRow extends StatelessWidget {
     return List<DateTime>.generate(count, (i) => start.add(Duration(days: i)));
   }
 
-  bool _isSameDay(DateTime a, DateTime b) =>
+  static bool _isSameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
 
   @override
@@ -55,9 +78,12 @@ class DayChipRow extends StatelessWidget {
         itemBuilder: (context, index) {
           final day = days[index];
           final isSelected = _isSameDay(day, selectedDay);
+          final isFilled =
+              filledDays.any((d) => _isSameDay(d, day));
           return _DayChip(
             day: day,
             isSelected: isSelected,
+            isFilled: isFilled,
             onTap: () => onSelect(day),
           );
         },
@@ -70,19 +96,36 @@ class _DayChip extends StatelessWidget {
   const _DayChip({
     required this.day,
     required this.isSelected,
+    required this.isFilled,
     required this.onTap,
   });
 
   final DateTime day;
   final bool isSelected;
+  final bool isFilled;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final abbrev = DayChipRow._weekdayAbbrev[day.weekday] ?? '';
-    final bg = isSelected ? AppColors.greenDeep : AppColors.surface;
-    final fg = isSelected ? AppColors.onGreen : AppColors.fgDefault;
-    final borderColor = isSelected ? AppColors.greenDeep : AppColors.borderSoft;
+    final monthAbbrev = DayChipRow._monthAbbrev[day.month] ?? '';
+
+    final Color bg;
+    final Color fg;
+    final Color borderColor;
+    if (isSelected) {
+      bg = AppColors.greenDeep;
+      fg = AppColors.onGreen;
+      borderColor = AppColors.greenDeep;
+    } else if (isFilled) {
+      bg = AppColors.butterSoft;
+      fg = AppColors.greenDeep;
+      borderColor = AppColors.greenDeep;
+    } else {
+      bg = AppColors.surface;
+      fg = AppColors.fgDefault;
+      borderColor = AppColors.borderSoft;
+    }
 
     return GestureDetector(
       onTap: onTap,
@@ -94,12 +137,19 @@ class _DayChip extends StatelessWidget {
           border: Border.all(color: borderColor),
         ),
         padding: const EdgeInsets.symmetric(
-          vertical: AppSizes.sp12,
-          horizontal: AppSizes.sm,
+          vertical: AppSizes.sm,
+          horizontal: AppSizes.xs,
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
+            if (isFilled && !isSelected)
+              Icon(
+                Icons.check,
+                color: fg,
+                size: AppSizes.iconSm,
+              ),
             Text(
               abbrev,
               style: AppTypography.caption.copyWith(
@@ -107,10 +157,13 @@ class _DayChip extends StatelessWidget {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: AppSizes.xs),
             Text(
-              '${day.day}',
-              style: AppTypography.sectionTitle.copyWith(color: fg),
+              '${day.day} $monthAbbrev',
+              style: AppTypography.caption.copyWith(
+                color: fg,
+                fontWeight: FontWeight.w700,
+                fontSize: 12,
+              ),
             ),
           ],
         ),
