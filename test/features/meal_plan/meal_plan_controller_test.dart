@@ -154,8 +154,9 @@ void main() {
 
   group('MealPlanController.build', () {
     test(
-      'sets windowStart to today (date-only), windowEnd to today+6, '
-      'populates entries + baby, expanded starts empty',
+      'NIB-143: windowStart is most-recent Monday on/before today, '
+      'windowEnd is windowStart + 6 (Sunday), populates entries + baby, '
+      'expanded starts empty',
       () async {
         final entry = _makeEntry();
         stubHappy(entries: [entry]);
@@ -166,16 +167,48 @@ void main() {
         );
 
         final today = DateTime.now();
-        final expectedStart = DateTime(today.year, today.month, today.day);
+        final todayDateOnly = DateTime(today.year, today.month, today.day);
+        final expectedStart = todayDateOnly.subtract(
+          Duration(days: todayDateOnly.weekday - 1),
+        );
         final expectedEnd = expectedStart.add(const Duration(days: 6));
 
         expect(state.windowStart, expectedStart);
+        expect(state.windowStart.weekday, DateTime.monday);
         expect(state.windowEnd, expectedEnd);
+        expect(state.windowEnd.weekday, DateTime.sunday);
+        expect(
+          state.windowEnd.difference(state.windowStart).inDays,
+          6,
+        );
         expect(state.entries, hasLength(1));
         expect(state.entries.single.id, 'mp-1');
         expect(state.baby?.id, _babyId);
         expect(state.expanded, isEmpty);
         expect(state.recipes['recipe-001']?.title, 'Peanut Butter Toast');
+      },
+    );
+
+    test(
+      'NIB-143: getRolling7 is invoked with the Monday windowStart, '
+      'not today',
+      () async {
+        stubHappy();
+        final container = buildContainer();
+        await container.read(mealPlanControllerProvider(_babyId).future);
+
+        final today = DateTime.now();
+        final todayDateOnly = DateTime(today.year, today.month, today.day);
+        final expectedStart = todayDateOnly.subtract(
+          Duration(days: todayDateOnly.weekday - 1),
+        );
+
+        verify(
+          () => mockMealPlanService.getRolling7(
+            _babyId,
+            today: expectedStart,
+          ),
+        ).called(1);
       },
     );
 

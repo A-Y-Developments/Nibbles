@@ -20,6 +20,14 @@ class MealPlanController extends _$MealPlanController {
 
   static DateTime _dateOnly(DateTime dt) => DateTime(dt.year, dt.month, dt.day);
 
+  /// NIB-143: most-recent Monday on or before [dt] (local-date floor).
+  /// `DateTime.weekday` is 1 (Mon) through 7 (Sun), so subtracting
+  /// `weekday - 1` lands on Monday.
+  static DateTime _mondayOnOrBefore(DateTime dt) {
+    final dateOnly = _dateOnly(dt);
+    return dateOnly.subtract(Duration(days: dateOnly.weekday - 1));
+  }
+
   /// Normalize an expand-map key to a UTC date-only [DateTime] so keys match
   /// regardless of the input's local TZ or sub-day precision.
   static DateTime _expandedKey(DateTime day) =>
@@ -29,7 +37,9 @@ class MealPlanController extends _$MealPlanController {
   Future<MealPlanState> build(String babyId) async {
     _babyId = babyId;
 
-    final windowStart = _dateOnly(DateTime.now());
+    // NIB-143: anchor the 7-day window on the most-recent Monday
+    // on/before today so the planner always renders a Mon-Sun week.
+    final windowStart = _mondayOnOrBefore(DateTime.now());
     final windowEnd = windowStart.add(const Duration(days: 6));
 
     final mealPlanService = ref.read(mealPlanServiceProvider);
