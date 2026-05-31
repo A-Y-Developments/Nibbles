@@ -51,7 +51,8 @@ class HelpfulGuidanceCard extends StatelessWidget {
         const SizedBox(height: AppSizes.sm + 2),
         const TipCard(
           title: 'Important Health Disclaimer',
-          body: 'Our recommendations are intended for educational purposes '
+          body:
+              'Our recommendations are intended for educational purposes '
               'only and should not be considered medical advice.',
         ),
       ],

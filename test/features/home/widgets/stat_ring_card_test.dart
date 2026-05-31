@@ -84,25 +84,24 @@ void main() {
       },
     );
 
-    testWidgets(
-      'hasIronRichRecipes = true -> both chips render',
-      (tester) async {
-        await tester.pumpWidget(
-          _wrap(
-            const StatRingCard(
-              safeCount: 1,
-              flaggedCount: 0,
-              notStartedCount: 8,
-              inProgressCount: 0,
-              hasIronRichRecipes: true,
-            ),
+    testWidgets('hasIronRichRecipes = true -> both chips render', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(
+          const StatRingCard(
+            safeCount: 1,
+            flaggedCount: 0,
+            notStartedCount: 8,
+            inProgressCount: 0,
+            hasIronRichRecipes: true,
           ),
-        );
+        ),
+      );
 
-        expect(find.byType(AppChip), findsNWidgets(2));
-        expect(find.text('✓ Iron Rich'), findsOneWidget);
-        expect(find.text('✓ Active Program Allergens'), findsOneWidget);
-      },
-    );
+      expect(find.byType(AppChip), findsNWidgets(2));
+      expect(find.text('✓ Iron Rich'), findsOneWidget);
+      expect(find.text('✓ Active Program Allergens'), findsOneWidget);
+    });
   });
 }

@@ -58,8 +58,7 @@ class TodaysMealsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final today = DateTime.now();
-    final headerTitle =
-        'Today, ${_shortMonths[today.month - 1]} ${today.day}';
+    final headerTitle = 'Today, ${_shortMonths[today.month - 1]} ${today.day}';
     final isComplete = todaysMeals.length >= _dailyTarget;
 
     return Column(
@@ -195,7 +194,8 @@ class _MealRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = recipe?.title ??
+    final title =
+        recipe?.title ??
         ((entry.mealTime?.isNotEmpty ?? false)
             ? _capitalize(entry.mealTime!)
             : 'Meal');

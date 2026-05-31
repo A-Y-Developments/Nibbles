@@ -13,11 +13,7 @@ import 'package:nibbles/src/routing/route_enums.dart';
 /// other Home variant keeps the header/greeting/stats chrome and composes
 /// [ReadyToStartCard] / [GettingStartedTipsCard] inline.
 class HomeEmptyStateFull extends StatelessWidget {
-  const HomeEmptyStateFull({
-    this.babyName,
-    this.onCreateMealPlan,
-    super.key,
-  });
+  const HomeEmptyStateFull({this.babyName, this.onCreateMealPlan, super.key});
 
   /// Optional baby name. When null the CTA body falls back to a neutral
   /// "your baby's food journey" phrasing.
@@ -64,11 +60,7 @@ class HomeEmptyStateFull extends StatelessWidget {
 /// the headline + spec body copy (interpolating [babyName] when provided)
 /// and a primary "Create First Meal" pill driven by [onPressed].
 class ReadyToStartCard extends StatelessWidget {
-  const ReadyToStartCard({
-    required this.onPressed,
-    this.babyName,
-    super.key,
-  });
+  const ReadyToStartCard({required this.onPressed, this.babyName, super.key});
 
   final VoidCallback onPressed;
   final String? babyName;
@@ -101,24 +93,17 @@ class ReadyToStartCard extends StatelessWidget {
           Text(
             'Ready to Start?',
             textAlign: TextAlign.center,
-            style: textTheme.displaySmall?.copyWith(
-              color: AppColors.fgStrong,
-            ),
+            style: textTheme.displaySmall?.copyWith(color: AppColors.fgStrong),
           ),
           const SizedBox(height: AppSizes.sm),
           Text(
             'Begin $possessive food journey by creating your first meal '
             'prep and introducing allergens safely.',
             textAlign: TextAlign.center,
-            style: textTheme.bodyLarge?.copyWith(
-              color: AppColors.fgFaint,
-            ),
+            style: textTheme.bodyLarge?.copyWith(color: AppColors.fgFaint),
           ),
           const SizedBox(height: AppSizes.lg),
-          AppPillButton(
-            label: 'Create First Meal',
-            onPressed: onPressed,
-          ),
+          AppPillButton(label: 'Create First Meal', onPressed: onPressed),
         ],
       ),
     );

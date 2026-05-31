@@ -21,7 +21,8 @@ class GettingStartedTipsCard extends StatelessWidget {
         SizedBox(height: 12),
         TipCard(
           title: 'Getting Started Tips',
-          body: 'Start with single-ingredient purees and introduce one new '
+          body:
+              'Start with single-ingredient purees and introduce one new '
               'food every 3-5 days to monitor for reactions.',
         ),
       ],

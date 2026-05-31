@@ -100,9 +100,7 @@ class HomeController extends _$HomeController {
     final uniqueIds = <String>{for (final e in entries) e.recipeId};
     final service = ref.read(recipeServiceProvider);
 
-    final fetched = await Future.wait(
-      uniqueIds.map(service.getRecipeById),
-    );
+    final fetched = await Future.wait(uniqueIds.map(service.getRecipeById));
 
     final out = <String, Recipe>{};
     var i = 0;

@@ -102,10 +102,7 @@ class OngoingIntroducedCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          name,
-                          style: AppTypography.emptyStateTitle,
-                        ),
+                        Text(name, style: AppTypography.emptyStateTitle),
                         const SizedBox(height: AppSizes.sp2),
                         Text(
                           '$filled/$_target times ',
@@ -153,10 +150,7 @@ class _CoralThumb extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppSizes.radiusLg),
       ),
       alignment: Alignment.center,
-      child: Text(
-        emoji,
-        style: const TextStyle(fontSize: 28, height: 1),
-      ),
+      child: Text(emoji, style: const TextStyle(fontSize: 28, height: 1)),
     );
   }
 }

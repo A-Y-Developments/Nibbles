@@ -222,13 +222,7 @@ class _RingPainter extends CustomPainter {
       final paint = Paint()
         ..color = fillColor
         ..style = PaintingStyle.fill;
-      canvas.drawArc(
-        rect,
-        -math.pi / 2,
-        2 * math.pi * fraction,
-        true,
-        paint,
-      );
+      canvas.drawArc(rect, -math.pi / 2, 2 * math.pi * fraction, true, paint);
     }
 
     // Hole — butter-soft inner disc to leave only the ring band visible.

@@ -42,9 +42,7 @@ void main() {
 
     expect(find.text('Milk feeds still the priority'), findsOneWidget);
     expect(
-      find.text(
-        'Breastmilk or formula remains the main nutrition at 8 months',
-      ),
+      find.text('Breastmilk or formula remains the main nutrition at 8 months'),
       findsOneWidget,
     );
   });
