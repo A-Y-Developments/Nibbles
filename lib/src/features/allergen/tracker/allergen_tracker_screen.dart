@@ -320,6 +320,7 @@ class _TrackerAppBar extends StatelessWidget {
           AppRoundButton(
             icon: const Icon(Icons.arrow_back_ios_new_rounded),
             onPressed: onBack,
+            tone: AppRoundButtonTone.ghost,
             semanticLabel: 'Back',
           ),
           Expanded(
@@ -419,19 +420,20 @@ class _OngoingList extends StatelessWidget {
   Widget build(BuildContext context) {
     final exposed = _exposed;
 
-    if (exposed.isEmpty && logs.isEmpty) {
-      return const SliverToBoxAdapter(child: _OngoingEmptyState());
-    }
-
+    // Section scaffolding ALWAYS renders (Figma 1089:17373). Empty data
+    // is shown as a per-section placeholder INSIDE the section, never as a
+    // full-screen flower illustration.
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: AppSizes.pagePaddingH),
       sliver: SliverList(
         delegate: SliverChildListDelegate(<Widget>[
-          if (exposed.isNotEmpty) ...[
-            _SectionHeader(
-              title: 'Allergen Exposure',
-              trailing: _SeeAllLink(onPressed: onSeeAll),
-            ),
+          _SectionHeader(
+            title: 'Allergen Exposure',
+            trailing: _SeeAllLink(onPressed: onSeeAll),
+          ),
+          if (exposed.isEmpty)
+            const _SectionPlaceholder(text: 'No exposures yet')
+          else
             for (final a in exposed) ...[
               AllergenProgressCard(
                 allergen: a,
@@ -445,10 +447,11 @@ class _OngoingList extends StatelessWidget {
               ),
               const SizedBox(height: AppSizes.sm),
             ],
-            const SizedBox(height: AppSizes.sm),
-          ],
-          if (logs.isNotEmpty) ...[
-            const _SectionHeader(title: 'Reaction Log'),
+          const SizedBox(height: AppSizes.md),
+          const _SectionHeader(title: 'Reaction Log'),
+          if (logs.isEmpty)
+            const _SectionPlaceholder(text: 'No reactions logged yet')
+          else
             for (final entry in _reverseIndexed(logs)) ...[
               Builder(
                 builder: (context) => ReactionLogRow(
@@ -466,7 +469,6 @@ class _OngoingList extends StatelessWidget {
               ),
               const SizedBox(height: AppSizes.sm),
             ],
-          ],
         ]),
       ),
     );
@@ -488,21 +490,24 @@ class _IndexedLog {
   final int index;
 }
 
-class _OngoingEmptyState extends StatelessWidget {
-  const _OngoingEmptyState();
+/// Lightweight per-section empty placeholder. Sits inside a section card slot
+/// without the full-screen Quatrefoil mark — section scaffolding (header)
+/// stays visible above it. Matches Figma's section-level empty treatment.
+class _SectionPlaceholder extends StatelessWidget {
+  const _SectionPlaceholder({required this.text});
+
+  final String text;
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: AppSizes.pagePaddingH,
-        vertical: AppSizes.lg,
-      ),
-      child: EmptyState(
-        title: 'No introductions yet',
-        subtitle:
-            'Switch to Big 11 to choose an allergen and tap '
-            "'Start Introduce' to begin.",
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSizes.md),
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+          color: AppColors.fgFaint,
+        ),
       ),
     );
   }

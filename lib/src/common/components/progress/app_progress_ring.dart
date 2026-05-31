@@ -43,7 +43,8 @@ class AppProgressRing extends StatelessWidget {
                   text: '$value',
                   style: const TextStyle(
                     fontFamily: FontFamily.parkinsans,
-                    fontSize: 22,
+                    // Figma "Large/Bold" 28 (report 1089:17373 line 56).
+                    fontSize: 28,
                     fontWeight: FontWeight.w700,
                     height: 1,
                     color: AppColors.coralDeep,
@@ -53,7 +54,7 @@ class AppProgressRing extends StatelessWidget {
                   text: '/$max',
                   style: const TextStyle(
                     fontFamily: FontFamily.parkinsans,
-                    fontSize: 10,
+                    fontSize: 12,
                     height: 1,
                     color: AppColors.fgFaint,
                   ),

@@ -256,7 +256,8 @@ void main() {
     );
 
     testWidgets(
-      'Ongoing tab shows empty state when no allergens have logs',
+      'Ongoing tab keeps section scaffolding visible with per-section '
+      'placeholders when there are no exposures or logs',
       (tester) async {
         stubReads(
           statuses: {
@@ -267,9 +268,18 @@ void main() {
         await tester.pumpWidget(buildSubject(_PushRecorder()));
         await tester.pumpAndSettle();
 
-        expect(find.text('No introductions yet'), findsOneWidget);
-        // No Allergen Exposure section header in empty state.
-        expect(find.text('Allergen Exposure'), findsNothing);
+        // Section headers remain visible at zero data (Figma 1089:17373).
+        expect(find.text('Allergen Exposure'), findsOneWidget);
+        expect(
+          find.text('Reaction Log', skipOffstage: false),
+          findsOneWidget,
+        );
+        // Per-section placeholders sit inside their sections.
+        expect(find.text('No exposures yet'), findsOneWidget);
+        expect(
+          find.text('No reactions logged yet', skipOffstage: false),
+          findsOneWidget,
+        );
       },
     );
 
