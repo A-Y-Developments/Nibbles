@@ -142,9 +142,9 @@ void main() {
         // animation/animation-pumping can produce duplicate Text widgets
         // — assert presence, not exact count).
         expect(find.text('Safe'), findsWidgets);
-        // Contextual banner is the butter-wash safe variant.
+        // Contextual banner is the butter-wash safe variant (verbatim Figma).
         expect(
-          find.text("You've already introduced this allergen"),
+          find.textContaining("You've already introduced this allergen!"),
           findsOneWidget,
         );
       },
@@ -172,7 +172,7 @@ void main() {
         );
         // No safe banner.
         expect(
-          find.text("You've already introduced this allergen"),
+          find.textContaining("You've already introduced this allergen!"),
           findsNothing,
         );
       },
@@ -216,7 +216,7 @@ void main() {
         // The banner renders SizedBox.shrink when notStarted.
         expect(find.byType(DetailContextualBanner), findsOneWidget);
         expect(
-          find.text("You've already introduced this allergen"),
+          find.textContaining("You've already introduced this allergen!"),
           findsNothing,
         );
         expect(find.text('Not started'), findsOneWidget);

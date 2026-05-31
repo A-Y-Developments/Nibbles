@@ -3,14 +3,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:nibbles/gen/fonts.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
-import 'package:nibbles/src/common/domain/entities/allergen.dart';
 import 'package:nibbles/src/common/domain/entities/allergen_log.dart';
-import 'package:nibbles/src/common/domain/enums/emoji_taste.dart';
 import 'package:nibbles/src/common/services/allergen_service.dart';
 import 'package:nibbles/src/features/allergen/detail/allergen_detail_controller.dart';
 import 'package:nibbles/src/features/allergen/log_detail/allergen_log_detail_controller.dart';
@@ -19,13 +19,20 @@ import 'package:nibbles/src/features/allergen/tracker/allergen_tracker_controlle
 import 'package:nibbles/src/logging/analytics.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 
-/// Read-only Allergen Log Detail screen (NIB-127).
+/// Read-only Reaction Log Detail screen (NIB-93).
 ///
-/// Route — `/home/allergen/:allergenKey/log/:logId`. Shows the captured log
-/// fields (header + status badge, log date, optional taste, optional notes,
-/// optional attachment title/description/photo). The overflow menu in the
-/// app bar exposes Edit (pushes the EDIT route) and Delete (confirmation
-/// dialog → [AllergenService.deleteAllergenLog] → pops back).
+/// Route — `/home/allergen/:allergenKey/log/:logId`. Figma frames:
+///  • 1525:28920 — Tried Safe + No Attachment
+///  • 1525:28776 — Tried Safe + Attachment
+///  • 1525:28946 — Tried Unsafe + No Attachment
+///  • 1525:28856 — Tried Unsafe + Attachment
+///
+/// Layout (verbatim copy):
+/// AppBar "Reaction Log" + overflow (Edit Reactions / Delete Log).
+/// Body: "Log N" + Safe/Unsafe pill, "Date" field, "Notes" field, and an
+/// optional "Attachment (Optional)" block (photo + Change Picture CTA +
+/// title/description + download chip). The Reaction (taste) field is not
+/// shown in the Figma audit and is intentionally omitted from this screen.
 class AllergenLogDetailScreen extends ConsumerWidget {
   const AllergenLogDetailScreen({
     required this.allergenKey,
@@ -122,12 +129,6 @@ class _LogDetailView extends ConsumerWidget {
   String _formatDate(DateTime d) =>
       '${_months[d.month - 1]} ${d.day}, ${d.year}';
 
-  String _tasteLabel(EmojiTaste taste) => switch (taste) {
-    EmojiTaste.love => '😍 Loved it',
-    EmojiTaste.neutral => '😐 Neutral',
-    EmojiTaste.dislike => '😣 Disliked',
-  };
-
   Future<void> _onMenuSelected(
     BuildContext context,
     WidgetRef ref,
@@ -139,13 +140,12 @@ class _LogDetailView extends ConsumerWidget {
           AppRoute.allergenLogEdit.name,
           pathParameters: {'allergenKey': allergenKey, 'logId': logId},
         );
-        // Refresh the detail view in case the edit updated fields.
-        ref.invalidate(
-          allergenLogDetailControllerProvider(allergenKey, logId),
-        );
-        // Refresh both upstream lists so a pop to either reflects the edit.
-        ref.invalidate(allergenDetailControllerProvider(allergenKey));
-        ref.invalidate(allergenTrackerControllerProvider(state.babyId));
+        ref
+          ..invalidate(
+            allergenLogDetailControllerProvider(allergenKey, logId),
+          )
+          ..invalidate(allergenDetailControllerProvider(allergenKey))
+          ..invalidate(allergenTrackerControllerProvider(state.babyId));
       case 'delete':
         await _confirmAndDelete(context, ref);
     }
@@ -218,25 +218,50 @@ class _LogDetailView extends ConsumerWidget {
       Analytics.instance.logAllergenLogDeleted(allergenKey: allergenKey),
     );
 
-    // Invalidate both upstream lists so a pop to either reflects the delete.
     ref
       ..invalidate(allergenDetailControllerProvider(allergenKey))
       ..invalidate(allergenTrackerControllerProvider(state.babyId));
     context.pop();
   }
 
+  Future<void> _onChangePicturePressed(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    await context.pushNamed(
+      AppRoute.allergenLogEdit.name,
+      pathParameters: {'allergenKey': allergenKey, 'logId': logId},
+    );
+    ref
+      ..invalidate(allergenLogDetailControllerProvider(allergenKey, logId))
+      ..invalidate(allergenDetailControllerProvider(allergenKey))
+      ..invalidate(allergenTrackerControllerProvider(state.babyId));
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final textTheme = Theme.of(context).textTheme;
     final log = state.log;
-    final allergen = state.allergen;
+    final notes = log.notes?.trim();
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        title: Text('Log ${state.logNumber}', style: textTheme.titleMedium),
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_rounded,
+            color: AppColors.fgStrong,
+          ),
+          onPressed: () => context.pop(),
+        ),
+        title: Text(
+          'Reaction Log',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            color: AppColors.fgStrong,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
         actions: [
           PopupMenuButton<String>(
             key: const Key('log_detail_menu'),
@@ -248,11 +273,11 @@ class _LogDetailView extends ConsumerWidget {
             itemBuilder: (_) => const [
               PopupMenuItem<String>(
                 value: 'edit',
-                child: Text('Edit'),
+                child: Text('Edit Reactions'),
               ),
               PopupMenuItem<String>(
                 value: 'delete',
-                child: Text('Delete'),
+                child: Text('Delete Log'),
               ),
             ],
           ),
@@ -264,28 +289,29 @@ class _LogDetailView extends ConsumerWidget {
           vertical: AppSizes.pagePaddingV,
         ),
         children: [
-          _LogHeaderCard(
-            allergen: allergen,
+          _LogTitleRow(
+            logNumber: state.logNumber,
             hadReaction: log.hadReaction,
-            logDate: _formatDate(log.logDate),
           ),
-          if (log.emojiTaste != null) ...[
-            const SizedBox(height: AppSizes.lg),
-            const _SectionLabel('Reaction'),
-            const SizedBox(height: AppSizes.sm),
-            _ReadOnlyRow(value: _tasteLabel(log.emojiTaste!)),
-          ],
-          if (log.notes != null && log.notes!.trim().isNotEmpty) ...[
-            const SizedBox(height: AppSizes.lg),
-            const _SectionLabel('Notes'),
-            const SizedBox(height: AppSizes.sm),
-            _ReadOnlyRow(value: log.notes!.trim()),
-          ],
+          const SizedBox(height: AppSizes.md),
+          const _FieldLabel('Date'),
+          const SizedBox(height: AppSizes.xs),
+          _ReadOnlyField(value: _formatDate(log.logDate)),
+          const SizedBox(height: AppSizes.md),
+          const _FieldLabel('Notes'),
+          const SizedBox(height: AppSizes.xs),
+          _ReadOnlyField(
+            value: notes == null || notes.isEmpty ? '—' : notes,
+          ),
           if (_hasAttachment(log)) ...[
-            const SizedBox(height: AppSizes.lg),
-            const _SectionLabel('Attachment'),
+            const SizedBox(height: AppSizes.md),
+            const _FieldLabel('Attachment (Optional)'),
             const SizedBox(height: AppSizes.sm),
-            _AttachmentCard(log: log),
+            _AttachmentBlock(
+              log: log,
+              onChangePicturePressed: () =>
+                  _onChangePicturePressed(context, ref),
+            ),
           ],
           const SizedBox(height: AppSizes.xxl),
         ],
@@ -310,129 +336,159 @@ class _LogDetailView extends ConsumerWidget {
 // Local widgets — private to log_detail per spec build-rule 3.
 // ---------------------------------------------------------------------------
 
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.text);
+/// Header row: bold "Log N" + Safe/Unsafe status pill.
+class _LogTitleRow extends StatelessWidget {
+  const _LogTitleRow({required this.logNumber, required this.hadReaction});
+
+  final int logNumber;
+  final bool hadReaction;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            'Log $logNumber',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              color: AppColors.fgStrong,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+        AppChip(
+          label: hadReaction ? 'Unsafe' : 'Safe',
+          tone: hadReaction ? AppChipTone.flag : AppChipTone.safe,
+        ),
+      ],
+    );
+  }
+}
+
+/// Field label — Parkinsans SemiBold 15 per Headline/SemiBold token.
+class _FieldLabel extends StatelessWidget {
+  const _FieldLabel(this.text);
   final String text;
 
   @override
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+      style: const TextStyle(
+        fontFamily: FontFamily.parkinsans,
+        fontSize: 15,
+        height: 22 / 15,
+        fontWeight: FontWeight.w600,
         color: AppColors.fgStrong,
       ),
     );
   }
 }
 
-class _LogHeaderCard extends StatelessWidget {
-  const _LogHeaderCard({
-    required this.allergen,
-    required this.hadReaction,
-    required this.logDate,
-  });
-
-  final Allergen allergen;
-  final bool hadReaction;
-  final String logDate;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return AppCard(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.md,
-        vertical: AppSizes.md,
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: const BoxDecoration(
-              color: AppColors.coralSoft,
-              shape: BoxShape.circle,
-            ),
-            alignment: Alignment.center,
-            child: Text(allergen.emoji, style: const TextStyle(fontSize: 26)),
-          ),
-          const SizedBox(width: AppSizes.sp12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(allergen.name, style: textTheme.titleMedium),
-                const SizedBox(height: 2),
-                Text(
-                  logDate,
-                  style: textTheme.bodySmall?.copyWith(
-                    color: AppColors.fgFaint,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: AppSizes.sm),
-          AppChip(
-            label: hadReaction ? 'Unsafe' : 'Safe',
-            tone: hadReaction ? AppChipTone.flag : AppChipTone.safe,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ReadOnlyRow extends StatelessWidget {
-  const _ReadOnlyRow({required this.value});
+/// Pill-shaped read-only field. Background = Neutral-10 (#eaeaea / borderSoft).
+class _ReadOnlyField extends StatelessWidget {
+  const _ReadOnlyField({required this.value});
   final String value;
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return AppCard(
+    return Container(
+      height: AppSizes.fieldHeight,
+      padding: const EdgeInsets.symmetric(horizontal: AppSizes.fieldPaddingH),
+      decoration: BoxDecoration(
+        color: AppColors.borderSoft,
+        borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+      ),
+      alignment: Alignment.centerLeft,
       child: Text(
         value,
-        style: textTheme.bodyMedium?.copyWith(color: AppColors.fgStrong),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: GoogleFonts.figtree(
+          fontSize: 15,
+          height: 22 / 15,
+          color: AppColors.fgFaint,
+        ),
       ),
     );
   }
 }
 
-class _AttachmentCard extends ConsumerWidget {
-  const _AttachmentCard({required this.log});
+/// Attachment cluster: photo preview + Change Picture pill + title +
+/// description + small download chip.
+class _AttachmentBlock extends ConsumerWidget {
+  const _AttachmentBlock({
+    required this.log,
+    required this.onChangePicturePressed,
+  });
 
   final AllergenLog log;
+  final VoidCallback onChangePicturePressed;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final textTheme = Theme.of(context).textTheme;
     final title = log.attachmentTitle;
     final description = log.attachmentDescription;
     final photoPath = log.photoUrl;
 
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (title != null && title.isNotEmpty)
-            Text(title, style: textTheme.titleSmall),
-          if (description != null && description.isNotEmpty) ...[
-            if (title != null && title.isNotEmpty)
-              const SizedBox(height: AppSizes.xs),
-            Text(
-              description,
-              style: textTheme.bodyMedium?.copyWith(color: AppColors.fgMuted),
-            ),
-          ],
-          if (photoPath != null && photoPath.isNotEmpty) ...[
-            const SizedBox(height: AppSizes.md),
-            _PhotoPreview(photoPath: photoPath),
-          ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (photoPath != null && photoPath.isNotEmpty)
+          _PhotoPreview(photoPath: photoPath),
+        if (photoPath != null && photoPath.isNotEmpty) ...[
+          const SizedBox(height: AppSizes.sp12),
+          AppPillButton(
+            key: const Key('log_detail_change_picture'),
+            label: 'Change Picture',
+            onPressed: onChangePicturePressed,
+            variant: AppPillButtonVariant.ghost,
+          ),
         ],
-      ),
+        if ((title != null && title.isNotEmpty) ||
+            (description != null && description.isNotEmpty)) ...[
+          const SizedBox(height: AppSizes.md),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (title != null && title.isNotEmpty)
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontFamily: FontFamily.parkinsans,
+                          fontSize: 15,
+                          height: 22 / 15,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.fgStrong,
+                        ),
+                      ),
+                    if (description != null && description.isNotEmpty) ...[
+                      if (title != null && title.isNotEmpty)
+                        const SizedBox(height: 2),
+                      Text(
+                        description,
+                        style: GoogleFonts.figtree(
+                          fontSize: 15,
+                          height: 22 / 15,
+                          color: AppColors.fgFaint,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSizes.sm),
+              const _DownloadChip(),
+            ],
+          ),
+        ],
+      ],
     );
   }
 }
@@ -445,45 +501,72 @@ class _PhotoPreview extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final urlAsync = ref.watch(_signedPhotoUrlProvider(photoPath));
 
-    return urlAsync.when(
-      loading: () => Container(
-        height: 180,
-        decoration: BoxDecoration(
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+      child: urlAsync.when(
+        loading: () => Container(
+          height: 195,
+          width: double.infinity,
           color: AppColors.surfaceVariant,
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+          alignment: Alignment.center,
+          child: const CircularProgressIndicator(),
         ),
-        alignment: Alignment.center,
-        child: const CircularProgressIndicator(),
-      ),
-      error: (_, __) => const AppChip(
-        label: 'Photo unavailable',
-        tone: AppChipTone.mute,
-        emoji: '📎',
-      ),
-      data: (url) {
-        if (url == null) {
-          return const AppChip(
-            label: 'Photo unavailable',
-            tone: AppChipTone.mute,
-            emoji: '📎',
-          );
-        }
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          child: Image.network(
+        error: (_, __) => Container(
+          height: 195,
+          width: double.infinity,
+          color: AppColors.surfaceVariant,
+          alignment: Alignment.center,
+          child: const Text('Photo unavailable'),
+        ),
+        data: (url) {
+          if (url == null) {
+            return Container(
+              height: 195,
+              width: double.infinity,
+              color: AppColors.surfaceVariant,
+              alignment: Alignment.center,
+              child: const Text('Photo unavailable'),
+            );
+          }
+          return Image.network(
             url,
-            height: 180,
+            height: 195,
             width: double.infinity,
             fit: BoxFit.cover,
             errorBuilder: (_, __, ___) => Container(
-              height: 180,
+              height: 195,
               color: AppColors.surfaceVariant,
               alignment: Alignment.center,
               child: const Text('Photo unavailable'),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// 35x35 round chip with a download glyph, sitting beside the attachment
+/// caption. Display-only per audit; no documented save-to-device flow yet.
+class _DownloadChip extends StatelessWidget {
+  const _DownloadChip();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 35,
+      height: 35,
+      decoration: const BoxDecoration(
+        color: AppColors.surface,
+        shape: BoxShape.circle,
+        boxShadow: AppSizes.shadowCard,
+      ),
+      alignment: Alignment.center,
+      child: const Icon(
+        Icons.file_download_outlined,
+        size: AppSizes.iconSm,
+        color: AppColors.fgStrong,
+      ),
     );
   }
 }
