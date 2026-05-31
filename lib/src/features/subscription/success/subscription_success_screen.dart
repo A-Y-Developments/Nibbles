@@ -89,15 +89,24 @@ class _SubscriptionSuccessScreenState
         ? LoadingConfirmationPhase.success
         : LoadingConfirmationPhase.loading;
 
+    final semanticLabel = phase == SubscriptionSuccessPhase.success
+        ? 'Subscription activated. You are all set. Returning to home.'
+        : 'Setting up your subscription, please wait.';
+
     return PopScope(
       canPop: false,
       child: Scaffold(
-        body: LoadingConfirmation(
-          phase: mapped,
-          successLabel: 'You all set!',
-          blobKey: const Key('subscription_success_blob'),
-          loadingLabelKey: const Key('subscription_success_loading_label'),
-          successLabelKey: const Key('subscription_success_done_label'),
+        body: Semantics(
+          container: true,
+          liveRegion: true,
+          label: semanticLabel,
+          child: LoadingConfirmation(
+            phase: mapped,
+            successLabel: 'You all set!',
+            blobKey: const Key('subscription_success_blob'),
+            loadingLabelKey: const Key('subscription_success_loading_label'),
+            successLabelKey: const Key('subscription_success_done_label'),
+          ),
         ),
       ),
     );
