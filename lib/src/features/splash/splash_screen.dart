@@ -108,13 +108,33 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppSizes.xl),
-          AppPillButton(
-            label: 'Try again',
-            expand: false,
-            onPressed: isReloading
-                ? null
-                : () => ref.invalidate(splashControllerProvider),
-          ),
+          if (isReloading)
+            Semantics(
+              label: 'Try again, retrying',
+              enabled: false,
+              button: true,
+              liveRegion: true,
+              child: SizedBox(
+                height: AppSizes.buttonHeightSm,
+                child: Center(
+                  child: SizedBox.square(
+                    dimension: AppSizes.iconMd,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        AppColors.destructive,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            )
+          else
+            AppPillButton(
+              label: 'Try again',
+              expand: false,
+              onPressed: () => ref.invalidate(splashControllerProvider),
+            ),
         ],
       ),
     );
