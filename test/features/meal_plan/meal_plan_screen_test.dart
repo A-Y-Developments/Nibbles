@@ -303,17 +303,20 @@ void main() {
 
         await pumpScreen(tester);
 
-        // Expand the first day card so its '+ Add' pill is visible.
+        // Expand the first day card so its 'Add' pill is visible.
         final firstCard = find.byType(DayAccordionCard).first;
         final chevron = find
-            .descendant(of: firstCard, matching: find.byIcon(Icons.expand_more))
+            .descendant(
+              of: firstCard,
+              matching: find.byIcon(Icons.keyboard_arrow_down),
+            )
             .first;
         await tester.tap(chevron);
         await tester.pumpAndSettle();
 
-        // Tap the '+ Add' pill inside the expanded card.
+        // Tap the 'Add' pill inside the expanded card.
         final addPill = find
-            .descendant(of: firstCard, matching: find.text('+ Add'))
+            .descendant(of: firstCard, matching: find.text('Add'))
             .first;
         await tester.tap(addPill);
         // Drive the sheet entrance + _load() — pumpAndSettle would hang on

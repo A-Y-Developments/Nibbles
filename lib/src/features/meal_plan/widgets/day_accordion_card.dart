@@ -44,14 +44,14 @@ class DayAccordionCard extends StatelessWidget {
   final ValueChanged<String> onRecipeTap;
   final ValueChanged<DayCardMenuAction> onMenuSelected;
 
-  static const _weekdayShort = <String>[
-    'Mon',
-    'Tue',
-    'Wed',
-    'Thu',
-    'Fri',
-    'Sat',
-    'Sun',
+  static const _weekdayFull = <String>[
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday',
   ];
 
   static const _monthShort = <String>[
@@ -69,10 +69,11 @@ class DayAccordionCard extends StatelessWidget {
     'Dec',
   ];
 
+  /// Spec format: `Tuesday, 14 Apr` (Figma 971:8619 verbatim).
   String _dateLabel() {
-    final dow = _weekdayShort[day.weekday - 1];
+    final dow = _weekdayFull[day.weekday - 1];
     final mon = _monthShort[day.month - 1];
-    return '$dow ${day.day} $mon';
+    return '$dow, ${day.day} $mon';
   }
 
   @override
@@ -109,15 +110,11 @@ class DayAccordionCard extends StatelessWidget {
                 onRecipeTap: onRecipeTap,
               ),
             const SizedBox(height: AppSizes.sm),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: AppPillButton(
-                label: '+ Add',
-                size: AppPillButtonSize.small,
-                variant: AppPillButtonVariant.ghost,
-                expand: false,
-                onPressed: onAdd,
-              ),
+            // Full-width lime "Add" pill (Figma 971:8619, 971:7804).
+            AppPillButton(
+              label: 'Add',
+              variant: AppPillButtonVariant.ghost,
+              onPressed: onAdd,
             ),
           ],
         ],
@@ -152,32 +149,93 @@ class _Header extends StatelessWidget {
               style: AppTypography.textTheme.titleMedium,
             ),
           ),
+          // Green-filled rounded-square overflow button (Figma 971:8619).
           PopupMenuButton<DayCardMenuAction>(
             tooltip: 'More',
-            icon: const Icon(
-              Icons.more_horiz,
-              color: AppColors.fgMuted,
-              size: AppSizes.iconMd,
+            position: PopupMenuPosition.under,
+            color: AppColors.surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppSizes.radiusLg),
             ),
+            padding: EdgeInsets.zero,
             onSelected: onMenuSelected,
             itemBuilder: (_) => const [
               PopupMenuItem<DayCardMenuAction>(
                 value: DayCardMenuAction.addToShopList,
-                child: Text('Add to shop list'),
+                child: _MenuRow(
+                  icon: Icons.shopping_cart_outlined,
+                  label: 'Add to shop list',
+                ),
               ),
               PopupMenuItem<DayCardMenuAction>(
                 value: DayCardMenuAction.clearCurrentWeek,
-                child: Text('Clear current week'),
+                child: _MenuRow(
+                  icon: Icons.delete_outline,
+                  label: 'Clear current week',
+                ),
               ),
             ],
+            child: const _DayCardChip(icon: Icons.more_horiz),
           ),
-          Icon(
-            isExpanded ? Icons.expand_less : Icons.expand_more,
-            color: AppColors.fgMuted,
-            size: AppSizes.iconMd,
+          const SizedBox(width: AppSizes.xs),
+          // Green-filled rounded-square chevron button (Figma 971:8619).
+          _DayCardChip(
+            icon: isExpanded
+                ? Icons.keyboard_arrow_up
+                : Icons.keyboard_arrow_down,
+            onTap: onToggle,
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Green-deep rounded-square chip used in the day-card header for the
+/// overflow (left) and chevron (right) buttons. Matches the screen-level
+/// header's `MealPlanOverflowButton` visual.
+class _DayCardChip extends StatelessWidget {
+  const _DayCardChip({required this.icon, this.onTap});
+
+  final IconData icon;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final box = SizedBox(
+      width: AppSizes.roundButtonSm,
+      height: AppSizes.roundButtonSm,
+      child: Icon(icon, color: AppColors.onGreen, size: AppSizes.iconMd),
+    );
+    return Material(
+      color: AppColors.greenDeep,
+      borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+      child: onTap == null
+          ? box
+          : InkWell(
+              borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+              onTap: onTap,
+              child: box,
+            ),
+    );
+  }
+}
+
+class _MenuRow extends StatelessWidget {
+  const _MenuRow({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: AppSizes.iconSm, color: AppColors.fgStrong),
+        const SizedBox(width: AppSizes.sm),
+        Text(label, style: AppTypography.textTheme.bodyMedium),
+      ],
     );
   }
 }
@@ -186,10 +244,12 @@ class _EmptyHint extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSizes.xs),
-      child: Text(
-        'No meal plan yet.',
-        style: AppTypography.caption.copyWith(color: AppColors.fgFaint),
+      padding: const EdgeInsets.symmetric(vertical: AppSizes.sm),
+      child: Center(
+        child: Text(
+          'No meal plan yet.',
+          style: AppTypography.textTheme.titleSmall,
+        ),
       ),
     );
   }
