@@ -2,3 +2,7 @@
 PRODUCT_BUNDLE_IDENTIFIER=com.aydev.nibbles.dev
 FLUTTER_TARGET=lib/main_dev.dart
 DISPLAY_NAME=Nibbles Dev
+
+// Google OAuth (NIB-147) — dev iOS client ID + reversed URL scheme.
+GIDClientID=50776105003-8hr72ci96hfi386va9s94civdjlegnqo.apps.googleusercontent.com
+GIDReversedClientID=com.googleusercontent.apps.50776105003-8hr72ci96hfi386va9s94civdjlegnqo

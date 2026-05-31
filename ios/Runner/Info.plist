@@ -2,10 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>GIDClientID</key>
+	<string>$(GIDClientID)</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Nibbles</string>
+	<string>$(DISPLAY_NAME)</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -48,21 +50,15 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.aydev.nibbles</string>
-				<string>com.aydev.nibbles.dev</string>
+				<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 			</array>
 		</dict>
-		<!-- Google OAuth callback (NIB-117). The scheme is the REVERSED Google OAuth
-		     iOS client ID from GCP, e.g. com.googleusercontent.apps.123456789-abcdef.
-		     TODO: replace REPLACE_WITH_REVERSED_GOOGLE_OAUTH_CLIENT_ID with the real
-		     reversed client ID from the GCP OAuth 2.0 iOS client (dev + prod share
-		     one entry; if dev and prod use separate GCP clients, add a second dict). -->
 		<dict>
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>REPLACE_WITH_REVERSED_GOOGLE_OAUTH_CLIENT_ID</string>
+				<string>$(GIDReversedClientID)</string>
 			</array>
 		</dict>
 	</array>
