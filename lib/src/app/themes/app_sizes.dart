@@ -21,6 +21,8 @@ abstract final class AppSizes {
   static const double radiusLg = 16;
   static const double radiusXl = 20;
   static const double radius2xl = 24;
+  // Floating Add-Ingredient card — Figma 971:9883 (rounded-[30px]).
+  static const double radius3xl = 30;
   static const double radiusFull = 999;
 
   // Icon sizes

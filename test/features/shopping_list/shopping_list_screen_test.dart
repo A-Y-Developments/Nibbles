@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
 import 'package:nibbles/src/common/components/controls/app_segmented_control.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
@@ -259,7 +260,9 @@ void main() {
       await tester.tap(find.text('Clear All Shopping List'));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Delete'));
+      // Disambiguate from the SwipeRevealRow's hidden "Delete" pill — the
+      // bottom-sheet's Delete button is wrapped in AppPillButton.
+      await tester.tap(find.widgetWithText(AppPillButton, 'Delete'));
       await tester.pumpAndSettle();
 
       verify(() => mockService.clearAll(_babyId)).called(1);
