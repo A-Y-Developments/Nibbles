@@ -18,6 +18,7 @@ import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/common/services/meal_plan_service.dart';
 import 'package:nibbles/src/common/services/recipe_service.dart';
 import 'package:nibbles/src/features/meal_plan/meal_plan_screen.dart';
+import 'package:nibbles/src/features/meal_plan/sheets/select_period_date_sheet.dart';
 import 'package:nibbles/src/features/meal_plan/widgets/add_date_pill.dart';
 import 'package:nibbles/src/features/meal_plan/widgets/day_accordion_card.dart';
 import 'package:nibbles/src/features/meal_plan/widgets/meal_plan_empty_state.dart';
@@ -178,14 +179,20 @@ void main() {
   }
 
   group('MealPlanScreen empty branch', () {
-    testWidgets('renders MealPlanEmptyState when entries is empty',
+    testWidgets(
+        'renders MealPlanEmptyState + header (no day-count line) and no '
+        'DayAccordionCards when entries is empty',
         (tester) async {
       stubBoot();
       await pumpScreen(tester);
 
       expect(find.byType(MealPlanEmptyState), findsOneWidget);
       expect(find.byType(DayAccordionCard), findsNothing);
-      expect(find.byType(MealPlanHeader), findsNothing);
+      // Per Figma 971:8199 the empty state still shows the header (title +
+      // age subtitle + overflow button) — only the populated view renders
+      // the "Meal plan for X days" line.
+      expect(find.byType(MealPlanHeader), findsOneWidget);
+      expect(find.textContaining('Meal plan for'), findsNothing);
     });
   });
 
@@ -227,6 +234,34 @@ void main() {
         findsNWidgets(3),
       );
     });
+
+    testWidgets(
+      'empty-state overflow → Create new meal prep opens '
+      'SelectPeriodDateSheet',
+      (tester) async {
+        // Force the empty branch so we land on MealPlanEmptyState with the
+        // single-item overflow menu.
+        stubBoot();
+        await pumpScreen(tester);
+
+        // Tap the header overflow button on the empty state.
+        await tester.tap(find.byType(MealPlanOverflowButton));
+        await tester.pumpAndSettle();
+
+        // The empty-state menu carries only 'Create new meal prep'.
+        expect(find.text('Create new meal prep'), findsOneWidget);
+        expect(
+          find.byWidgetPredicate((w) => w is PopupMenuItem),
+          findsOneWidget,
+        );
+
+        // Picking it opens the Select Period Date sheet.
+        await tester.tap(find.text('Create new meal prep'));
+        await tester.pumpAndSettle();
+        expect(find.byType(SelectPeriodDateSheet), findsOneWidget);
+        expect(find.text('Select Period Date'), findsOneWidget);
+      },
+    );
 
     testWidgets('per-card overflow menu shows exactly 2 items', (tester) async {
       final start = DateTime.now();

@@ -13,14 +13,17 @@ class MealPlanHeader extends StatelessWidget {
   const MealPlanHeader({
     required this.babyName,
     required this.ageMonths,
-    required this.dayCount,
     required this.overflowButton,
+    this.dayCount,
     super.key,
   });
 
   final String babyName;
   final int ageMonths;
-  final int dayCount;
+  // Optional day-count line. Populated view renders it; empty state omits it
+  // (Figma 971:8199 shows only the title + '4 Month' subtitle on the empty
+  // route).
+  final int? dayCount;
   final Widget overflowButton;
 
   @override
@@ -60,11 +63,13 @@ class MealPlanHeader extends StatelessWidget {
               '$ageMonths Month',
               style: AppTypography.caption.copyWith(color: AppColors.fgFaint),
             ),
-            const SizedBox(height: AppSizes.sp12),
-            Text(
-              'Meal plan for $dayCount days',
-              style: AppTypography.sectionTitle,
-            ),
+            if (dayCount != null) ...[
+              const SizedBox(height: AppSizes.sp12),
+              Text(
+                'Meal plan for $dayCount days',
+                style: AppTypography.sectionTitle,
+              ),
+            ],
           ],
         ),
       ),

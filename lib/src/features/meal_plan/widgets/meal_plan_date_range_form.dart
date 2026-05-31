@@ -1,0 +1,249 @@
+import 'package:flutter/material.dart';
+import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_sizes.dart';
+import 'package:nibbles/src/app/themes/app_typography.dart';
+import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
+import 'package:nibbles/src/features/meal_plan/widgets/inline_calendar.dart';
+
+/// Shared Start Date / End Date form used by both the Meal Plan empty-state
+/// (`MealPlanEmptyState`) and the Select Period Date bottom-sheet
+/// (`SelectPeriodDateSheet`, Figma 971:8000). Renders two date fields plus
+/// a primary CTA. Tapping a field opens an [InlineCalendar] directly below
+/// it — the OS picker is intentionally never used (per NIB-76 AC: the
+/// typo'd Figma weekday row is not replicated and the picker is themed to
+/// sage/butter, not iOS blue).
+///
+/// Defaults to today + (today + 6 days) so the CTA is enabled on first
+/// paint, matching the Figma frame's pre-filled `17/04/2026` placeholders.
+class MealPlanDateRangeForm extends StatefulWidget {
+  const MealPlanDateRangeForm({
+    required this.ctaLabel,
+    required this.onSubmit,
+    this.initialStart,
+    this.initialEnd,
+    super.key,
+  });
+
+  /// CTA label. Empty-state uses 'Create meal plan' (Figma 971:8199); the
+  /// bottom-sheet variant (971:8000) uses 'Custom meal plan'.
+  final String ctaLabel;
+
+  /// Fires when the user taps the CTA with a valid range.
+  final ValueChanged<DateTimeRange> onSubmit;
+
+  /// Optional initial start date. Defaults to today (date-only).
+  final DateTime? initialStart;
+
+  /// Optional initial end date. Defaults to today + 6 days (date-only).
+  final DateTime? initialEnd;
+
+  @override
+  State<MealPlanDateRangeForm> createState() => _MealPlanDateRangeFormState();
+}
+
+enum _OpenField { none, start, end }
+
+class _MealPlanDateRangeFormState extends State<MealPlanDateRangeForm> {
+  late DateTime _startDate;
+  late DateTime _endDate;
+  late DateTime _focusedMonth;
+  _OpenField _openField = _OpenField.none;
+
+  static DateTime _dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
+
+  @override
+  void initState() {
+    super.initState();
+    final today = _dateOnly(DateTime.now());
+    _startDate = widget.initialStart != null
+        ? _dateOnly(widget.initialStart!)
+        : today;
+    _endDate = widget.initialEnd != null
+        ? _dateOnly(widget.initialEnd!)
+        : today.add(const Duration(days: 6));
+    _focusedMonth = DateTime(_startDate.year, _startDate.month);
+  }
+
+  bool get _canSubmit => !_endDate.isBefore(_startDate);
+
+  String? get _rangeError => _endDate.isBefore(_startDate)
+      ? 'End date must be on or after start date.'
+      : null;
+
+  void _toggleField(_OpenField field, DateTime current) {
+    setState(() {
+      if (_openField == field) {
+        _openField = _OpenField.none;
+      } else {
+        _openField = field;
+        _focusedMonth = DateTime(current.year, current.month);
+      }
+    });
+  }
+
+  void _onDaySelected(DateTime day) {
+    setState(() {
+      if (_openField == _OpenField.start) {
+        _startDate = day;
+        // Auto-bump end forward so the range stays valid.
+        if (_endDate.isBefore(day)) _endDate = day;
+      } else if (_openField == _OpenField.end) {
+        _endDate = day;
+      }
+      _openField = _OpenField.none;
+    });
+  }
+
+  void _onMonthChanged(DateTime month) {
+    setState(() => _focusedMonth = month);
+  }
+
+  void _onSubmit() {
+    if (!_canSubmit) return;
+    widget.onSubmit(DateTimeRange(start: _startDate, end: _endDate));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final rangeError = _rangeError;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _DateField(
+          label: 'Start Date',
+          value: _startDate,
+          isOpen: _openField == _OpenField.start,
+          onTap: () => _toggleField(_OpenField.start, _startDate),
+        ),
+        if (_openField == _OpenField.start) ...[
+          const SizedBox(height: AppSizes.sm),
+          InlineCalendar(
+            selectedDate: _startDate,
+            focusedMonth: _focusedMonth,
+            onDaySelected: _onDaySelected,
+            onMonthChanged: _onMonthChanged,
+          ),
+        ],
+        const SizedBox(height: AppSizes.md),
+        _DateField(
+          label: 'End Date',
+          value: _endDate,
+          isOpen: _openField == _OpenField.end,
+          onTap: () => _toggleField(_OpenField.end, _endDate),
+        ),
+        if (_openField == _OpenField.end) ...[
+          const SizedBox(height: AppSizes.sm),
+          InlineCalendar(
+            selectedDate: _endDate,
+            focusedMonth: _focusedMonth,
+            onDaySelected: _onDaySelected,
+            onMonthChanged: _onMonthChanged,
+            minDate: _startDate,
+          ),
+        ],
+        if (rangeError != null) ...[
+          const SizedBox(height: AppSizes.xs),
+          Text(
+            rangeError,
+            style: theme.textTheme.bodySmall?.copyWith(color: AppColors.error),
+          ),
+        ],
+        const SizedBox(height: AppSizes.md),
+        AppPillButton(
+          label: widget.ctaLabel,
+          onPressed: _canSubmit ? _onSubmit : null,
+        ),
+      ],
+    );
+  }
+}
+
+/// Single labelled date field. `value` is the currently chosen date —
+/// rendered as `dd/MM/yyyy` to match Figma's verbatim placeholder
+/// (`17/04/2026`). Open state paints a green-deep border + subtle glow.
+class _DateField extends StatelessWidget {
+  const _DateField({
+    required this.label,
+    required this.value,
+    required this.isOpen,
+    required this.onTap,
+  });
+
+  final String label;
+  final DateTime value;
+  final bool isOpen;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final displayText = _formatDate(value);
+    final borderColor = isOpen ? AppColors.greenDeep : AppColors.borderSoft;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: theme.textTheme.labelMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: AppColors.fgStrong,
+          ),
+        ),
+        const SizedBox(height: AppSizes.sm),
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 120),
+            height: AppSizes.fieldHeight,
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSizes.fieldPaddingH,
+            ),
+            decoration: BoxDecoration(
+              color: isOpen ? AppColors.surface : AppColors.bgInput,
+              borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+              border: Border.all(
+                color: borderColor,
+                width: isOpen ? 2 : 1,
+              ),
+              boxShadow: isOpen
+                  ? [
+                      BoxShadow(
+                        color: AppColors.green.withValues(alpha: 0.15),
+                        spreadRadius: 3,
+                      ),
+                    ]
+                  : null,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    displayText,
+                    style: AppTypography.textTheme.bodyLarge?.copyWith(
+                      color: AppColors.fgStrong,
+                    ),
+                  ),
+                ),
+                const Icon(
+                  Icons.calendar_today_outlined,
+                  size: AppSizes.iconSm,
+                  color: AppColors.greenDeep,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  static String _formatDate(DateTime d) {
+    final dd = d.day.toString().padLeft(2, '0');
+    final mm = d.month.toString().padLeft(2, '0');
+    return '$dd/$mm/${d.year}';
+  }
+}
