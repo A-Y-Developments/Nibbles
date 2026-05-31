@@ -302,40 +302,48 @@ class _DayHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.all(AppSizes.sp12),
-        child: Row(
-          children: [
-            Expanded(
-              child: Row(
-                children: [
-                  Flexible(
-                    child: Text(
-                      _formatDate(day),
-                      style: AppTypography.textTheme.titleSmall?.copyWith(
-                        color: AppColors.fgStrong,
-                        fontWeight: FontWeight.w600,
+    return Semantics(
+      button: true,
+      label: _formatDate(day),
+      hint: isExpanded ? 'Collapse day' : 'Expand day to add to meal plan',
+      expanded: isExpanded,
+      child: InkWell(
+        onTap: onTap,
+        child: ExcludeSemantics(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSizes.sp12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          _formatDate(day),
+                          style: AppTypography.textTheme.titleSmall?.copyWith(
+                            color: AppColors.fgStrong,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                      if (isSelected) ...[
+                        const SizedBox(width: AppSizes.sm),
+                        const _SelectedDayBadge(),
+                      ],
+                    ],
                   ),
-                  if (isSelected) ...[
-                    const SizedBox(width: AppSizes.sm),
-                    const _SelectedDayBadge(),
-                  ],
-                ],
-              ),
+                ),
+                ExcludeSemantics(
+                  child: _DayChip(
+                    icon: isExpanded
+                        ? Icons.keyboard_arrow_up
+                        : Icons.keyboard_arrow_down,
+                  ),
+                ),
+              ],
             ),
-            const _DayChip(icon: Icons.more_horiz),
-            const SizedBox(width: AppSizes.xs),
-            _DayChip(
-              icon: isExpanded
-                  ? Icons.keyboard_arrow_up
-                  : Icons.keyboard_arrow_down,
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -401,13 +409,9 @@ class _ConfirmCta extends StatelessWidget {
     final label = count == 0
         ? 'Add to Meal Plan'
         : '$count ${count == 1 ? 'Day' : 'Days'} Selected';
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSizes.sm),
-      child: AppPillButton(
-        label: label,
-        size: AppPillButtonSize.small,
-        onPressed: count == 0 ? null : onConfirm,
-      ),
+    return AppPillButton(
+      label: label,
+      onPressed: count == 0 ? null : onConfirm,
     );
   }
 }

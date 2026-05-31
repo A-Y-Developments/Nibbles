@@ -255,36 +255,72 @@ class _BrowseMealSheetState extends ConsumerState<_BrowseMealSheet> {
     return groups.entries.toList(growable: false);
   }
 
+  Future<void> _maybeClose() async {
+    if (_selectedRecipeIds.isEmpty) {
+      Navigator.of(context).pop();
+      return;
+    }
+    final discard = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+        ),
+        title: const Text('Discard your selections?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Keep'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Discard'),
+          ),
+        ],
+      ),
+    );
+    if (discard ?? false) {
+      if (mounted) Navigator.of(context).pop();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
     final maxHeight = mediaQuery.size.height * 0.92;
 
-    return SafeArea(
-      top: false,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxHeight: maxHeight),
-        child: Padding(
-          padding: EdgeInsets.only(bottom: mediaQuery.viewInsets.bottom),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: AppSizes.sm),
-              _GrabHandle(),
-              const SizedBox(height: AppSizes.md),
-              _Header(
-                startDate: widget.startDate,
-                endDate: widget.endDate,
-                onClose: () => Navigator.of(context).pop(),
-              ),
-              const SizedBox(height: AppSizes.md),
-              Expanded(child: _body()),
-              if (!_loading && _error == null) _StickyAddBar(
-                count: _selectedRecipeIds.length,
-                inReviewMode: _filter != BrowseMealSelectionFilter.none,
-                onPressed: _selectedRecipeIds.isEmpty ? null : _confirm,
-              ),
-            ],
+    return PopScope(
+      canPop: _selectedRecipeIds.isEmpty,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _maybeClose();
+      },
+      child: SafeArea(
+        top: false,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: maxHeight),
+          child: Padding(
+            padding: EdgeInsets.only(bottom: mediaQuery.viewInsets.bottom),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: AppSizes.sm),
+                _GrabHandle(),
+                const SizedBox(height: AppSizes.md),
+                _Header(
+                  startDate: widget.startDate,
+                  endDate: widget.endDate,
+                  onClose: _maybeClose,
+                ),
+                const SizedBox(height: AppSizes.md),
+                Expanded(child: _body()),
+                if (!_loading && _error == null) _StickyAddBar(
+                  count: _selectedRecipeIds.length,
+                  inReviewMode: _filter != BrowseMealSelectionFilter.none,
+                  onPressed: _selectedRecipeIds.isEmpty ? null : _confirm,
+                ),
+              ],
+            ),
           ),
         ),
       ),
