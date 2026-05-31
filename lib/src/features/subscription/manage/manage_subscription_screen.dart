@@ -147,12 +147,14 @@ class _ManageSubscriptionBody extends StatelessWidget {
                     key: const Key('manage_subscription_cancel_cta'),
                     label: 'Cancel Subscription',
                     variant: AppPillButtonVariant.ghost,
+                    size: AppPillButtonSize.small,
                     onPressed: () => _onCancelPressed(context),
                   )
                 : AppPillButton(
                     key: const Key('manage_subscription_go_premium_cta'),
                     label: 'Go Premium',
                     variant: AppPillButtonVariant.ghost,
+                    size: AppPillButtonSize.small,
                     onPressed: () =>
                         context.pushNamed(AppRoute.paywall.name),
                   ),

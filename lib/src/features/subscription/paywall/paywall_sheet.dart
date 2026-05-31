@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:nibbles/gen/fonts.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
@@ -94,7 +93,9 @@ class _PaywallSheetState extends ConsumerState<PaywallSheet> {
     if (!mounted) return;
     result.whenOrNull(
       success: (_) {
-        Navigator.of(context).pop();
+        // Mirror the purchase-success path so destination is deterministic
+        // whether entered as a sheet or via the routed /subscription/paywall.
+        context.goNamed(AppRoute.subscriptionSuccess.name);
       },
       failure: (error) {
         // Per error-handling.md, restore failure surfaces as P1 with the
@@ -147,6 +148,7 @@ class _PaywallSheetState extends ConsumerState<PaywallSheet> {
     final media = MediaQuery.of(context);
 
     return SafeArea(
+      top: false,
       child: ConstrainedBox(
         constraints: BoxConstraints(
           maxHeight: media.size.height * 0.92,
@@ -244,28 +246,21 @@ class _SheetHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Figma row: 34x33 close (radius 30) ↔ 148x42 Restore purchase pill.
+    // Close uses default 48x48 hit area to meet a11y minimum.
+    // Visual shape (radius 30) is preserved via style; only the
+    // restrictive SizedBox(34x33) + BoxConstraints(33/34) are dropped.
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        SizedBox(
-          width: 34,
-          height: 33,
-          child: IconButton(
-            key: const Key('paywall_close_button'),
-            icon: const Icon(Icons.close, size: AppSizes.iconMd),
-            color: AppColors.text,
-            onPressed: onClose,
-            tooltip: 'Close',
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(
-              minWidth: 34,
-              minHeight: 33,
-            ),
-            style: IconButton.styleFrom(
-              shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(30)),
-              ),
+        IconButton(
+          key: const Key('paywall_close_button'),
+          icon: const Icon(Icons.close, size: AppSizes.iconMd),
+          color: AppColors.text,
+          onPressed: onClose,
+          tooltip: 'Close',
+          style: IconButton.styleFrom(
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(30)),
             ),
           ),
         ),
@@ -280,12 +275,15 @@ class _SheetHeader extends StatelessWidget {
               minimumSize: const Size(148, 42),
             ),
             child: restoreSpinning
-                ? const SizedBox(
-                    width: AppSizes.iconSm,
-                    height: AppSizes.iconSm,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppColors.text,
+                ? Semantics(
+                    label: 'Restoring purchase',
+                    child: const SizedBox(
+                      width: AppSizes.iconSm,
+                      height: AppSizes.iconSm,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.text,
+                      ),
                     ),
                   )
                 : Text(
@@ -365,20 +363,22 @@ class _BrandRow extends StatelessWidget {
         // without per-pixel hand-tuning.
         const BrandLogo(size: 42),
         const SizedBox(width: AppSizes.sp12),
-        Container(
-          key: const Key('paywall_mascot_placeholder'),
-          width: 42,
-          height: 42,
-          decoration: const BoxDecoration(
-            color: AppColors.butter,
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(
-            // Crown stand-in for the Figma bee/crown mascot — closest
-            // material icon until the real SVG ships.
-            Icons.workspace_premium,
-            color: AppColors.greenDeep,
-            size: AppSizes.iconMd,
+        ExcludeSemantics(
+          child: Container(
+            key: const Key('paywall_mascot_placeholder'),
+            width: 42,
+            height: 42,
+            decoration: const BoxDecoration(
+              color: AppColors.butter,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              // Crown stand-in for the Figma bee/crown mascot — closest
+              // material icon until the real SVG ships.
+              Icons.workspace_premium,
+              color: AppColors.greenDeep,
+              size: AppSizes.iconMd,
+            ),
           ),
         ),
       ],
@@ -394,13 +394,16 @@ class _Heading extends StatelessWidget {
     // Title 1 / Bold — Parkinsans 22/34 (matches theme `headlineSmall`/`titleLarge`
     // height ratio 34/22 = 1.545; theme is 1.273 from a different ramp, so
     // override the line-height explicitly to the Figma spec).
-    return Text(
-      'Everything you need for safe feeding',
-      style: AppTypography.textTheme.titleLarge?.copyWith(
-        fontSize: 22,
-        fontWeight: FontWeight.w700,
-        height: 34 / 22,
-        color: AppColors.text,
+    return Semantics(
+      header: true,
+      child: Text(
+        'Everything you need for safe feeding',
+        style: AppTypography.textTheme.titleLarge?.copyWith(
+          fontSize: 22,
+          fontWeight: FontWeight.w700,
+          height: 34 / 22,
+          color: AppColors.text,
+        ),
       ),
     );
   }
@@ -453,22 +456,24 @@ class _FeatureRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Container(
-          width: 68,
-          height: 68,
-          decoration: BoxDecoration(
-            color: AppColors.coralSoft,
-            borderRadius: roundedThumb
-                ? BorderRadius.circular(AppSizes.radiusMd)
-                : null,
-          ),
-          // TODO(NIB-55): replace with the Figma `Intersect` / nuts-table /
-          // meal-plan thumbnail PNGs when the assets land in
-          // assets/images/paywall/. Until then a neutral coral tile keeps
-          // the rhythm without shipping the wrong art.
-          child: const Icon(
-            Icons.restaurant_outlined,
-            color: AppColors.coralDeep,
+        ExcludeSemantics(
+          child: Container(
+            width: 68,
+            height: 68,
+            decoration: BoxDecoration(
+              color: AppColors.coralSoft,
+              borderRadius: roundedThumb
+                  ? BorderRadius.circular(AppSizes.radiusMd)
+                  : null,
+            ),
+            // TODO(NIB-55): replace with the Figma `Intersect` / nuts-table /
+            // meal-plan thumbnail PNGs when the assets land in
+            // assets/images/paywall/. Until then a neutral coral tile keeps
+            // the rhythm without shipping the wrong art.
+            child: const Icon(
+              Icons.restaurant_outlined,
+              color: AppColors.coralDeep,
+            ),
           ),
         ),
         const SizedBox(width: AppSizes.lg),
@@ -510,16 +515,21 @@ class _SocialProof extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(
-            5,
-            (_) => const Padding(
-              padding: EdgeInsets.symmetric(horizontal: AppSizes.xs + 2),
-              child: Icon(
-                Icons.star_rounded,
-                size: 22,
-                color: AppColors.coral,
+        Semantics(
+          label: '5 star rating',
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(
+              5,
+              (_) => const Padding(
+                padding: EdgeInsets.symmetric(horizontal: AppSizes.xs + 2),
+                child: ExcludeSemantics(
+                  child: Icon(
+                    Icons.star_rounded,
+                    size: 22,
+                    color: AppColors.coral,
+                  ),
+                ),
               ),
             ),
           ),
@@ -583,10 +593,12 @@ class _TrialCard extends StatelessWidget {
               children: [
                 const TextSpan(text: 'Then billed at '),
                 TextSpan(
-                  // Figma calls out Nunito Bold inline for the price token.
+                  // Use bundled Parkinsans Bold for the price token (Nunito
+                  // is not in pubspec; runtime GoogleFonts download removed).
                   text:
                       '${offering.priceString} ${offering.periodLabel}',
-                  style: GoogleFonts.nunito(
+                  style: const TextStyle(
+                    fontFamily: FontFamily.parkinsans,
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
                     height: 22 / 15,
@@ -669,10 +681,8 @@ class _TrialCardError extends StatelessWidget {
                 foregroundColor: AppColors.destructive,
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSizes.sm,
-                  vertical: AppSizes.xs,
                 ),
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                minimumSize: const Size(48, 48),
               ),
               child: const Text('Retry'),
             ),
@@ -714,12 +724,15 @@ class _Footer extends StatelessWidget {
                 customBorder: const StadiumBorder(),
                 child: Center(
                   child: purchasing
-                      ? const SizedBox(
-                          width: AppSizes.iconMd,
-                          height: AppSizes.iconMd,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.cream,
+                      ? Semantics(
+                          label: 'Starting free trial',
+                          child: const SizedBox(
+                            width: AppSizes.iconMd,
+                            height: AppSizes.iconMd,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.cream,
+                            ),
                           ),
                         )
                       : Text(
