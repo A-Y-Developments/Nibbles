@@ -15,6 +15,7 @@ import 'package:nibbles/src/features/meal_plan/map/map_meals_state.dart';
 import 'package:nibbles/src/features/meal_plan/meal_plan_controller.dart';
 import 'package:nibbles/src/features/meal_plan/meal_plan_state.dart';
 import 'package:nibbles/src/features/meal_plan/sheets/browse_meal_sheet.dart';
+import 'package:nibbles/src/features/meal_plan/sheets/select_period_date_sheet.dart';
 import 'package:nibbles/src/features/meal_plan/widgets/add_date_pill.dart';
 import 'package:nibbles/src/features/meal_plan/widgets/add_to_shopping_list_modal.dart';
 import 'package:nibbles/src/features/meal_plan/widgets/clear_confirm_dialog.dart';
@@ -116,7 +117,13 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
     if (state.entries.isEmpty) {
       return MealPlanEmptyState(
         babyName: baby.name,
+        ageMonths: ageInMonths(baby.dateOfBirth),
         onCreateMealPlan: _onCreateMealPlanFromEmpty,
+        overflowButton: Builder(
+          builder: (btnContext) => MealPlanOverflowButton(
+            onTap: () => _openEmptyStateMenu(btnContext),
+          ),
+        ),
       );
     }
     return _PopulatedView(
@@ -294,20 +301,30 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
   }
 
   Future<void> _onCreateMealPrep(MealPlanState state) async {
-    final endDate = _effectiveWindowEnd(state);
-    final days = endDate.difference(state.windowStart).inDays + 1;
+    // First let the user pick the date range via the Select Period Date
+    // bottom-sheet (Figma 971:8000). Pre-fill with the current window so the
+    // sheet opens on the same range the planner is showing.
+    final range = await showSelectPeriodDateSheet(
+      context,
+      initialStart: state.windowStart,
+      initialEnd: _effectiveWindowEnd(state),
+    );
+    if (range == null) return;
+    if (!mounted) return;
+
+    final days = range.end.difference(range.start).inDays + 1;
     unawaited(
       ref.read(analyticsProvider).logMealPrepRangeSelected(days: days),
     );
     final picked = await showBrowseMealSheet(
       context,
       babyId: widget.babyId,
-      startDate: state.windowStart,
-      endDate: endDate,
+      startDate: range.start,
+      endDate: range.end,
     );
     if (picked == null || picked.isEmpty) return;
     if (!mounted) return;
-    await _pushMapMeals(picked, state.windowStart, endDate);
+    await _pushMapMeals(picked, range.start, range.end);
   }
 
   Future<void> _onClearWindow(MealPlanState state) async {
@@ -371,6 +388,57 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
       AppRoute.recipeDetail.name,
       pathParameters: {'recipeId': recipeId},
     );
+  }
+
+  /// Opens the screen-level overflow menu while the empty state is showing.
+  /// Empty state has no entries, so 'Add to shop list' and 'Clear current
+  /// week' are not actionable — only the 'Create new meal prep' route is
+  /// surfaced, which funnels through the same Select Period Date sheet.
+  Future<void> _openEmptyStateMenu(BuildContext btnContext) async {
+    final state = ref
+        .read(mealPlanControllerProvider(widget.babyId))
+        .valueOrNull;
+    if (state == null) return;
+
+    final renderBox = btnContext.findRenderObject() as RenderBox?;
+    final overlay =
+        Overlay.of(btnContext).context.findRenderObject() as RenderBox?;
+    if (renderBox == null || overlay == null) return;
+
+    final topRight = renderBox.localToGlobal(
+      Offset(renderBox.size.width, 0),
+      ancestor: overlay,
+    );
+    final position = RelativeRect.fromLTRB(
+      topRight.dx - AppSizes.pagePaddingH * 2,
+      topRight.dy + AppSizes.xxl,
+      AppSizes.pagePaddingH,
+      0,
+    );
+
+    final action = await showMenu<_ScreenMenuAction>(
+      context: btnContext,
+      position: position,
+      color: AppColors.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+      ),
+      items: const [
+        PopupMenuItem<_ScreenMenuAction>(
+          value: _ScreenMenuAction.createMealPrep,
+          padding: EdgeInsets.zero,
+          child: _ScreenMenuRow(
+            icon: Icons.add,
+            label: 'Create new meal prep',
+            highlight: true,
+          ),
+        ),
+      ],
+    );
+    if (action == _ScreenMenuAction.createMealPrep) {
+      unawaited(ref.read(analyticsProvider).logMealPrepCreateStarted());
+      await _onCreateMealPrep(state);
+    }
   }
 }
 
