@@ -85,6 +85,7 @@ class HomeController extends _$HomeController {
       allergenLogCounts: logCounts,
       todaysMeals: todaysMeals,
       todaysRecipes: recipes,
+      hasAnyPlannedMeal: rolling.isNotEmpty,
     );
   }
 
