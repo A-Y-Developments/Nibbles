@@ -36,6 +36,30 @@ class ShoppingListService {
     return _repo.addItems(items);
   }
 
+  /// NIB-136: Adds ingredient names sourced from the meal-plan
+  /// "Add to Shoplist" range sheet. Same name-only insert as
+  /// [addFromRecipe], but tags rows with `source=mealPlan` so the
+  /// shopping list can attribute their origin.
+  Future<Result<void>> addFromMealPlan(
+    String babyId,
+    List<String> selectedIngredientNames,
+  ) {
+    final now = DateTime.now();
+    final items = selectedIngredientNames
+        .map(
+          (name) => ShoppingListItem(
+            id: '',
+            babyId: babyId,
+            name: name,
+            isChecked: false,
+            source: ShoppingListSource.mealPlan,
+            createdAt: now,
+          ),
+        )
+        .toList();
+    return _repo.addItems(items);
+  }
+
   /// Adds a single manually-entered item.
   Future<Result<void>> addManualItem(String babyId, String name) =>
       _repo.addItems([

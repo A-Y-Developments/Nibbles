@@ -212,6 +212,150 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
+  // NIB-136: getRangeIngredientNames
+  // ---------------------------------------------------------------------------
+
+  group('MealPlanService.getRangeIngredientNames', () {
+    final rangeStart = DateTime(2026, 4, 20);
+    final rangeEnd = DateTime(2026, 4, 23);
+
+    test(
+      'normalizes range to date-only and queries repo via getEntriesInRange',
+      () async {
+        final start = DateTime(2026, 4, 20, 9, 30);
+        final end = DateTime(2026, 4, 23, 23, 59);
+        when(
+          () => mockMealPlanRepo.getEntriesInRange(any(), any(), any()),
+        ).thenAnswer((_) async => const Result.success([]));
+
+        await sut.getRangeIngredientNames(_babyId, start, end);
+
+        verify(
+          () => mockMealPlanRepo.getEntriesInRange(
+            _babyId,
+            DateTime(2026, 4, 20),
+            DateTime(2026, 4, 23),
+          ),
+        ).called(1);
+      },
+    );
+
+    test(
+      'deduplicates case-insensitively, preserves first-occurrence casing',
+      () async {
+        when(
+          () => mockMealPlanRepo.getEntriesInRange(any(), any(), any()),
+        ).thenAnswer(
+          (_) async => Result.success([
+            _makeEntry(),
+            _makeEntry(id: 'e2', recipeId: 'r2'),
+          ]),
+        );
+        when(() => mockRecipeRepo.getRecipeById('r1')).thenAnswer(
+          (_) async => Result.success(
+            _makeRecipe(
+              ingredients: [
+                const Ingredient(name: 'Olive Oil', quantity: '1 tbsp'),
+                const Ingredient(name: 'Rice', quantity: '1 cup'),
+              ],
+            ),
+          ),
+        );
+        when(() => mockRecipeRepo.getRecipeById('r2')).thenAnswer(
+          (_) async => Result.success(
+            _makeRecipe(
+              id: 'r2',
+              ingredients: [
+                // Different casing — should collapse into the first occurrence.
+                const Ingredient(name: 'rice', quantity: '2 cups'),
+                const Ingredient(name: 'OLIVE OIL', quantity: '2 tbsp'),
+                const Ingredient(name: 'Sugar', quantity: '1 tsp'),
+              ],
+            ),
+          ),
+        );
+
+        final result = await sut.getRangeIngredientNames(
+          _babyId,
+          rangeStart,
+          rangeEnd,
+        );
+
+        expect(result.isSuccess, isTrue);
+        final names = result.dataOrNull!;
+        // First-occurrence casing preserved; dedup case-insensitive.
+        expect(names, equals(['Olive Oil', 'Rice', 'Sugar']));
+      },
+    );
+
+    test('skips failed recipe fetch (best-effort)', () async {
+      when(
+        () => mockMealPlanRepo.getEntriesInRange(any(), any(), any()),
+      ).thenAnswer(
+        (_) async => Result.success([
+          _makeEntry(),
+          _makeEntry(id: 'e2', recipeId: 'r2'),
+        ]),
+      );
+      when(() => mockRecipeRepo.getRecipeById('r1')).thenAnswer(
+        (_) async => const Result.failure(ServerException('not found')),
+      );
+      when(() => mockRecipeRepo.getRecipeById('r2')).thenAnswer(
+        (_) async => Result.success(
+          _makeRecipe(
+            id: 'r2',
+            ingredients: [
+              const Ingredient(name: 'Bread', quantity: '2 slices'),
+            ],
+          ),
+        ),
+      );
+
+      final result = await sut.getRangeIngredientNames(
+        _babyId,
+        rangeStart,
+        rangeEnd,
+      );
+
+      expect(result.isSuccess, isTrue);
+      expect(result.dataOrNull, equals(['Bread']));
+    });
+
+    test('getEntriesInRange failure propagates without recipe fetches',
+        () async {
+      when(
+        () => mockMealPlanRepo.getEntriesInRange(any(), any(), any()),
+      ).thenAnswer(
+        (_) async => const Result.failure(ServerException('DB error')),
+      );
+
+      final result = await sut.getRangeIngredientNames(
+        _babyId,
+        rangeStart,
+        rangeEnd,
+      );
+
+      expect(result.isFailure, isTrue);
+      verifyNever(() => mockRecipeRepo.getRecipeById(any()));
+    });
+
+    test('empty range returns empty list', () async {
+      when(
+        () => mockMealPlanRepo.getEntriesInRange(any(), any(), any()),
+      ).thenAnswer((_) async => const Result.success([]));
+
+      final result = await sut.getRangeIngredientNames(
+        _babyId,
+        rangeStart,
+        rangeEnd,
+      );
+
+      expect(result.isSuccess, isTrue);
+      expect(result.dataOrNull, isEmpty);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
   // NIB-59: getRolling7
   // ---------------------------------------------------------------------------
 

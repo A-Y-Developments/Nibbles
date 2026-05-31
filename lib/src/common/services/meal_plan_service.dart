@@ -166,6 +166,45 @@ class MealPlanService {
     return Result.success(names.toList());
   }
 
+  /// NIB-136: range-scoped ingredient aggregation for the
+  /// "Add to Shoplist" sheet launched from the screen-level overflow menu.
+  ///
+  /// Walks every meal-plan entry whose `planDate` falls inside
+  /// `[startDate, endDate]`, expands them into recipe ingredients, and
+  /// returns a list of unique ingredient names. Dedup is case-insensitive
+  /// (e.g. "olive oil" and "Olive Oil" collapse to one) but the display
+  /// casing of the first occurrence is preserved.
+  ///
+  /// Individual recipe fetch failures are skipped (best-effort); only a
+  /// failure to fetch the range's meal plan propagates as [Result.failure].
+  Future<Result<List<String>>> getRangeIngredientNames(
+    String babyId,
+    DateTime startDate,
+    DateTime endDate,
+  ) async {
+    final mealsResult = await _repo.getEntriesInRange(
+      babyId,
+      _dateOnly(startDate),
+      _dateOnly(endDate),
+    );
+    if (mealsResult.isFailure) {
+      return Result.failure(mealsResult.errorOrNull!);
+    }
+
+    final seenKeys = <String>{};
+    final names = <String>[];
+    for (final entry in mealsResult.dataOrNull!) {
+      final recipeResult = await _recipeRepo.getRecipeById(entry.recipeId);
+      if (recipeResult.isFailure) continue;
+      for (final ingredient in recipeResult.dataOrNull!.ingredients) {
+        final key = ingredient.name.toLowerCase();
+        if (seenKeys.add(key)) names.add(ingredient.name);
+      }
+    }
+
+    return Result.success(names);
+  }
+
   /// Deletes a single meal plan entry by ID.
   Future<Result<void>> removeEntry(String entryId) =>
       _repo.removeEntry(entryId);
