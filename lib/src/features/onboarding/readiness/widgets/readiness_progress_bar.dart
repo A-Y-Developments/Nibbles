@@ -68,37 +68,43 @@ class ReadinessProgressBar extends StatelessWidget {
     const trackColor = AppColors.borderSoft;
     const height = AppSizes.sm; // 8px track per Figma render.
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-      child: SizedBox(
-        height: height,
-        width: double.infinity,
-        child: Stack(
-          children: [
-            const ColoredBox(
-              color: trackColor,
-              child: SizedBox.expand(),
-            ),
-            TweenAnimationBuilder<double>(
-              duration: const Duration(milliseconds: 320),
-              curve: Curves.easeOut,
-              tween: Tween<double>(begin: fraction, end: fraction),
-              builder: (context, value, _) => FractionallySizedBox(
-                widthFactor: value.clamp(0.0, 1.0),
-                child: TweenAnimationBuilder<Color?>(
-                  duration: const Duration(milliseconds: 320),
-                  curve: Curves.easeOut,
-                  tween: ColorTween(end: fillColor),
-                  builder: (context, color, __) => Container(
-                    decoration: BoxDecoration(
-                      color: color ?? fillColor,
-                      borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+    return Semantics(
+      label: 'Readiness progress',
+      value: '${currentIndex + 1} of $stepCount',
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+        child: SizedBox(
+          height: height,
+          width: double.infinity,
+          child: Stack(
+            children: [
+              const ColoredBox(
+                color: trackColor,
+                child: SizedBox.expand(),
+              ),
+              TweenAnimationBuilder<double>(
+                duration: const Duration(milliseconds: 320),
+                curve: Curves.easeOut,
+                tween: Tween<double>(begin: fraction, end: fraction),
+                builder: (context, value, _) => FractionallySizedBox(
+                  widthFactor: value.clamp(0.0, 1.0),
+                  child: TweenAnimationBuilder<Color?>(
+                    duration: const Duration(milliseconds: 320),
+                    curve: Curves.easeOut,
+                    tween: ColorTween(end: fillColor),
+                    builder: (context, color, __) => Container(
+                      decoration: BoxDecoration(
+                        color: color ?? fillColor,
+                        borderRadius: BorderRadius.circular(
+                          AppSizes.radiusFull,
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

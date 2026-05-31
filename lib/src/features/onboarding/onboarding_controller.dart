@@ -6,6 +6,7 @@ import 'package:nibbles/src/common/domain/enums/consent_type.dart';
 import 'package:nibbles/src/common/domain/formz/baby_name_input.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/common/services/consent_service.dart';
+import 'package:nibbles/src/common/services/local_flag_service.dart';
 import 'package:nibbles/src/features/onboarding/onboarding_state.dart';
 import 'package:nibbles/src/utils/age_in_months.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -100,6 +101,17 @@ class OnboardingController extends _$OnboardingController {
 
   void setReadinessReady({required bool ready}) {
     state = state.copyWith(readinessReady: ready);
+  }
+
+  /// Derives the readiness-ready flag from current answers, persists the
+  /// local-flag, and updates state. Called from the readiness screen's finish
+  /// step so the flag is flipped inside the controller before the router
+  /// redirect runs — avoids the race between fire-and-forget flag write and
+  /// GoRouter reading the stale value.
+  void completeReadiness() {
+    final allMet = state.readinessAnswers.every((a) => a ?? false);
+    state = state.copyWith(readinessReady: allMet);
+    ref.read(localFlagServiceProvider).setOnboardingReadinessDone();
   }
 
   // ---------------------------------------------------------------------------

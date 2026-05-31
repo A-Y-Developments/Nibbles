@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/domain/enums/gender.dart';
-import 'package:nibbles/src/common/services/local_flag_service.dart';
 import 'package:nibbles/src/features/onboarding/baby_setup/baby_setup_controller.dart';
 import 'package:nibbles/src/features/onboarding/baby_setup/baby_setup_state.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
@@ -19,40 +18,49 @@ class OnboardingBabySetupScreen extends ConsumerWidget {
     final controller = ref.read(babySetupControllerProvider.notifier);
     final textTheme = Theme.of(context).textTheme;
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
+    return PopScope(
+      // Allow pop only on the first step (step 0); on later steps, intercept
+      // system back and step backward through the wizard instead.
+      canPop: state.step == 0,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) controller.previousStep();
+      },
+      child: Scaffold(
         backgroundColor: AppColors.background,
-        elevation: 0,
-        leading: state.step > 0
-            ? IconButton(
-                icon: const Icon(Icons.arrow_back_rounded),
-                onPressed: controller.previousStep,
-              )
-            : null,
-        title: Text(
-          'Step ${state.step + 1} of 3',
-          style: textTheme.bodySmall?.copyWith(color: AppColors.subtext),
-        ),
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSizes.pagePaddingH,
-            vertical: AppSizes.pagePaddingV,
+        appBar: AppBar(
+          backgroundColor: AppColors.background,
+          elevation: 0,
+          leading: state.step > 0
+              ? IconButton(
+                  tooltip: 'Back',
+                  icon: const Icon(
+                    Icons.arrow_back_rounded,
+                    semanticLabel: 'Back',
+                  ),
+                  onPressed: controller.previousStep,
+                )
+              : null,
+          title: Text(
+            'Step ${state.step + 1} of 3',
+            style: textTheme.bodySmall?.copyWith(color: AppColors.subtext),
           ),
-          child: switch (state.step) {
-            0 => _NameStep(state: state, controller: controller),
-            1 => _DobStep(state: state, controller: controller),
-            _ => _GenderStep(
-              state: state,
-              controller: controller,
-              onSuccess: () {
-                ref.read(localFlagServiceProvider).setOnboardingBabySetupDone();
-                context.goNamed(AppRoute.home.name);
-              },
+        ),
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSizes.pagePaddingH,
+              vertical: AppSizes.pagePaddingV,
             ),
-          },
+            child: switch (state.step) {
+              0 => _NameStep(state: state, controller: controller),
+              1 => _DobStep(state: state, controller: controller),
+              _ => _GenderStep(
+                state: state,
+                controller: controller,
+                onSuccess: () => context.goNamed(AppRoute.home.name),
+              ),
+            },
+          ),
         ),
       ),
     );

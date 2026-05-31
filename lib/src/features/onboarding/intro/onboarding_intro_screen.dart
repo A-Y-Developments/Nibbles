@@ -373,9 +373,15 @@ class _BottomSection extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _DotIndicator(
-            count: slideCount,
-            currentIndex: currentPage,
+          Semantics(
+            container: true,
+            liveRegion: true,
+            label: 'Page ${currentPage + 1} of $slideCount',
+            excludeSemantics: true,
+            child: _DotIndicator(
+              count: slideCount,
+              currentIndex: currentPage,
+            ),
           ),
           const SizedBox(height: AppSizes.lg),
           Row(
@@ -384,7 +390,8 @@ class _BottomSection extends StatelessWidget {
                 key: const Key('onboarding_intro_back'),
                 icon: const Icon(Icons.arrow_back),
                 tone: AppRoundButtonTone.butter,
-                onPressed: onBack,
+                // Disable on slide 1 — no previous slide.
+                onPressed: currentPage == 0 ? null : onBack,
                 semanticLabel: 'Back',
               ),
               const SizedBox(width: AppSizes.sp12),

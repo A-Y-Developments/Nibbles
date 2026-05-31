@@ -98,64 +98,70 @@ class _OnboardingBabySetupLoadingScreenState
       canPop: false,
       child: Scaffold(
         backgroundColor: AppColors.butterSoft,
-        body: SafeArea(
-          child: SizedBox.expand(
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                // Centered cluster: petal blob + faint "LOADING" caption
-                // overlay. The caption sits inside the blob's footprint per
-                // the Figma snapshot (audit screenshot).
-                Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    const PetalBlob(
-                      key: Key('onboarding_baby_setup_loading_blob'),
+        body: Semantics(
+          label: 'Setting up your baby profile',
+          liveRegion: true,
+          container: true,
+          child: SafeArea(
+            child: SizedBox.expand(
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // Decorative cluster — excluded from semantics; the outer
+                  // live-region Semantics covers the loading state.
+                  ExcludeSemantics(
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        const PetalBlob(
+                          key: Key('onboarding_baby_setup_loading_blob'),
+                        ),
+                        Padding(
+                          // Nudge the caption slightly below the blob's optical
+                          // center so it reads under the inner sage quatrefoil
+                          // (matches the audit snapshot).
+                          padding: const EdgeInsets.only(top: AppSizes.xxl),
+                          child: Text(
+                            loadingCaption,
+                            key: const Key(
+                              'onboarding_baby_setup_loading_caption',
+                            ),
+                            textAlign: TextAlign.center,
+                            style: textTheme.bodySmall?.copyWith(
+                              color: AppColors.cream,
+                              fontSize: 12.8,
+                              height: 19.2 / 12.8,
+                              letterSpacing: 4.33,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    Padding(
-                      // Nudge the caption slightly below the blob's optical
-                      // center so it reads under the inner sage quatrefoil
-                      // (matches the audit snapshot).
-                      padding: const EdgeInsets.only(top: AppSizes.xxl),
-                      child: Text(
-                        loadingCaption,
-                        key: const Key(
-                          'onboarding_baby_setup_loading_caption',
-                        ),
-                        textAlign: TextAlign.center,
-                        style: textTheme.bodySmall?.copyWith(
-                          color: AppColors.cream,
-                          fontSize: 12.8,
-                          height: 19.2 / 12.8,
-                          letterSpacing: 4.33,
-                          fontWeight: FontWeight.w400,
-                        ),
+                  ),
+                  // Footer tagline anchored ~70% down screen — Figma footer at
+                  // bottom 611 of an 874 height (≈30% from the bottom = 0.40
+                  // on the y axis once expressed as Alignment(0, y)).
+                  Align(
+                    alignment: const Alignment(0, 0.40),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSizes.pagePaddingH,
                       ),
-                    ),
-                  ],
-                ),
-                // Footer tagline anchored ~70% down screen — Figma footer at
-                // bottom 611 of an 874 height (≈30% from the bottom = 0.40
-                // on the y axis once expressed as Alignment(0, y)).
-                Align(
-                  alignment: const Alignment(0, 0.40),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSizes.pagePaddingH,
-                    ),
-                    child: Text(
-                      footerCopy,
-                      key: const Key('onboarding_baby_setup_loading_footer'),
-                      textAlign: TextAlign.center,
-                      // Body/SemiBold (Figtree 15/22 w600) per audit token map.
-                      style: textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.text,
+                      child: Text(
+                        footerCopy,
+                        key: const Key('onboarding_baby_setup_loading_footer'),
+                        textAlign: TextAlign.center,
+                        // Body/SemiBold (Figtree 15/22 w600) per audit token map.
+                        style: textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.text,
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

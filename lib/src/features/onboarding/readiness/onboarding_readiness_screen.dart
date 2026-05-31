@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/components.dart';
-import 'package:nibbles/src/common/services/local_flag_service.dart';
 import 'package:nibbles/src/features/onboarding/onboarding_controller.dart';
 import 'package:nibbles/src/features/onboarding/onboarding_state.dart';
 import 'package:nibbles/src/features/onboarding/readiness/widgets/readiness_choice_card.dart';
@@ -129,8 +128,16 @@ class _OnboardingReadinessScreenState
     final isNextEnabled = currentAnswer != null;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
+      // Gradient background: butterSoft → light grey per Figma readiness spec.
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [AppColors.butterSoft, Color(0xFFF5F5F5)],
+          ),
+        ),
+        child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: AppSizes.pagePaddingH,
@@ -139,13 +146,19 @@ class _OnboardingReadinessScreenState
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: AppSizes.md),
-              Center(
-                child: Text(
-                  '${_currentIndex + 1} of $_readinessTotalSteps Questions',
-                  key: const Key('onboarding_readiness_counter'),
-                  style: textTheme.bodyMedium?.copyWith(
-                    color: AppColors.fgStrong,
-                    fontWeight: FontWeight.w600,
+              Semantics(
+                liveRegion: true,
+                container: true,
+                label:
+                    'Question ${_currentIndex + 1} of $_readinessTotalSteps',
+                child: Center(
+                  child: Text(
+                    '${_currentIndex + 1} of $_readinessTotalSteps Questions',
+                    key: const Key('onboarding_readiness_counter'),
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: AppColors.fgStrong,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
@@ -218,6 +231,7 @@ class _OnboardingReadinessScreenState
           ),
         ),
       ),
+      ),
     );
   }
 
@@ -276,16 +290,10 @@ class _OnboardingReadinessScreenState
   }
 
   void _finish() {
-    final controller = ref.read(onboardingControllerProvider.notifier);
-    // signs_met derivation: ready iff every sign answer is `true`. Pinned on
-    // state so the consent screen can branch without recounting. The result
-    // screen still applies the NIB-120 3/5 majority gate when rendering.
-    final answers = ref.read(onboardingControllerProvider).readinessAnswers;
-    final allMet = answers.every((a) => a ?? false);
-    controller.setReadinessReady(ready: allMet);
-    // CRITICAL: GoRouter redirect bounces back to /onboarding/readiness while
-    // this flag is false. Dropping this call creates a silent redirect loop.
-    ref.read(localFlagServiceProvider).setOnboardingReadinessDone();
+    // Delegate flag write + state update to controller so the local flag is
+    // flipped before GoRouter's redirect reads it — avoids the fire-and-forget
+    // race that existed when the flag was written from the Screen layer.
+    ref.read(onboardingControllerProvider.notifier).completeReadiness();
     context.goNamed(AppRoute.onboardingResult.name);
   }
 }
