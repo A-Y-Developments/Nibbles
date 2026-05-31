@@ -24,16 +24,21 @@ class DetailContextualBanner extends StatelessWidget {
         );
       case AllergenStatus.safe:
         return (
-          text: "You've already introduced this allergen",
+          text:
+              "You've already introduced this allergen! Don't forget to "
+              "include it regularly in your baby's meal prep to help "
+              'maintain exposure.',
           bg: AppColors.butterSoft,
           fg: AppColors.greenDeep,
         );
       case AllergenStatus.flagged:
         return (
-          text: 'You already tried this allergen. '
-              'Please consult a medical professional.',
+          text:
+              'You already tried this allergen, but it appears to be '
+              'unsafe. Please consult a medical professional for further '
+              'guidance.',
           bg: AppColors.destructiveSoft,
-          fg: AppColors.flagFg,
+          fg: AppColors.burgundy,
         );
     }
   }
