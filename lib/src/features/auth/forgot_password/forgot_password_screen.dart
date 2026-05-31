@@ -118,7 +118,7 @@ class _InputView extends StatelessWidget {
       children: [
         Text(
           'Forgot your password?',
-          style: textTheme.headlineSmall,
+          style: textTheme.displaySmall,
           textAlign: TextAlign.left,
         ),
         const SizedBox(height: AppSizes.sm),
@@ -182,7 +182,7 @@ class _ConfirmationView extends StatelessWidget {
         const SizedBox(height: AppSizes.lg),
         Text(
           'Check your email',
-          style: textTheme.headlineSmall,
+          style: textTheme.displaySmall,
           textAlign: TextAlign.left,
         ),
         const SizedBox(height: AppSizes.sm),

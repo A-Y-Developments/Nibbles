@@ -18,6 +18,7 @@ class ForgotPasswordController extends _$ForgotPasswordController {
   }
 
   Future<void> submit() async {
+    if (state.isLoading) return;
     final email = EmailInput.dirty(state.email.value);
     if (email.isNotValid) {
       state = state.copyWith(

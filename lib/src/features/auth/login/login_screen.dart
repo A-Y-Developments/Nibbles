@@ -12,15 +12,31 @@ import 'package:nibbles/src/routing/route_enums.dart';
 ///
 /// 3 state variants — empty / filled / error — per Figma frames 971:10029,
 /// 1015:10854, 1023:6909. Background is the Grad-1 token (butter→cream).
-class LoginScreen extends ConsumerWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends ConsumerState<LoginScreen> {
+  final _emailFocus = FocusNode();
+  final _passwordFocus = FocusNode();
+
+  @override
+  void dispose() {
+    _emailFocus.dispose();
+    _passwordFocus.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(loginControllerProvider);
     final controller = ref.read(loginControllerProvider.notifier);
     final textTheme = Theme.of(context).textTheme;
     final hasError = state.errorMessage != null;
+    final canSubmit = state.email.isValid && state.password.isValid;
 
     return Scaffold(
       // Grad-1 — butter→cream diagonal. Frame backdrop applied via the
@@ -69,8 +85,9 @@ class LoginScreen extends ConsumerWidget {
                   hintText: 'Email address',
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
+                  focusNode: _emailFocus,
                   onChanged: controller.updateEmail,
-                  errorText: hasError ? state.errorMessage : null,
+                  onSubmitted: (_) => _passwordFocus.requestFocus(),
                   errorColor: AppColors.burgundy,
                 ),
                 const SizedBox(height: AppSizes.md),
@@ -80,20 +97,42 @@ class LoginScreen extends ConsumerWidget {
                   hintText: 'Password',
                   obscureText: state.obscure,
                   textInputAction: TextInputAction.done,
+                  focusNode: _passwordFocus,
                   onChanged: controller.updatePassword,
+                  onSubmitted: (_) {
+                    if (!state.isLoading && canSubmit) controller.submit();
+                  },
                   errorText: hasError ? state.errorMessage : null,
                   errorColor: AppColors.burgundy,
                   suffixIcon: _PasswordSuffixIcon(
                     obscure: state.obscure,
-                    hasError: hasError,
                     onToggle: controller.toggleObscure,
                   ),
                 ),
-                const SizedBox(height: AppSizes.lg),
+                const SizedBox(height: AppSizes.xs),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () =>
+                        context.goNamed(AppRoute.forgotPassword.name),
+                    child: const Text(
+                      'Forgot password?',
+                      style: TextStyle(
+                        fontFamily: FontFamily.parkinsans,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.burgundy,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSizes.md),
                 AppPillButton(
                   key: const Key('login_submit_button'),
                   label: state.isLoading ? 'Logging in…' : 'Login',
-                  onPressed: state.isLoading ? null : controller.submit,
+                  onPressed: (state.isLoading || !canSubmit)
+                      ? null
+                      : controller.submit,
                 ),
                 const SizedBox(height: AppSizes.lg),
                 const _OrDivider(),
@@ -156,32 +195,26 @@ class _LoginLogoMark extends StatelessWidget {
 class _PasswordSuffixIcon extends StatelessWidget {
   const _PasswordSuffixIcon({
     required this.obscure,
-    required this.hasError,
     required this.onToggle,
   });
 
   final bool obscure;
-  final bool hasError;
   final VoidCallback onToggle;
 
   @override
   Widget build(BuildContext context) {
-    // Error variant (Figma login-3) shows a check glyph in the password
-    // suffix instead of the eye toggle — odd, but per spec.
-    if (hasError) {
-      return const Icon(
-        Icons.check_rounded,
-        color: AppColors.burgundy,
-        size: AppSizes.iconMd,
-      );
-    }
-    return InkResponse(
-      onTap: onToggle,
-      radius: AppSizes.iconMd,
-      child: Icon(
-        obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-        color: AppColors.fgMuted,
-        size: AppSizes.iconMd,
+    return Semantics(
+      button: true,
+      toggled: !obscure,
+      label: obscure ? 'Show password' : 'Hide password',
+      excludeSemantics: true,
+      child: IconButton(
+        onPressed: onToggle,
+        icon: Icon(
+          obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+          color: AppColors.fgMuted,
+          size: AppSizes.iconMd,
+        ),
       ),
     );
   }
@@ -233,7 +266,7 @@ class _GoogleLoginButton extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const _GoogleGlyph(size: 24),
+              const ExcludeSemantics(child: _GoogleGlyph(size: 24)),
               const SizedBox(width: AppSizes.sm),
               Text(
                 'Login with Google',
@@ -349,16 +382,14 @@ class _SignUpFooter extends StatelessWidget {
           'Don’t have an account?',
           style: textTheme.bodyLarge?.copyWith(color: AppColors.text),
         ),
-        const SizedBox(width: AppSizes.xs),
-        InkWell(
-          key: const Key('login_signup_link'),
-          onTap: () => context.goNamed(AppRoute.register.name),
-          child: const Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: AppSizes.xs,
-              vertical: AppSizes.xs,
-            ),
-            child: Text(
+        Semantics(
+          button: true,
+          label: 'Sign up',
+          excludeSemantics: true,
+          child: TextButton(
+            key: const Key('login_signup_link'),
+            onPressed: () => context.goNamed(AppRoute.register.name),
+            child: const Text(
               'Sign Up',
               style: TextStyle(
                 fontFamily: FontFamily.parkinsans,
