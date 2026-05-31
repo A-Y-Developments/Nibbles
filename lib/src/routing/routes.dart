@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/common/services/auth_service.dart';
 import 'package:nibbles/src/common/services/local_flag_service.dart';
+import 'package:nibbles/src/common/services/subscription_service.dart';
 import 'package:nibbles/src/features/allergen/complete/allergen_complete_screen.dart';
 import 'package:nibbles/src/features/allergen/detail/allergen_detail_screen.dart';
 import 'package:nibbles/src/features/allergen/log/allergen_log_screen.dart';
@@ -44,7 +45,14 @@ part 'routes.g.dart';
 
 class _RouterRefreshNotifier extends ChangeNotifier {
   _RouterRefreshNotifier(Ref ref) {
-    ref.listen<bool>(authServiceProvider, (_, __) => notifyListeners());
+    ref
+      ..listen<bool>(authServiceProvider, (_, __) => notifyListeners())
+      // NIB-144 — refresh on entitlement change so the M2 paywall guard
+      // re-evaluates as soon as `SubscriptionService.isActive` flips.
+      ..listen<bool>(
+        subscriptionServiceProvider,
+        (_, __) => notifyListeners(),
+      );
   }
 }
 
@@ -63,6 +71,7 @@ String? resolveAppRedirect({
   required bool babySetupDone,
   required bool readinessDone,
   required bool onboardingDone,
+  required bool isSubscribed,
 }) {
   // Allow splash through — it handles its own redirect after init.
   if (location == AppRoute.splash.path) return null;
@@ -118,8 +127,10 @@ String? resolveAppRedirect({
     return AppRoute.onboardingConsent.path;
   }
 
-  // 7. All onboarding done — any onboarding/auth/paywall screen redirects to
-  //    home. Paywall remains gated here while M2 is deferred.
+  // 7. All onboarding done — any onboarding/auth screen redirects to home.
+  //    Paywall is intentionally NOT in `gatedPaths` (NIB-144 / M2): an
+  //    onboarded user who is not subscribed must be sent TO the paywall, not
+  //    bounced away from it.
   const gatedPaths = {
     '/auth/login',
     '/auth/register',
@@ -131,9 +142,20 @@ String? resolveAppRedirect({
     '/onboarding/result',
     '/onboarding/consent',
     '/onboarding/baby-setup',
-    '/subscription/paywall',
   };
   if (gatedPaths.contains(location)) return AppRoute.home.path;
+
+  // 8. M2 paywall guard (NIB-144). Onboarded but unsubscribed users are
+  //    redirected to the paywall. Allow the paywall itself and the post-
+  //    purchase transition screen through so the purchase flow can complete.
+  if (!isSubscribed) {
+    const subscriptionAllowedPaths = {
+      '/subscription/paywall',
+      '/subscription/success',
+    };
+    if (subscriptionAllowedPaths.contains(location)) return null;
+    return AppRoute.paywall.path;
+  }
 
   return null;
 }
@@ -155,6 +177,8 @@ GoRouter goRouter(Ref ref) {
         babySetupDone: localFlags.isOnboardingBabySetupDone(),
         readinessDone: localFlags.isOnboardingReadinessDone(),
         onboardingDone: localFlags.isOnboardingDone(),
+        // NIB-144 — watch so router refreshes when entitlement flips.
+        isSubscribed: ref.watch(subscriptionServiceProvider),
       );
     },
     routes: [
