@@ -57,6 +57,13 @@ class AllergenLogController extends _$AllergenLogController {
     state = state.copyWith(photoPath: xFile.path);
   }
 
+  /// Commits a photo path that was captured outside of the controller (e.g.
+  /// by the Attachment bottom-sheet which manages its own local draft state
+  /// so Cancel does not bleed into the parent form). Passing `null` clears
+  /// the staged photo.
+  void setAttachmentPhoto(String? path) =>
+      state = state.copyWith(photoPath: path);
+
   void removePhoto() => state = state.copyWith(photoPath: null);
 
   /// Resets the controller to its CREATE-mode defaults (logDate = today, all

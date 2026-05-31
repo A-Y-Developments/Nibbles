@@ -7,7 +7,7 @@ part of 'allergen_log_controller.dart';
 // **************************************************************************
 
 String _$allergenLogControllerHash() =>
-    r'fde5033f91fc059f4405bb5ee37c1ef397aa0b79';
+    r'37ba29d5d46690376ebb7636d4610e49f467bbc8';
 
 /// Controller backing the redesigned full-screen Allergen Log capture screen
 /// (NIB-127).
