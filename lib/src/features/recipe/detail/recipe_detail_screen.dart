@@ -53,17 +53,29 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
     return babyIdAsync.when(
       loading: () => const Scaffold(
         backgroundColor: AppColors.background,
-        body: Center(child: CircularProgressIndicator()),
+        body: Center(
+          child: CircularProgressIndicator(semanticsLabel: 'Loading recipe'),
+        ),
       ),
-      error: (_, __) => const Scaffold(
+      error: (_, __) => Scaffold(
         backgroundColor: AppColors.background,
-        body: Center(child: Text('Could not load baby profile.')),
+        appBar: AppBar(backgroundColor: AppColors.background),
+        body: Semantics(
+          liveRegion: true,
+          container: true,
+          child: const Center(child: Text('Could not load baby profile.')),
+        ),
       ),
       data: (babyId) {
         if (babyId == null) {
-          return const Scaffold(
+          return Scaffold(
             backgroundColor: AppColors.background,
-            body: Center(child: Text('No baby profile found.')),
+            appBar: AppBar(backgroundColor: AppColors.background),
+            body: Semantics(
+              liveRegion: true,
+              container: true,
+              child: const Center(child: Text('No baby profile found.')),
+            ),
           );
         }
         return _RecipeDetailBody(babyId: babyId, recipeId: widget.recipeId);
@@ -395,7 +407,7 @@ class _RecipeContentState extends ConsumerState<_RecipeContent> {
             left: 0,
             right: 0,
             child: const AddToMealPlanSuccessBanner(
-              message: 'Succesfully added to meal plan',
+              message: 'Successfully added to meal plan',
             ),
           ),
       ],

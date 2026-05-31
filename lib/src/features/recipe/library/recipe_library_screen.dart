@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/constants/allergen_emoji.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
@@ -15,6 +16,7 @@ import 'package:nibbles/src/features/recipe/library/widgets/read_guide_banner.da
 import 'package:nibbles/src/features/recipe/library/widgets/recipe_category_row.dart';
 import 'package:nibbles/src/features/recipe/library/widgets/recipe_search_empty.dart';
 import 'package:nibbles/src/features/recipe/library/widgets/recipe_search_results.dart';
+import 'package:nibbles/src/routing/route_enums.dart';
 
 /// Recipe Library screen (RC-01, NIB-53 redesign + NIB-58 search rewire).
 ///
@@ -44,15 +46,25 @@ class RecipeLibraryScreen extends ConsumerWidget {
 
     return babyIdAsync.when(
       loading: () => const _PageScaffold(
-        body: Center(child: CircularProgressIndicator()),
+        body: Center(
+          child: CircularProgressIndicator(semanticsLabel: 'Loading recipes'),
+        ),
       ),
-      error: (_, __) => const _PageScaffold(
-        body: Center(child: Text('Could not load baby profile.')),
+      error: (_, __) => _PageScaffold(
+        body: Semantics(
+          liveRegion: true,
+          container: true,
+          child: const Center(child: Text('Could not load baby profile.')),
+        ),
       ),
       data: (babyId) {
         if (babyId == null) {
-          return const _PageScaffold(
-            body: Center(child: Text('No baby profile found.')),
+          return _PageScaffold(
+            body: Semantics(
+              liveRegion: true,
+              container: true,
+              child: const Center(child: Text('No baby profile found.')),
+            ),
           );
         }
         return _RecipeLibraryBody(babyId: babyId);
@@ -106,18 +118,7 @@ class _RecipeLibraryBodyState extends ConsumerState<_RecipeLibraryBody> {
   }
 
   void _openStartingGuide() {
-    // TODO(NIB-94): replace SnackBar with `context.pushNamed(
-    //   AppRoute.startingGuide.name)` once the Starting Guide route lands.
-    // Route is not registered yet so we cannot reference it here without
-    // breaking analyze.
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(
-        const SnackBar(
-          content: Text('Starting Guide coming soon'),
-          duration: Duration(seconds: 2),
-        ),
-      );
+    context.pushNamed(AppRoute.startingGuide.name);
   }
 
   void _onBookmarkTap() {
@@ -165,8 +166,11 @@ class _RecipeLibraryBodyState extends ConsumerState<_RecipeLibraryBody> {
           ),
           Expanded(
             child: libraryAsync.when(
-              loading: () =>
-                  const Center(child: CircularProgressIndicator()),
+              loading: () => const Center(
+                child: CircularProgressIndicator(
+                  semanticsLabel: 'Loading recipes',
+                ),
+              ),
               error: (_, __) => _ErrorView(onRetry: _refresh),
               data: (state) => _RecipeContent(
                 state: state,
@@ -284,13 +288,27 @@ class _ErrorView extends StatelessWidget {
           SizedBox(
             height: MediaQuery.of(context).size.height * 0.6,
             child: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(AppSizes.lg),
-                child: Text(
-                  "Couldn't load recipes. Pull down to retry.",
-                  textAlign: TextAlign.center,
-                  style: AppTypography.caption.copyWith(
-                    color: AppColors.fgFaint,
+              child: Semantics(
+                liveRegion: true,
+                container: true,
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSizes.lg),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        "Couldn't load recipes.",
+                        textAlign: TextAlign.center,
+                        style: AppTypography.caption.copyWith(
+                          color: AppColors.fgFaint,
+                        ),
+                      ),
+                      const SizedBox(height: AppSizes.sm),
+                      ElevatedButton(
+                        onPressed: () => unawaited(onRetry()),
+                        child: const Text('Retry'),
+                      ),
+                    ],
                   ),
                 ),
               ),

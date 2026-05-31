@@ -122,6 +122,10 @@ class _CardThumbnail extends StatelessWidget {
             CachedNetworkImage(
               imageUrl: url!,
               fit: BoxFit.cover,
+              memCacheWidth:
+                  (158 * MediaQuery.devicePixelRatioOf(context)).round(),
+              memCacheHeight:
+                  (117 * MediaQuery.devicePixelRatioOf(context)).round(),
               placeholder: (_, __) =>
                   const ColoredBox(color: AppColors.tan20),
               errorWidget: (_, __, ___) => const ColoredBox(

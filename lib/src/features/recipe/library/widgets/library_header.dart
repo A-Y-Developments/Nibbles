@@ -135,6 +135,7 @@ class _SearchInput extends StatelessWidget {
             IconButton(
               visualDensity: VisualDensity.compact,
               padding: EdgeInsets.zero,
+              tooltip: 'Clear search',
               constraints: const BoxConstraints(
                 minWidth: AppSizes.iconLg,
                 minHeight: AppSizes.iconLg,
@@ -163,19 +164,23 @@ class _FilterChipButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.greenDeep,
-      borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-      child: InkWell(
+    return Semantics(
+      button: true,
+      label: 'Open Starting Guide',
+      child: Material(
+        color: AppColors.greenDeep,
         borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        onTap: onTap,
-        child: SizedBox(
-          width: size,
-          height: size,
-          child: const Icon(
-            Icons.bookmark_outline,
-            color: AppColors.onGreen,
-            size: AppSizes.iconMd,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+          onTap: onTap,
+          child: SizedBox(
+            width: size,
+            height: size,
+            child: const Icon(
+              Icons.bookmark_outline,
+              color: AppColors.onGreen,
+              size: AppSizes.iconMd,
+            ),
           ),
         ),
       ),

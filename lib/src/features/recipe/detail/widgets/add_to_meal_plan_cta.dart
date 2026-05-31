@@ -58,35 +58,40 @@ class AddToMealPlanSuccessBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSizes.pagePaddingH),
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md,
-          vertical: AppSizes.sp12,
-        ),
-        decoration: BoxDecoration(
-          color: AppColors.butter,
-          borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-        ),
-        child: Row(
-          children: [
-            const Icon(
-              Icons.check_circle_outline,
-              size: AppSizes.iconMd,
-              color: AppColors.greenDeep,
-            ),
-            const SizedBox(width: AppSizes.sm),
-            Expanded(
-              child: Text(
-                message,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: AppColors.greenDeep,
-                  fontWeight: FontWeight.w600,
+    return Semantics(
+      liveRegion: true,
+      container: true,
+      label: message,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppSizes.pagePaddingH),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSizes.md,
+            vertical: AppSizes.sp12,
+          ),
+          decoration: BoxDecoration(
+            color: AppColors.butter,
+            borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+          ),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.check_circle_outline,
+                size: AppSizes.iconMd,
+                color: AppColors.greenDeep,
+              ),
+              const SizedBox(width: AppSizes.sm),
+              Expanded(
+                child: Text(
+                  message,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: AppColors.greenDeep,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
