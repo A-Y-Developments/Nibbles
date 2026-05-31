@@ -10,6 +10,10 @@ import 'package:nibbles/src/routing/routes.dart';
 /// implementation detail.
 void main() {
   // Sugar so each case reads as a state row rather than a constructor.
+  //
+  // Defaults to `subscribed: true` so existing pre-NIB-144 matrix rows keep
+  // exercising the same redirect paths (without the M2 paywall guard kicking
+  // in). The dedicated "M2 paywall guard" group below flips this to false.
   String? resolve({
     required String at,
     bool launched = true,
@@ -17,6 +21,7 @@ void main() {
     bool babySetup = false,
     bool readiness = false,
     bool onboarding = false,
+    bool subscribed = true,
   }) => resolveAppRedirect(
     location: at,
     hasLaunched: launched,
@@ -24,6 +29,7 @@ void main() {
     babySetupDone: babySetup,
     readinessDone: readiness,
     onboardingDone: onboarding,
+    isSubscribed: subscribed,
   );
 
   group('splash + first launch', () {
@@ -204,6 +210,10 @@ void main() {
     'all done — onboarding_done = true (the reinstall seeded path)',
     () {
       test('any onboarding/auth path redirects to /home', () {
+        // Post-NIB-144: paywall is intentionally NOT in gatedPaths because
+        // the M2 guard sends unsubscribed onboarded users TO it. Subscribed
+        // onboarded users on paywall fall through to `null` (covered by the
+        // M2 group below).
         for (final gated in [
           AppRoute.onboardingIntro.path,
           AppRoute.onboardingName.path,
@@ -213,7 +223,6 @@ void main() {
           AppRoute.onboardingConsent.path,
           AppRoute.onboardingBabySetup.path,
           AppRoute.forgotPassword.path,
-          AppRoute.paywall.path,
         ]) {
           expect(
             resolve(
@@ -301,6 +310,102 @@ void main() {
           onboarding: true,
         ),
         isNull,
+      );
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // NIB-144 — M2 paywall guard.
+  //
+  // Decision locked in NIB-120: M2 guard re-enabled, paywall mandatory.
+  // Onboarded but unsubscribed users are redirected to /subscription/paywall;
+  // the paywall itself and the post-purchase success screen are allowed
+  // through so the purchase flow can complete.
+  // ---------------------------------------------------------------------------
+  group('NIB-144 M2 paywall guard', () {
+    test(
+      'onboarded + unsubscribed user is redirected to /subscription/paywall',
+      () {
+        for (final p in [
+          AppRoute.home.path,
+          AppRoute.mealPlan.path,
+          AppRoute.shoppingList.path,
+          AppRoute.recipeLibrary.path,
+          AppRoute.profile.path,
+        ]) {
+          expect(
+            resolve(
+              at: p,
+              babySetup: true,
+              readiness: true,
+              onboarding: true,
+              subscribed: false,
+            ),
+            AppRoute.paywall.path,
+            reason: p,
+          );
+        }
+      },
+    );
+
+    test(
+      'onboarded + unsubscribed user can reach paywall + success screens',
+      () {
+        for (final p in [
+          AppRoute.paywall.path,
+          AppRoute.subscriptionSuccess.path,
+        ]) {
+          expect(
+            resolve(
+              at: p,
+              babySetup: true,
+              readiness: true,
+              onboarding: true,
+              subscribed: false,
+            ),
+            isNull,
+            reason: p,
+          );
+        }
+      },
+    );
+
+    test('onboarded + subscribed user can reach /home', () {
+      expect(
+        resolve(
+          at: AppRoute.home.path,
+          babySetup: true,
+          readiness: true,
+          onboarding: true,
+        ),
+        isNull,
+      );
+    });
+
+    test(
+      'onboarded + subscribed user on paywall passes through (no bounce)',
+      () {
+        expect(
+          resolve(
+            at: AppRoute.paywall.path,
+            babySetup: true,
+            readiness: true,
+            onboarding: true,
+          ),
+          isNull,
+        );
+      },
+    );
+
+    test('guard does not fire while still onboarding', () {
+      // Phase A — unsubscribed user must still be funneled through onboarding,
+      // not bounced to paywall.
+      expect(
+        resolve(
+          at: AppRoute.home.path,
+          subscribed: false,
+        ),
+        AppRoute.onboardingName.path,
       );
     });
   });
