@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/components.dart';
@@ -12,22 +11,23 @@ import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/common/services/local_flag_service.dart';
 import 'package:nibbles/src/features/allergen/log/allergen_log_controller.dart';
 import 'package:nibbles/src/features/allergen/log/allergen_log_state.dart';
-import 'package:nibbles/src/features/allergen/log/widgets/photo_capture_button.dart';
-import 'package:nibbles/src/features/allergen/log/widgets/taste_selector.dart';
+import 'package:nibbles/src/features/allergen/log/widgets/attachment_sheet.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 
-/// Full-screen Allergen Log capture / edit screen (NIB-127).
+/// Full-screen Allergen Reaction Log capture / edit screen (NIB-56 / NIB-127).
+///
+/// Renders the redesigned form matching Figma frame `1525:28322` — Date,
+/// Any Reaction? toggle, Notes, Attachment (Optional) container. The
+/// "Add Picture" CTA inside the dashed attachment container opens the
+/// Attachment bottom-sheet (Figma `1525:28629`) to capture photo + title +
+/// description. Save commits the new log via [AllergenLogController].
 ///
 /// CREATE mode — route `/home/allergen/:allergenKey/log`, [logId] null.
 /// EDIT mode — route `/home/allergen/:allergenKey/log/:logId/edit`, [logId]
-/// set; the controller hydrates state from the existing log via
-/// [AllergenLogController.hydrateForEdit] on first build.
+/// set; the controller hydrates state from the existing log on first build.
 ///
 /// Pops with a [bool] result — `true` when a log was saved (caller should
-/// invalidate). On a CREATE save where `hadReaction == true`, the pop result
-/// is also `true` and the parent (home_screen) reads
-/// [AllergenLogController]'s last state to decide whether to show the GP
-/// referral dialog.
+/// invalidate upstream lists).
 class AllergenLogScreen extends ConsumerStatefulWidget {
   const AllergenLogScreen({
     required this.allergenKey,
@@ -46,11 +46,6 @@ class AllergenLogScreen extends ConsumerStatefulWidget {
 
 class _AllergenLogScreenState extends ConsumerState<AllergenLogScreen> {
   final _notesCtrl = TextEditingController();
-  final _attachmentTitleCtrl = TextEditingController();
-  final _attachmentDescCtrl = TextEditingController();
-
-  // Tracks the hydrated logId we already synced text controllers from. Keeps
-  // the typed-into-field text from being clobbered on every rebuild.
   String? _ctrlSyncKey;
 
   @override
@@ -76,8 +71,6 @@ class _AllergenLogScreenState extends ConsumerState<AllergenLogScreen> {
   @override
   void dispose() {
     _notesCtrl.dispose();
-    _attachmentTitleCtrl.dispose();
-    _attachmentDescCtrl.dispose();
     super.dispose();
   }
 
@@ -86,8 +79,6 @@ class _AllergenLogScreenState extends ConsumerState<AllergenLogScreen> {
     if (key == null || _ctrlSyncKey == key) return;
     _ctrlSyncKey = key;
     _notesCtrl.text = state.notes ?? '';
-    _attachmentTitleCtrl.text = state.attachmentTitle ?? '';
-    _attachmentDescCtrl.text = state.attachmentDescription ?? '';
   }
 
   @override
@@ -115,12 +106,8 @@ class _AllergenLogScreenState extends ConsumerState<AllergenLogScreen> {
       // AL-08 reachability gate (NIB-128). After a successful save (CREATE or
       // EDIT) re-derive per-allergen statuses; if every allergen is `safe`
       // AND the per-baby `program_completion_shown_{babyId}` flag is unset,
-      // flip the flag and route to /home/allergen/complete instead of popping.
-      // On any read failure (status read, missing baby) we fall through to
-      // the existing pop — the success path must NOT be blocked on a stale
-      // status read. NIB-102 fires its analytics events independently on the
-      // controller side; this navigation happens after that and both paths
-      // coexist.
+      // flip the flag and route to /home/allergen/complete instead of
+      // popping. On any read failure we fall through to the existing pop.
       final babyId = ref.read(currentBabyIdProvider).valueOrNull;
       if (babyId != null) {
         final flagService = ref.read(localFlagServiceProvider);
@@ -175,8 +162,6 @@ class _AllergenLogScreenState extends ConsumerState<AllergenLogScreen> {
           state: state,
           controller: controller,
           notesCtrl: _notesCtrl,
-          attachmentTitleCtrl: _attachmentTitleCtrl,
-          attachmentDescCtrl: _attachmentDescCtrl,
         );
       },
     );
@@ -191,8 +176,6 @@ class _LogScreenBody extends StatelessWidget {
     required this.state,
     required this.controller,
     required this.notesCtrl,
-    required this.attachmentTitleCtrl,
-    required this.attachmentDescCtrl,
   });
 
   final String allergenKey;
@@ -201,8 +184,6 @@ class _LogScreenBody extends StatelessWidget {
   final AllergenLogState state;
   final AllergenLogController controller;
   final TextEditingController notesCtrl;
-  final TextEditingController attachmentTitleCtrl;
-  final TextEditingController attachmentDescCtrl;
 
   static const _months = <String>[
     'Jan',
@@ -236,46 +217,24 @@ class _LogScreenBody extends StatelessWidget {
     if (picked != null) controller.setLogDate(picked);
   }
 
-  Future<void> _pickPhoto(BuildContext context) async {
-    await showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppSizes.radiusXl),
-        ),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.camera_alt_outlined),
-              title: const Text('Camera'),
-              onTap: () {
-                Navigator.of(ctx).pop();
-                controller.pickPhoto(ImageSource.camera);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_library_outlined),
-              title: const Text('Gallery'),
-              onTap: () {
-                Navigator.of(ctx).pop();
-                controller.pickPhoto(ImageSource.gallery);
-              },
-            ),
-            const SizedBox(height: AppSizes.sm),
-          ],
-        ),
-      ),
+  Future<void> _openAttachmentSheet(BuildContext context) async {
+    final result = await showAttachmentSheet(
+      context,
+      initialPhotoPath: state.photoPath,
+      initialTitle: state.attachmentTitle,
+      initialDescription: state.attachmentDescription,
     );
+    if (result == null) return;
+    controller
+      ..setAttachmentPhoto(result.photoPath)
+      ..setAttachmentTitle(result.title ?? '')
+      ..setAttachmentDescription(result.description ?? '');
   }
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final logDate = state.logDate ?? DateTime.now();
+    final logDate = state.logDate;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -283,117 +242,110 @@ class _LogScreenBody extends StatelessWidget {
         backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.close_rounded),
+          icon: const Icon(Icons.arrow_back_rounded),
+          color: AppColors.fgStrong,
           onPressed: () => context.pop(false),
         ),
         title: Text(
-          isEdit ? 'Edit Log' : 'Add Log',
-          style: textTheme.titleMedium,
+          'Reaction Log',
+          style: textTheme.titleMedium?.copyWith(color: AppColors.fgStrong),
         ),
-        centerTitle: true,
+        centerTitle: false,
+        titleSpacing: 0,
       ),
       body: SafeArea(
         top: false,
-        child: ListView(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSizes.pagePaddingH,
-            vertical: AppSizes.pagePaddingV,
-          ),
+        child: Column(
           children: [
-            // Log Date row
-            const _SectionLabel('Log Date'),
-            const SizedBox(height: AppSizes.sm),
-            _DateField(
-              value: _formatDate(logDate),
-              onTap: () => _pickDate(context),
-            ),
-            const SizedBox(height: AppSizes.lg),
-
-            // Reaction toggle
-            _ReactionToggleCard(
-              hadReaction: state.hadReaction,
-              onToggle: controller.toggleReaction,
-            ),
-            const SizedBox(height: AppSizes.lg),
-
-            // Taste (optional)
-            const _SectionLabel('Reaction (optional)'),
-            const SizedBox(height: AppSizes.sm),
-            TasteSelector(
-              selected: state.taste,
-              onSelect: controller.setTaste,
-            ),
-            const SizedBox(height: AppSizes.lg),
-
-            // Notes
-            const _SectionLabel('Notes'),
-            const SizedBox(height: AppSizes.sm),
-            _MultilineField(
-              controller: notesCtrl,
-              hintText: 'How did it go? Anything to remember?',
-              minLines: 3,
-              onChanged: controller.setNotes,
-            ),
-            const SizedBox(height: AppSizes.lg),
-
-            // Attachment
-            const _SectionLabel('Attachment (optional)'),
-            const SizedBox(height: AppSizes.sm),
-            AppTextField(
-              controller: attachmentTitleCtrl,
-              hintText: 'Title (e.g. Recipe, Photo)',
-              onChanged: controller.setAttachmentTitle,
-            ),
-            const SizedBox(height: AppSizes.sm),
-            _MultilineField(
-              controller: attachmentDescCtrl,
-              hintText: 'Description',
-              minLines: 2,
-              onChanged: controller.setAttachmentDescription,
-            ),
-            const SizedBox(height: AppSizes.sm),
-            _PhotoRow(
-              localPhotoPath: state.photoPath,
-              existingPhotoPath: state.existingPhotoPath,
-              onPick: () => _pickPhoto(context),
-              onRemove: controller.removePhoto,
-            ),
-            const SizedBox(height: AppSizes.lg),
-
-            if (state.errorMessage != null) ...[
-              Text(
-                state.errorMessage!,
-                style: textTheme.bodySmall?.copyWith(color: AppColors.error),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppSizes.sm),
-            ],
-
-            AppPillButton(
-              key: const Key('log_save_button'),
-              label: isEdit ? 'Save Changes' : 'Save Log',
-              onPressed: _canSubmit
-                  ? () => controller.submit(
-                      babyId: babyId,
-                      allergenKey: allergenKey,
-                    )
-                  : null,
-              leading: state.isLoading
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: AppColors.cream,
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSizes.pagePaddingH,
+                  vertical: AppSizes.sm,
+                ),
+                children: [
+                  const _SectionLabel('Date'),
+                  const SizedBox(height: AppSizes.sm),
+                  _DateField(
+                    value: logDate != null ? _formatDate(logDate) : null,
+                    hint: _formatDate(DateTime.now()),
+                    onTap: () => _pickDate(context),
+                  ),
+                  const SizedBox(height: AppSizes.md),
+                  _ReactionToggleRow(
+                    hadReaction: state.hadReaction,
+                    onToggle: controller.toggleReaction,
+                  ),
+                  const SizedBox(height: AppSizes.md),
+                  const _SectionLabel('Notes'),
+                  const SizedBox(height: AppSizes.sm),
+                  _NotesField(
+                    controller: notesCtrl,
+                    onChanged: controller.setNotes,
+                  ),
+                  const SizedBox(height: AppSizes.md),
+                  const _SectionLabel('Attachment (Optional)'),
+                  const SizedBox(height: AppSizes.sm),
+                  _AttachmentBlock(
+                    hasAttachment: _hasAttachment(state),
+                    onOpenSheet: () => _openAttachmentSheet(context),
+                  ),
+                  if (state.errorMessage != null) ...[
+                    const SizedBox(height: AppSizes.md),
+                    Text(
+                      state.errorMessage!,
+                      style: textTheme.bodySmall?.copyWith(
+                        color: AppColors.error,
                       ),
-                    )
-                  : null,
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ],
+              ),
             ),
-            const SizedBox(height: AppSizes.md),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSizes.pagePaddingH,
+                AppSizes.sm,
+                AppSizes.pagePaddingH,
+                AppSizes.md,
+              ),
+              child: AppPillButton(
+                key: const Key('log_save_button'),
+                label: 'Save',
+                onPressed: _canSubmit
+                    ? () => controller.submit(
+                        babyId: babyId,
+                        allergenKey: allergenKey,
+                      )
+                    : null,
+                leading: state.isLoading
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.cream,
+                        ),
+                      )
+                    : null,
+              ),
+            ),
           ],
         ),
       ),
     );
+  }
+
+  bool _hasAttachment(AllergenLogState state) {
+    final title = state.attachmentTitle;
+    final description = state.attachmentDescription;
+    final photo = state.photoPath;
+    final existingPhoto = state.existingPhotoPath;
+    return (photo != null && photo.isNotEmpty) ||
+        (existingPhoto != null && existingPhoto.isNotEmpty) ||
+        (title != null && title.isNotEmpty) ||
+        (description != null && description.isNotEmpty);
   }
 }
 
@@ -411,23 +363,31 @@ class _SectionLabel extends StatelessWidget {
       text,
       style: Theme.of(context).textTheme.titleSmall?.copyWith(
         color: AppColors.fgStrong,
+        fontWeight: FontWeight.w700,
       ),
     );
   }
 }
 
 class _DateField extends StatelessWidget {
-  const _DateField({required this.value, required this.onTap});
+  const _DateField({
+    required this.value,
+    required this.hint,
+    required this.onTap,
+  });
 
-  final String value;
+  final String? value;
+  final String hint;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final hasValue = value != null;
     return Material(
       color: Colors.transparent,
       child: InkWell(
+        key: const Key('log_date_field'),
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppSizes.radiusMd),
         child: Container(
@@ -437,29 +397,14 @@ class _DateField extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppSizes.radiusMd),
             border: Border.all(color: AppColors.borderSoft),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: AppSizes.md - 2),
+          padding:
+              const EdgeInsets.symmetric(horizontal: AppSizes.fieldPaddingH),
           alignment: Alignment.centerLeft,
-          child: Row(
-            children: [
-              const Icon(
-                Icons.calendar_today_outlined,
-                size: AppSizes.iconSm,
-                color: AppColors.greenDeep,
-              ),
-              const SizedBox(width: AppSizes.sm),
-              Expanded(
-                child: Text(
-                  value,
-                  style: textTheme.bodyLarge?.copyWith(
-                    color: AppColors.fgStrong,
-                  ),
-                ),
-              ),
-              const Icon(
-                Icons.chevron_right_rounded,
-                color: AppColors.fgFaint,
-              ),
-            ],
+          child: Text(
+            hasValue ? value! : hint,
+            style: textTheme.bodyLarge?.copyWith(
+              color: hasValue ? AppColors.fgStrong : AppColors.fgFaint,
+            ),
           ),
         ),
       ),
@@ -467,17 +412,10 @@ class _DateField extends StatelessWidget {
   }
 }
 
-class _MultilineField extends StatelessWidget {
-  const _MultilineField({
-    required this.controller,
-    required this.hintText,
-    required this.minLines,
-    required this.onChanged,
-  });
+class _NotesField extends StatelessWidget {
+  const _NotesField({required this.controller, required this.onChanged});
 
   final TextEditingController controller;
-  final String hintText;
-  final int minLines;
   final ValueChanged<String> onChanged;
 
   @override
@@ -490,29 +428,30 @@ class _MultilineField extends StatelessWidget {
         border: Border.all(color: AppColors.borderSoft),
       ),
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.md - 2,
-        vertical: AppSizes.sm,
+        horizontal: AppSizes.fieldPaddingH,
+        vertical: AppSizes.sm + 2,
       ),
       child: TextField(
+        key: const Key('log_notes_field'),
         controller: controller,
-        minLines: minLines,
-        maxLines: 6,
+        minLines: 1,
+        maxLines: 4,
         onChanged: onChanged,
         cursorColor: AppColors.greenDeep,
         style: textTheme.bodyLarge?.copyWith(color: AppColors.fgStrong),
         decoration: InputDecoration(
           isCollapsed: true,
           border: InputBorder.none,
-          hintText: hintText,
-          hintStyle: textTheme.bodyLarge?.copyWith(color: AppColors.greenSoft),
+          hintText: 'My baby love it, no reaction',
+          hintStyle: textTheme.bodyLarge?.copyWith(color: AppColors.fgFaint),
         ),
       ),
     );
   }
 }
 
-class _ReactionToggleCard extends StatelessWidget {
-  const _ReactionToggleCard({
+class _ReactionToggleRow extends StatelessWidget {
+  const _ReactionToggleRow({
     required this.hadReaction,
     required this.onToggle,
   });
@@ -523,84 +462,74 @@ class _ReactionToggleCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    return AppCard(
-      onTap: onToggle,
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('Any reaction?', style: textTheme.titleSmall),
-                const SizedBox(height: 2),
-                Text(
-                  hadReaction
-                      ? 'Marked Unsafe — captured as a flagged log.'
-                      : 'Marked Safe — captured as a clean log.',
-                  style: textTheme.bodySmall?.copyWith(
-                    color: AppColors.fgMuted,
+    return Semantics(
+      toggled: hadReaction,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onToggle,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: AppSizes.sm),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Any Reaction?',
+                  style: textTheme.titleSmall?.copyWith(
+                    color: AppColors.fgStrong,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-              ],
-            ),
+              ),
+              IgnorePointer(
+                child: AppSwitch(
+                  key: const Key('log_reaction_switch'),
+                  value: hadReaction,
+                  onChanged: (_) {},
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: AppSizes.sm),
-          IgnorePointer(
-            child: AppSwitch(value: hadReaction, onChanged: (_) {}),
-          ),
-        ],
+        ),
       ),
     );
   }
 }
 
-class _PhotoRow extends StatelessWidget {
-  const _PhotoRow({
-    required this.localPhotoPath,
-    required this.existingPhotoPath,
-    required this.onPick,
-    required this.onRemove,
+class _AttachmentBlock extends StatelessWidget {
+  const _AttachmentBlock({
+    required this.hasAttachment,
+    required this.onOpenSheet,
   });
 
-  /// New photo picked locally in this session.
-  final String? localPhotoPath;
-
-  /// Existing storage path on the row when editing an existing log. Shown
-  /// as a chip when no new photo is picked yet.
-  final String? existingPhotoPath;
-  final VoidCallback onPick;
-  final VoidCallback onRemove;
+  final bool hasAttachment;
+  final VoidCallback onOpenSheet;
 
   @override
   Widget build(BuildContext context) {
-    if (localPhotoPath != null) {
-      return PhotoCaptureButton(
-        photoPath: localPhotoPath,
-        onPick: onPick,
-        onRemove: onRemove,
-      );
-    }
-    return Row(
-      children: [
-        Expanded(
-          child: AppPillButton(
-            label: existingPhotoPath != null ? 'Replace Photo' : 'Add Photo',
-            onPressed: onPick,
-            variant: AppPillButtonVariant.secondary,
-            size: AppPillButtonSize.small,
-            leading: const Icon(Icons.camera_alt_outlined),
+    return AppCard(
+      variant: AppCardVariant.dashed,
+      padding: const EdgeInsets.all(AppSizes.sp12),
+      child: SizedBox(
+        height: AppSizes.buttonHeight,
+        child: Material(
+          color: AppColors.butter,
+          shape: const StadiumBorder(),
+          child: InkWell(
+            key: const Key('attachment_add_picture'),
+            customBorder: const StadiumBorder(),
+            onTap: onOpenSheet,
+            child: Center(
+              child: Text(
+                hasAttachment ? 'Edit Picture' : 'Add Picture',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  color: AppColors.greenDeep,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
           ),
         ),
-        if (existingPhotoPath != null) ...[
-          const SizedBox(width: AppSizes.sm),
-          const AppChip(
-            label: 'Existing photo',
-            tone: AppChipTone.mute,
-            emoji: '📎',
-          ),
-        ],
-      ],
+      ),
     );
   }
 }

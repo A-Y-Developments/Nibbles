@@ -50,46 +50,54 @@ void main() {
   );
 
   group('AllergenLogScreen (CREATE)', () {
-    testWidgets('shows Add Log header', (tester) async {
+    testWidgets('shows Reaction Log header', (tester) async {
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
 
-      expect(find.text('Add Log'), findsOneWidget);
+      expect(find.text('Reaction Log'), findsOneWidget);
     });
 
-    testWidgets('shows three taste options', (tester) async {
+    testWidgets('shows all section labels in spec order', (tester) async {
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
 
-      expect(find.text('Love it'), findsOneWidget);
-      expect(find.text('Neutral'), findsOneWidget);
-      expect(find.text('Dislike'), findsOneWidget);
+      expect(find.text('Date'), findsOneWidget);
+      expect(find.text('Any Reaction?'), findsOneWidget);
+      expect(find.text('Notes'), findsOneWidget);
+      expect(find.text('Attachment (Optional)'), findsOneWidget);
     });
 
-    testWidgets('shows reaction question', (tester) async {
+    testWidgets('shows date field and notes hint', (tester) async {
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
 
-      expect(find.text('Any reaction?'), findsOneWidget);
+      expect(find.byKey(const Key('log_date_field')), findsOneWidget);
+      expect(find.text('My baby love it, no reaction'), findsOneWidget);
     });
 
-    testWidgets('shows photo capture CTA', (tester) async {
+    testWidgets('shows Add Picture CTA inside attachment block',
+        (tester) async {
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
-      await tester.drag(find.byType(ListView).first, const Offset(0, -800));
-      await tester.pumpAndSettle();
 
-      expect(find.text('Add Photo'), findsOneWidget);
+      expect(find.byKey(const Key('attachment_add_picture')), findsOneWidget);
+      expect(find.text('Add Picture'), findsOneWidget);
     });
 
-    testWidgets('shows save button', (tester) async {
+    testWidgets('shows reaction switch wired to controller state',
+        (tester) async {
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
-      await tester.drag(find.byType(ListView).first, const Offset(0, -800));
+
+      expect(find.byKey(const Key('log_reaction_switch')), findsOneWidget);
+    });
+
+    testWidgets('shows footer Save button', (tester) async {
+      await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('log_save_button')), findsOneWidget);
-      expect(find.text('Save Log'), findsOneWidget);
+      expect(find.text('Save'), findsOneWidget);
     });
   });
 }
