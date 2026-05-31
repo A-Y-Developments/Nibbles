@@ -5,33 +5,32 @@ import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/brand/quatrefoil.dart';
 import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
 
-/// Shows the DS clear-week confirm dialog (Figma 971:8151).
+/// Shows the DS clear-week confirm bottom-sheet (Figma 971:8090).
 ///
-/// Returns `true` if the user tapped Delete, `false` if Cancel, and `null`
-/// if dismissed via the barrier. Leaf widget — NIB-69 will swap the legacy
-/// Material `AlertDialog` call site in `meal_plan_screen.dart` over to this.
+/// Renders a centered confirmation sheet pinned to the bottom of the screen
+/// with the planner visible behind a scrim. Returns `true` if the user tapped
+/// Delete, `false` if Cancel, and `null` if dismissed via the scrim.
 Future<bool?> showClearMealPlanConfirm(BuildContext context) {
-  return showDialog<bool>(
+  return showModalBottomSheet<bool>(
     context: context,
-    // Spec NIB-103 build-rule 5 requires `barrierDismissible: true` to be
-    // passed explicitly even though it matches the default.
-    // ignore: avoid_redundant_argument_values
-    barrierDismissible: true,
-    builder: (ctx) => const _ClearConfirmDialog(),
+    backgroundColor: AppColors.cream,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(AppSizes.radiusLg),
+      ),
+    ),
+    builder: (_) => const _ClearConfirmSheet(),
   );
 }
 
-class _ClearConfirmDialog extends StatelessWidget {
-  const _ClearConfirmDialog();
+class _ClearConfirmSheet extends StatelessWidget {
+  const _ClearConfirmSheet();
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: AppColors.cream,
-      insetPadding: const EdgeInsets.symmetric(horizontal: AppSizes.lg),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-      ),
+    return SafeArea(
+      top: false,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
           AppSizes.lg,
@@ -42,8 +41,6 @@ class _ClearConfirmDialog extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Quatrefoil(size: AppSizes.avatarLg),
-            const SizedBox(height: AppSizes.md),
             Text(
               'Are you sure you want to delete?',
               style: Theme.of(context).textTheme.titleMedium ??
@@ -51,12 +48,14 @@ class _ClearConfirmDialog extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSizes.lg),
+            const Quatrefoil(size: AppSizes.avatarLg),
+            const SizedBox(height: AppSizes.lg),
             Row(
               children: [
                 Expanded(
                   child: AppPillButton(
                     label: 'Cancel',
-                    variant: AppPillButtonVariant.ghost,
+                    variant: AppPillButtonVariant.secondary,
                     onPressed: () => Navigator.pop(context, false),
                   ),
                 ),
@@ -64,7 +63,6 @@ class _ClearConfirmDialog extends StatelessWidget {
                 Expanded(
                   child: AppPillButton(
                     label: 'Delete',
-                    variant: AppPillButtonVariant.destructive,
                     onPressed: () => Navigator.pop(context, true),
                   ),
                 ),
