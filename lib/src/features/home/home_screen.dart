@@ -80,9 +80,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final babyIdAsync = ref.watch(currentBabyIdProvider);
 
     return babyIdAsync.when(
+      skipLoadingOnRefresh: true,
+      skipLoadingOnReload: true,
       loading: () => const _HomeLoadingScaffold(),
-      error: (_, __) =>
-          const _HomeErrorScaffold(message: 'Could not load baby profile.'),
+      error: (_, __) => _HomeErrorScaffold(
+        message: 'Could not load baby profile.',
+        onRetry: () => ref.invalidate(currentBabyIdProvider),
+      ),
       data: (babyId) {
         if (babyId == null) {
           return Scaffold(
@@ -109,22 +113,32 @@ class _HomeBody extends ConsumerWidget {
     final asyncState = ref.watch(homeControllerProvider(babyId));
 
     return asyncState.when(
+      skipLoadingOnRefresh: true,
+      skipLoadingOnReload: true,
       loading: () => const _HomeLoadingScaffold(),
       error: (err, _) => _HomeErrorScaffold(
         message: err is AppException ? err.message : 'Something went wrong.',
         onRetry: () => ref.invalidate(homeControllerProvider(babyId)),
       ),
-      data: (state) =>
-          _HomeContent(state: state, onCreateFirstMeal: onCreateFirstMeal),
+      data: (state) => _HomeContent(
+        state: state,
+        onCreateFirstMeal: onCreateFirstMeal,
+        onRefresh: () async => ref.invalidate(homeControllerProvider(babyId)),
+      ),
     );
   }
 }
 
 class _HomeContent extends StatelessWidget {
-  const _HomeContent({required this.state, required this.onCreateFirstMeal});
+  const _HomeContent({
+    required this.state,
+    required this.onCreateFirstMeal,
+    required this.onRefresh,
+  });
 
   final HomeState state;
   final VoidCallback onCreateFirstMeal;
+  final Future<void> Function() onRefresh;
 
   @override
   Widget build(BuildContext context) {
@@ -148,41 +162,49 @@ class _HomeContent extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSizes.pagePaddingH,
-            vertical: AppSizes.pagePaddingV,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              HomeHeader(babyName: baby.name, ageMonths: ageMonths),
-              const SizedBox(height: AppSizes.md),
-              GreetingCard(
-                babyName: baby.name,
-                ageMonths: ageMonths,
-                dateOfBirth: baby.dateOfBirth,
-              ),
-              const SizedBox(height: AppSizes.md),
-              StatRingCard(
-                safeCount: state.safeCount,
-                flaggedCount: state.flaggedCount,
-                notStartedCount: state.notStartedCount,
-                inProgressCount: state.inProgressCount,
-                todayMealCount: state.todayMealCount,
-                todayMealTarget: 2,
-              ),
-              const SizedBox(height: AppSizes.md),
-              ..._middleSection(
-                state: state,
-                babyName: baby.name,
-                variant: variant,
-                onCreateFirstMeal: onCreateFirstMeal,
-              ),
-              const SizedBox(height: AppSizes.md),
-              _tipsSection(variant),
-              const SizedBox(height: AppSizes.xl),
-            ],
+        child: RefreshIndicator(
+          onRefresh: onRefresh,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSizes.pagePaddingH,
+              vertical: AppSizes.pagePaddingV,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                HomeHeader(
+                  babyName: baby.name,
+                  ageMonths: ageMonths,
+                  onAvatarTap: () => context.pushNamed(AppRoute.profile.name),
+                ),
+                const SizedBox(height: AppSizes.md),
+                GreetingCard(
+                  babyName: baby.name,
+                  ageMonths: ageMonths,
+                  dateOfBirth: baby.dateOfBirth,
+                ),
+                const SizedBox(height: AppSizes.md),
+                StatRingCard(
+                  safeCount: state.safeCount,
+                  flaggedCount: state.flaggedCount,
+                  notStartedCount: state.notStartedCount,
+                  inProgressCount: state.inProgressCount,
+                  todayMealCount: state.todayMealCount,
+                  todayMealTarget: 2,
+                ),
+                const SizedBox(height: AppSizes.md),
+                ..._middleSection(
+                  state: state,
+                  babyName: baby.name,
+                  variant: variant,
+                  onCreateFirstMeal: onCreateFirstMeal,
+                ),
+                const SizedBox(height: AppSizes.md),
+                _tipsSection(variant),
+                const SizedBox(height: AppSizes.xl),
+              ],
+            ),
           ),
         ),
       ),
@@ -275,9 +297,14 @@ class _HomeLoadingScaffold extends StatelessWidget {
   const _HomeLoadingScaffold();
 
   @override
-  Widget build(BuildContext context) => const Scaffold(
+  Widget build(BuildContext context) => Scaffold(
     backgroundColor: AppColors.background,
-    body: Center(child: CircularProgressIndicator()),
+    body: Center(
+      child: Semantics(
+        label: 'Loading home dashboard',
+        child: const CircularProgressIndicator(),
+      ),
+    ),
   );
 }
 

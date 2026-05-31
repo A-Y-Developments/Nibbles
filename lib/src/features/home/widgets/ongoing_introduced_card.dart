@@ -6,6 +6,7 @@ import 'package:nibbles/src/app/constants/allergen_emoji.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
+import 'package:nibbles/src/common/components/progress/app_segmented_progress_bar.dart';
 import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
 import 'package:nibbles/src/common/services/helpers/derive_allergen_status.dart';
 import 'package:nibbles/src/logging/analytics.dart';
@@ -111,7 +112,11 @@ class OngoingIntroducedCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: AppSizes.sm),
-                        _ProgressSegments(filled: filled),
+                        AppSegmentedProgressBar(
+                          filledCount: filled,
+                          tone: AppSegmentedProgressTone.coral,
+                          height: 6,
+                        ),
                       ],
                     ),
                   ),
@@ -151,36 +156,6 @@ class _CoralThumb extends StatelessWidget {
       ),
       alignment: Alignment.center,
       child: Text(emoji, style: const TextStyle(fontSize: 28, height: 1)),
-    );
-  }
-}
-
-class _ProgressSegments extends StatelessWidget {
-  const _ProgressSegments({required this.filled});
-
-  /// Number of segments to render with the salmon fill (0..3).
-  final int filled;
-
-  static const int _segments = 3;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: List<Widget>.generate(_segments, (i) {
-        final isFilled = i < filled;
-        return Expanded(
-          child: Padding(
-            padding: EdgeInsets.only(left: i == 0 ? 0 : AppSizes.xs),
-            child: Container(
-              height: 6,
-              decoration: BoxDecoration(
-                color: isFilled ? AppColors.coral : AppColors.borderSoft,
-                borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-              ),
-            ),
-          ),
-        );
-      }),
     );
   }
 }
