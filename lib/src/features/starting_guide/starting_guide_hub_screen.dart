@@ -5,7 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
-import 'package:nibbles/src/app/themes/app_typography.dart';
+import 'package:nibbles/src/common/components/feedback/empty_state.dart';
+import 'package:nibbles/src/common/components/navigation/app_header.dart';
 import 'package:nibbles/src/common/services/local_flag_service.dart';
 import 'package:nibbles/src/features/starting_guide/constants/articles.dart';
 import 'package:nibbles/src/features/starting_guide/starting_guide_controller.dart';
@@ -68,96 +69,74 @@ class _StartingGuideHubScreenState
   Widget build(BuildContext context) {
     final guideAsync = ref.watch(startingGuideControllerProvider);
 
-    return Scaffold(
-      backgroundColor: AppColors.cream,
-      body: guideAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, __) => const Center(
-          child: Padding(
-            padding: EdgeInsets.all(AppSizes.lg),
-            child: Text(
-              "Couldn't load the Starting Guide.",
-              style: AppTypography.emptyStateTitle,
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ),
-        data: (state) => CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(child: _Header(onBack: _onBack)),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSizes.pagePaddingH,
-                AppSizes.md,
-                AppSizes.pagePaddingH,
-                AppSizes.xl,
-              ),
-              sliver: SliverList.separated(
-                itemCount: state.articles.length,
-                separatorBuilder: (_, __) =>
-                    const SizedBox(height: AppSizes.sp12),
-                itemBuilder: (context, index) {
-                  final article = state.articles[index];
-                  return ArticleCard(
-                    article: article,
-                    onTap: () => _openArticle(article.slug),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
+    final header = SafeArea(
+      bottom: false,
+      child: AppHeader(
+        title: 'Starting Guide',
+        leading: GuideBackButton(onTap: _onBack),
       ),
     );
-  }
-}
 
-class _Header extends StatelessWidget {
-  const _Header({required this.onBack});
-
-  final VoidCallback onBack;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [AppColors.butter, AppColors.butterSoft],
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [AppColors.butterSoft, Color(0xFFF5F5F5)],
+          ),
         ),
-      ),
-      padding: const EdgeInsets.fromLTRB(
-        AppSizes.pagePaddingH,
-        AppSizes.sm,
-        AppSizes.pagePaddingH,
-        AppSizes.lg,
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                GuideBackButton(onTap: onBack),
-                const SizedBox(width: AppSizes.sp12),
-                Expanded(
-                  child: Text(
-                    'Starting Guide',
-                    style: AppTypography.textTheme.titleLarge,
+        child: guideAsync.when(
+          loading: () => Column(
+            children: [
+              header,
+              const Expanded(
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            ],
+          ),
+          error: (_, __) => Column(
+            children: [
+              header,
+              Expanded(
+                child: Center(
+                  child: EmptyState(
+                    title: "Couldn't load the Starting Guide.",
+                    subtitle: 'Pull down or tap retry to try again.',
+                    ctaLabel: 'Retry',
+                    onCtaPressed: () =>
+                        ref.invalidate(startingGuideControllerProvider),
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: AppSizes.sm),
-            Text(
-              'Bite-sized reads to help you start solids with confidence.',
-              style: AppTypography.textTheme.bodyMedium?.copyWith(
-                color: AppColors.fgMuted,
               ),
-            ),
-          ],
+            ],
+          ),
+          data: (state) => CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(child: header),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSizes.pagePaddingH,
+                  AppSizes.md,
+                  AppSizes.pagePaddingH,
+                  AppSizes.xl,
+                ),
+                sliver: SliverList.separated(
+                  itemCount: state.articles.length,
+                  separatorBuilder: (_, __) =>
+                      const SizedBox(height: AppSizes.sp12),
+                  itemBuilder: (context, index) {
+                    final article = state.articles[index];
+                    return ArticleCard(
+                      article: article,
+                      onTap: () => _openArticle(article.slug),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

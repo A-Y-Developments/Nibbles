@@ -7,10 +7,11 @@ import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
+import 'package:nibbles/src/common/components/buttons/app_round_button.dart';
 import 'package:nibbles/src/common/components/chips/app_chip.dart';
+import 'package:nibbles/src/common/components/navigation/app_header.dart';
 import 'package:nibbles/src/features/starting_guide/constants/articles.dart';
 import 'package:nibbles/src/features/starting_guide/starting_guide_controller.dart';
-import 'package:nibbles/src/features/starting_guide/widgets/guide_back_button.dart';
 import 'package:nibbles/src/features/starting_guide/widgets/guide_checklist_card.dart';
 import 'package:nibbles/src/features/starting_guide/widgets/guide_chip_grid_card.dart';
 import 'package:nibbles/src/features/starting_guide/widgets/guide_hero_card.dart';
@@ -126,7 +127,20 @@ class _ArticleBody extends StatelessWidget {
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(
-          child: _Header(title: article.title, onBack: onBack),
+          child: SafeArea(
+            bottom: false,
+            child: AppHeader(
+              title: article.title,
+              wash: AppHeaderWash.cream,
+              leading: AppRoundButton(
+                icon: const Icon(Icons.arrow_back_rounded),
+                tone: AppRoundButtonTone.ghost,
+                size: AppRoundButtonSize.small,
+                semanticLabel: 'Back',
+                onPressed: onBack,
+              ),
+            ),
+          ),
         ),
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(
@@ -241,47 +255,6 @@ class _InlineCtaPair extends StatelessWidget {
   }
 }
 
-class _Header extends StatelessWidget {
-  const _Header({required this.title, required this.onBack});
-
-  final String title;
-  final VoidCallback onBack;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [AppColors.butter, AppColors.butterSoft],
-        ),
-      ),
-      padding: const EdgeInsets.fromLTRB(
-        AppSizes.pagePaddingH,
-        AppSizes.sm,
-        AppSizes.pagePaddingH,
-        AppSizes.md,
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: Row(
-          children: [
-            GuideBackButton(onTap: onBack),
-            const SizedBox(width: AppSizes.sp12),
-            Expanded(
-              child: Text(
-                title,
-                style: AppTypography.textTheme.titleSmall,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _NotFound extends StatelessWidget {
   const _NotFound({required this.onBack});
 
@@ -295,7 +268,13 @@ class _NotFound extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            GuideBackButton(onTap: onBack),
+            AppRoundButton(
+              icon: const Icon(Icons.arrow_back_rounded),
+              tone: AppRoundButtonTone.ghost,
+              size: AppRoundButtonSize.small,
+              semanticLabel: 'Back',
+              onPressed: onBack,
+            ),
             const SizedBox(height: AppSizes.lg),
             const Text(
               'Article not found',
