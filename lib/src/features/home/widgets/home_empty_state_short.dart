@@ -4,11 +4,10 @@ import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/features/home/widgets/home_empty_state_full.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 
-/// NIB-96: short "Ready to start?" empty state.
+/// NIB-96: short "Ready to Start?" empty state.
 ///
-/// Used when the ongoing-introduced card and day chips need hiding (program
-/// not started). Renders only the butter-wash "Ready to start?" card and its
-/// primary CTA — no Getting Started Tips section below. Reuses
+/// Renders only the butter-wash [ReadyToStartCard] (no Getting Started Tips
+/// below). Used when the host already renders its own tips block. Reuses
 /// [ReadyToStartCard] from [HomeEmptyStateFull].
 class HomeEmptyStateShort extends StatelessWidget {
   const HomeEmptyStateShort({
@@ -17,9 +16,7 @@ class HomeEmptyStateShort extends StatelessWidget {
     super.key,
   });
 
-  /// Optional baby name. Preserved from the NIB-86 placeholder signature;
-  /// the spec copy is name-agnostic, so this is currently unused for
-  /// rendering.
+  /// Optional baby name. Interpolated into the spec copy when provided.
   final String? babyName;
 
   /// Invoked when the user taps "Create First Meal". Defaults to navigating
@@ -42,7 +39,10 @@ class HomeEmptyStateShort extends StatelessWidget {
         horizontal: AppSizes.pagePaddingH,
         vertical: AppSizes.sm,
       ),
-      child: ReadyToStartCard(onPressed: () => _onPressed(context)),
+      child: ReadyToStartCard(
+        babyName: babyName,
+        onPressed: () => _onPressed(context),
+      ),
     );
   }
 }

@@ -1,7 +1,8 @@
-// NIB-111 — Optional widget-level coverage for `HomeEmptyStateFull`.
+// NIB-96 — Widget-level coverage for `HomeEmptyStateFull`.
 //
-// Verifies the Ready-to-Start card + Getting Started Tips render and that
-// the CTA invokes the supplied `onCreateMealPlan` callback when provided.
+// Verifies the verbatim Figma copy on the Ready-to-Start card + the single
+// Getting Started Tips card render, baby-name interpolation works, and the
+// CTA invokes the supplied `onCreateMealPlan` callback when provided.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -13,15 +14,28 @@ Widget _wrap(Widget child) =>
 
 void main() {
   testWidgets(
-    'renders ReadyToStartCard title + body + Create First Meal CTA',
+    'renders ReadyToStartCard title + spec body + Create First Meal CTA',
     (tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
       await tester.pumpWidget(
-        _wrap(HomeEmptyStateFull(onCreateMealPlan: () {})),
+        _wrap(
+          HomeEmptyStateFull(
+            babyName: 'Oliver',
+            onCreateMealPlan: () {},
+          ),
+        ),
       );
 
-      expect(find.text('Ready to start?'), findsOneWidget);
+      expect(find.text('Ready to Start?'), findsOneWidget);
       expect(
-        find.text("Track allergen introductions and plan baby's meals."),
+        find.text(
+          "Begin Oliver's food journey by creating your first meal prep "
+          'and introducing allergens safely.',
+        ),
         findsOneWidget,
       );
       expect(find.text('Create First Meal'), findsOneWidget);
@@ -29,7 +43,7 @@ void main() {
   );
 
   testWidgets(
-    'renders the 3 Getting Started Tips section',
+    'renders the single Getting Started Tips section with verbatim copy',
     (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 1;
@@ -41,11 +55,38 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      expect(find.text('Helpful Guidance'), findsOneWidget);
+      expect(find.byType(TipCard), findsOneWidget);
       expect(find.text('Getting Started Tips'), findsOneWidget);
-      expect(find.byType(TipCard), findsNWidgets(3));
-      expect(find.text('Start with single-ingredient foods'), findsOneWidget);
-      expect(find.text('Introduce allergens early'), findsOneWidget);
-      expect(find.text('Watch, wait, repeat'), findsOneWidget);
+      expect(
+        find.text(
+          'Start with single-ingredient purees and introduce one new food '
+          'every 3-5 days to monitor for reactions.',
+        ),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    "falls back to neutral 'your baby's' phrasing when babyName is omitted",
+    (tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        _wrap(HomeEmptyStateFull(onCreateMealPlan: () {})),
+      );
+
+      expect(
+        find.text(
+          "Begin your baby's food journey by creating your first meal prep "
+          'and introducing allergens safely.',
+        ),
+        findsOneWidget,
+      );
     },
   );
 

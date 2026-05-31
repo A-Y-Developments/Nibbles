@@ -1,9 +1,9 @@
 // Widget tests for the redesigned Home dashboard screen.
 //
-// NIB-111: net-new coverage for the four dashboard states (populated,
-// empty-full, empty-short-equivalent, no-meals), navigation tap routing
-// (ongoing card -> allergen tracker, meal row -> recipe detail, empty-state
-// CTA -> meal plan tab), and the error/retry path.
+// NIB-96 reshapes the empty-state contract: the header + greeting + stat
+// rings are always present when a baby exists; only the middle + tips
+// sections swap per Figma variant. The "no baby" edge case retains the
+// stand-alone `HomeEmptyStateFull` scaffold.
 //
 // Strategy:
 //   * Override `homeControllerProvider(babyId)` with a canned `HomeState`
@@ -16,14 +16,16 @@
 //     a no-op `FirebaseAnalyticsPlatform` so the production code paths
 //     that hit `Analytics.instance` directly do not throw.
 //
-// Branching notes (intentionally do NOT modify lib/**):
-//   * `HomeScreen` has only two empty-state code paths today — both render
-//     `HomeEmptyStateFull`. The "no baby" path and the "baby exists but no
-//     activity" (`HomeState.hasNoActivity`) path are covered; a distinct
-//     `HomeEmptyStateShort` branch is not surfaced by the screen.
-//   * `HomeNoMealsState` is likewise not wired by the screen — empty
-//     `todaysMeals` inside the populated dashboard surfaces the inline
-//     "No meals today" placeholder rendered by `TodaysMealsCard`.
+// Variant matrix (NIB-96 Figma frames):
+//   * readyToStartEmpty   — baby, no inProgress, hasAnyPlannedMeal=false.
+//   * readyToStartWithOngoing — baby, inProgress allergen, no planned meals.
+//   * noMealsToday        — baby, hasAnyPlannedMeal=true, today's meals 0.
+//   * populated           — today has >=1 mapped meal.
+//
+// The `baby == null` branch still renders the stand-alone HomeEmptyStateFull
+// because there is no baby to greet.
+//
+// Other notes:
 //   * `HomeHeader.onAvatarTap` is never wired by the screen, so the
 //     avatar -> profile navigation has no production behaviour to assert.
 //   * The screen's error scaffold CTA reads "Try Again", not "Retry".
@@ -52,6 +54,7 @@ import 'package:nibbles/src/features/home/widgets/greeting_card.dart';
 import 'package:nibbles/src/features/home/widgets/helpful_guidance_card.dart';
 import 'package:nibbles/src/features/home/widgets/home_empty_state_full.dart';
 import 'package:nibbles/src/features/home/widgets/home_header.dart';
+import 'package:nibbles/src/features/home/widgets/home_no_meals_state.dart';
 import 'package:nibbles/src/features/home/widgets/ongoing_introduced_card.dart';
 import 'package:nibbles/src/features/home/widgets/stat_ring_card.dart';
 import 'package:nibbles/src/features/home/widgets/todays_meals_card.dart';
@@ -103,21 +106,30 @@ HomeState _populatedState() => HomeState(
   ],
 );
 
-/// Populated baby + statuses but ZERO meals today — exercises the
-/// `TodaysMealsCard` inline "No meals today" placeholder while still
-/// rendering the full dashboard chrome.
-HomeState _populatedNoMealsState() => HomeState(
+/// NIB-96 `noMealsToday` variant — meals exist somewhere in the rolling-7
+/// window (hasAnyPlannedMeal=true) but today's slot is empty.
+HomeState _noMealsTodayState() => HomeState(
   baby: _fakeBaby,
   allergenStatuses: const {
     'peanut': AllergenStatus.inProgress,
     'egg': AllergenStatus.safe,
   },
+  hasAnyPlannedMeal: true,
 );
 
-/// Baby exists but every allergen is `notStarted` and no meals today —
-/// `HomeState.hasNoActivity == true` so the screen renders the empty-state
-/// full variant.
-HomeState _emptyFullState() => HomeState(
+/// NIB-96 `readyToStartWithOngoing` variant — allergen inProgress but no
+/// meals planned at all (hasAnyPlannedMeal=false, todaysMeals empty).
+HomeState _readyToStartWithOngoingState() => HomeState(
+  baby: _fakeBaby,
+  allergenStatuses: const {
+    'peanut': AllergenStatus.inProgress,
+    'egg': AllergenStatus.notStarted,
+  },
+);
+
+/// NIB-96 `readyToStartEmpty` variant — baby exists but every allergen is
+/// `notStarted` and no meals planned. Dashboard chrome still renders.
+HomeState _emptyState() => HomeState(
   baby: _fakeBaby,
   allergenStatuses: const {
     'peanut': AllergenStatus.notStarted,
@@ -330,7 +342,7 @@ void main() {
       },
     );
 
-    testWidgets("greeting shows baby name + 'months today' tri-color line", (
+    testWidgets("greeting shows baby name + 'today!' age line", (
       tester,
     ) async {
       await _pump(
@@ -338,13 +350,11 @@ void main() {
         overrides: _overridesFor(babyId: _babyId, state: _populatedState()),
       );
 
-      // NIB-77 — greeting is now three TextSpan runs: "{name} is " +
-      // "{months} months {days} days " (green-deep accent) + "today!🎉".
-      // The runs share a single Text.rich, so assert by sub-string presence
-      // against the rendered RichText rather than by find.text equality.
-      expect(find.textContaining('Lily is '), findsOneWidget);
-      // "today!🎉" is uniquely the closing run of the greeting line.
-      expect(find.textContaining('today!🎉'), findsOneWidget);
+      // GreetingCard renders text containing the baby name + age phrasing.
+      // NIB-96 passes `dateOfBirth` to GreetingCard so the precise-age path
+      // fires: "Lily is N months M days today! 🎉".
+      expect(find.textContaining('Lily'), findsWidgets);
+      expect(find.textContaining('today!'), findsOneWidget);
     });
 
     testWidgets('meal rows render one Material row per todays meal entry', (
@@ -361,66 +371,104 @@ void main() {
     });
   });
 
-  group('HomeScreen — empty-full state (baby + no activity)', () {
+  group('HomeScreen — readyToStartEmpty variant (baby + no activity)', () {
     testWidgets(
-      'baby present but `hasNoActivity` -> HomeEmptyStateFull renders',
+      'renders chrome + inline ReadyToStart card + Getting Started Tips',
       (tester) async {
         await _pump(
           tester,
-          overrides: _overridesFor(babyId: _babyId, state: _emptyFullState()),
+          overrides: _overridesFor(babyId: _babyId, state: _emptyState()),
         );
 
-        expect(find.byType(HomeEmptyStateFull), findsOneWidget);
-        // Dashboard chrome is intentionally absent in empty-full.
-        expect(find.byType(HomeHeader), findsNothing);
-        expect(find.byType(StatRingCard), findsNothing);
+        // Dashboard chrome is present (NIB-96 contract).
+        expect(find.byType(HomeHeader), findsOneWidget);
+        expect(find.byType(GreetingCard), findsOneWidget);
+        expect(find.byType(StatRingCard), findsOneWidget);
+        // Empty variant: no ongoing, no day chips, no today's meals.
+        expect(find.byType(OngoingIntroducedCard), findsNothing);
+        expect(find.text('ONGOING INTRODUCED'), findsNothing);
+        expect(find.byType(DayChipRow), findsNothing);
         expect(find.byType(TodaysMealsCard), findsNothing);
-        // Ready-to-start CTA copy.
-        expect(find.text('Ready to start?'), findsOneWidget);
+        // Stand-alone HomeEmptyStateFull NOT used when a baby exists.
+        expect(find.byType(HomeEmptyStateFull), findsNothing);
+        // Ready-to-start verbatim copy + single Getting Started Tips.
+        expect(find.text('Ready to Start?'), findsOneWidget);
         expect(find.text('Create First Meal'), findsOneWidget);
-      },
-    );
-  });
-
-  group('HomeScreen — empty-full state (no baby)', () {
-    // The screen has only two empty-state code paths; both render
-    // HomeEmptyStateFull. There is no separate HomeEmptyStateShort branch
-    // at the screen level (see widget-level test for the standalone
-    // HomeEmptyStateShort). This test stands in for the "empty-short"
-    // ticket bullet -- the screen's branching is documented above.
-    testWidgets(
-      'babyId resolves to null -> HomeEmptyStateFull (full empty branch)',
-      (tester) async {
-        await _pump(tester, overrides: _overridesFor());
-
-        expect(find.byType(HomeEmptyStateFull), findsOneWidget);
-        expect(find.byType(HomeHeader), findsNothing);
-        // Getting Started Tips title is part of the full variant.
         expect(find.text('Getting Started Tips'), findsOneWidget);
       },
     );
   });
 
-  group('HomeScreen — no-meals (populated dashboard, empty todays meals)', () {
+  group('HomeScreen — readyToStartWithOngoing variant', () {
     testWidgets(
-      'empty todaysMeals -> TodaysMealsCard inline placeholder renders',
+      'renders ongoing + day chips + ReadyToStart + Getting Started Tips',
       (tester) async {
         await _pump(
           tester,
           overrides: _overridesFor(
             babyId: _babyId,
-            state: _populatedNoMealsState(),
+            state: _readyToStartWithOngoingState(),
           ),
         );
 
-        // Full dashboard chrome still renders (we are NOT in empty-full).
         expect(find.byType(HomeHeader), findsOneWidget);
         expect(find.byType(StatRingCard), findsOneWidget);
-        expect(find.byType(TodaysMealsCard), findsOneWidget);
-        // Inline empty-meals placeholder text.
-        expect(find.text('No meals today'), findsOneWidget);
-        // Counter shows 0/2.
-        expect(find.text('0/2'), findsOneWidget);
+        // Ongoing card renders because peanut is inProgress.
+        expect(find.text('ONGOING INTRODUCED'), findsOneWidget);
+        expect(find.byType(DayChipRow), findsOneWidget);
+        // Today's meals card NOT present; Ready-to-Start CTA IS.
+        expect(find.byType(TodaysMealsCard), findsNothing);
+        expect(find.text('Ready to Start?'), findsOneWidget);
+        expect(find.text('Create First Meal'), findsOneWidget);
+        expect(find.text('Getting Started Tips'), findsOneWidget);
+      },
+    );
+  });
+
+  group('HomeScreen — noMealsToday variant', () {
+    testWidgets(
+      'renders ongoing + day chips + dashed No Meals Mapped Yet + + Add',
+      (tester) async {
+        await _pump(
+          tester,
+          overrides: _overridesFor(
+            babyId: _babyId,
+            state: _noMealsTodayState(),
+          ),
+        );
+
+        expect(find.byType(HomeHeader), findsOneWidget);
+        expect(find.byType(StatRingCard), findsOneWidget);
+        // Ongoing card renders.
+        expect(find.text('ONGOING INTRODUCED'), findsOneWidget);
+        expect(find.byType(DayChipRow), findsOneWidget);
+        // Dashed "No Meals Mapped Yet" body with "+ Add" CTA.
+        expect(find.byType(HomeNoMealsState), findsOneWidget);
+        expect(find.text('No Meals Mapped Yet'), findsOneWidget);
+        expect(
+          find.text('Drag & drop or click meals below to add them'),
+          findsOneWidget,
+        );
+        expect(find.text('+ Add'), findsOneWidget);
+        // Ready-to-Start card is NOT rendered here.
+        expect(find.text('Ready to Start?'), findsNothing);
+        // Single Getting Started Tips section.
+        expect(find.text('Getting Started Tips'), findsOneWidget);
+      },
+    );
+  });
+
+  group('HomeScreen — empty-full state (no baby)', () {
+    testWidgets(
+      'babyId resolves to null -> stand-alone HomeEmptyStateFull renders',
+      (tester) async {
+        await _pump(tester, overrides: _overridesFor());
+
+        expect(find.byType(HomeEmptyStateFull), findsOneWidget);
+        // No chrome — there is no baby to greet.
+        expect(find.byType(HomeHeader), findsNothing);
+        // Getting Started Tips title is part of the full variant.
+        expect(find.text('Getting Started Tips'), findsOneWidget);
       },
     );
   });
@@ -490,15 +538,36 @@ void main() {
     );
 
     testWidgets(
-      'tap empty-state Create First Meal CTA -> switches to meal plan tab',
+      'tap inline Create First Meal CTA (empty variant) -> meal plan tab',
       (tester) async {
         await _pump(
           tester,
-          overrides: _overridesFor(babyId: _babyId, state: _emptyFullState()),
+          overrides: _overridesFor(babyId: _babyId, state: _emptyState()),
         );
 
-        expect(find.byType(HomeEmptyStateFull), findsOneWidget);
+        // Inline ReadyToStartCard renders inside the chrome — no separate
+        // HomeEmptyStateFull on the baby+empty path.
+        expect(find.text('Create First Meal'), findsOneWidget);
         await tester.tap(find.text('Create First Meal'));
+        await tester.pumpAndSettle();
+
+        expect(find.text(_mealPlanMarker), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'tap noMealsToday + Add CTA -> switches to meal plan tab',
+      (tester) async {
+        await _pump(
+          tester,
+          overrides: _overridesFor(
+            babyId: _babyId,
+            state: _noMealsTodayState(),
+          ),
+        );
+
+        expect(find.text('+ Add'), findsOneWidget);
+        await tester.tap(find.text('+ Add'));
         await tester.pumpAndSettle();
 
         expect(find.text(_mealPlanMarker), findsOneWidget);
