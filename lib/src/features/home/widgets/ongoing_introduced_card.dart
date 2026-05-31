@@ -18,16 +18,25 @@ import 'package:nibbles/src/routing/route_enums.dart';
 /// When no allergen is in-progress the card renders [SizedBox.shrink] so the
 /// home layout collapses naturally.
 ///
-/// Note: log counts ('X/3 times' subhead) are intentionally omitted — the home
-/// state only carries derived statuses, not per-allergen log counts. The
-/// 3-segment progress bar therefore renders all 3 empty.
+/// Per the NIB-77 remediation audit (home-populated frame), the subhead
+/// shows `"X/3 times "` (verbatim — trailing space preserved) and the
+/// 3-segment progress bar lights up the first X segments in salmon
+/// ([AppColors.coral]) with the remainder rendered in [AppColors.borderSoft].
+/// [logCounts] is the clean-log count per allergen key sourced from
+/// `HomeState.allergenLogCounts`; absent keys default to 0.
 class OngoingIntroducedCard extends StatelessWidget {
   const OngoingIntroducedCard({
     required this.allergenStatuses,
+    this.logCounts = const <String, int>{},
     super.key,
   });
 
   final Map<String, AllergenStatus> allergenStatuses;
+  final Map<String, int> logCounts;
+
+  /// Allergens are considered safe after 3 clean (no-reaction) logs — that
+  /// 3 is the canonical target the segmented bar visualises.
+  static const int _target = 3;
 
   String? get _ongoingKey {
     for (final key in kAllergenKeys) {
@@ -49,6 +58,7 @@ class OngoingIntroducedCard extends StatelessWidget {
 
     final emoji = AllergenEmoji.get(key);
     final name = _displayName(key);
+    final filled = (logCounts[key] ?? 0).clamp(0, _target);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -98,13 +108,13 @@ class OngoingIntroducedCard extends StatelessWidget {
                         ),
                         const SizedBox(height: AppSizes.sp2),
                         Text(
-                          'Currently introducing',
+                          '$filled/$_target times ',
                           style: AppTypography.caption.copyWith(
                             color: AppColors.fgFaint,
                           ),
                         ),
                         const SizedBox(height: AppSizes.sm),
-                        const _ProgressSegments(),
+                        _ProgressSegments(filled: filled),
                       ],
                     ),
                   ),
@@ -152,19 +162,25 @@ class _CoralThumb extends StatelessWidget {
 }
 
 class _ProgressSegments extends StatelessWidget {
-  const _ProgressSegments();
+  const _ProgressSegments({required this.filled});
+
+  /// Number of segments to render with the salmon fill (0..3).
+  final int filled;
+
+  static const int _segments = 3;
 
   @override
   Widget build(BuildContext context) {
     return Row(
-      children: List<Widget>.generate(3, (i) {
+      children: List<Widget>.generate(_segments, (i) {
+        final isFilled = i < filled;
         return Expanded(
           child: Padding(
             padding: EdgeInsets.only(left: i == 0 ? 0 : AppSizes.xs),
             child: Container(
               height: 6,
               decoration: BoxDecoration(
-                color: AppColors.coralSoft,
+                color: isFilled ? AppColors.coral : AppColors.borderSoft,
                 borderRadius: BorderRadius.circular(AppSizes.radiusFull),
               ),
             ),

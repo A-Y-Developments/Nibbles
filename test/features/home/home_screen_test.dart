@@ -330,7 +330,7 @@ void main() {
       },
     );
 
-    testWidgets("greeting shows baby name + 'months today' line", (
+    testWidgets("greeting shows baby name + 'months today' tri-color line", (
       tester,
     ) async {
       await _pump(
@@ -338,9 +338,13 @@ void main() {
         overrides: _overridesFor(babyId: _babyId, state: _populatedState()),
       );
 
-      // GreetingCard renders text containing the baby name + age phrasing.
-      expect(find.textContaining('Lily'), findsWidgets);
-      expect(find.textContaining('months today!'), findsOneWidget);
+      // NIB-77 — greeting is now three TextSpan runs: "{name} is " +
+      // "{months} months {days} days " (green-deep accent) + "today!🎉".
+      // The runs share a single Text.rich, so assert by sub-string presence
+      // against the rendered RichText rather than by find.text equality.
+      expect(find.textContaining('Lily is '), findsOneWidget);
+      // "today!🎉" is uniquely the closing run of the greeting line.
+      expect(find.textContaining('today!🎉'), findsOneWidget);
     });
 
     testWidgets('meal rows render one Material row per todays meal entry', (

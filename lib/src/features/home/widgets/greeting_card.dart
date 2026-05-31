@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/utils/age_in_months.dart';
 
-/// NIB-65 — Exact-age greeting line for the Home dashboard.
+/// NIB-65 / NIB-77 — Exact-age greeting line for the Home dashboard.
 ///
-/// Renders the title2 line `{name} is {ageMonths} months {ageDays} days
-/// today! 🎉` when [dateOfBirth] is supplied (preferred path), or the
-/// `{name} is {ageMonths} months today! 🎉` fallback when only [ageMonths]
-/// is wired (the current NIB-86 call-site).
+/// Renders the title2 line as three styled runs per the Figma audit
+/// (home-populated, node 1242:10567):
+///   - `"{name} is "` — body color (fgStrong)
+///   - `"{ageMonths} months {ageDays} days "` — green-deep accent
+///   - `"today!🎉"` — body color (fgStrong)
 ///
-/// [dateOfBirth] is optional so the existing call-site keeps compiling
-/// without `home_screen.dart` having to change — the constructor only adds
-/// the precise-age path on top of the wired signature.
+/// When [dateOfBirth] is null we fall back to a months-only middle run
+/// (`"{ageMonths} months "`) so the test fixture call-site (which only
+/// passes `ageMonths`) keeps compiling and reading naturally.
 class GreetingCard extends StatelessWidget {
   const GreetingCard({
     required this.babyName,
@@ -26,20 +28,30 @@ class GreetingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      _greeting(DateTime.now()),
-      style: AppTypography.textTheme.titleLarge,
+    final accent = _accentRun(DateTime.now());
+    final base = AppTypography.textTheme.titleLarge ?? const TextStyle();
+
+    return Text.rich(
+      TextSpan(
+        style: base.copyWith(color: AppColors.fgStrong),
+        children: [
+          TextSpan(text: '$babyName is '),
+          TextSpan(
+            text: accent,
+            style: base.copyWith(color: AppColors.greenDeep),
+          ),
+          const TextSpan(text: 'today!🎉'),
+        ],
+      ),
     );
   }
 
-  String _greeting(DateTime now) {
+  String _accentRun(DateTime now) {
     final dob = dateOfBirth;
-    if (dob == null) {
-      return '$babyName is $ageMonths months today! 🎉';
-    }
+    if (dob == null) return '$ageMonths months ';
     final months = ageInMonths(dob, now: now);
     final days = _daysIntoCurrentMonth(dob, now, months);
-    return '$babyName is $months months $days days today! 🎉';
+    return '$months months $days days ';
   }
 
   /// Days elapsed since the most recent month anniversary of [dob].

@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:nibbles/gen/fonts.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
-import 'package:nibbles/src/app/themes/app_typography.dart';
 
-/// Home — rolling-7 day-chip row (NIB-77, Figma 1242:10628).
+/// Home — DateRow (NIB-77, Figma 1242:10628).
 ///
-/// Decorative-only pill chips for today + the previous 6 days. The 'Today'
-/// chip is highlighted (butter background, green-deep text); the rest use a
-/// muted surface (surfaceVariant background, fgMuted text). No day selection
-/// callback — selection is owned by the meal-plan screen, not Home.
+/// Renders three tall CalendarPerday chips per the home-populated audit
+/// (today + two previous days). The first chip uses the lime selected
+/// variant; the remaining two use the default white variant. Decorative —
+/// day selection is owned by the meal-plan screen, not Home.
+///
+/// Per chip layout (matches CalendarPerday variant tokens):
+///   - Width 64, height 86, radius 20.
+///   - Top line: weekday + comma, Figtree 13/600.
+///   - Bottom line: month + day, Parkinsans 17/700.
 class DayChipRow extends StatelessWidget {
   const DayChipRow({super.key});
 
@@ -37,63 +42,86 @@ class DayChipRow extends StatelessWidget {
     'Sun',
   ];
 
-  String _label(DateTime date) {
-    final weekday = _shortWeekdays[date.weekday - 1];
-    final month = _shortMonths[date.month - 1];
-    return '$weekday, $month ${date.day}';
-  }
-
   @override
   Widget build(BuildContext context) {
     final today = DateTime.now();
     final dates = List<DateTime>.generate(
-      7,
+      3,
       (i) => DateTime(today.year, today.month, today.day - i),
     );
 
-    return SizedBox(
-      height: AppSizes.chipHeight,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: dates.length,
-        separatorBuilder: (_, __) => const SizedBox(width: AppSizes.sm),
-        itemBuilder: (context, i) {
-          final isToday = i == 0;
-          return _PillChip(
-            label: isToday ? 'Today' : _label(dates[i]),
-            isActive: isToday,
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: List<Widget>.generate(dates.length, (i) {
+          final date = dates[i];
+          return Padding(
+            padding: EdgeInsets.only(left: i == 0 ? 0 : AppSizes.sm),
+            child: _CalendarPerday(
+              weekday: '${_shortWeekdays[date.weekday - 1]},',
+              monthDay: '${_shortMonths[date.month - 1]} ${date.day}',
+              isSelected: i == 0,
+            ),
           );
-        },
+        }),
       ),
     );
   }
 }
 
-class _PillChip extends StatelessWidget {
-  const _PillChip({required this.label, required this.isActive});
+class _CalendarPerday extends StatelessWidget {
+  const _CalendarPerday({
+    required this.weekday,
+    required this.monthDay,
+    required this.isSelected,
+  });
 
-  final String label;
-  final bool isActive;
+  final String weekday;
+  final String monthDay;
+  final bool isSelected;
 
   @override
   Widget build(BuildContext context) {
-    final background = isActive ? AppColors.butter : AppColors.surfaceVariant;
-    final foreground = isActive ? AppColors.greenDeep : AppColors.fgMuted;
+    final background = isSelected ? AppColors.butter : AppColors.surface;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSizes.md - 2),
-      alignment: Alignment.center,
+      width: AppSizes.dayChipW,
+      constraints: const BoxConstraints(minHeight: AppSizes.dayChipH),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSizes.sm,
+        vertical: AppSizes.sm,
+      ),
       decoration: BoxDecoration(
         color: background,
-        borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+        borderRadius: BorderRadius.circular(AppSizes.radiusXl),
+        boxShadow: isSelected ? null : AppSizes.shadowCard,
       ),
-      child: Text(
-        label,
-        style: AppTypography.textTheme.labelMedium?.copyWith(
-          color: foreground,
-          fontWeight: FontWeight.w700,
-          height: 1,
-        ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            weekday,
+            style: const TextStyle(
+              fontFamily: FontFamily.parkinsans,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              height: 1.2,
+              color: AppColors.fgStrong,
+            ),
+          ),
+          const SizedBox(height: AppSizes.xs),
+          Text(
+            monthDay,
+            style: const TextStyle(
+              fontFamily: FontFamily.parkinsans,
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              height: 1.2,
+              color: AppColors.fgStrong,
+            ),
+          ),
+        ],
       ),
     );
   }
