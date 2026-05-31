@@ -24,11 +24,27 @@ import 'package:nibbles/src/routing/route_enums.dart';
 ///   body  "Password must be at least 8 characters"
 ///   field labels "Password" / "Retype Password"
 ///   placeholders "Input password" / "Retype password"
-class ResetPasswordScreen extends ConsumerWidget {
+class ResetPasswordScreen extends ConsumerStatefulWidget {
   const ResetPasswordScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ResetPasswordScreen> createState() =>
+      _ResetPasswordScreenState();
+}
+
+class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
+  final _passwordNode = FocusNode();
+  final _confirmNode = FocusNode();
+
+  @override
+  void dispose() {
+    _passwordNode.dispose();
+    _confirmNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(resetPasswordControllerProvider);
     final textTheme = Theme.of(context).textTheme;
 
@@ -60,6 +76,11 @@ class ResetPasswordScreen extends ConsumerWidget {
     } else {
       confirmHelper = guidance;
     }
+
+    final canSubmit = !state.isLoading &&
+        !state.password.isNotValid &&
+        state.passwordsMatch &&
+        state.confirmPassword.isNotEmpty;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -111,7 +132,10 @@ class ResetPasswordScreen extends ConsumerWidget {
                   label: 'Password',
                   hintText: 'Input password',
                   obscureText: true,
+                  textInputAction: TextInputAction.next,
+                  focusNode: _passwordNode,
                   onChanged: controller.updatePassword,
+                  onSubmitted: (_) => _confirmNode.requestFocus(),
                   // Helper text is ALWAYS shown (guidance or error) — render
                   // via errorText slot so the colour swap follows the field
                   // border. Forest-green tone per Figma 971:10148 helper.
@@ -124,7 +148,12 @@ class ResetPasswordScreen extends ConsumerWidget {
                   label: 'Retype Password',
                   hintText: 'Retype password',
                   obscureText: true,
+                  textInputAction: TextInputAction.done,
+                  focusNode: _confirmNode,
                   onChanged: controller.updateConfirmPassword,
+                  onSubmitted: (_) {
+                    if (canSubmit) controller.submit();
+                  },
                   errorText: confirmHelper,
                   errorColor: AppColors.green,
                 ),
@@ -143,7 +172,7 @@ class ResetPasswordScreen extends ConsumerWidget {
                 AppPillButton(
                   key: const Key('reset_password_submit_button'),
                   label: 'Confirm',
-                  onPressed: state.isLoading ? null : controller.submit,
+                  onPressed: canSubmit ? controller.submit : null,
                   leading: state.isLoading
                       ? const SizedBox(
                           width: 16,

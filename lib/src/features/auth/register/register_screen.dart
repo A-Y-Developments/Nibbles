@@ -168,24 +168,30 @@ class _SignUpLogoMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const SizedBox(
-      width: _size,
-      height: _size,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Quatrefoil(size: _size, coreColor: AppColors.butter),
-          Text(
-            'n',
-            style: TextStyle(
-              fontFamily: FontFamily.parkinsans,
-              fontSize: 70,
-              fontWeight: FontWeight.w800,
-              height: 1,
-              color: AppColors.greenDeep,
-            ),
+    return Semantics(
+      label: 'Nibbles',
+      image: true,
+      child: const ExcludeSemantics(
+        child: SizedBox(
+          width: _size,
+          height: _size,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Quatrefoil(size: _size, coreColor: AppColors.butter),
+              Text(
+                'n',
+                style: TextStyle(
+                  fontFamily: FontFamily.parkinsans,
+                  fontSize: 70,
+                  fontWeight: FontWeight.w800,
+                  height: 1,
+                  color: AppColors.greenDeep,
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -199,13 +205,18 @@ class _ObscureToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkResponse(
-      onTap: onTap,
-      radius: AppSizes.iconMd,
-      child: Icon(
-        obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-        color: AppColors.fgMuted,
-        size: AppSizes.iconMd,
+    return Semantics(
+      button: true,
+      toggled: !obscure,
+      label: obscure ? 'Show password' : 'Hide password',
+      excludeSemantics: true,
+      child: IconButton(
+        onPressed: onTap,
+        icon: Icon(
+          obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+          color: AppColors.fgMuted,
+          size: AppSizes.iconMd,
+        ),
       ),
     );
   }
@@ -294,22 +305,24 @@ class _GoogleGlyph extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      alignment: Alignment.center,
-      decoration: const BoxDecoration(
-        color: _googleBlue,
-        shape: BoxShape.circle,
-      ),
-      child: Text(
-        'G',
-        style: TextStyle(
-          fontFamily: FontFamily.parkinsans,
-          fontSize: size * 0.66,
-          fontWeight: FontWeight.w700,
-          height: 1,
-          color: AppColors.surface,
+    return ExcludeSemantics(
+      child: Container(
+        width: size,
+        height: size,
+        alignment: Alignment.center,
+        decoration: const BoxDecoration(
+          color: _googleBlue,
+          shape: BoxShape.circle,
+        ),
+        child: Text(
+          'G',
+          style: TextStyle(
+            fontFamily: FontFamily.parkinsans,
+            fontSize: size * 0.66,
+            fontWeight: FontWeight.w700,
+            height: 1,
+            color: AppColors.surface,
+          ),
         ),
       ),
     );
