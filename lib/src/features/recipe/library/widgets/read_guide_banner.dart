@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:nibbles/gen/fonts.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
-import 'package:nibbles/src/app/themes/app_typography.dart';
 
-/// First-launch 'Read Guide' banner for the Recipe Library (Figma 971:8644
-/// outer, 1015:6821 inner). Butter-soft tip card with a green-deep glyph,
-/// title, supporting copy, and a green-deep 'Read Guide' CTA.
+/// First-launch 'New to Starting Solids?' banner for the Recipe Library
+/// (Figma 971:8644 → 1015:6820). Forest-green card with white title, white
+/// 10/Regular supporting copy, and a full-width white-outlined 'Read Guide'
+/// CTA.
 ///
 /// Visibility is gated upstream by `LocalFlagService.isStartingGuideSeen()`;
 /// the banner itself is a pure presentation widget — tapping the CTA fires
@@ -17,6 +18,13 @@ class ReadGuideBanner extends StatelessWidget {
 
   final VoidCallback onTap;
 
+  // Token mapping for the Figma 'Banner' container (1015:6820):
+  //   bg               -> Nibble-primary-Forest    (#5C7852)
+  //   shadow           -> 0 4 10 rgba(92,120,82,0.04)
+  //   radius           -> 12
+  //   padding          -> 24 vertical / 12 horizontal
+  //   inner column gap -> 12
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -26,79 +34,65 @@ class ReadGuideBanner extends StatelessWidget {
         AppSizes.pagePaddingH,
         0,
       ),
-      padding: const EdgeInsets.all(AppSizes.md - 2),
-      decoration: BoxDecoration(
-        color: AppColors.bgCardTint,
-        borderRadius: BorderRadius.circular(AppSizes.radiusXl),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSizes.sp12,
+        vertical: AppSizes.lg,
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const _Glyph(),
-          const SizedBox(width: AppSizes.sp12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'New to solids?',
-                  style: AppTypography.textTheme.titleSmall?.copyWith(
-                    color: AppColors.fgStrong,
-                    fontSize: 15,
-                    height: 1.3,
-                  ),
-                ),
-                const SizedBox(height: AppSizes.xs),
-                Text(
-                  'Start here — our Starting Guide walks you through '
-                  'first foods, portions, and what to watch out for.',
-                  style: AppTypography.textTheme.bodyMedium?.copyWith(
-                    color: AppColors.fgMuted,
-                  ),
-                ),
-                const SizedBox(height: AppSizes.sm + 2),
-                _ReadGuideCta(onTap: onTap),
-              ],
-            ),
+      decoration: BoxDecoration(
+        color: AppColors.green,
+        borderRadius: BorderRadius.circular(AppSizes.sp12),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A5C7852),
+            offset: Offset(0, 4),
+            blurRadius: 10,
           ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text(
+            'New to Starting Solids?',
+            style: _bannerTitleStyle,
+          ),
+          const SizedBox(height: AppSizes.sp12),
+          Text(
+            'Start your baby’s food journey the right way with simple '
+            'basics.',
+            style: _bannerBodyStyle,
+          ),
+          const SizedBox(height: AppSizes.sp12),
+          _ReadGuideCta(onTap: onTap),
         ],
       ),
     );
   }
 }
 
-class _Glyph extends StatelessWidget {
-  const _Glyph();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: AppSizes.tipGlyph,
-      height: AppSizes.tipGlyph,
-      decoration: const BoxDecoration(
-        color: AppColors.greenDeep,
-        shape: BoxShape.circle,
-      ),
-      alignment: Alignment.center,
-      child: const Icon(
-        Icons.menu_book_outlined,
-        color: AppColors.butter,
-        size: AppSizes.iconSm,
-      ),
-    );
-  }
-}
-
-/// Local display-font CTA style for the 'Read Guide' button.
-///
-/// Matches kit `components-empty-state.html .btn` / `kit.css .pillbtn--sm`:
-/// `700 13px/1 var(--font-display)` (Parkinsans). Defined locally instead of
-/// mutating the shared [AppTypography.button] token (out of scope for NIB-53).
-const TextStyle _readGuideCtaStyle = TextStyle(
+// Figma Headline/SemiBold — Parkinsans SemiBold 15/22 white (1015:6812).
+const TextStyle _bannerTitleStyle = TextStyle(
   fontFamily: FontFamily.parkinsans,
-  fontSize: 13,
-  fontWeight: FontWeight.w700,
-  height: 1,
+  fontSize: 15,
+  fontWeight: FontWeight.w600,
+  height: 22 / 15,
+  color: AppColors.cream,
+);
+
+// Figma Caption/Regular — Figtree Regular 10/16 white (1015:6813).
+final TextStyle _bannerBodyStyle = GoogleFonts.figtree(
+  fontSize: 10,
+  fontWeight: FontWeight.w400,
+  height: 16 / 10,
+  color: AppColors.cream,
+);
+
+// Figma button label — Parkinsans SemiBold 15/22 white (I1015:6814;1015:9925).
+const TextStyle _ctaLabelStyle = TextStyle(
+  fontFamily: FontFamily.parkinsans,
+  fontSize: 15,
+  fontWeight: FontWeight.w600,
+  height: 22 / 15,
   color: AppColors.cream,
 );
 
@@ -110,30 +104,21 @@ class _ReadGuideCta extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.greenDeep,
-      borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(AppSizes.lg),
       child: InkWell(
-        borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+        borderRadius: BorderRadius.circular(AppSizes.lg),
         onTap: onTap,
-        child: const Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: AppSizes.md,
-            vertical: AppSizes.sm,
+        child: Container(
+          padding: const EdgeInsets.all(AppSizes.radiusMd),
+          decoration: BoxDecoration(
+            border: Border.all(color: AppColors.cream),
+            borderRadius: BorderRadius.circular(AppSizes.lg),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Read Guide',
-                style: _readGuideCtaStyle,
-              ),
-              SizedBox(width: AppSizes.xs),
-              Icon(
-                Icons.arrow_forward_rounded,
-                color: AppColors.cream,
-                size: AppSizes.iconSm,
-              ),
-            ],
+          alignment: Alignment.center,
+          child: const Text(
+            'Read Guide',
+            style: _ctaLabelStyle,
           ),
         ),
       ),

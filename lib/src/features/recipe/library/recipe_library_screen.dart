@@ -16,13 +16,13 @@ import 'package:nibbles/src/features/recipe/library/widgets/recipe_category_row.
 import 'package:nibbles/src/features/recipe/library/widgets/recipe_search_empty.dart';
 import 'package:nibbles/src/features/recipe/library/widgets/recipe_search_results.dart';
 
-/// Recipe Library screen (RC-01, NIB-53 reskin + NIB-58 search rewire).
+/// Recipe Library screen (RC-01, NIB-53 redesign + NIB-58 search rewire).
 ///
-/// Reskins the previous SliverGrid layout to a butter-wash [LibraryHeader] +
-/// vertical stack of horizontal [RecipeCategoryRow]s, driven by
-/// `RecipeService.getRecipesByCategory`. A first-launch [ReadGuideBanner]
-/// appears above the first row when `LocalFlagService.isStartingGuideSeen()`
-/// is `false`. Section order:
+/// Reskins the Recipe Library tab to the butter-gradient hero + vertical
+/// stack of horizontal [RecipeCategoryRow]s per Figma 971:8644 / 971:8760.
+/// Driven by `RecipeService.getRecipesByCategory`. A first-launch forest
+/// 'New to Starting Solids?' [ReadGuideBanner] sits above the first row
+/// when `LocalFlagService.isStartingGuideSeen()` is `false`. Section order:
 ///   1. (optional) 'Recommendation for {ongoing allergen}' — recipes from
 ///      any category whose `allergenTags` contain the in-progress allergen.
 ///   2. One row per category in the order returned by the service.
@@ -43,23 +43,46 @@ class RecipeLibraryScreen extends ConsumerWidget {
     final babyIdAsync = ref.watch(currentBabyIdProvider);
 
     return babyIdAsync.when(
-      loading: () => const Scaffold(
-        backgroundColor: AppColors.cream,
+      loading: () => const _PageScaffold(
         body: Center(child: CircularProgressIndicator()),
       ),
-      error: (_, __) => const Scaffold(
-        backgroundColor: AppColors.cream,
+      error: (_, __) => const _PageScaffold(
         body: Center(child: Text('Could not load baby profile.')),
       ),
       data: (babyId) {
         if (babyId == null) {
-          return const Scaffold(
-            backgroundColor: AppColors.cream,
+          return const _PageScaffold(
             body: Center(child: Text('No baby profile found.')),
           );
         }
         return _RecipeLibraryBody(babyId: babyId);
       },
+    );
+  }
+}
+
+/// Shared scaffold with the Recipe Library butter -> cream page gradient
+/// (Figma 971:8644 root linear-gradient(128.4deg, #FFFCD5 19%, #F5F5F5 50%)).
+class _PageScaffold extends StatelessWidget {
+  const _PageScaffold({required this.body});
+
+  final Widget body;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            stops: [0.19, 0.5],
+            colors: [AppColors.butterSoft, AppColors.cream],
+          ),
+        ),
+        child: body,
+      ),
     );
   }
 }
@@ -131,8 +154,7 @@ class _RecipeLibraryBodyState extends ConsumerState<_RecipeLibraryBody> {
 
     final searchValue = libraryAsync.valueOrNull?.searchQuery ?? '';
 
-    return Scaffold(
-      backgroundColor: AppColors.cream,
+    return _PageScaffold(
       body: Column(
         children: [
           LibraryHeader(

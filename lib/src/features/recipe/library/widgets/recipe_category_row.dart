@@ -10,10 +10,9 @@ import 'package:nibbles/src/routing/route_enums.dart';
 /// A horizontally-scrolling row of [RecipeGridCard]s under a section title.
 ///
 /// Each card is pinned to the design-system 158x220 box per Figma 971:8760.
-/// The row leaves the page padding intact (cards begin at
-/// [AppSizes.pagePaddingH] from the left edge); horizontal padding is applied
-/// to the inner list so that the section title and the first card both align
-/// to the same gutter.
+/// The section title is rendered with the Headline/SemiBold token
+/// (Parkinsans SemiBold 15/22) per the audit spec; cards are spaced by
+/// the Figma 24px row gap.
 class RecipeCategoryRow extends StatelessWidget {
   const RecipeCategoryRow({
     required this.title,
@@ -28,6 +27,8 @@ class RecipeCategoryRow extends StatelessWidget {
 
   static const double _cardWidth = 158;
   static const double _cardHeight = 220;
+  // Figma row gap (971:8660 etc.) — 24px between cards.
+  static const double _cardGap = AppSizes.lg;
 
   @override
   Widget build(BuildContext context) {
@@ -39,11 +40,14 @@ class RecipeCategoryRow extends StatelessWidget {
             AppSizes.pagePaddingH,
             AppSizes.md,
             AppSizes.pagePaddingH,
-            AppSizes.sm + 2,
+            AppSizes.sp12,
           ),
           child: Text(
             title,
-            style: AppTypography.sectionTitle.copyWith(
+            style: AppTypography.textTheme.titleSmall?.copyWith(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              height: 22 / 15,
               color: AppColors.fgStrong,
             ),
           ),
@@ -56,7 +60,7 @@ class RecipeCategoryRow extends StatelessWidget {
               horizontal: AppSizes.pagePaddingH,
             ),
             itemCount: recipes.length,
-            separatorBuilder: (_, __) => const SizedBox(width: AppSizes.sp12),
+            separatorBuilder: (_, __) => const SizedBox(width: _cardGap),
             itemBuilder: (context, index) {
               final recipe = recipes[index];
               return SizedBox(

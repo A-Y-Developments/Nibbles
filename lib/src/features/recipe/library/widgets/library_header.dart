@@ -3,17 +3,21 @@ import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 
-/// Butter-wash header for the Recipe Library screen (Figma 971:8760).
+/// Recipe Library header (Figma 971:8644 / 971:8760, NIB-53 redesign).
 ///
-/// Composes:
-///   * a butter -> butter-soft vertical gradient background
-///   * a 'Recipe Library' title row with a trailing green-deep bookmark
-///     button (rounded-square, 32x32) that pushes the Starting Guide
-///   * a pill-shaped search input with a search-prefix icon and an optional
-///     trailing clear button when [searchValue] is non-empty
+/// Sits inside the butter-gradient page background. Composes:
+///   * a 17/Bold 'Recipe Library' title row
+///   * a search row — neutral-10-filled 48x input with a forest-dark border
+///     (placeholder 'Search recipe') + a 47x47 forest-dark filter chip
+///     pinned to the right
 ///
 /// The search field is uncontrolled here — callers own the
-/// [TextEditingController] and the `onSearchChanged` callback.
+/// [TextEditingController] and the `onSearchChanged` callback. The filter
+/// chip mirrors the Figma `ButtonChips` Primary variant: a green-deep tile
+/// with the 'class' bookmark / ribbon glyph. Tapping it fires
+/// [onBookmarkTap]; per NIB-53 the host screen wires this to the Starting
+/// Guide nav (Read Guide CTA on the banner is the only place that also
+/// marks the seen flag).
 class LibraryHeader extends StatelessWidget {
   const LibraryHeader({
     required this.searchController,
@@ -28,43 +32,49 @@ class LibraryHeader extends StatelessWidget {
   final ValueChanged<String> onSearchChanged;
   final VoidCallback onBookmarkTap;
 
+  // Figma sizes (971:8650 input, 894:6480 button-chips).
+  static const double _inputHeight = 48;
+  static const double _chipSize = 47;
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [AppColors.butter, AppColors.butterSoft],
-        ),
-      ),
+    return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSizes.pagePaddingH,
         AppSizes.sm,
         AppSizes.pagePaddingH,
-        AppSizes.md,
+        AppSizes.sp12,
       ),
       child: SafeArea(
         bottom: false,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Recipe Library',
-                    style: AppTypography.textTheme.titleLarge,
-                  ),
-                ),
-                _BookmarkButton(onTap: onBookmarkTap),
-              ],
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: AppSizes.xs),
+              child: Text(
+                'Recipe Library',
+                style: AppTypography.textTheme.titleSmall,
+              ),
             ),
             const SizedBox(height: AppSizes.sp12),
-            _SearchPill(
-              controller: searchController,
-              value: searchValue,
-              onChanged: onSearchChanged,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: _SearchInput(
+                    controller: searchController,
+                    value: searchValue,
+                    onChanged: onSearchChanged,
+                    height: _inputHeight,
+                  ),
+                ),
+                const SizedBox(width: AppSizes.sp12),
+                _FilterChipButton(
+                  size: _chipSize,
+                  onTap: onBookmarkTap,
+                ),
+              ],
             ),
           ],
         ),
@@ -73,59 +83,35 @@ class LibraryHeader extends StatelessWidget {
   }
 }
 
-class _BookmarkButton extends StatelessWidget {
-  const _BookmarkButton({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.greenDeep,
-      borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-        onTap: onTap,
-        child: const SizedBox(
-          width: AppSizes.roundButtonSm,
-          height: AppSizes.roundButtonSm,
-          child: Icon(
-            Icons.bookmark_outline,
-            color: AppColors.onGreen,
-            size: AppSizes.iconMd,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SearchPill extends StatelessWidget {
-  const _SearchPill({
+class _SearchInput extends StatelessWidget {
+  const _SearchInput({
     required this.controller,
     required this.value,
     required this.onChanged,
+    required this.height,
   });
 
   final TextEditingController controller;
   final String value;
   final ValueChanged<String> onChanged;
+  final double height;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 44,
+      height: height,
       decoration: BoxDecoration(
-        color: AppColors.bgInput,
-        borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+        color: AppColors.divider,
+        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+        border: Border.all(color: AppColors.greenDeep),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: AppSizes.fieldPaddingH),
+      padding: const EdgeInsets.symmetric(horizontal: AppSizes.sp12),
       child: Row(
         children: [
           const Icon(
             Icons.search,
             color: AppColors.greenDeep,
-            size: AppSizes.iconMd,
+            size: AppSizes.iconMd - 4,
           ),
           const SizedBox(width: AppSizes.sm),
           Expanded(
@@ -135,7 +121,7 @@ class _SearchPill extends StatelessWidget {
               textInputAction: TextInputAction.search,
               style: AppTypography.textTheme.bodyLarge,
               decoration: InputDecoration(
-                hintText: 'Search recipes…',
+                hintText: 'Search recipe',
                 hintStyle: AppTypography.textTheme.bodyLarge?.copyWith(
                   color: AppColors.fgFaint,
                 ),
@@ -164,6 +150,34 @@ class _SearchPill extends StatelessWidget {
               },
             ),
         ],
+      ),
+    );
+  }
+}
+
+class _FilterChipButton extends StatelessWidget {
+  const _FilterChipButton({required this.size, required this.onTap});
+
+  final double size;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.greenDeep,
+      borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+        onTap: onTap,
+        child: SizedBox(
+          width: size,
+          height: size,
+          child: const Icon(
+            Icons.bookmark_outline,
+            color: AppColors.onGreen,
+            size: AppSizes.iconMd,
+          ),
+        ),
       ),
     );
   }
