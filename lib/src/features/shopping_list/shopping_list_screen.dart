@@ -8,6 +8,8 @@ import 'package:nibbles/src/common/components/controls/app_segmented_control.dar
 import 'package:nibbles/src/common/domain/entities/shopping_list_item.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/features/shopping_list/shopping_list_controller.dart';
+import 'package:nibbles/src/features/shopping_list/widgets/clear_all_confirm_sheet.dart';
+import 'package:nibbles/src/features/shopping_list/widgets/shopping_list_menu.dart';
 
 /// Shopping List root screen — Figma frames 971:9851 (populated) and
 /// 971:9989 (empty). Header (Title 3/Bold + green-deep more_horiz chip) +
@@ -16,9 +18,15 @@ import 'package:nibbles/src/features/shopping_list/shopping_list_controller.dart
 /// Background: Grad-1 (linear-gradient 154.398deg, butterSoft → cream)
 /// matching the recipe library Grad-1 mapping.
 ///
-/// Add-item, swipe-delete, overflow menu actions, and the clear-all
-/// confirmation sheet live in separate frames (971:9872 / 971:9889 /
-/// 971:9915 / 971:9958) and are out of scope for this ticket.
+/// Header overflow chip opens a floating dropdown menu (971:9889 / 971:9936)
+/// with two actions:
+///   * "Copy to Clipboard" — copies the active List items as a bulleted
+///     string via the controller; surfaces a P2 toast on success/failure.
+///   * "Clear All Shopping List" — opens the Clear-All confirmation sheet
+///     (971:9958). Confirm calls the controller's `clearAll` and drops back
+///     to the empty state; cancel dismisses the sheet.
+///
+/// Add-item (971:9872) and swipe-delete (971:9915) remain out of scope.
 class ShoppingListScreen extends ConsumerWidget {
   const ShoppingListScreen({super.key});
 
@@ -89,13 +97,7 @@ class _ShoppingListBodyState extends ConsumerState<_ShoppingListBody> {
   int _selectedTab = 0; // 0 = List, 1 = Bought
 
   Future<void> _showClearConfirmation() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (_) => const _ConfirmDialog(
-        title: 'Clear list',
-        message: 'This will delete all items. Are you sure?',
-      ),
-    );
+    final confirmed = await showClearAllConfirmSheet(context);
     if (confirmed != true || !mounted) return;
     await _runWrite(
       ref.read(shoppingListControllerProvider(widget.babyId).notifier).clearAll,
@@ -184,9 +186,9 @@ class _ShoppingListBodyState extends ConsumerState<_ShoppingListBody> {
             _ShoppingListHeader(
               onMenuSelected: (action) {
                 switch (action) {
-                  case _MenuAction.copy:
+                  case ShoppingListMenuAction.copy:
                     _copyToClipboard();
-                  case _MenuAction.clear:
+                  case ShoppingListMenuAction.clear:
                     _showClearConfirmation();
                 }
               },
@@ -226,8 +228,6 @@ class _ShoppingListBodyState extends ConsumerState<_ShoppingListBody> {
   }
 }
 
-enum _MenuAction { copy, clear }
-
 // ---------------------------------------------------------------------------
 // Header — title + green-deep more_horiz overflow chip
 // ---------------------------------------------------------------------------
@@ -235,7 +235,7 @@ enum _MenuAction { copy, clear }
 class _ShoppingListHeader extends StatelessWidget {
   const _ShoppingListHeader({required this.onMenuSelected});
 
-  final ValueChanged<_MenuAction> onMenuSelected;
+  final ValueChanged<ShoppingListMenuAction> onMenuSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -247,50 +247,34 @@ class _ShoppingListHeader extends StatelessWidget {
             style: AppTypography.textTheme.titleSmall,
           ),
         ),
-        _OverflowChip(onSelected: onMenuSelected),
+        ShoppingListOverflowMenu(
+          onSelected: onMenuSelected,
+          child: const _OverflowChip(),
+        ),
       ],
     );
   }
 }
 
-/// 40x40 green-deep rounded-square chip hosting the more_horiz popup menu.
-/// Mirrors Figma 971:9858 (Button-chips, bg ForestDarkn, rounded-[10px]).
+/// 40x40 green-deep rounded-square chip. Mirrors Figma 971:9943
+/// (Button-chips, bg ForestDarkn, rounded-[10px]).
 class _OverflowChip extends StatelessWidget {
-  const _OverflowChip({required this.onSelected});
-
-  final ValueChanged<_MenuAction> onSelected;
+  const _OverflowChip();
 
   @override
   Widget build(BuildContext context) {
-    return PopupMenuButton<_MenuAction>(
-      onSelected: onSelected,
-      tooltip: 'More options',
-      position: PopupMenuPosition.under,
-      offset: const Offset(0, AppSizes.xs),
-      color: AppColors.surface,
-      shape: RoundedRectangleBorder(
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: AppColors.greenDeep,
         borderRadius: BorderRadius.circular(AppSizes.radiusMd),
       ),
-      itemBuilder: (_) => const [
-        PopupMenuItem(
-          value: _MenuAction.copy,
-          child: Text('Copy to clipboard'),
-        ),
-        PopupMenuItem(value: _MenuAction.clear, child: Text('Clear list')),
-      ],
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: AppColors.greenDeep,
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        ),
-        alignment: Alignment.center,
-        child: const Icon(
-          Icons.more_horiz,
-          color: AppColors.onGreen,
-          size: AppSizes.iconMd,
-        ),
+      alignment: Alignment.center,
+      child: const Icon(
+        Icons.more_horiz,
+        color: AppColors.onGreen,
+        size: AppSizes.iconMd,
       ),
     );
   }
@@ -504,38 +488,6 @@ class _ErrorState extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Confirm dialog (Clear All)
-// ---------------------------------------------------------------------------
-
-class _ConfirmDialog extends StatelessWidget {
-  const _ConfirmDialog({required this.title, required this.message});
-
-  final String title;
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = AppTypography.textTheme;
-
-    return AlertDialog(
-      title: Text(title, style: textTheme.titleMedium),
-      content: Text(message, style: textTheme.bodyMedium),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('No'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.of(context).pop(true),
-          style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-          child: const Text('Yes'),
-        ),
-      ],
     );
   }
 }
