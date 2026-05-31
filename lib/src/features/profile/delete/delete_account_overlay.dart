@@ -39,6 +39,8 @@ Future<void> showDeleteAccountOverlay(BuildContext context) {
         top: Radius.circular(30),
       ),
     ),
+    // isDismissible and enableDrag are wired dynamically inside the sheet
+    // via a ValueNotifier so the sheet rebuilds when submitting starts.
     builder: (_) => const _DeleteAccountSheet(),
   );
 }
@@ -105,95 +107,98 @@ class _DeleteAccountSheetState extends ConsumerState<_DeleteAccountSheet> {
     final submitting = state.isSubmitting;
     final reasonPicked = _selectedReason != null;
 
-    return SafeArea(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: media.size.height * 0.92,
-        ),
-        child: Padding(
-          padding: EdgeInsets.only(bottom: media.viewInsets.bottom),
-          child: SingleChildScrollView(
-            child: Padding(
-              // Figma column inset: left/right 16, top 37, bottom 27.
-              padding: const EdgeInsets.fromLTRB(
-                AppSizes.md,
-                37,
-                AppSizes.md,
-                27,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _SheetHeader(
-                    onClose: submitting
-                        ? null
-                        : () => Navigator.of(context).pop(),
-                  ),
-                  // Figma: header-to-heading gap = 24.
-                  const SizedBox(height: AppSizes.lg),
-                  const _BrandLockup(),
-                  // Figma: lockup-to-heading gap = 24.
-                  const SizedBox(height: AppSizes.lg),
-                  // Title 2 / Bold — Parkinsans 20/28, Black (#2c2c2c), left.
-                  Text(
-                    'Tell us why you want to delete your account',
-                    textAlign: TextAlign.left,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: AppColors.text,
-                      height: 28 / 20,
+    return PopScope(
+      canPop: !submitting,
+      child: SafeArea(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: media.size.height * 0.92,
+          ),
+          child: Padding(
+            padding: EdgeInsets.only(bottom: media.viewInsets.bottom),
+            child: SingleChildScrollView(
+              child: Padding(
+                // Figma column inset: left/right 16, top 37, bottom 27.
+                padding: const EdgeInsets.fromLTRB(
+                  AppSizes.md,
+                  37,
+                  AppSizes.md,
+                  27,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _SheetHeader(
+                      onClose: submitting
+                          ? null
+                          : () => Navigator.of(context).pop(),
                     ),
-                  ),
-                  // Figma: heading-to-chips gap = 24.
-                  const SizedBox(height: AppSizes.lg),
-                  for (var i = 0; i < _kReasons.length; i++) ...[
-                    ReasonChoiceRow(
-                      key: Key('delete_reason_$i'),
-                      label: _kReasons[i],
-                      selected: _selectedReason == _kReasons[i],
-                      onTap: submitting
-                          ? () {}
-                          : () => setState(() {
-                              _selectedReason = _kReasons[i];
-                            }),
+                    // Figma: header-to-heading gap = 24.
+                    const SizedBox(height: AppSizes.lg),
+                    const _BrandLockup(),
+                    // Figma: lockup-to-heading gap = 24.
+                    const SizedBox(height: AppSizes.lg),
+                    // Title 2 / Bold — Parkinsans 20/28, Black (#2c2c2c), left.
+                    Text(
+                      'Tell us why you want to delete your account',
+                      textAlign: TextAlign.left,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: AppColors.text,
+                        height: 28 / 20,
+                      ),
                     ),
-                    // Figma: gap between choices = 12.
-                    if (i != _kReasons.length - 1)
-                      const SizedBox(height: AppSizes.sp12),
-                  ],
-                  // Figma: chips-to-warning gap = 12 (column gap).
-                  const SizedBox(height: AppSizes.sp12),
-                  // Callout / Regular — Figtree 14/22, Black (#2c2c2c), left.
-                  Text(
-                    'After your account is deleted, you will permanently lose '
-                    'your profile, meal history, preferences, and subscription '
-                    'data. This action cannot be undone.',
-                    textAlign: TextAlign.left,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: AppColors.text,
-                      height: 22 / 14,
-                    ),
-                  ),
-                  if (state.errorMessage != null) ...[
+                    // Figma: heading-to-chips gap = 24.
+                    const SizedBox(height: AppSizes.lg),
+                    for (var i = 0; i < _kReasons.length; i++) ...[
+                      ReasonChoiceRow(
+                        key: Key('delete_reason_$i'),
+                        label: _kReasons[i],
+                        selected: _selectedReason == _kReasons[i],
+                        onTap: submitting
+                            ? () {}
+                            : () => setState(() {
+                                _selectedReason = _kReasons[i];
+                              }),
+                      ),
+                      // Figma: gap between choices = 12.
+                      if (i != _kReasons.length - 1)
+                        const SizedBox(height: AppSizes.sp12),
+                    ],
+                    // Figma: chips-to-warning gap = 12 (column gap).
                     const SizedBox(height: AppSizes.sp12),
-                    _InlineError(
-                      message: state.errorMessage!,
-                      onRetry: reasonPicked && !submitting ? _onContinue : null,
+                    // Callout / Regular — Figtree 14/22, Black (#2c2c2c), left.
+                    Text(
+                      'After your account is deleted, you will permanently lose '
+                      'your profile, meal history, preferences, and subscription '
+                      'data. This action cannot be undone.',
+                      textAlign: TextAlign.left,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: AppColors.text,
+                        height: 22 / 14,
+                      ),
+                    ),
+                    if (state.errorMessage != null) ...[
+                      const SizedBox(height: AppSizes.sp12),
+                      _InlineError(
+                        message: state.errorMessage!,
+                        onRetry: reasonPicked && !submitting ? _onContinue : null,
+                      ),
+                    ],
+                    // Figma: warning-to-CTA stack gap (column → bottom stack).
+                    const SizedBox(height: AppSizes.lg),
+                    _ContinueButton(
+                      enabled: reasonPicked && !submitting,
+                      submitting: submitting,
+                      onPressed: _onContinue,
+                    ),
+                    // Figma: Continue-to-Cancel gap = 12.
+                    const SizedBox(height: AppSizes.sp12),
+                    _CancelButton(
+                      enabled: !submitting,
+                      onPressed: () => Navigator.of(context).pop(),
                     ),
                   ],
-                  // Figma: warning-to-CTA stack gap (column → bottom stack).
-                  const SizedBox(height: AppSizes.lg),
-                  _ContinueButton(
-                    enabled: reasonPicked && !submitting,
-                    submitting: submitting,
-                    onPressed: _onContinue,
-                  ),
-                  // Figma: Continue-to-Cancel gap = 12.
-                  const SizedBox(height: AppSizes.sp12),
-                  _CancelButton(
-                    enabled: !submitting,
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ],
+                ),
               ),
             ),
           ),

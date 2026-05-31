@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
+import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/services/auth_service.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/features/profile/delete/delete_account_overlay.dart';
@@ -117,8 +118,9 @@ class _ProfileContent extends ConsumerWidget {
           gradient: LinearGradient(
             // 152.612deg in CSS ≈ Alignment(sinθ, -cosθ).
             // sin(152.612°) ≈ 0.460, cos(152.612°) ≈ -0.888.
-            begin: Alignment(-0.460, 0.888),
-            end: Alignment(0.460, -0.888),
+            // butter (butterSoft) renders at top; gray at bottom.
+            begin: Alignment(-0.460, -0.888),
+            end: Alignment(0.460, 0.888),
             stops: [0.19168, 0.5],
             colors: [AppColors.butterSoft, Color(0xFFF5F5F5)],
           ),
@@ -222,9 +224,19 @@ class _ProfileContent extends ConsumerWidget {
     );
 
     if (confirmed ?? false) {
-      await ref.read(authServiceProvider.notifier).signOut();
-      unawaited(ref.read(analyticsProvider).logLogout());
-      // GoRouter redirect handles navigation to /auth/login.
+      final result = await ref.read(authServiceProvider.notifier).signOut();
+      if (!context.mounted) return;
+      switch (result) {
+        case Success():
+          unawaited(ref.read(analyticsProvider).logLogout());
+          // GoRouter redirect handles navigation to /auth/login.
+        case Failure():
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Couldn't sign out. Please try again."),
+            ),
+          );
+      }
     }
   }
 }

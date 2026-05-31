@@ -38,17 +38,19 @@ class PremiumTeaserCard extends StatelessWidget {
             children: [
               Text('nibbles', style: wordmark),
               const SizedBox(width: AppSizes.sp12),
-              Container(
-                width: 26,
-                height: 26,
-                decoration: BoxDecoration(
-                  color: AppColors.butter,
-                  borderRadius: BorderRadius.circular(AppSizes.sm),
-                ),
-                child: const Icon(
-                  Icons.workspace_premium_rounded,
-                  size: 18,
-                  color: AppColors.greenDeep,
+              ExcludeSemantics(
+                child: Container(
+                  width: 26,
+                  height: 26,
+                  decoration: BoxDecoration(
+                    color: AppColors.butter,
+                    borderRadius: BorderRadius.circular(AppSizes.sm),
+                  ),
+                  child: const Icon(
+                    Icons.workspace_premium_rounded,
+                    size: 18,
+                    color: AppColors.greenDeep,
+                  ),
                 ),
               ),
             ],

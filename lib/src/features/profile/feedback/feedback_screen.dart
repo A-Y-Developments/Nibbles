@@ -169,10 +169,10 @@ class _FeedbackEntryScreen extends StatelessWidget {
                   const SizedBox(height: AppSizes.sp12),
                   Text(
                     'Thank you. We read every message.',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       color: AppColors.fgStrong,
                       fontWeight: FontWeight.w600,
-                      height: 22 / 15,
+                      height: 1.47,
                     ),
                   ),
                 ],
@@ -223,18 +223,22 @@ class _FeedbackTransitionScreen extends StatelessWidget {
             children: [
               const _BrandLoaderMark(),
               const SizedBox(height: AppSizes.lg),
-              Text(
-                caption,
-                key: Key(
-                  isSuccess
-                      ? 'feedback_sent_caption'
-                      : 'feedback_loading_caption',
-                ),
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.black,
-                  fontWeight: FontWeight.w600,
-                  height: 22 / 15,
+              Semantics(
+                liveRegion: true,
+                label: caption,
+                child: Text(
+                  caption,
+                  key: Key(
+                    isSuccess
+                        ? 'feedback_sent_caption'
+                        : 'feedback_loading_caption',
+                  ),
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: Colors.black,
+                    fontWeight: FontWeight.w600,
+                    height: 1.47,
+                  ),
                 ),
               ),
             ],
@@ -386,27 +390,32 @@ class _FeedbackFieldState extends State<_FeedbackField> {
         horizontal: AppSizes.md - 2,
         vertical: AppSizes.sp12,
       ),
-      child: TextField(
-        key: const Key('feedback_message_field'),
-        controller: _controller,
-        focusNode: _focusNode,
-        onChanged: widget.onChanged,
-        minLines: 6,
-        maxLines: 10,
-        // Silent 2k cap — there's no counter or helper text in Figma, so we
-        // don't surface it visibly, but we still bound the payload size.
-        maxLength: 2000,
-        textCapitalization: TextCapitalization.sentences,
-        keyboardType: TextInputType.multiline,
-        cursorColor: AppColors.greenDeep,
-        style: theme.textTheme.bodyLarge?.copyWith(color: AppColors.fgStrong),
-        decoration: InputDecoration(
-          isCollapsed: true,
-          border: InputBorder.none,
-          counterText: '',
-          hintText: 'Your feedback...',
-          hintStyle: theme.textTheme.bodyLarge?.copyWith(
-            color: AppColors.fgFaint,
+      child: Semantics(
+        label: 'Feedback message',
+        hint: 'Thank you. We read every message.',
+        textField: true,
+        child: TextField(
+          key: const Key('feedback_message_field'),
+          controller: _controller,
+          focusNode: _focusNode,
+          onChanged: widget.onChanged,
+          minLines: 6,
+          maxLines: 10,
+          // Silent 2k cap — there's no counter or helper text in Figma, so we
+          // don't surface it visibly, but we still bound the payload size.
+          maxLength: 2000,
+          textCapitalization: TextCapitalization.sentences,
+          keyboardType: TextInputType.multiline,
+          cursorColor: AppColors.greenDeep,
+          style: theme.textTheme.bodyLarge?.copyWith(color: AppColors.fgStrong),
+          decoration: InputDecoration(
+            isCollapsed: true,
+            border: InputBorder.none,
+            counterText: '',
+            hintText: 'Your feedback...',
+            hintStyle: theme.textTheme.bodyLarge?.copyWith(
+              color: AppColors.fgFaint,
+            ),
           ),
         ),
       ),

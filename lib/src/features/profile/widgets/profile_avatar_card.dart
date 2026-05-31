@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:nibbles/gen/fonts.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
+import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
 
 /// Avatar / identity block on Profile (Figma node 1189:12440).
 ///
@@ -43,18 +44,20 @@ class ProfileAvatarCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Container(
-            width: _avatarDiameter,
-            height: _avatarDiameter,
-            decoration: const BoxDecoration(
-              color: AppColors.coral,
-              shape: BoxShape.circle,
-            ),
-            child: const Center(
-              child: Icon(
-                Icons.child_care_rounded,
-                size: 72,
-                color: AppColors.cream,
+          ExcludeSemantics(
+            child: Container(
+              width: _avatarDiameter,
+              height: _avatarDiameter,
+              decoration: const BoxDecoration(
+                color: AppColors.coral,
+                shape: BoxShape.circle,
+              ),
+              child: const Center(
+                child: Icon(
+                  Icons.child_care_rounded,
+                  size: 72,
+                  color: AppColors.cream,
+                ),
               ),
             ),
           ),
@@ -83,30 +86,19 @@ class ProfileAvatarCard extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppSizes.lg),
-          // Edit pill — 108x48 butter, radius 24, Parkinsans SemiBold 15.
-          // Figma node 1189:12428.
-          SizedBox(
-            width: 108,
-            height: 48,
-            child: Material(
-              color: AppColors.butter,
-              shape: const StadiumBorder(),
-              child: InkWell(
+          // Edit pill — Figma node 1189:12428.
+          Semantics(
+            button: true,
+            label: 'Edit',
+            hint: 'Edit baby profile',
+            child: SizedBox(
+              width: 108,
+              child: AppPillButton(
                 key: const Key('profile_edit_button'),
-                onTap: onEdit,
-                customBorder: const StadiumBorder(),
-                child: const Center(
-                  child: Text(
-                    'Edit',
-                    style: TextStyle(
-                      fontFamily: FontFamily.parkinsans,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      height: 22 / 15,
-                      color: AppColors.greenDeep,
-                    ),
-                  ),
-                ),
+                label: 'Edit',
+                variant: AppPillButtonVariant.ghost,
+                size: AppPillButtonSize.small,
+                onPressed: onEdit,
               ),
             ),
           ),

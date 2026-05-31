@@ -124,6 +124,9 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
   late final TextEditingController _firstNameController;
   late final TextEditingController _lastNameController;
   late final TextEditingController _emailController;
+  late final FocusNode _firstNameFocus;
+  late final FocusNode _lastNameFocus;
+  late final FocusNode _emailFocus;
   bool _emailTouched = false;
 
   @override
@@ -136,6 +139,9 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
       text: widget.formState.lastName,
     );
     _emailController = TextEditingController(text: widget.formState.email);
+    _firstNameFocus = FocusNode();
+    _lastNameFocus = FocusNode();
+    _emailFocus = FocusNode();
   }
 
   @override
@@ -143,6 +149,9 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     _firstNameController.dispose();
     _lastNameController.dispose();
     _emailController.dispose();
+    _firstNameFocus.dispose();
+    _lastNameFocus.dispose();
+    _emailFocus.dispose();
     super.dispose();
   }
 
@@ -190,53 +199,80 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
                   children: [
                     const _EditAvatar(),
                     const SizedBox(height: _kFieldGroupGap),
-                    _LabelledField(
+                    Semantics(
                       label: 'First Name',
-                      labelStyle: labelStyle,
-                      field: AppTextField(
-                        key: const Key('edit_first_name_field'),
-                        controller: _firstNameController,
-                        onChanged: controller.updateFirstName,
-                        textInputAction: TextInputAction.next,
+                      textField: true,
+                      child: _LabelledField(
+                        label: 'First Name',
+                        labelStyle: labelStyle,
+                        field: AppTextField(
+                          key: const Key('edit_first_name_field'),
+                          controller: _firstNameController,
+                          focusNode: _firstNameFocus,
+                          onChanged: controller.updateFirstName,
+                          textInputAction: TextInputAction.next,
+                          onSubmitted: (_) => FocusScope.of(context)
+                              .requestFocus(_lastNameFocus),
+                        ),
                       ),
                     ),
                     const SizedBox(height: _kFieldGroupGap),
-                    _LabelledField(
-                      label: 'Last Name (Optional)',
-                      labelStyle: labelStyle,
-                      field: AppTextField(
-                        key: const Key('edit_last_name_field'),
-                        controller: _lastNameController,
-                        onChanged: controller.updateLastName,
-                        textInputAction: TextInputAction.next,
+                    Semantics(
+                      label: 'Last Name, optional',
+                      textField: true,
+                      child: _LabelledField(
+                        label: 'Last Name (Optional)',
+                        labelStyle: labelStyle,
+                        field: AppTextField(
+                          key: const Key('edit_last_name_field'),
+                          controller: _lastNameController,
+                          focusNode: _lastNameFocus,
+                          onChanged: controller.updateLastName,
+                          textInputAction: TextInputAction.next,
+                          onSubmitted: (_) => FocusScope.of(context)
+                              .requestFocus(_emailFocus),
+                        ),
                       ),
                     ),
                     const SizedBox(height: _kFieldGroupGap),
-                    _LabelledField(
+                    Semantics(
                       label: 'Email',
-                      labelStyle: labelStyle,
-                      field: AppTextField(
-                        key: const Key('edit_email_field'),
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        textInputAction: TextInputAction.done,
-                        onChanged: (value) {
-                          if (!_emailTouched) {
-                            setState(() => _emailTouched = true);
-                          }
-                          controller.updateEmail(value);
-                        },
-                        errorText: _emailTouched && !emailValid
-                            ? 'Enter a valid email address.'
-                            : null,
+                      textField: true,
+                      child: _LabelledField(
+                        label: 'Email',
+                        labelStyle: labelStyle,
+                        field: AppTextField(
+                          key: const Key('edit_email_field'),
+                          controller: _emailController,
+                          focusNode: _emailFocus,
+                          keyboardType: TextInputType.emailAddress,
+                          textInputAction: TextInputAction.done,
+                          autocorrect: false,
+                          enableSuggestions: false,
+                          onChanged: (value) {
+                            if (!_emailTouched) {
+                              setState(() => _emailTouched = true);
+                            }
+                            controller.updateEmail(value);
+                          },
+                          onSubmitted: (_) {
+                            if (canSave) unawaited(_save());
+                          },
+                          errorText: _emailTouched && !emailValid
+                              ? 'Enter a valid email address.'
+                              : null,
+                        ),
                       ),
                     ),
                     if (formState.errorMessage != null) ...[
                       const SizedBox(height: AppSizes.sm),
-                      Text(
-                        formState.errorMessage!,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: AppColors.error,
+                      Semantics(
+                        liveRegion: true,
+                        child: Text(
+                          'Error: ${formState.errorMessage!}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: AppColors.error,
+                          ),
                         ),
                       ),
                     ],
@@ -244,6 +280,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
                     AppPillButton(
                       key: const Key('edit_profile_save_button'),
                       label: formState.isLoading ? 'Saving…' : 'Save',
+                      size: AppPillButtonSize.small,
                       onPressed: canSave ? _save : null,
                     ),
                   ],
@@ -350,21 +387,23 @@ class _EditAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        width: _kEditAvatarSize,
-        height: _kEditAvatarSize,
-        decoration: const BoxDecoration(
-          color: AppColors.coral,
-          shape: BoxShape.circle,
-        ),
-        child: const Center(
-          child: Icon(
-            Icons.child_care_rounded,
-            // ~74px glyph fits the 143px coral puck while echoing the
-            // ProfileScreen avatar proportions (64 glyph in 120 puck).
-            size: 74,
-            color: AppColors.cream,
+    return ExcludeSemantics(
+      child: Center(
+        child: Container(
+          width: _kEditAvatarSize,
+          height: _kEditAvatarSize,
+          decoration: const BoxDecoration(
+            color: AppColors.coral,
+            shape: BoxShape.circle,
+          ),
+          child: const Center(
+            child: Icon(
+              Icons.child_care_rounded,
+              // ~74px glyph fits the 143px coral puck while echoing the
+              // ProfileScreen avatar proportions (64 glyph in 120 puck).
+              size: 74,
+              color: AppColors.cream,
+            ),
           ),
         ),
       ),
