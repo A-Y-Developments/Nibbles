@@ -20,6 +20,9 @@ class AppTextField extends StatefulWidget {
     this.enabled = true,
     this.focusNode,
     this.suffixIcon,
+    this.autocorrect = true,
+    this.enableSuggestions = true,
+    this.textCapitalization = TextCapitalization.none,
     super.key,
   });
 
@@ -45,6 +48,15 @@ class AppTextField extends StatefulWidget {
   /// Optional trailing widget rendered inside the field (e.g. a valid-email
   /// checkmark or a password visibility toggle).
   final Widget? suffixIcon;
+
+  /// Forwarded to [TextField.autocorrect]. Pass `false` for email fields.
+  final bool autocorrect;
+
+  /// Forwarded to [TextField.enableSuggestions]. Pass `false` for email fields.
+  final bool enableSuggestions;
+
+  /// Forwarded to [TextField.textCapitalization].
+  final TextCapitalization textCapitalization;
 
   @override
   State<AppTextField> createState() => _AppTextFieldState();
@@ -135,6 +147,9 @@ class _AppTextFieldState extends State<AppTextField> {
                   textInputAction: widget.textInputAction,
                   onChanged: widget.onChanged,
                   onSubmitted: widget.onSubmitted,
+                  autocorrect: widget.autocorrect,
+                  enableSuggestions: widget.enableSuggestions,
+                  textCapitalization: widget.textCapitalization,
                   style: theme.textTheme.bodyLarge?.copyWith(
                     color: AppColors.fgStrong,
                   ),

@@ -30,56 +30,66 @@ class SettingsRow extends StatelessWidget {
     // Figma audit (node 1207:15365 etc.): list rows use radius 10 and p-12.
     final radius = BorderRadius.circular(AppSizes.radiusMd);
 
-    return Material(
-      color: AppColors.cream,
-      borderRadius: radius,
-      child: Ink(
-        decoration: BoxDecoration(
+    return Semantics(
+      button: true,
+      label: title,
+      value: subtitle,
+      hint: danger ? 'Destructive action' : null,
+      child: ExcludeSemantics(
+        child: Material(
           color: AppColors.cream,
           borderRadius: radius,
-          boxShadow: AppSizes.shadowCard,
-        ),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: radius,
-          child: Padding(
-            padding: const EdgeInsets.all(AppSizes.sp12),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Headline/SemiBold — Parkinsans 600 15/22.
-                      Text(
-                        title,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 15,
-                          height: 22 / 15,
-                          color: titleColor,
-                        ),
-                      ),
-                      if (subtitle != null) ...[
-                        // Body/Regular — Figtree 400 15/22.
-                        Text(
-                          subtitle!,
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            color: AppColors.text,
-                            fontSize: 15,
-                            height: 22 / 15,
+          child: Ink(
+            decoration: BoxDecoration(
+              color: AppColors.cream,
+              borderRadius: radius,
+              boxShadow: AppSizes.shadowCard,
+            ),
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: radius,
+              child: Padding(
+                padding: const EdgeInsets.all(AppSizes.sp12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Headline/SemiBold — Parkinsans 600 15/22.
+                          Text(
+                            title,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                              height: 22 / 15,
+                              color: titleColor,
+                            ),
                           ),
-                        ),
-                      ],
-                    ],
-                  ),
+                          if (subtitle != null) ...[
+                            // Body/Regular — Figtree 400 15/22.
+                            Text(
+                              subtitle!,
+                              style: theme.textTheme.bodyLarge?.copyWith(
+                                color: AppColors.text,
+                                fontSize: 15,
+                                height: 22 / 15,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    ExcludeSemantics(
+                      child: Icon(
+                        Icons.chevron_right_rounded,
+                        size: AppSizes.iconMd,
+                        color: chevronColor,
+                      ),
+                    ),
+                  ],
                 ),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  size: AppSizes.iconMd,
-                  color: chevronColor,
-                ),
-              ],
+              ),
             ),
           ),
         ),
