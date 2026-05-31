@@ -1,6 +1,7 @@
 import 'package:nibbles/src/common/domain/enums/gender.dart';
 import 'package:nibbles/src/common/domain/formz/baby_name_input.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
+import 'package:nibbles/src/common/services/local_flag_service.dart';
 import 'package:nibbles/src/features/onboarding/baby_setup/baby_setup_state.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -56,6 +57,9 @@ class BabySetupController extends _$BabySetupController {
     return result.when(
       success: (_) {
         state = state.copyWith(isLoading: false);
+        // Flip the local flag here so GoRouter redirect reads the new value
+        // before the screen navigates to /home.
+        ref.read(localFlagServiceProvider).setOnboardingBabySetupDone();
         return true;
       },
       failure: (error) {

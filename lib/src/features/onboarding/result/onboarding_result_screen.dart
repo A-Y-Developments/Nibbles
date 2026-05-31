@@ -312,36 +312,42 @@ class _SignRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final icon = positive ? Icons.check_rounded : Icons.close_rounded;
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: AppSizes.iconLg,
-          height: AppSizes.iconLg,
-          decoration: const BoxDecoration(
-            color: AppColors.cream,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            icon,
-            size: AppSizes.iconSm,
-            color: AppColors.greenDeep,
-          ),
-        ),
-        const SizedBox(width: AppSizes.sp12),
-        Expanded(
-          child: Padding(
-            // Nudge label down so it visually centers against the icon circle.
-            padding: const EdgeInsets.only(top: AppSizes.xs),
-            child: Text(
-              label,
-              style: textTheme.bodyLarge?.copyWith(
-                color: AppColors.fgDefault,
+    return Semantics(
+      container: true,
+      label: '${positive ? 'Met' : 'Not met'}: $label',
+      child: ExcludeSemantics(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: AppSizes.iconLg,
+              height: AppSizes.iconLg,
+              decoration: const BoxDecoration(
+                color: AppColors.cream,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                size: AppSizes.iconSm,
+                color: AppColors.greenDeep,
               ),
             ),
-          ),
+            const SizedBox(width: AppSizes.sp12),
+            Expanded(
+              child: Padding(
+                // Nudge label down to visually center against the icon.
+                padding: const EdgeInsets.only(top: AppSizes.xs),
+                child: Text(
+                  label,
+                  style: textTheme.bodyLarge?.copyWith(
+                    color: AppColors.fgDefault,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

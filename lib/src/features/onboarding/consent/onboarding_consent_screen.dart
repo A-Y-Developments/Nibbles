@@ -99,7 +99,11 @@ class _OnboardingConsentScreenState
     final canConfirm = _allChecked && !isSubmitting;
     final ctaLabel = _allChecked ? 'Yes, I Understand' : 'Check confirmation';
 
-    return Scaffold(
+    return PopScope(
+      // Block system back and hardware back while submit is in-flight to
+      // prevent racing the createBaby call with orphaned baby rows.
+      canPop: !isSubmitting,
+      child: Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: Padding(
@@ -156,7 +160,8 @@ class _OnboardingConsentScreenState
                     icon: const Icon(Icons.arrow_back_rounded),
                     tone: AppRoundButtonTone.butter,
                     semanticLabel: 'Back',
-                    onPressed: _onBack,
+                    // Gate back during submit to prevent orphan-baby race.
+                    onPressed: isSubmitting ? null : _onBack,
                   ),
                   const SizedBox(width: AppSizes.sp12),
                   Expanded(
@@ -171,6 +176,7 @@ class _OnboardingConsentScreenState
             ],
           ),
         ),
+      ),
       ),
     );
   }
@@ -215,34 +221,42 @@ class _ConsentCheckboxRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    return InkWell(
-      borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+    return Semantics(
+      container: true,
+      checked: value,
       onTap: () => onChanged(!value),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSizes.sm),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              // Nudge the checkbox down so it visually aligns with the first
-              // line of label text.
-              padding: const EdgeInsets.only(top: 2),
-              child: AppCheckbox(
-                value: value,
-                onChanged: onChanged,
-              ),
-            ),
-            const SizedBox(width: AppSizes.sp12),
-            Expanded(
-              child: Text(
-                label,
-                // Body/Regular per Figma audit (Figtree 15/22) → bodyLarge.
-                style: textTheme.bodyLarge?.copyWith(
-                  color: AppColors.fgDefault,
+      label: label,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+        onTap: () => onChanged(!value),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: AppSizes.sm),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                // Nudge the checkbox down so it visually aligns with the first
+                // line of label text.
+                padding: const EdgeInsets.only(top: 2),
+                child: ExcludeSemantics(
+                  child: AppCheckbox(
+                    value: value,
+                    onChanged: onChanged,
+                  ),
                 ),
               ),
-            ),
-          ],
+              const SizedBox(width: AppSizes.sp12),
+              Expanded(
+                child: Text(
+                  label,
+                  // Body/Regular per Figma audit (Figtree 15/22) → bodyLarge.
+                  style: textTheme.bodyLarge?.copyWith(
+                    color: AppColors.fgDefault,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -265,47 +279,54 @@ class _InlineError extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    return Container(
-      padding: const EdgeInsets.all(AppSizes.md),
-      decoration: BoxDecoration(
-        color: AppColors.destructiveSoft,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Icon(
-                Icons.error_outline_rounded,
-                color: AppColors.destructive,
-                size: AppSizes.iconMd,
-              ),
-              const SizedBox(width: AppSizes.sp12),
-              Expanded(
-                child: Text(
-                  message,
-                  style: textTheme.bodyMedium?.copyWith(
+    return Semantics(
+      liveRegion: true,
+      container: true,
+      label: 'Error: $message',
+      child: Container(
+        padding: const EdgeInsets.all(AppSizes.md),
+        decoration: BoxDecoration(
+          color: AppColors.destructiveSoft,
+          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const ExcludeSemantics(
+                  child: Icon(
+                    Icons.error_outline_rounded,
                     color: AppColors.destructive,
+                    size: AppSizes.iconMd,
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSizes.sm),
-          Align(
-            alignment: Alignment.centerRight,
-            child: AppPillButton(
-              key: const Key('onboarding_consent_retry'),
-              label: 'Retry',
-              variant: AppPillButtonVariant.secondary,
-              size: AppPillButtonSize.small,
-              expand: false,
-              onPressed: onRetry,
+                const SizedBox(width: AppSizes.sp12),
+                Expanded(
+                  child: Text(
+                    message,
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: AppColors.destructive,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
+            const SizedBox(height: AppSizes.sm),
+            Align(
+              alignment: Alignment.centerRight,
+              child: AppPillButton(
+                key: const Key('onboarding_consent_retry'),
+                label: 'Retry',
+                variant: AppPillButtonVariant.secondary,
+                size: AppPillButtonSize.small,
+                expand: false,
+                onPressed: onRetry,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
