@@ -6,11 +6,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:nibbles/src/common/components/components.dart';
+import 'package:nibbles/src/common/data/repositories/consent_repository.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/domain/entities/baby.dart';
+import 'package:nibbles/src/common/domain/enums/consent_type.dart';
 import 'package:nibbles/src/common/domain/enums/gender.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
+import 'package:nibbles/src/common/services/consent_service.dart';
 import 'package:nibbles/src/common/services/local_flag_service.dart';
 import 'package:nibbles/src/features/onboarding/consent/onboarding_consent_screen.dart';
 import 'package:nibbles/src/features/onboarding/onboarding_controller.dart';
@@ -19,6 +22,30 @@ import 'package:nibbles/src/routing/route_enums.dart';
 class _MockBabyProfileService extends Mock implements BabyProfileService {}
 
 class _MockLocalFlagService extends Mock implements LocalFlagService {}
+
+/// Hand-rolled no-op repo — avoids polluting the global mocktail matcher
+/// queue with `any(named: 'babyId')` etc. The screen tests stub
+/// `babyProfile.createBaby` with POSITIONAL `any()` matchers; mixing in a
+/// Mock for ConsentService with NAMED matchers trips mocktail's matcher
+/// accounting on the next real call. NIB-145's wiring behaviour is asserted
+/// in the controller-level test
+/// (`onboarding_controller_consent_persistence_test.dart`).
+class _NoopConsentRepository implements ConsentRepository {
+  const _NoopConsentRepository();
+
+  @override
+  Future<Result<void>> recordConsent({
+    required String babyId,
+    required ConsentType type,
+  }) async => const Result.success(null);
+}
+
+Future<void> _noopCrashRecorder(
+  Object error,
+  StackTrace stack, {
+  String? reason,
+  List<String>? information,
+}) async {}
 
 final _fakeBaby = Baby(
   id: 'baby-001',
@@ -75,7 +102,11 @@ ProviderContainer _makeContainer({
   final container = ProviderContainer(
     overrides: [
       babyProfileServiceProvider.overrideWithValue(babyProfile),
+      consentServiceProvider.overrideWithValue(
+        const ConsentService(_NoopConsentRepository()),
+      ),
       localFlagServiceProvider.overrideWithValue(flags),
+      onboardingCrashRecorderProvider.overrideWithValue(_noopCrashRecorder),
     ],
   );
   addTearDown(container.dispose);
