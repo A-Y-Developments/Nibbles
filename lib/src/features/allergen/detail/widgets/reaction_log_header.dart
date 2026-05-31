@@ -20,19 +20,28 @@ class ReactionLogHeader extends StatelessWidget {
           button: true,
           label: 'Add reaction log',
           child: Material(
-            color: AppColors.greenDeep,
-            shape: const CircleBorder(),
+            color: Colors.transparent,
             child: InkWell(
               onTap: onAddPressed,
               customBorder: const CircleBorder(),
-              child: const SizedBox(
-                width: AppSizes.roundButtonSm,
-                height: AppSizes.roundButtonSm,
+              child: SizedBox(
+                width: 48,
+                height: 48,
                 child: Center(
-                  child: Icon(
-                    Icons.add_rounded,
-                    size: AppSizes.iconMd,
-                    color: AppColors.cream,
+                  child: Container(
+                    width: AppSizes.roundButtonSm,
+                    height: AppSizes.roundButtonSm,
+                    decoration: const BoxDecoration(
+                      color: AppColors.greenDeep,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Center(
+                      child: Icon(
+                        Icons.add_rounded,
+                        size: AppSizes.iconMd,
+                        color: AppColors.cream,
+                      ),
+                    ),
                   ),
                 ),
               ),

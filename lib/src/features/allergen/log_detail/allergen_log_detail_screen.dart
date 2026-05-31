@@ -238,6 +238,7 @@ class _LogDetailViewState extends ConsumerState<_LogDetailView> {
         actions: [
           IconButton(
             key: const Key('log_detail_menu'),
+            tooltip: 'Log actions',
             icon: Icon(
               Icons.more_horiz_rounded,
               key: _menuAnchorKey,
@@ -266,6 +267,7 @@ class _LogDetailViewState extends ConsumerState<_LogDetailView> {
           const SizedBox(height: AppSizes.xs),
           _ReadOnlyField(
             value: notes == null || notes.isEmpty ? '—' : notes,
+            isMultiline: true,
           ),
           if (_hasAttachment(log)) ...[
             const SizedBox(height: AppSizes.md),
@@ -348,13 +350,37 @@ class _FieldLabel extends StatelessWidget {
   }
 }
 
-/// Pill-shaped read-only field. Background = Neutral-10 (#eaeaea / borderSoft).
+/// Read-only field. For single-line use (e.g. Date): pill-shaped with fixed
+/// height. For multiline use (e.g. Notes): rounded corners, auto-height,
+/// no truncation.
 class _ReadOnlyField extends StatelessWidget {
-  const _ReadOnlyField({required this.value});
+  const _ReadOnlyField({required this.value, this.isMultiline = false});
   final String value;
+  final bool isMultiline;
 
   @override
   Widget build(BuildContext context) {
+    if (isMultiline) {
+      return Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSizes.fieldPaddingH,
+          vertical: AppSizes.sm + 2,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.borderSoft,
+          borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+        ),
+        alignment: Alignment.centerLeft,
+        child: Text(
+          value,
+          style: GoogleFonts.figtree(
+            fontSize: 15,
+            height: 22 / 15,
+            color: AppColors.fgFaint,
+          ),
+        ),
+      );
+    }
     return Container(
       height: AppSizes.fieldHeight,
       padding: const EdgeInsets.symmetric(horizontal: AppSizes.fieldPaddingH),

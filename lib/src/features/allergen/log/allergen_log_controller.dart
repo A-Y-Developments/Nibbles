@@ -95,10 +95,16 @@ class AllergenLogController extends _$AllergenLogController {
       return;
     }
 
-    final log = logsResult.dataOrNull!.firstWhere(
-      (AllergenLog l) => l.id == logId,
-      orElse: () => throw StateError('Log "$logId" not found.'),
-    );
+    final log = logsResult.dataOrNull!
+        .where((AllergenLog l) => l.id == logId)
+        .firstOrNull;
+    if (log == null) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: "Couldn't load this log. Please try again.",
+      );
+      return;
+    }
 
     state = AllergenLogState(
       logId: log.id,

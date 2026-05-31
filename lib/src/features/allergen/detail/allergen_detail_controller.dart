@@ -1,3 +1,4 @@
+import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/domain/entities/allergen.dart';
 import 'package:nibbles/src/common/services/allergen_service.dart';
@@ -13,7 +14,7 @@ class AllergenDetailController extends _$AllergenDetailController {
   Future<AllergenDetailState> build(String allergenKey) async {
     final baby = await ref.read(babyProfileServiceProvider).getBaby();
     if (baby == null) {
-      throw StateError('No baby profile found.');
+      throw const UnknownException('No baby profile found.');
     }
     final service = ref.read(allergenServiceProvider);
 
@@ -22,7 +23,7 @@ class AllergenDetailController extends _$AllergenDetailController {
     final allergen = allergensResult.dataOrNull!
         .firstWhere(
           (Allergen a) => a.key == allergenKey,
-          orElse: () => throw StateError('Allergen "$allergenKey" not found.'),
+          orElse: () => throw UnknownException('Allergen "$allergenKey" not found.'),
         );
 
     final logsResult = await service.getLogs(baby.id, allergenKey: allergenKey);
@@ -62,7 +63,7 @@ class AllergenDetailController extends _$AllergenDetailController {
 
   void _throwIfFailure<T>(Result<T> result) {
     if (result.isFailure) {
-      throw StateError(result.errorOrNull!.message);
+      throw result.errorOrNull!;
     }
   }
 }

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
+import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/features/allergen/complete/allergen_complete_controller.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 
@@ -24,7 +25,35 @@ class AllergenCompleteScreen extends ConsumerWidget {
         backgroundColor: AppColors.background,
         body: stateAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text(e.toString())),
+          error: (e, _) => Center(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSizes.pagePaddingH),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.error_outline,
+                    size: 48,
+                    color: Color(0xFFE53935),
+                  ),
+                  const SizedBox(height: AppSizes.md),
+                  const Text(
+                    "Couldn't load your celebration. Please try again.",
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: AppSizes.lg),
+                  AppPillButton(
+                    label: 'Retry',
+                    onPressed: () => ref.invalidate(
+                      allergenCompleteControllerProvider,
+                    ),
+                    size: AppPillButtonSize.small,
+                    expand: false,
+                  ),
+                ],
+              ),
+            ),
+          ),
           data: (s) => SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(
@@ -68,33 +97,23 @@ class AllergenCompleteScreen extends ConsumerWidget {
                     alignment: WrapAlignment.center,
                     children: s.allergens
                         .map(
-                          (a) => Chip(
-                            avatar: Text(
-                              a.emoji,
-                              style: const TextStyle(fontSize: 16),
-                            ),
-                            label: Text(a.name),
-                            backgroundColor: AppColors.allergenSafe.withValues(
-                              alpha: 0.15,
-                            ),
-                            side: const BorderSide(
-                              color: AppColors.allergenSafe,
-                            ),
-                            labelStyle: Theme.of(context).textTheme.labelMedium
-                                ?.copyWith(color: AppColors.allergenSafe),
+                          (a) => AppChip(
+                            label: a.name,
+                            emoji: a.emoji,
+                            tone: AppChipTone.safe,
                           ),
                         )
                         .toList(),
                   ).animate().fadeIn(delay: 700.ms, duration: 400.ms),
                   const SizedBox(height: AppSizes.xxl),
-                  FilledButton(
+                  AppPillButton(
+                    label: 'View in Profile',
                     onPressed: () {
                       ref
                           .read(allergenCompleteControllerProvider.notifier)
                           .markShown();
                       context.goNamed(AppRoute.profile.name);
                     },
-                    child: const Text('View in Profile'),
                   ).animate().fadeIn(delay: 900.ms, duration: 400.ms),
                   const SizedBox(height: AppSizes.md),
                 ],

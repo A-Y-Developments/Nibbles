@@ -242,6 +242,7 @@ class _LogScreenBody extends StatelessWidget {
         backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
+          tooltip: 'Back',
           icon: const Icon(Icons.arrow_back_rounded),
           color: AppColors.fgStrong,
           onPressed: () => context.pop(false),
@@ -384,26 +385,32 @@ class _DateField extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final hasValue = value != null;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        key: const Key('log_date_field'),
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        child: Container(
-          height: AppSizes.fieldHeight,
-          decoration: BoxDecoration(
-            color: AppColors.bgInput,
-            borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-            border: Border.all(color: AppColors.borderSoft),
-          ),
-          padding:
-              const EdgeInsets.symmetric(horizontal: AppSizes.fieldPaddingH),
-          alignment: Alignment.centerLeft,
-          child: Text(
-            hasValue ? value! : hint,
-            style: textTheme.bodyLarge?.copyWith(
-              color: hasValue ? AppColors.fgStrong : AppColors.fgFaint,
+    return Semantics(
+      button: true,
+      label: 'Log date',
+      value: hasValue ? value! : 'Not set',
+      hint: 'Opens date picker',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          key: const Key('log_date_field'),
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+          child: Container(
+            height: AppSizes.fieldHeight,
+            decoration: BoxDecoration(
+              color: AppColors.bgInput,
+              borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+              border: Border.all(color: AppColors.borderSoft),
+            ),
+            padding:
+                const EdgeInsets.symmetric(horizontal: AppSizes.fieldPaddingH),
+            alignment: Alignment.centerLeft,
+            child: Text(
+              hasValue ? value! : hint,
+              style: textTheme.bodyLarge?.copyWith(
+                color: hasValue ? AppColors.fgStrong : AppColors.fgFaint,
+              ),
             ),
           ),
         ),
@@ -463,7 +470,11 @@ class _ReactionToggleRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     return Semantics(
+      label: 'Any Reaction?',
       toggled: hadReaction,
+      button: true,
+      onTap: onToggle,
+      excludeSemantics: true,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: onToggle,
@@ -480,12 +491,10 @@ class _ReactionToggleRow extends StatelessWidget {
                   ),
                 ),
               ),
-              IgnorePointer(
-                child: AppSwitch(
-                  key: const Key('log_reaction_switch'),
-                  value: hadReaction,
-                  onChanged: (_) {},
-                ),
+              AppSwitch(
+                key: const Key('log_reaction_switch'),
+                value: hadReaction,
+                onChanged: (_) => onToggle(),
               ),
             ],
           ),
