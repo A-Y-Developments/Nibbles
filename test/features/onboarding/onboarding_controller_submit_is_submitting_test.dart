@@ -3,14 +3,35 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:nibbles/src/common/data/repositories/consent_repository.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/domain/entities/baby.dart';
+import 'package:nibbles/src/common/domain/enums/consent_type.dart';
 import 'package:nibbles/src/common/domain/enums/gender.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
+import 'package:nibbles/src/common/services/consent_service.dart';
 import 'package:nibbles/src/features/onboarding/onboarding_controller.dart';
 
 class _MockBabyProfileService extends Mock implements BabyProfileService {}
+
+/// See `onboarding_controller_test.dart` for the matcher-queue rationale.
+class _NoopConsentRepository implements ConsentRepository {
+  const _NoopConsentRepository();
+
+  @override
+  Future<Result<void>> recordConsent({
+    required String babyId,
+    required ConsentType type,
+  }) async => const Result.success(null);
+}
+
+Future<void> _noopCrashRecorder(
+  Object error,
+  StackTrace stack, {
+  String? reason,
+  List<String>? information,
+}) async {}
 
 final _fakeBaby = Baby(
   id: 'baby-001',
@@ -23,7 +44,13 @@ final _fakeBaby = Baby(
 
 ProviderContainer _makeContainer(BabyProfileService service) {
   final container = ProviderContainer(
-    overrides: [babyProfileServiceProvider.overrideWithValue(service)],
+    overrides: [
+      babyProfileServiceProvider.overrideWithValue(service),
+      consentServiceProvider.overrideWithValue(
+        const ConsentService(_NoopConsentRepository()),
+      ),
+      onboardingCrashRecorderProvider.overrideWithValue(_noopCrashRecorder),
+    ],
   );
   addTearDown(container.dispose);
   return container;
