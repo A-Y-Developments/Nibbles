@@ -12,7 +12,10 @@ import 'package:nibbles/src/common/domain/enums/gender.dart';
 import 'package:nibbles/src/common/services/allergen_service.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/features/allergen/log_detail/allergen_log_detail_screen.dart';
+import 'package:nibbles/src/logging/analytics.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
+
+import '../../../support/fake_analytics.dart';
 
 class _MockAllergenService extends Mock implements AllergenService {}
 
@@ -86,14 +89,20 @@ void main() {
 
   Widget buildSubject() {
     final router = GoRouter(
-      initialLocation: '/',
+      initialLocation: '/log',
       routes: [
         GoRoute(
           path: '/',
-          builder: (_, __) => const AllergenLogDetailScreen(
-            allergenKey: _allergenKey,
-            logId: _logId,
-          ),
+          builder: (_, __) => const Scaffold(body: Text('ROOT_STUB')),
+          routes: [
+            GoRoute(
+              path: 'log',
+              builder: (_, __) => const AllergenLogDetailScreen(
+                allergenKey: _allergenKey,
+                logId: _logId,
+              ),
+            ),
+          ],
         ),
         GoRoute(
           path: AppRoute.allergenLogEdit.path,
@@ -107,6 +116,7 @@ void main() {
       overrides: [
         allergenServiceProvider.overrideWithValue(mockService),
         babyProfileServiceProvider.overrideWithValue(mockBabyService),
+        analyticsProvider.overrideWithValue(FakeAnalytics()),
       ],
       child: MaterialApp.router(routerConfig: router),
     );
@@ -197,7 +207,7 @@ void main() {
     );
 
     testWidgets(
-      'overflow menu exposes "Edit Reactions" and "Delete Log"',
+      '3-dot menu overlay exposes "Edit Reactions" and "Delete Log"',
       (tester) async {
         stubLogs([_makeLog(notes: 'note')]);
 
@@ -209,6 +219,80 @@ void main() {
 
         expect(find.text('Edit Reactions'), findsOneWidget);
         expect(find.text('Delete Log'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'Delete row opens the Figma confirmation popup with verbatim copy + '
+      'Cancel/Delete pill buttons; Cancel dismisses without deleting',
+      (tester) async {
+        stubLogs([_makeLog(notes: 'note')]);
+
+        await tester.pumpWidget(buildSubject());
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byKey(const Key('log_detail_menu')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('log_actions_menu_delete')));
+        await tester.pumpAndSettle();
+
+        // Verbatim Figma copy (1525:31338).
+        expect(find.text('Are you sure you want to delete?'), findsOneWidget);
+        expect(
+          find.byKey(const Key('delete_log_cancel_button')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('delete_log_confirm_button')),
+          findsOneWidget,
+        );
+
+        await tester.tap(find.byKey(const Key('delete_log_cancel_button')));
+        await tester.pumpAndSettle();
+
+        verifyNever(
+          () => mockService.deleteAllergenLog(
+            logId: any(named: 'logId'),
+            photoPath: any(named: 'photoPath'),
+          ),
+        );
+      },
+    );
+
+    testWidgets(
+      'Confirming the delete popup calls deleteAllergenLog with the log id + '
+      'photo path',
+      (tester) async {
+        stubLogs([
+          _makeLog(
+            attachmentTitle: 'Rash on cheek area',
+            photoUrl: 'allergen-attachments/$_babyId/p.jpg',
+          ),
+        ]);
+        when(
+          () => mockService.deleteAllergenLog(
+            logId: any(named: 'logId'),
+            photoPath: any(named: 'photoPath'),
+          ),
+        ).thenAnswer((_) async => const Result.success(null));
+
+        await tester.pumpWidget(buildSubject());
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byKey(const Key('log_detail_menu')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('log_actions_menu_delete')));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byKey(const Key('delete_log_confirm_button')));
+        await tester.pumpAndSettle();
+
+        verify(
+          () => mockService.deleteAllergenLog(
+            logId: _logId,
+            photoPath: 'allergen-attachments/$_babyId/p.jpg',
+          ),
+        ).called(1);
       },
     );
   });

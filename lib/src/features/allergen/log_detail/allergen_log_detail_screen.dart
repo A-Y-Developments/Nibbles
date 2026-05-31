@@ -15,6 +15,8 @@ import 'package:nibbles/src/common/services/allergen_service.dart';
 import 'package:nibbles/src/features/allergen/detail/allergen_detail_controller.dart';
 import 'package:nibbles/src/features/allergen/log_detail/allergen_log_detail_controller.dart';
 import 'package:nibbles/src/features/allergen/log_detail/allergen_log_detail_state.dart';
+import 'package:nibbles/src/features/allergen/log_detail/widgets/delete_log_confirmation_dialog.dart';
+import 'package:nibbles/src/features/allergen/log_detail/widgets/log_actions_menu.dart';
 import 'package:nibbles/src/features/allergen/tracker/allergen_tracker_controller.dart';
 import 'package:nibbles/src/logging/analytics.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
@@ -100,7 +102,7 @@ class AllergenLogDetailScreen extends ConsumerWidget {
   }
 }
 
-class _LogDetailView extends ConsumerWidget {
+class _LogDetailView extends ConsumerStatefulWidget {
   const _LogDetailView({
     required this.state,
     required this.allergenKey,
@@ -111,6 +113,11 @@ class _LogDetailView extends ConsumerWidget {
   final String allergenKey;
   final String logId;
 
+  @override
+  ConsumerState<_LogDetailView> createState() => _LogDetailViewState();
+}
+
+class _LogDetailViewState extends ConsumerState<_LogDetailView> {
   static const _months = <String>[
     'Jan',
     'Feb',
@@ -126,84 +133,50 @@ class _LogDetailView extends ConsumerWidget {
     'Dec',
   ];
 
+  // Anchors the 3-dot floating menu overlay (Figma 1525:31083 input 188x96 at
+  // y=-26 below the more-icon).
+  final GlobalKey _menuAnchorKey = GlobalKey();
+
+  AllergenLogDetailState get _state => widget.state;
+  String get _allergenKey => widget.allergenKey;
+  String get _logId => widget.logId;
+
   String _formatDate(DateTime d) =>
       '${_months[d.month - 1]} ${d.day}, ${d.year}';
 
-  Future<void> _onMenuSelected(
-    BuildContext context,
-    WidgetRef ref,
-    String value,
-  ) async {
-    switch (value) {
-      case 'edit':
+  Future<void> _onMenuPressed() async {
+    final choice = await showLogActionsMenu(context, anchor: _menuAnchorKey);
+    if (!mounted || choice == null) return;
+    switch (choice) {
+      case LogActionMenuChoice.edit:
         await context.pushNamed(
           AppRoute.allergenLogEdit.name,
-          pathParameters: {'allergenKey': allergenKey, 'logId': logId},
+          pathParameters: {'allergenKey': _allergenKey, 'logId': _logId},
         );
+        if (!mounted) return;
         ref
           ..invalidate(
-            allergenLogDetailControllerProvider(allergenKey, logId),
+            allergenLogDetailControllerProvider(_allergenKey, _logId),
           )
-          ..invalidate(allergenDetailControllerProvider(allergenKey))
-          ..invalidate(allergenTrackerControllerProvider(state.babyId));
-      case 'delete':
-        await _confirmAndDelete(context, ref);
+          ..invalidate(allergenDetailControllerProvider(_allergenKey))
+          ..invalidate(allergenTrackerControllerProvider(_state.babyId));
+      case LogActionMenuChoice.delete:
+        await _confirmAndDelete();
     }
   }
 
-  Future<void> _confirmAndDelete(BuildContext context, WidgetRef ref) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-        ),
-        title: Text(
-          'Delete this log?',
-          style: Theme.of(ctx).textTheme.titleMedium,
-        ),
-        content: Text(
-          'This will permanently remove this reaction log. You can re-add it '
-          'later.',
-          style: Theme.of(ctx).textTheme.bodyMedium?.copyWith(
-            color: AppColors.fgMuted,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(
-              'Cancel',
-              style: Theme.of(ctx).textTheme.labelLarge?.copyWith(
-                color: AppColors.fgMuted,
-              ),
-            ),
-          ),
-          TextButton(
-            key: const Key('log_delete_confirm'),
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(
-              'Delete',
-              style: Theme.of(ctx).textTheme.labelLarge?.copyWith(
-                color: AppColors.destructive,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+  Future<void> _confirmAndDelete() async {
+    final confirmed = await showDeleteLogConfirmationDialog(context);
 
-    if (confirmed != true || !context.mounted) return;
+    if (confirmed != true || !mounted) return;
 
     final service = ref.read(allergenServiceProvider);
     final result = await service.deleteAllergenLog(
-      logId: state.log.id,
-      photoPath: state.log.photoUrl,
+      logId: _state.log.id,
+      photoPath: _state.log.photoUrl,
     );
 
-    if (!context.mounted) return;
+    if (!mounted) return;
 
     if (result.isFailure) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -215,32 +188,32 @@ class _LogDetailView extends ConsumerWidget {
     }
 
     unawaited(
-      Analytics.instance.logAllergenLogDeleted(allergenKey: allergenKey),
+      ref
+          .read(analyticsProvider)
+          .logAllergenLogDeleted(allergenKey: _allergenKey),
     );
 
     ref
-      ..invalidate(allergenDetailControllerProvider(allergenKey))
-      ..invalidate(allergenTrackerControllerProvider(state.babyId));
+      ..invalidate(allergenDetailControllerProvider(_allergenKey))
+      ..invalidate(allergenTrackerControllerProvider(_state.babyId));
     context.pop();
   }
 
-  Future<void> _onChangePicturePressed(
-    BuildContext context,
-    WidgetRef ref,
-  ) async {
+  Future<void> _onChangePicturePressed() async {
     await context.pushNamed(
       AppRoute.allergenLogEdit.name,
-      pathParameters: {'allergenKey': allergenKey, 'logId': logId},
+      pathParameters: {'allergenKey': _allergenKey, 'logId': _logId},
     );
+    if (!mounted) return;
     ref
-      ..invalidate(allergenLogDetailControllerProvider(allergenKey, logId))
-      ..invalidate(allergenDetailControllerProvider(allergenKey))
-      ..invalidate(allergenTrackerControllerProvider(state.babyId));
+      ..invalidate(allergenLogDetailControllerProvider(_allergenKey, _logId))
+      ..invalidate(allergenDetailControllerProvider(_allergenKey))
+      ..invalidate(allergenTrackerControllerProvider(_state.babyId));
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final log = state.log;
+  Widget build(BuildContext context) {
+    final log = _state.log;
     final notes = log.notes?.trim();
 
     return Scaffold(
@@ -263,23 +236,14 @@ class _LogDetailView extends ConsumerWidget {
           ),
         ),
         actions: [
-          PopupMenuButton<String>(
+          IconButton(
             key: const Key('log_detail_menu'),
-            icon: const Icon(
+            icon: Icon(
               Icons.more_horiz_rounded,
+              key: _menuAnchorKey,
               color: AppColors.fgStrong,
             ),
-            onSelected: (v) => _onMenuSelected(context, ref, v),
-            itemBuilder: (_) => const [
-              PopupMenuItem<String>(
-                value: 'edit',
-                child: Text('Edit Reactions'),
-              ),
-              PopupMenuItem<String>(
-                value: 'delete',
-                child: Text('Delete Log'),
-              ),
-            ],
+            onPressed: _onMenuPressed,
           ),
         ],
       ),
@@ -290,7 +254,7 @@ class _LogDetailView extends ConsumerWidget {
         ),
         children: [
           _LogTitleRow(
-            logNumber: state.logNumber,
+            logNumber: _state.logNumber,
             hadReaction: log.hadReaction,
           ),
           const SizedBox(height: AppSizes.md),
@@ -309,8 +273,7 @@ class _LogDetailView extends ConsumerWidget {
             const SizedBox(height: AppSizes.sm),
             _AttachmentBlock(
               log: log,
-              onChangePicturePressed: () =>
-                  _onChangePicturePressed(context, ref),
+              onChangePicturePressed: _onChangePicturePressed,
             ),
           ],
           const SizedBox(height: AppSizes.xxl),
