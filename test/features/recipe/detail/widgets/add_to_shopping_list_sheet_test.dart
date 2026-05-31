@@ -1,4 +1,4 @@
-// Widget tests for the redesigned Add-to-Shopping-List sheet (NIB-68).
+// Widget tests for the redesigned Add-to-Shoplist sheet (NIB-75 / NIB-68).
 //
 // Drives `showAddToShoppingListSheet(context, ingredients)` and asserts:
 //   * each row renders a leading checkbox and a trailing remove ('Remove')
@@ -66,7 +66,7 @@ void main() {
         await setupViewport(tester);
         await _openSheet(tester);
 
-        expect(find.text('Add to Shopping List'), findsOneWidget);
+        expect(find.text('Add to Shoplist'), findsOneWidget);
         for (final ing in _ingredients) {
           expect(find.text(ing.name), findsOneWidget);
         }
