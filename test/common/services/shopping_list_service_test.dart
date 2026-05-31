@@ -83,6 +83,46 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
+  // NIB-136: addFromMealPlan
+  // ---------------------------------------------------------------------------
+
+  group('ShoppingListService.addFromMealPlan', () {
+    test(
+      'creates items with source=mealPlan, isChecked=false, id empty',
+      () async {
+        when(
+          () => mockRepo.addItems(any()),
+        ).thenAnswer((_) async => const Result.success(null));
+
+        await sut.addFromMealPlan(_babyId, ['Flour', 'Sugar', 'Butter']);
+
+        final captured =
+            verify(() => mockRepo.addItems(captureAny())).captured.single
+                as List<ShoppingListItem>;
+        expect(captured, hasLength(3));
+        expect(captured.map((i) => i.name).toList(),
+            equals(['Flour', 'Sugar', 'Butter']));
+        for (final item in captured) {
+          expect(item.source, ShoppingListSource.mealPlan);
+          expect(item.isChecked, isFalse);
+          expect(item.id, '');
+          expect(item.babyId, _babyId);
+        }
+      },
+    );
+
+    test('repo failure propagates', () async {
+      when(() => mockRepo.addItems(any())).thenAnswer(
+        (_) async => const Result.failure(ServerException('DB error')),
+      );
+
+      final result = await sut.addFromMealPlan(_babyId, ['Flour']);
+
+      expect(result.isFailure, isTrue);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
   // addManualItem
   // ---------------------------------------------------------------------------
 

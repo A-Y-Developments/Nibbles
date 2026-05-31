@@ -22,6 +22,7 @@ import 'package:nibbles/src/features/meal_plan/widgets/clear_confirm_dialog.dart
 import 'package:nibbles/src/features/meal_plan/widgets/day_accordion_card.dart';
 import 'package:nibbles/src/features/meal_plan/widgets/meal_plan_empty_state.dart';
 import 'package:nibbles/src/features/meal_plan/widgets/meal_plan_header.dart';
+import 'package:nibbles/src/features/meal_plan/widgets/range_add_to_shoplist_sheet.dart';
 import 'package:nibbles/src/logging/analytics.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 import 'package:nibbles/src/utils/age_in_months.dart';
@@ -272,7 +273,7 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
                 .inDays +
             1;
         unawaited(analytics.logMealPlanAddToShopList(dayCount: dayCount));
-        await _openAddToShoppingList(state.windowStart);
+        await _openRangeAddToShoplist(start, end);
       case _ScreenMenuAction.createMealPrep:
         unawaited(analytics.logMealPrepCreateStarted());
         await _onCreateMealPrep(state);
@@ -362,6 +363,16 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
         ),
       ),
       builder: (_) => AddToShoppingListModal(babyId: widget.babyId, date: date),
+    );
+  }
+
+  /// NIB-136: range-scoped sheet from the screen-level overflow menu.
+  Future<void> _openRangeAddToShoplist(DateTime start, DateTime end) async {
+    await showRangeAddToShoplistSheet(
+      context,
+      babyId: widget.babyId,
+      startDate: start,
+      endDate: end,
     );
   }
 
