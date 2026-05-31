@@ -69,11 +69,11 @@ void main() {
         isExpanded: false,
       );
 
-      // Header includes the date label e.g. "Sat 30 May".
+      // Header includes the date label e.g. "Saturday, 30 May".
       expect(find.textContaining('30 May'), findsOneWidget);
       // Body content (recipe title + Add pill) is hidden.
       expect(find.text('Peanut Butter Toast'), findsNothing);
-      expect(find.text('+ Add'), findsNothing);
+      expect(find.text('Add'), findsNothing);
       expect(find.text('No meal plan yet.'), findsNothing);
     });
 
@@ -91,7 +91,7 @@ void main() {
         );
 
         expect(find.text('Peanut Butter Toast'), findsOneWidget);
-        expect(find.text('+ Add'), findsOneWidget);
+        expect(find.text('Add'), findsOneWidget);
         // Tag chips render with replaced underscore labels.
         expect(find.text('peanut'), findsOneWidget);
         expect(find.text('egg'), findsOneWidget);
@@ -134,7 +134,7 @@ void main() {
       );
 
       expect(find.text('No meal plan yet.'), findsOneWidget);
-      expect(find.text('+ Add'), findsOneWidget);
+      expect(find.text('Add'), findsOneWidget);
     });
 
     testWidgets('header tap fires onToggle', (tester) async {
@@ -154,7 +154,7 @@ void main() {
       expect(toggled, 1);
     });
 
-    testWidgets('"+ Add" pill tap fires onAdd', (tester) async {
+    testWidgets('"Add" pill tap fires onAdd', (tester) async {
       var added = 0;
       await _pumpCard(
         tester,
@@ -164,7 +164,7 @@ void main() {
         onAdd: () => added++,
       );
 
-      await tester.tap(find.text('+ Add'));
+      await tester.tap(find.text('Add'));
       await tester.pumpAndSettle();
 
       expect(added, 1);

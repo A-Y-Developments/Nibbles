@@ -500,31 +500,75 @@ class _PopulatedView extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppSizes.radiusLg),
       ),
-      items: [
+      items: const [
+        // First row carries the lime default-highlight (Figma 971:7826).
         PopupMenuItem<_ScreenMenuAction>(
           value: _ScreenMenuAction.addToShopList,
-          child: Text(
-            'Add to shop list',
-            style: AppTypography.textTheme.bodyMedium,
+          padding: EdgeInsets.zero,
+          child: _ScreenMenuRow(
+            icon: Icons.shopping_cart_outlined,
+            label: 'Add to shop list',
+            highlight: true,
           ),
         ),
         PopupMenuItem<_ScreenMenuAction>(
           value: _ScreenMenuAction.createMealPrep,
-          child: Text(
-            'Create new meal prep',
-            style: AppTypography.textTheme.bodyMedium,
+          child: _ScreenMenuRow(
+            icon: Icons.add,
+            label: 'Create new meal prep',
           ),
         ),
         PopupMenuItem<_ScreenMenuAction>(
           value: _ScreenMenuAction.clearCurrentWeek,
-          child: Text(
-            'Clear current week',
-            style: AppTypography.textTheme.bodyMedium,
+          child: _ScreenMenuRow(
+            icon: Icons.delete_outline,
+            label: 'Clear current week',
           ),
         ),
       ],
     );
     if (action != null) onScreenMenuSelected(action);
+  }
+}
+
+/// Row used inside the screen-level overflow popup. When [highlight] is
+/// true the entire row paints in lime (butter) with forest-deep text +
+/// icon — matches the default-active row in Figma 971:7826.
+class _ScreenMenuRow extends StatelessWidget {
+  const _ScreenMenuRow({
+    required this.icon,
+    required this.label,
+    this.highlight = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool highlight;
+
+  @override
+  Widget build(BuildContext context) {
+    final fg = highlight ? AppColors.greenDeep : AppColors.fgStrong;
+    final row = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: AppSizes.iconSm, color: fg),
+        const SizedBox(width: AppSizes.sm),
+        Text(
+          label,
+          style: AppTypography.textTheme.bodyMedium?.copyWith(color: fg),
+        ),
+      ],
+    );
+    if (!highlight) return row;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSizes.md,
+        vertical: AppSizes.sm,
+      ),
+      color: AppColors.butter,
+      child: row,
+    );
   }
 }
 
