@@ -213,34 +213,89 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
-  // Clear list menu
+  // Clear All Shopping List menu — Figma 971:9936 / 971:9958
   // ---------------------------------------------------------------------------
 
-  group('ShoppingListScreen - clear list', () {
-    testWidgets('Clear list menu shows confirmation dialog', (tester) async {
+  group('ShoppingListScreen - clear all', () {
+    testWidgets(
+      'Clear All Shopping List opens the verbatim confirmation sheet',
+      (tester) async {
+        await tester.pumpWidget(_buildSut(mockService));
+        await tester.pumpAndSettle();
+
+        // Open overflow menu via the green-deep more_horiz chip.
+        await tester.tap(find.byIcon(Icons.more_horiz));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Clear All Shopping List'));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.text('Are you sure you want to delete?'),
+          findsOneWidget,
+        );
+        expect(find.text('Cancel'), findsOneWidget);
+        expect(find.text('Delete'), findsOneWidget);
+        // Legacy AlertDialog must not surface.
+        expect(find.byType(AlertDialog), findsNothing);
+      },
+    );
+
+    testWidgets('tapping Delete calls clearAll and empties the list', (
+      tester,
+    ) async {
+      when(
+        () => mockService.getItems(any()),
+      ).thenAnswer((_) async => Result.success([_makeItem()]));
+      when(
+        () => mockService.clearAll(any()),
+      ).thenAnswer((_) async => const Result.success(null));
+
       await tester.pumpWidget(_buildSut(mockService));
       await tester.pumpAndSettle();
 
-      // Open overflow menu via the green-deep more_horiz chip.
       await tester.tap(find.byIcon(Icons.more_horiz));
       await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Clear list').last);
+      await tester.tap(find.text('Clear All Shopping List'));
       await tester.pumpAndSettle();
 
-      expect(
-        find.text('This will delete all items. Are you sure?'),
-        findsOneWidget,
-      );
+      await tester.tap(find.text('Delete'));
+      await tester.pumpAndSettle();
+
+      verify(() => mockService.clearAll(_babyId)).called(1);
+      expect(find.text("You don't have any list yet"), findsOneWidget);
+    });
+
+    testWidgets('tapping Cancel dismisses the sheet without clearing', (
+      tester,
+    ) async {
+      when(
+        () => mockService.getItems(any()),
+      ).thenAnswer((_) async => Result.success([_makeItem()]));
+
+      await tester.pumpWidget(_buildSut(mockService));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.more_horiz));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Clear All Shopping List'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+
+      verifyNever(() => mockService.clearAll(any()));
+      expect(find.text('Are you sure you want to delete?'), findsNothing);
+      expect(find.text('Apples'), findsOneWidget);
     });
   });
 
   // ---------------------------------------------------------------------------
-  // Copy to clipboard
+  // Copy to Clipboard menu — Figma 971:9889
   // ---------------------------------------------------------------------------
 
   group('ShoppingListScreen - clipboard', () {
-    testWidgets('Copy to clipboard shows success snackbar', (tester) async {
+    testWidgets('Copy to Clipboard shows success snackbar', (tester) async {
       when(
         () => mockService.getItems(any()),
       ).thenAnswer((_) async => Result.success([_makeItem()]));
@@ -252,13 +307,13 @@ void main() {
       await tester.tap(find.byIcon(Icons.more_horiz));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Copy to clipboard'));
+      await tester.tap(find.text('Copy to Clipboard'));
       await tester.pumpAndSettle();
 
       expect(find.text('Copied to clipboard'), findsOneWidget);
     });
 
-    testWidgets('Copy to clipboard shows error snackbar when clipboard fails', (
+    testWidgets('Copy to Clipboard shows error snackbar when clipboard fails', (
       tester,
     ) async {
       when(
@@ -278,7 +333,7 @@ void main() {
       await tester.tap(find.byIcon(Icons.more_horiz));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Copy to clipboard'));
+      await tester.tap(find.text('Copy to Clipboard'));
       await tester.pumpAndSettle();
 
       expect(find.text("Couldn't copy. Try again."), findsOneWidget);
