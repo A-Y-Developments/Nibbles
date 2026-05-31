@@ -56,6 +56,10 @@ abstract final class AppColors {
   static const Color coralSoft = Color(0xFFFDF2EC);
   static const Color coralDeep = Color(0xFFC97850);
 
+  // Burgundy ghost — soft pediatrician-advisory tint
+  // (Nibble-primary-BurgundyGhost — recipe detail allergen card).
+  static const Color burgundyGhost = Color(0xFFF5E6E6);
+
   // Cream surface base
   static const Color cream = Color(0xFFFFFDF8);
 

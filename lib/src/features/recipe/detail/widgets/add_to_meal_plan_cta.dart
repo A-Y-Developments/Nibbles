@@ -41,38 +41,33 @@ class AddToMealPlanCta extends StatelessWidget {
   }
 }
 
-/// Inline success banner — DS-styled, top-anchored inside the scroll view.
-/// Mirrors Figma node 1474:53362. The screen owns dismiss state.
+/// Lime success toast shown over the top of the hero on the recipe detail
+/// screen after the user adds the recipe to their meal plan.
+///
+/// Mirrors Figma node 971:9727 — butter (lime) fill + forest-dark text, no
+/// dismiss control. Caller owns auto-dismiss state via a timer.
 class AddToMealPlanSuccessBanner extends StatelessWidget {
   const AddToMealPlanSuccessBanner({
     required this.message,
-    required this.onDismiss,
     super.key,
   });
 
   final String message;
-  final VoidCallback onDismiss;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSizes.pagePaddingH,
-        AppSizes.sm,
-        AppSizes.pagePaddingH,
-        0,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: AppSizes.pagePaddingH),
       child: Container(
         padding: const EdgeInsets.symmetric(
           horizontal: AppSizes.md,
           vertical: AppSizes.sp12,
         ),
         decoration: BoxDecoration(
-          color: AppColors.greenTint,
+          color: AppColors.butter,
           borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-          border: Border.all(color: AppColors.green, width: 1.5),
         ),
         child: Row(
           children: [
@@ -89,19 +84,6 @@ class AddToMealPlanSuccessBanner extends StatelessWidget {
                   color: AppColors.greenDeep,
                   fontWeight: FontWeight.w600,
                 ),
-              ),
-            ),
-            IconButton(
-              onPressed: onDismiss,
-              icon: const Icon(
-                Icons.close,
-                size: AppSizes.iconSm,
-                color: AppColors.greenDeep,
-              ),
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(
-                minHeight: AppSizes.iconLg,
-                minWidth: AppSizes.iconLg,
               ),
             ),
           ],

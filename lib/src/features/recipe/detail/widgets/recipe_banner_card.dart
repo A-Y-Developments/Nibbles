@@ -5,9 +5,11 @@ import 'package:nibbles/src/common/components/cards/app_card.dart';
 import 'package:nibbles/src/common/components/chips/app_chip.dart';
 
 /// Recipe banner card — sits just under the hero image. Shows the title,
-/// the age range, an optional category chip, and the diet (nutrition) chips.
+/// a "Best for $ageRange" subtitle line, and the diet (nutrition) chips.
 ///
-/// Mirrors Figma node 1129:13972.
+/// Mirrors Figma node 1129:13972 (recipe-library-detail-1 / -2). Figma has
+/// no separate category pill on this card — `category` is intentionally
+/// ignored at the visual layer for the redesign.
 class RecipeBannerCard extends StatelessWidget {
   const RecipeBannerCard({
     required this.title,
@@ -20,6 +22,10 @@ class RecipeBannerCard extends StatelessWidget {
   final String title;
   final String ageRange;
   final List<String> nutritionTags;
+
+  /// Retained on the constructor for compatibility with the existing
+  /// controller wiring. Not rendered in the redesign — Figma omits a
+  /// category pill on this card.
   final String? category;
 
   String _humanize(String raw) {
@@ -33,8 +39,6 @@ class RecipeBannerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final categoryLabel = category;
-    final hasSubheader = categoryLabel != null && categoryLabel.isNotEmpty;
     final hasDietChips = nutritionTags.isNotEmpty;
 
     return AppCard(
@@ -51,22 +55,13 @@ class RecipeBannerCard extends StatelessWidget {
               color: AppColors.fgStrong,
             ),
           ),
-          const SizedBox(height: AppSizes.sm),
-          Row(
-            children: [
-              AppChip(
-                label: 'Fit for $ageRange',
-                tone: AppChipTone.butter,
-                icon: const Icon(Icons.child_care_outlined),
-              ),
-              if (hasSubheader) ...[
-                const SizedBox(width: AppSizes.xs),
-                AppChip(
-                  label: _humanize(categoryLabel),
-                  tone: AppChipTone.mute,
-                ),
-              ],
-            ],
+          const SizedBox(height: AppSizes.xs),
+          Text(
+            'Best for $ageRange',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: AppColors.fgMuted,
+              fontWeight: FontWeight.w600,
+            ),
           ),
           if (hasDietChips) ...[
             const SizedBox(height: AppSizes.sm),
