@@ -9,8 +9,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nibbles/src/common/components/cards/tip_card.dart';
 import 'package:nibbles/src/features/home/widgets/home_empty_state_full.dart';
 
-Widget _wrap(Widget child) =>
-    MaterialApp(home: Scaffold(body: SafeArea(child: child)));
+Widget _wrap(Widget child) => MaterialApp(
+  home: Scaffold(body: SafeArea(child: child)),
+);
 
 void main() {
   testWidgets(
@@ -22,12 +23,7 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       await tester.pumpWidget(
-        _wrap(
-          HomeEmptyStateFull(
-            babyName: 'Oliver',
-            onCreateMealPlan: () {},
-          ),
-        ),
+        _wrap(HomeEmptyStateFull(babyName: 'Oliver', onCreateMealPlan: () {})),
       );
 
       expect(find.text('Ready to Start?'), findsOneWidget);

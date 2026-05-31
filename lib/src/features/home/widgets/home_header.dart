@@ -69,10 +69,7 @@ class HomeHeader extends StatelessWidget {
               ),
             ),
           ),
-          _HeaderAvatar(
-            initial: _avatarInitial,
-            onTap: onAvatarTap,
-          ),
+          _HeaderAvatar(initial: _avatarInitial, onTap: onAvatarTap),
         ],
       ),
     );

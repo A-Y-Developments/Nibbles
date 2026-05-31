@@ -240,13 +240,11 @@ class _ThrowingHomeController extends HomeController {
 // SUT builder
 // ---------------------------------------------------------------------------
 
-Widget _buildSut({
-  required List<Override> overrides,
-  GoRouter? router,
-}) => ProviderScope(
-  overrides: overrides,
-  child: MaterialApp.router(routerConfig: router ?? _testRouter()),
-);
+Widget _buildSut({required List<Override> overrides, GoRouter? router}) =>
+    ProviderScope(
+      overrides: overrides,
+      child: MaterialApp.router(routerConfig: router ?? _testRouter()),
+    );
 
 List<Override> _overridesFor({
   String? babyId,
@@ -257,7 +255,8 @@ List<Override> _overridesFor({
     currentBabyIdProvider.overrideWith((ref) async => babyId),
   ];
   if (babyId != null) {
-    final factory = controllerFactory ??
+    final factory =
+        controllerFactory ??
         () => _FakeHomeController(state ?? _populatedState());
     ovs.add(homeControllerProvider(babyId).overrideWith(factory));
   }
@@ -307,10 +306,7 @@ void main() {
     testWidgets('renders empty state scaffold when no baby exists', (
       tester,
     ) async {
-      await _pump(
-        tester,
-        overrides: _overridesFor(),
-      );
+      await _pump(tester, overrides: _overridesFor());
       expect(find.byType(HomeScreen), findsOneWidget);
       expect(find.byType(HomeEmptyStateFull), findsOneWidget);
     });
@@ -342,9 +338,7 @@ void main() {
       },
     );
 
-    testWidgets("greeting shows baby name + 'today!' age line", (
-      tester,
-    ) async {
+    testWidgets("greeting shows baby name + 'today!' age line", (tester) async {
       await _pump(
         tester,
         overrides: _overridesFor(babyId: _babyId, state: _populatedState()),
@@ -477,27 +471,26 @@ void main() {
   // 2. Navigation taps
   // -------------------------------------------------------------------------
   group('HomeScreen — navigation taps', () {
-    testWidgets(
-      'tap ongoing card -> pushes /home/allergen/tracker',
-      (tester) async {
-        await _pump(
-          tester,
-          overrides: _overridesFor(babyId: _babyId, state: _populatedState()),
-        );
+    testWidgets('tap ongoing card -> pushes /home/allergen/tracker', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        overrides: _overridesFor(babyId: _babyId, state: _populatedState()),
+      );
 
-        // OngoingIntroducedCard wraps an InkWell inside a Material; tap
-        // by descendant from the card type so we hit the tappable region.
-        final inkwell = find.descendant(
-          of: find.byType(OngoingIntroducedCard),
-          matching: find.byType(InkWell),
-        );
-        expect(inkwell, findsOneWidget);
-        await tester.tap(inkwell);
-        await tester.pumpAndSettle();
+      // OngoingIntroducedCard wraps an InkWell inside a Material; tap
+      // by descendant from the card type so we hit the tappable region.
+      final inkwell = find.descendant(
+        of: find.byType(OngoingIntroducedCard),
+        matching: find.byType(InkWell),
+      );
+      expect(inkwell, findsOneWidget);
+      await tester.tap(inkwell);
+      await tester.pumpAndSettle();
 
-        expect(find.text(_allergenTrackerMarker), findsOneWidget);
-      },
-    );
+      expect(find.text(_allergenTrackerMarker), findsOneWidget);
+    });
 
     testWidgets(
       'tap a meal row -> pushes /home/recipes/:recipeId with the entry id',
@@ -511,10 +504,7 @@ void main() {
         await tester.tap(find.text('Breakfast'));
         await tester.pumpAndSettle();
 
-        expect(
-          find.text('RECIPE_DETAIL_STUB:recipe-aaa'),
-          findsOneWidget,
-        );
+        expect(find.text('RECIPE_DETAIL_STUB:recipe-aaa'), findsOneWidget);
       },
     );
 
@@ -530,10 +520,7 @@ void main() {
         await tester.tap(find.text('Lunch'));
         await tester.pumpAndSettle();
 
-        expect(
-          find.text('RECIPE_DETAIL_STUB:recipe-bbb'),
-          findsOneWidget,
-        );
+        expect(find.text('RECIPE_DETAIL_STUB:recipe-bbb'), findsOneWidget);
       },
     );
 
@@ -555,24 +542,20 @@ void main() {
       },
     );
 
-    testWidgets(
-      'tap noMealsToday + Add CTA -> switches to meal plan tab',
-      (tester) async {
-        await _pump(
-          tester,
-          overrides: _overridesFor(
-            babyId: _babyId,
-            state: _noMealsTodayState(),
-          ),
-        );
+    testWidgets('tap noMealsToday + Add CTA -> switches to meal plan tab', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        overrides: _overridesFor(babyId: _babyId, state: _noMealsTodayState()),
+      );
 
-        expect(find.text('+ Add'), findsOneWidget);
-        await tester.tap(find.text('+ Add'));
-        await tester.pumpAndSettle();
+      expect(find.text('+ Add'), findsOneWidget);
+      await tester.tap(find.text('+ Add'));
+      await tester.pumpAndSettle();
 
-        expect(find.text(_mealPlanMarker), findsOneWidget);
-      },
-    );
+      expect(find.text(_mealPlanMarker), findsOneWidget);
+    });
 
     testWidgets(
       'tap empty-state CTA from no-baby branch -> switches to meal plan tab',

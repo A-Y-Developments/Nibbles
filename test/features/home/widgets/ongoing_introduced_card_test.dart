@@ -37,7 +37,10 @@ class _NoopAnalyticsPlatform extends FirebaseAnalyticsPlatform {
 GoRouter _router(Widget child) => GoRouter(
   initialLocation: '/',
   routes: [
-    GoRoute(path: '/', builder: (_, __) => Scaffold(body: child)),
+    GoRoute(
+      path: '/',
+      builder: (_, __) => Scaffold(body: child),
+    ),
     GoRoute(
       path: AppRoute.allergenTracker.path,
       name: AppRoute.allergenTracker.name,
@@ -47,8 +50,7 @@ GoRouter _router(Widget child) => GoRouter(
   ],
 );
 
-Widget _wrap(Widget child) =>
-    MaterialApp.router(routerConfig: _router(child));
+Widget _wrap(Widget child) => MaterialApp.router(routerConfig: _router(child));
 
 void main() {
   setUpAll(() async {
@@ -57,25 +59,24 @@ void main() {
     FirebaseAnalyticsPlatform.instance = _NoopAnalyticsPlatform();
   });
 
-  testWidgets(
-    'no inProgress allergen -> renders SizedBox.shrink (collapses)',
-    (tester) async {
-      await tester.pumpWidget(
-        _wrap(
-          const OngoingIntroducedCard(
-            allergenStatuses: {
-              'peanut': AllergenStatus.safe,
-              'egg': AllergenStatus.notStarted,
-            },
-          ),
+  testWidgets('no inProgress allergen -> renders SizedBox.shrink (collapses)', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrap(
+        const OngoingIntroducedCard(
+          allergenStatuses: {
+            'peanut': AllergenStatus.safe,
+            'egg': AllergenStatus.notStarted,
+          },
         ),
-      );
+      ),
+    );
 
-      expect(find.text('ONGOING INTRODUCED'), findsNothing);
-      // The card collapses; no name labels render.
-      expect(find.text('Peanut'), findsNothing);
-    },
-  );
+    expect(find.text('ONGOING INTRODUCED'), findsNothing);
+    // The card collapses; no name labels render.
+    expect(find.text('Peanut'), findsNothing);
+  });
 
   testWidgets(
     'one inProgress allergen -> renders ONGOING INTRODUCED + name + emoji',
@@ -118,45 +119,43 @@ void main() {
     },
   );
 
-  testWidgets(
-    'logCounts above target -> subhead clamps to 3/3 times',
-    (tester) async {
-      await tester.pumpWidget(
-        _wrap(
-          const OngoingIntroducedCard(
-            allergenStatuses: {'peanut': AllergenStatus.inProgress},
-            logCounts: {'peanut': 7},
-          ),
+  testWidgets('logCounts above target -> subhead clamps to 3/3 times', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrap(
+        const OngoingIntroducedCard(
+          allergenStatuses: {'peanut': AllergenStatus.inProgress},
+          logCounts: {'peanut': 7},
         ),
-      );
-      await tester.pumpAndSettle();
+      ),
+    );
+    await tester.pumpAndSettle();
 
-      expect(find.text('3/3 times '), findsOneWidget);
-    },
-  );
+    expect(find.text('3/3 times '), findsOneWidget);
+  });
 
-  testWidgets(
-    'picks first inProgress in canonical kAllergenKeys order',
-    (tester) async {
-      // egg comes before dairy in the canonical sequence.
-      await tester.pumpWidget(
-        _wrap(
-          const OngoingIntroducedCard(
-            allergenStatuses: {
-              'peanut': AllergenStatus.safe,
-              'egg': AllergenStatus.inProgress,
-              'dairy': AllergenStatus.inProgress,
-            },
-          ),
+  testWidgets('picks first inProgress in canonical kAllergenKeys order', (
+    tester,
+  ) async {
+    // egg comes before dairy in the canonical sequence.
+    await tester.pumpWidget(
+      _wrap(
+        const OngoingIntroducedCard(
+          allergenStatuses: {
+            'peanut': AllergenStatus.safe,
+            'egg': AllergenStatus.inProgress,
+            'dairy': AllergenStatus.inProgress,
+          },
         ),
-      );
-      await tester.pumpAndSettle();
+      ),
+    );
+    await tester.pumpAndSettle();
 
-      expect(find.text('Egg'), findsOneWidget);
-      // Dairy should not be the surfaced card (egg wins by order).
-      expect(find.text('Dairy'), findsNothing);
-    },
-  );
+    expect(find.text('Egg'), findsOneWidget);
+    // Dairy should not be the surfaced card (egg wins by order).
+    expect(find.text('Dairy'), findsNothing);
+  });
 
   testWidgets(
     'multi-word allergen key (tree_nuts) is rendered title-cased with space',
@@ -164,9 +163,7 @@ void main() {
       await tester.pumpWidget(
         _wrap(
           const OngoingIntroducedCard(
-            allergenStatuses: {
-              'tree_nuts': AllergenStatus.inProgress,
-            },
+            allergenStatuses: {'tree_nuts': AllergenStatus.inProgress},
           ),
         ),
       );
@@ -176,24 +173,21 @@ void main() {
     },
   );
 
-  testWidgets(
-    'tapping the card pushes the allergen tracker route',
-    (tester) async {
-      await tester.pumpWidget(
-        _wrap(
-          const OngoingIntroducedCard(
-            allergenStatuses: {
-              'peanut': AllergenStatus.inProgress,
-            },
-          ),
+  testWidgets('tapping the card pushes the allergen tracker route', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrap(
+        const OngoingIntroducedCard(
+          allergenStatuses: {'peanut': AllergenStatus.inProgress},
         ),
-      );
-      await tester.pumpAndSettle();
+      ),
+    );
+    await tester.pumpAndSettle();
 
-      await tester.tap(find.byType(InkWell));
-      await tester.pumpAndSettle();
+    await tester.tap(find.byType(InkWell));
+    await tester.pumpAndSettle();
 
-      expect(find.text('TRACKER_STUB'), findsOneWidget);
-    },
-  );
+    expect(find.text('TRACKER_STUB'), findsOneWidget);
+  });
 }

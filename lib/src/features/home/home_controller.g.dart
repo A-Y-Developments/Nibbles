@@ -6,7 +6,7 @@ part of 'home_controller.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$homeControllerHash() => r'f313f7e94ae43aa34e007930bfdfefe42f6cb1ce';
+String _$homeControllerHash() => r'9c4e2f52578057334fc6ecf5081ee2c437c2ccc2';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -36,12 +36,18 @@ abstract class _$HomeController
   FutureOr<HomeState> build(String babyId);
 }
 
-/// NIB-86: Redesigned Home dashboard controller.
+/// NIB-86: Redesigned Home dashboard controller (extended for NIB-77).
 ///
 /// Parallel-fetches:
 ///  1. The current baby profile (NIB-65 header + greeting).
-///  2. Per-allergen derived statuses (NIB-126).
+///  2. Per-allergen logs (NIB-126 status derivation + NIB-77 log counts
+///     for the ongoing card "X/3 times" subhead and segment fill).
 ///  3. Rolling-7 meal plan entries (NIB-59), filtered to today.
+///
+/// After the meal-plan entries resolve, the controller hydrates each unique
+/// `recipeId` into a [Recipe] map so the today's-meals card can render
+/// recipe titles + allergen/nutrition chips. Recipe fetch failures are P3 —
+/// the controller falls back to a partial map without throwing.
 ///
 /// A missing baby is NOT an error — the screen renders the full empty-state
 /// placeholder. Allergen or meal-plan fetch failures throw via the existing
@@ -51,12 +57,18 @@ abstract class _$HomeController
 @ProviderFor(HomeController)
 const homeControllerProvider = HomeControllerFamily();
 
-/// NIB-86: Redesigned Home dashboard controller.
+/// NIB-86: Redesigned Home dashboard controller (extended for NIB-77).
 ///
 /// Parallel-fetches:
 ///  1. The current baby profile (NIB-65 header + greeting).
-///  2. Per-allergen derived statuses (NIB-126).
+///  2. Per-allergen logs (NIB-126 status derivation + NIB-77 log counts
+///     for the ongoing card "X/3 times" subhead and segment fill).
 ///  3. Rolling-7 meal plan entries (NIB-59), filtered to today.
+///
+/// After the meal-plan entries resolve, the controller hydrates each unique
+/// `recipeId` into a [Recipe] map so the today's-meals card can render
+/// recipe titles + allergen/nutrition chips. Recipe fetch failures are P3 —
+/// the controller falls back to a partial map without throwing.
 ///
 /// A missing baby is NOT an error — the screen renders the full empty-state
 /// placeholder. Allergen or meal-plan fetch failures throw via the existing
@@ -64,12 +76,18 @@ const homeControllerProvider = HomeControllerFamily();
 ///
 /// Copied from [HomeController].
 class HomeControllerFamily extends Family<AsyncValue<HomeState>> {
-  /// NIB-86: Redesigned Home dashboard controller.
+  /// NIB-86: Redesigned Home dashboard controller (extended for NIB-77).
   ///
   /// Parallel-fetches:
   ///  1. The current baby profile (NIB-65 header + greeting).
-  ///  2. Per-allergen derived statuses (NIB-126).
+  ///  2. Per-allergen logs (NIB-126 status derivation + NIB-77 log counts
+  ///     for the ongoing card "X/3 times" subhead and segment fill).
   ///  3. Rolling-7 meal plan entries (NIB-59), filtered to today.
+  ///
+  /// After the meal-plan entries resolve, the controller hydrates each unique
+  /// `recipeId` into a [Recipe] map so the today's-meals card can render
+  /// recipe titles + allergen/nutrition chips. Recipe fetch failures are P3 —
+  /// the controller falls back to a partial map without throwing.
   ///
   /// A missing baby is NOT an error — the screen renders the full empty-state
   /// placeholder. Allergen or meal-plan fetch failures throw via the existing
@@ -78,12 +96,18 @@ class HomeControllerFamily extends Family<AsyncValue<HomeState>> {
   /// Copied from [HomeController].
   const HomeControllerFamily();
 
-  /// NIB-86: Redesigned Home dashboard controller.
+  /// NIB-86: Redesigned Home dashboard controller (extended for NIB-77).
   ///
   /// Parallel-fetches:
   ///  1. The current baby profile (NIB-65 header + greeting).
-  ///  2. Per-allergen derived statuses (NIB-126).
+  ///  2. Per-allergen logs (NIB-126 status derivation + NIB-77 log counts
+  ///     for the ongoing card "X/3 times" subhead and segment fill).
   ///  3. Rolling-7 meal plan entries (NIB-59), filtered to today.
+  ///
+  /// After the meal-plan entries resolve, the controller hydrates each unique
+  /// `recipeId` into a [Recipe] map so the today's-meals card can render
+  /// recipe titles + allergen/nutrition chips. Recipe fetch failures are P3 —
+  /// the controller falls back to a partial map without throwing.
   ///
   /// A missing baby is NOT an error — the screen renders the full empty-state
   /// placeholder. Allergen or meal-plan fetch failures throw via the existing
@@ -116,12 +140,18 @@ class HomeControllerFamily extends Family<AsyncValue<HomeState>> {
   String? get name => r'homeControllerProvider';
 }
 
-/// NIB-86: Redesigned Home dashboard controller.
+/// NIB-86: Redesigned Home dashboard controller (extended for NIB-77).
 ///
 /// Parallel-fetches:
 ///  1. The current baby profile (NIB-65 header + greeting).
-///  2. Per-allergen derived statuses (NIB-126).
+///  2. Per-allergen logs (NIB-126 status derivation + NIB-77 log counts
+///     for the ongoing card "X/3 times" subhead and segment fill).
 ///  3. Rolling-7 meal plan entries (NIB-59), filtered to today.
+///
+/// After the meal-plan entries resolve, the controller hydrates each unique
+/// `recipeId` into a [Recipe] map so the today's-meals card can render
+/// recipe titles + allergen/nutrition chips. Recipe fetch failures are P3 —
+/// the controller falls back to a partial map without throwing.
 ///
 /// A missing baby is NOT an error — the screen renders the full empty-state
 /// placeholder. Allergen or meal-plan fetch failures throw via the existing
@@ -130,12 +160,18 @@ class HomeControllerFamily extends Family<AsyncValue<HomeState>> {
 /// Copied from [HomeController].
 class HomeControllerProvider
     extends AutoDisposeAsyncNotifierProviderImpl<HomeController, HomeState> {
-  /// NIB-86: Redesigned Home dashboard controller.
+  /// NIB-86: Redesigned Home dashboard controller (extended for NIB-77).
   ///
   /// Parallel-fetches:
   ///  1. The current baby profile (NIB-65 header + greeting).
-  ///  2. Per-allergen derived statuses (NIB-126).
+  ///  2. Per-allergen logs (NIB-126 status derivation + NIB-77 log counts
+  ///     for the ongoing card "X/3 times" subhead and segment fill).
   ///  3. Rolling-7 meal plan entries (NIB-59), filtered to today.
+  ///
+  /// After the meal-plan entries resolve, the controller hydrates each unique
+  /// `recipeId` into a [Recipe] map so the today's-meals card can render
+  /// recipe titles + allergen/nutrition chips. Recipe fetch failures are P3 —
+  /// the controller falls back to a partial map without throwing.
   ///
   /// A missing baby is NOT an error — the screen renders the full empty-state
   /// placeholder. Allergen or meal-plan fetch failures throw via the existing

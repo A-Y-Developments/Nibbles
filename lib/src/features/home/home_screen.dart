@@ -81,9 +81,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return babyIdAsync.when(
       loading: () => const _HomeLoadingScaffold(),
-      error: (_, __) => const _HomeErrorScaffold(
-        message: 'Could not load baby profile.',
-      ),
+      error: (_, __) =>
+          const _HomeErrorScaffold(message: 'Could not load baby profile.'),
       data: (babyId) {
         if (babyId == null) {
           return Scaffold(
@@ -93,10 +92,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           );
         }
-        return _HomeBody(
-          babyId: babyId,
-          onCreateFirstMeal: _onCreateFirstMeal,
-        );
+        return _HomeBody(babyId: babyId, onCreateFirstMeal: _onCreateFirstMeal);
       },
     );
   }
@@ -118,10 +114,8 @@ class _HomeBody extends ConsumerWidget {
         message: err is AppException ? err.message : 'Something went wrong.',
         onRetry: () => ref.invalidate(homeControllerProvider(babyId)),
       ),
-      data: (state) => _HomeContent(
-        state: state,
-        onCreateFirstMeal: onCreateFirstMeal,
-      ),
+      data: (state) =>
+          _HomeContent(state: state, onCreateFirstMeal: onCreateFirstMeal),
     );
   }
 }
@@ -162,10 +156,7 @@ class _HomeContent extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              HomeHeader(
-                babyName: baby.name,
-                ageMonths: ageMonths,
-              ),
+              HomeHeader(babyName: baby.name, ageMonths: ageMonths),
               const SizedBox(height: AppSizes.md),
               GreetingCard(
                 babyName: baby.name,
@@ -219,10 +210,7 @@ class _HomeContent extends StatelessWidget {
         return [
           const TodayDateLabel(),
           const SizedBox(height: AppSizes.sm),
-          ReadyToStartCard(
-            babyName: babyName,
-            onPressed: onCreateFirstMeal,
-          ),
+          ReadyToStartCard(babyName: babyName, onPressed: onCreateFirstMeal),
         ];
       case HomeVariant.readyToStartWithOngoing:
         return [
@@ -235,10 +223,7 @@ class _HomeContent extends StatelessWidget {
           const SizedBox(height: AppSizes.md),
           const TodayDateLabel(),
           const SizedBox(height: AppSizes.sm),
-          ReadyToStartCard(
-            babyName: babyName,
-            onPressed: onCreateFirstMeal,
-          ),
+          ReadyToStartCard(babyName: babyName, onPressed: onCreateFirstMeal),
         ];
       case HomeVariant.noMealsToday:
         return [
@@ -251,10 +236,7 @@ class _HomeContent extends StatelessWidget {
           const SizedBox(height: AppSizes.md),
           const TodayDateLabel(),
           const SizedBox(height: AppSizes.sm),
-          HomeNoMealsState(
-            babyName: babyName,
-            onAddMeal: onCreateFirstMeal,
-          ),
+          HomeNoMealsState(babyName: babyName, onAddMeal: onCreateFirstMeal),
         ];
       case HomeVariant.populated:
         return [

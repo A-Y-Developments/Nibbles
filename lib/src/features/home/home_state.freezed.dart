@@ -20,7 +20,9 @@ mixin _$HomeState {
   Baby? get baby => throw _privateConstructorUsedError;
   Map<String, AllergenStatus> get allergenStatuses =>
       throw _privateConstructorUsedError;
+  Map<String, int> get allergenLogCounts => throw _privateConstructorUsedError;
   List<MealPlanEntry> get todaysMeals => throw _privateConstructorUsedError;
+  Map<String, Recipe> get todaysRecipes => throw _privateConstructorUsedError;
   bool get hasAnyPlannedMeal => throw _privateConstructorUsedError;
 
   /// Create a copy of HomeState
@@ -38,7 +40,9 @@ abstract class $HomeStateCopyWith<$Res> {
   $Res call({
     Baby? baby,
     Map<String, AllergenStatus> allergenStatuses,
+    Map<String, int> allergenLogCounts,
     List<MealPlanEntry> todaysMeals,
+    Map<String, Recipe> todaysRecipes,
     bool hasAnyPlannedMeal,
   });
 
@@ -62,7 +66,9 @@ class _$HomeStateCopyWithImpl<$Res, $Val extends HomeState>
   $Res call({
     Object? baby = freezed,
     Object? allergenStatuses = null,
+    Object? allergenLogCounts = null,
     Object? todaysMeals = null,
+    Object? todaysRecipes = null,
     Object? hasAnyPlannedMeal = null,
   }) {
     return _then(
@@ -75,10 +81,18 @@ class _$HomeStateCopyWithImpl<$Res, $Val extends HomeState>
                 ? _value.allergenStatuses
                 : allergenStatuses // ignore: cast_nullable_to_non_nullable
                       as Map<String, AllergenStatus>,
+            allergenLogCounts: null == allergenLogCounts
+                ? _value.allergenLogCounts
+                : allergenLogCounts // ignore: cast_nullable_to_non_nullable
+                      as Map<String, int>,
             todaysMeals: null == todaysMeals
                 ? _value.todaysMeals
                 : todaysMeals // ignore: cast_nullable_to_non_nullable
                       as List<MealPlanEntry>,
+            todaysRecipes: null == todaysRecipes
+                ? _value.todaysRecipes
+                : todaysRecipes // ignore: cast_nullable_to_non_nullable
+                      as Map<String, Recipe>,
             hasAnyPlannedMeal: null == hasAnyPlannedMeal
                 ? _value.hasAnyPlannedMeal
                 : hasAnyPlannedMeal // ignore: cast_nullable_to_non_nullable
@@ -115,7 +129,9 @@ abstract class _$$HomeStateImplCopyWith<$Res>
   $Res call({
     Baby? baby,
     Map<String, AllergenStatus> allergenStatuses,
+    Map<String, int> allergenLogCounts,
     List<MealPlanEntry> todaysMeals,
+    Map<String, Recipe> todaysRecipes,
     bool hasAnyPlannedMeal,
   });
 
@@ -139,7 +155,9 @@ class __$$HomeStateImplCopyWithImpl<$Res>
   $Res call({
     Object? baby = freezed,
     Object? allergenStatuses = null,
+    Object? allergenLogCounts = null,
     Object? todaysMeals = null,
+    Object? todaysRecipes = null,
     Object? hasAnyPlannedMeal = null,
   }) {
     return _then(
@@ -152,10 +170,18 @@ class __$$HomeStateImplCopyWithImpl<$Res>
             ? _value._allergenStatuses
             : allergenStatuses // ignore: cast_nullable_to_non_nullable
                   as Map<String, AllergenStatus>,
+        allergenLogCounts: null == allergenLogCounts
+            ? _value._allergenLogCounts
+            : allergenLogCounts // ignore: cast_nullable_to_non_nullable
+                  as Map<String, int>,
         todaysMeals: null == todaysMeals
             ? _value._todaysMeals
             : todaysMeals // ignore: cast_nullable_to_non_nullable
                   as List<MealPlanEntry>,
+        todaysRecipes: null == todaysRecipes
+            ? _value._todaysRecipes
+            : todaysRecipes // ignore: cast_nullable_to_non_nullable
+                  as Map<String, Recipe>,
         hasAnyPlannedMeal: null == hasAnyPlannedMeal
             ? _value.hasAnyPlannedMeal
             : hasAnyPlannedMeal // ignore: cast_nullable_to_non_nullable
@@ -172,10 +198,14 @@ class _$HomeStateImpl extends _HomeState {
     this.baby,
     final Map<String, AllergenStatus> allergenStatuses =
         const <String, AllergenStatus>{},
+    final Map<String, int> allergenLogCounts = const <String, int>{},
     final List<MealPlanEntry> todaysMeals = const <MealPlanEntry>[],
+    final Map<String, Recipe> todaysRecipes = const <String, Recipe>{},
     this.hasAnyPlannedMeal = false,
   }) : _allergenStatuses = allergenStatuses,
+       _allergenLogCounts = allergenLogCounts,
        _todaysMeals = todaysMeals,
+       _todaysRecipes = todaysRecipes,
        super._();
 
   @override
@@ -189,6 +219,16 @@ class _$HomeStateImpl extends _HomeState {
     return EqualUnmodifiableMapView(_allergenStatuses);
   }
 
+  final Map<String, int> _allergenLogCounts;
+  @override
+  @JsonKey()
+  Map<String, int> get allergenLogCounts {
+    if (_allergenLogCounts is EqualUnmodifiableMapView)
+      return _allergenLogCounts;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(_allergenLogCounts);
+  }
+
   final List<MealPlanEntry> _todaysMeals;
   @override
   @JsonKey()
@@ -198,13 +238,22 @@ class _$HomeStateImpl extends _HomeState {
     return EqualUnmodifiableListView(_todaysMeals);
   }
 
+  final Map<String, Recipe> _todaysRecipes;
+  @override
+  @JsonKey()
+  Map<String, Recipe> get todaysRecipes {
+    if (_todaysRecipes is EqualUnmodifiableMapView) return _todaysRecipes;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(_todaysRecipes);
+  }
+
   @override
   @JsonKey()
   final bool hasAnyPlannedMeal;
 
   @override
   String toString() {
-    return 'HomeState(baby: $baby, allergenStatuses: $allergenStatuses, todaysMeals: $todaysMeals, hasAnyPlannedMeal: $hasAnyPlannedMeal)';
+    return 'HomeState(baby: $baby, allergenStatuses: $allergenStatuses, allergenLogCounts: $allergenLogCounts, todaysMeals: $todaysMeals, todaysRecipes: $todaysRecipes, hasAnyPlannedMeal: $hasAnyPlannedMeal)';
   }
 
   @override
@@ -218,8 +267,16 @@ class _$HomeStateImpl extends _HomeState {
               _allergenStatuses,
             ) &&
             const DeepCollectionEquality().equals(
+              other._allergenLogCounts,
+              _allergenLogCounts,
+            ) &&
+            const DeepCollectionEquality().equals(
               other._todaysMeals,
               _todaysMeals,
+            ) &&
+            const DeepCollectionEquality().equals(
+              other._todaysRecipes,
+              _todaysRecipes,
             ) &&
             (identical(other.hasAnyPlannedMeal, hasAnyPlannedMeal) ||
                 other.hasAnyPlannedMeal == hasAnyPlannedMeal));
@@ -230,7 +287,9 @@ class _$HomeStateImpl extends _HomeState {
     runtimeType,
     baby,
     const DeepCollectionEquality().hash(_allergenStatuses),
+    const DeepCollectionEquality().hash(_allergenLogCounts),
     const DeepCollectionEquality().hash(_todaysMeals),
+    const DeepCollectionEquality().hash(_todaysRecipes),
     hasAnyPlannedMeal,
   );
 
@@ -247,7 +306,9 @@ abstract class _HomeState extends HomeState {
   const factory _HomeState({
     final Baby? baby,
     final Map<String, AllergenStatus> allergenStatuses,
+    final Map<String, int> allergenLogCounts,
     final List<MealPlanEntry> todaysMeals,
+    final Map<String, Recipe> todaysRecipes,
     final bool hasAnyPlannedMeal,
   }) = _$HomeStateImpl;
   const _HomeState._() : super._();
@@ -257,7 +318,11 @@ abstract class _HomeState extends HomeState {
   @override
   Map<String, AllergenStatus> get allergenStatuses;
   @override
+  Map<String, int> get allergenLogCounts;
+  @override
   List<MealPlanEntry> get todaysMeals;
+  @override
+  Map<String, Recipe> get todaysRecipes;
   @override
   bool get hasAnyPlannedMeal;
 

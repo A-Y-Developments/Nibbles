@@ -58,10 +58,7 @@ class HomeNoMealsState extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _MealsHeaderRow(
-            filled: filledSlots,
-            total: scheduledSlots,
-          ),
+          _MealsHeaderRow(filled: filledSlots, total: scheduledSlots),
           const SizedBox(height: AppSizes.sm),
           AppCard(
             variant: AppCardVariant.dashed,

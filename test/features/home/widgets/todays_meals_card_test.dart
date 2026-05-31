@@ -45,7 +45,10 @@ class _NoopAnalyticsPlatform extends FirebaseAnalyticsPlatform {
 GoRouter _router(Widget child) => GoRouter(
   initialLocation: '/',
   routes: [
-    GoRoute(path: '/', builder: (_, __) => Scaffold(body: child)),
+    GoRoute(
+      path: '/',
+      builder: (_, __) => Scaffold(body: child),
+    ),
     GoRoute(
       path: AppRoute.recipeDetail.path,
       name: AppRoute.recipeDetail.name,
@@ -58,8 +61,7 @@ GoRouter _router(Widget child) => GoRouter(
   ],
 );
 
-Widget _wrap(Widget child) =>
-    MaterialApp.router(routerConfig: _router(child));
+Widget _wrap(Widget child) => MaterialApp.router(routerConfig: _router(child));
 
 MealPlanEntry _entry(String id, String recipeId, {String? mealTime}) =>
     MealPlanEntry(
@@ -96,58 +98,56 @@ void main() {
   });
 
   group('TodaysMealsCard — coverage banner gate', () {
-    testWidgets(
-      'below target (1/2) -> "Great job!" banner is NOT rendered',
-      (tester) async {
-        tester.view.physicalSize = const Size(1080, 2400);
-        tester.view.devicePixelRatio = 1;
-        addTearDown(tester.view.resetPhysicalSize);
-        addTearDown(tester.view.resetDevicePixelRatio);
+    testWidgets('below target (1/2) -> "Great job!" banner is NOT rendered', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
 
-        await tester.pumpWidget(
-          _wrap(
-            TodaysMealsCard(
-              todaysMeals: [_entry('m1', 'r-a', mealTime: 'breakfast')],
-            ),
+      await tester.pumpWidget(
+        _wrap(
+          TodaysMealsCard(
+            todaysMeals: [_entry('m1', 'r-a', mealTime: 'breakfast')],
           ),
-        );
-        await tester.pumpAndSettle();
+        ),
+      );
+      await tester.pumpAndSettle();
 
-        expect(
-          find.text('Great job! Everything important is covered'),
-          findsNothing,
-        );
-        expect(find.text('1/2'), findsOneWidget);
-      },
-    );
+      expect(
+        find.text('Great job! Everything important is covered'),
+        findsNothing,
+      );
+      expect(find.text('1/2'), findsOneWidget);
+    });
 
-    testWidgets(
-      'at target (2/2) -> "Great job!" banner renders (verbatim)',
-      (tester) async {
-        tester.view.physicalSize = const Size(1080, 2400);
-        tester.view.devicePixelRatio = 1;
-        addTearDown(tester.view.resetPhysicalSize);
-        addTearDown(tester.view.resetDevicePixelRatio);
+    testWidgets('at target (2/2) -> "Great job!" banner renders (verbatim)', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
 
-        await tester.pumpWidget(
-          _wrap(
-            TodaysMealsCard(
-              todaysMeals: [
-                _entry('m1', 'r-a', mealTime: 'breakfast'),
-                _entry('m2', 'r-b', mealTime: 'lunch'),
-              ],
-            ),
+      await tester.pumpWidget(
+        _wrap(
+          TodaysMealsCard(
+            todaysMeals: [
+              _entry('m1', 'r-a', mealTime: 'breakfast'),
+              _entry('m2', 'r-b', mealTime: 'lunch'),
+            ],
           ),
-        );
-        await tester.pumpAndSettle();
+        ),
+      );
+      await tester.pumpAndSettle();
 
-        expect(
-          find.text('Great job! Everything important is covered'),
-          findsOneWidget,
-        );
-        expect(find.text('2/2'), findsOneWidget);
-      },
-    );
+      expect(
+        find.text('Great job! Everything important is covered'),
+        findsOneWidget,
+      );
+      expect(find.text('2/2'), findsOneWidget);
+    });
   });
 
   group('TodaysMealsCard — meal rows', () {
@@ -201,26 +201,21 @@ void main() {
       },
     );
 
-    testWidgets(
-      'no recipe + no mealTime -> renders generic "Meal" fallback',
-      (tester) async {
-        tester.view.physicalSize = const Size(1080, 2400);
-        tester.view.devicePixelRatio = 1;
-        addTearDown(tester.view.resetPhysicalSize);
-        addTearDown(tester.view.resetDevicePixelRatio);
+    testWidgets('no recipe + no mealTime -> renders generic "Meal" fallback', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
 
-        await tester.pumpWidget(
-          _wrap(
-            TodaysMealsCard(
-              todaysMeals: [_entry('m1', 'r-a')],
-            ),
-          ),
-        );
-        await tester.pumpAndSettle();
+      await tester.pumpWidget(
+        _wrap(TodaysMealsCard(todaysMeals: [_entry('m1', 'r-a')])),
+      );
+      await tester.pumpAndSettle();
 
-        expect(find.text('Meal'), findsOneWidget);
-      },
-    );
+      expect(find.text('Meal'), findsOneWidget);
+    });
 
     testWidgets(
       'empty todaysMeals -> inline "No meals today" placeholder + 0/2 counter',
@@ -230,9 +225,7 @@ void main() {
         addTearDown(tester.view.resetPhysicalSize);
         addTearDown(tester.view.resetDevicePixelRatio);
 
-        await tester.pumpWidget(
-          _wrap(const TodaysMealsCard(todaysMeals: [])),
-        );
+        await tester.pumpWidget(_wrap(const TodaysMealsCard(todaysMeals: [])));
         await tester.pumpAndSettle();
 
         expect(find.text('No meals today'), findsOneWidget);
@@ -279,36 +272,35 @@ void main() {
       },
     );
 
-    testWidgets(
-      'more than 2 visible tags -> "+N" overflow chip renders',
-      (tester) async {
-        tester.view.physicalSize = const Size(1080, 2400);
-        tester.view.devicePixelRatio = 1;
-        addTearDown(tester.view.resetPhysicalSize);
-        addTearDown(tester.view.resetDevicePixelRatio);
+    testWidgets('more than 2 visible tags -> "+N" overflow chip renders', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
 
-        await tester.pumpWidget(
-          _wrap(
-            TodaysMealsCard(
-              todaysMeals: [_entry('m1', 'r-a')],
-              recipes: {
-                'r-a': _recipe(
-                  category: 'fruit',
-                  nutritionTags: const ['Iron Rich', 'Vitamin A', 'Fiber'],
-                ),
-              },
-            ),
+      await tester.pumpWidget(
+        _wrap(
+          TodaysMealsCard(
+            todaysMeals: [_entry('m1', 'r-a')],
+            recipes: {
+              'r-a': _recipe(
+                category: 'fruit',
+                nutritionTags: const ['Iron Rich', 'Vitamin A', 'Fiber'],
+              ),
+            },
           ),
-        );
-        await tester.pumpAndSettle();
+        ),
+      );
+      await tester.pumpAndSettle();
 
-        // Visible: category 'Fruit' + first nutritionTag 'Iron Rich'.
-        expect(find.text('Fruit'), findsOneWidget);
-        expect(find.text('Iron Rich'), findsOneWidget);
-        // Overflow: 4 total - 2 visible = +2.
-        expect(find.text('+2'), findsOneWidget);
-      },
-    );
+      // Visible: category 'Fruit' + first nutritionTag 'Iron Rich'.
+      expect(find.text('Fruit'), findsOneWidget);
+      expect(find.text('Iron Rich'), findsOneWidget);
+      // Overflow: 4 total - 2 visible = +2.
+      expect(find.text('+2'), findsOneWidget);
+    });
   });
 
   group('TodaysMealsCard — guidance copy (verbatim audit strings)', () {
@@ -320,9 +312,7 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      await tester.pumpWidget(
-        _wrap(const TodaysMealsCard(todaysMeals: [])),
-      );
+      await tester.pumpWidget(_wrap(const TodaysMealsCard(todaysMeals: [])));
       await tester.pumpAndSettle();
 
       // Title starts with "Today, " — full format is verified by month/day
