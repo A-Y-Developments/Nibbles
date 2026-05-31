@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/brand/quatrefoil.dart';
@@ -7,43 +6,34 @@ import 'package:nibbles/src/common/components/brand/quatrefoil.dart';
 /// Generic 'no results' empty state for the Recipe Library search
 /// (Figma 971:8813 / 971:8828).
 ///
-/// Centered butter-flower-glyph ([Quatrefoil]) + 16/700 title + caption
-/// subtitle. Copy is intentionally generic — the search query is NOT
-/// interpolated into the message.
+/// Centered butter-flower-glyph ([Quatrefoil], 136 per Figma Group74 box) +
+/// 16/700 title. Verbatim copy per Figma — smart apostrophe (U+2019), no
+/// subtitle. Search query is NOT interpolated into the message.
+///
+/// Renders the same in both keyboard-up (971:8813) and keyboard-dismissed
+/// (971:8828) variants — Scaffold's default `resizeToAvoidBottomInset` lets
+/// the `Center` re-centre against the available height when the OS keyboard
+/// is shown or hidden.
 class RecipeSearchEmpty extends StatelessWidget {
   const RecipeSearchEmpty({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Center(
+    return const Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(
+        padding: EdgeInsets.symmetric(
           horizontal: AppSizes.pagePaddingH,
           vertical: AppSizes.xl,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Quatrefoil(),
-            const SizedBox(height: AppSizes.sm + 2),
-            const Text(
-              "We couldn't find any recipes",
+            Quatrefoil(size: 136),
+            SizedBox(height: AppSizes.sm + 2),
+            Text(
+              'We couldn’t find any recipes',
               textAlign: TextAlign.center,
               style: AppTypography.emptyStateTitle,
-            ),
-            const SizedBox(height: AppSizes.xs),
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 240),
-              child: Text(
-                'Try a different keyword or clear the search to browse '
-                'every category.',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: AppColors.fgFaint,
-                ),
-              ),
             ),
           ],
         ),

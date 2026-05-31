@@ -273,7 +273,8 @@ void main() {
         expect(find.byType(RecipeSearchResults), findsNothing);
         expect(find.byType(RecipeCategoryRow), findsNothing);
         // Generic copy — does NOT interpolate the query.
-        expect(find.textContaining("We couldn't find"), findsOneWidget);
+        // Smart apostrophe (U+2019) per Figma 971:8813 verbatim.
+        expect(find.textContaining('We couldn’t find'), findsOneWidget);
         expect(find.textContaining('zzzunknown'), findsNothing);
       },
     );
