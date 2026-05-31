@@ -12,7 +12,7 @@ String _$babySetupLoadingControllerHash() =>
 /// NIB-137 — passive transition shown after the consent step submits
 /// successfully and before the user lands on /home.
 ///
-/// The actual `createBaby` future is owned by [OnboardingController.submit]
+/// The actual `createBaby` future is owned by `OnboardingController.submit`
 /// (NIB-100) — by the time this screen mounts, the baby already exists and
 /// `onboarding_done` is true. So this controller only owns the *dwell*:
 ///

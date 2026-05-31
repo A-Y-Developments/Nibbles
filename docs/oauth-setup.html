@@ -1,0 +1,835 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Nibbles — OAuth + Supabase Setup Walkthrough</title>
+<style>
+  :root {
+    --bg: #fffdf8;
+    --surface: #ffffff;
+    --ink: #2c2c2c;
+    --muted: #6b7280;
+    --line: #eaeaea;
+    --green: #3d5236;
+    --green-soft: #e8eee5;
+    --butter: #fffcd5;
+    --butter-deep: #eaec8c;
+    --coral: #f8a175;
+    --coral-soft: #fdf2ec;
+    --burgundy: #77393b;
+    --done: #38a169;
+    --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.04);
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 32px 24px 64px; }
+
+  header.hero {
+    border-radius: 20px;
+    background: linear-gradient(160deg, var(--butter) 0%, var(--bg) 70%);
+    padding: 32px 28px;
+    margin-bottom: 28px;
+    box-shadow: var(--shadow);
+  }
+  header.hero h1 { margin: 0 0 8px; font-size: 28px; letter-spacing: -0.02em; }
+  header.hero p { margin: 0; color: var(--muted); font-size: 15px; }
+
+  .progress-bar {
+    height: 8px;
+    background: var(--line);
+    border-radius: 999px;
+    overflow: hidden;
+    margin: 16px 0 0;
+  }
+  .progress-bar > div {
+    height: 100%;
+    background: var(--green);
+    width: 0;
+    transition: width .25s ease;
+  }
+  .progress-label {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  nav.toc {
+    position: sticky;
+    top: 16px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow);
+  }
+  nav.toc strong { display: block; margin-bottom: 8px; font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  nav.toc a { display: block; padding: 4px 0; color: var(--ink); text-decoration: none; font-size: 14px; }
+  nav.toc a:hover { color: var(--green); }
+  nav.toc .num { display: inline-block; width: 22px; color: var(--coral); font-variant-numeric: tabular-nums; }
+
+  section.card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 24px 24px 12px;
+    margin-bottom: 22px;
+    box-shadow: var(--shadow);
+  }
+  section.card > h2 {
+    margin: 0 0 12px;
+    font-size: 22px;
+    letter-spacing: -0.01em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  section.card > h2 .badge {
+    background: var(--green-soft);
+    color: var(--green);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 999px;
+    letter-spacing: 0.04em;
+  }
+
+  section.card h3 {
+    margin: 20px 0 8px;
+    font-size: 16px;
+    color: var(--green);
+  }
+
+  .step {
+    display: flex;
+    gap: 14px;
+    padding: 12px 0;
+    border-top: 1px dashed var(--line);
+  }
+  .step:first-of-type { border-top: 0; }
+  .step .check {
+    flex: 0 0 auto;
+    margin-top: 2px;
+  }
+  .step .check input {
+    width: 20px; height: 20px;
+    accent-color: var(--green);
+    cursor: pointer;
+  }
+  .step .body { flex: 1; min-width: 0; }
+  .step .body p { margin: 0 0 6px; }
+  .step.done .body p:first-of-type { text-decoration: line-through; color: var(--muted); }
+  .step .body small { color: var(--muted); font-size: 13px; }
+
+  code, kbd {
+    font-family: var(--mono);
+    background: #f4f4f0;
+    border: 1px solid var(--line);
+    padding: 1px 6px;
+    border-radius: 6px;
+    font-size: 13px;
+  }
+  kbd { background: var(--butter); }
+
+  pre {
+    background: #1c1f20;
+    color: #f3f3f0;
+    padding: 14px 16px;
+    border-radius: 10px;
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.5;
+    margin: 10px 0;
+    position: relative;
+  }
+  pre .copy-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(255,255,255,0.08);
+    color: #f3f3f0;
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 6px;
+    font-size: 11px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  pre .copy-btn:hover { background: rgba(255,255,255,0.16); }
+  pre .copy-btn.copied { background: var(--done); border-color: var(--done); color: #fff; }
+
+  .field {
+    display: grid;
+    grid-template-columns: minmax(0, 200px) 1fr;
+    gap: 8px;
+    align-items: center;
+    margin: 6px 0;
+    padding: 8px 12px;
+    background: var(--coral-soft);
+    border-radius: 8px;
+    font-size: 13px;
+  }
+  .field .label { color: var(--burgundy); font-weight: 600; }
+  .field .value { font-family: var(--mono); word-break: break-all; }
+
+  .alert {
+    background: var(--butter);
+    border-left: 4px solid var(--butter-deep);
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin: 14px 0;
+    font-size: 14px;
+  }
+  .alert.warn {
+    background: #fff3e6;
+    border-left-color: var(--coral);
+  }
+  .alert.tip { background: var(--green-soft); border-left-color: var(--green); }
+
+  table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 14px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+  a.btn {
+    display: inline-block;
+    background: var(--green);
+    color: #fffdf8;
+    text-decoration: none;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    margin: 4px 0;
+  }
+  a.btn:hover { background: #2f4029; }
+
+  .input-helper {
+    display: block;
+    margin: 6px 0;
+    background: #fff;
+    border: 1px dashed var(--coral);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-family: var(--mono);
+    font-size: 13px;
+    width: 100%;
+  }
+  .input-helper:focus { outline: 2px solid var(--coral-soft); border-color: var(--green); }
+
+  .completion-banner {
+    display: none;
+    background: var(--green);
+    color: #fffdf8;
+    border-radius: 14px;
+    padding: 22px;
+    text-align: center;
+    margin: 24px 0;
+  }
+  .completion-banner.show { display: block; }
+  .completion-banner h2 { margin: 0 0 6px; color: #fffdf8; }
+
+  footer { text-align: center; color: var(--muted); font-size: 13px; margin-top: 28px; }
+  footer a { color: var(--green); }
+
+  @media (max-width: 640px) {
+    .wrap { padding: 18px 14px 48px; }
+    .field { grid-template-columns: 1fr; }
+    nav.toc { position: static; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <h1>Nibbles OAuth + Supabase Walkthrough</h1>
+  <p>Step-by-step setup for Google sign-in, Apple sign-in, and the consent migration. Check items off as you go — progress is saved locally in your browser.</p>
+  <div class="progress-bar"><div id="bar"></div></div>
+  <div class="progress-label"><span id="done">0</span> of <span id="total">0</span> steps complete</div>
+</header>
+
+<nav class="toc">
+  <strong>Sections</strong>
+  <a href="#prereqs"><span class="num">0.</span> Prerequisites</a>
+  <a href="#consents-migration"><span class="num">1.</span> Apply consents migration</a>
+  <a href="#google"><span class="num">2.</span> Google sign-in</a>
+  <a href="#apple"><span class="num">3.</span> Apple sign-in</a>
+  <a href="#supabase"><span class="num">4.</span> Supabase dashboard</a>
+  <a href="#code-wiring"><span class="num">5.</span> Code wiring (paste IDs here)</a>
+  <a href="#verify"><span class="num">6.</span> Verify it works</a>
+</nav>
+
+<div class="completion-banner" id="banner">
+  <h2>You're done.</h2>
+  <p>Run <code>make run-dev</code> and try the Google / Apple buttons on the login screen.</p>
+</div>
+
+<!-- ============== PREREQS ============== -->
+<section class="card" id="prereqs">
+  <h2>0 · Prerequisites <span class="badge">~2 min</span></h2>
+  <p>You'll need accounts on all of these. The Apple Developer one costs $99/year; the others are free.</p>
+  <div class="step" data-id="prereq-supabase">
+    <div class="check"><input type="checkbox" /></div>
+    <div class="body">
+      <p><strong>Supabase project access</strong></p>
+      <small>You already have this. Project URL: <code>https://tysvrlxvaxkucdgbgfpc.supabase.co</code></small>
+      <div><a class="btn" href="https://supabase.com/dashboard/project/tysvrlxvaxkucdgbgfpc" target="_blank" rel="noopener">Open Supabase dashboard ↗</a></div>
+    </div>
+  </div>
+  <div class="step" data-id="prereq-google">
+    <div class="check"><input type="checkbox" /></div>
+    <div class="body">
+      <p><strong>Google account (for Google Cloud Console)</strong></p>
+      <small>Any Google account works. Free tier covers OAuth.</small>
+      <div><a class="btn" href="https://console.cloud.google.com/" target="_blank" rel="noopener">Open Google Cloud Console ↗</a></div>
+    </div>
+  </div>
+  <div class="step" data-id="prereq-apple">
+    <div class="check"><input type="checkbox" /></div>
+    <div class="body">
+      <p><strong>Apple Developer account ($99 / year)</strong></p>
+      <small>Required for "Sign in with Apple". If you don't have it yet, you can still ship Google-only and add Apple later.</small>
+      <div><a class="btn" href="https://developer.apple.com/account" target="_blank" rel="noopener">Open Apple Developer ↗</a></div>
+    </div>
+  </div>
+  <div class="step" data-id="prereq-cli">
+    <div class="check"><input type="checkbox" /></div>
+    <div class="body">
+      <p><strong>Supabase CLI installed (for the migration)</strong></p>
+      <small>If <code>supabase --version</code> works in your terminal you're good. Otherwise: <code>brew install supabase/tap/supabase</code></small>
+    </div>
+  </div>
+</section>
+
+<!-- ============== CONSENTS MIGRATION ============== -->
+<section class="card" id="consents-migration">
+  <h2>1 · Apply the consents migration <span class="badge">2 min</span></h2>
+  <p>NIB-145 added a new <code>consents</code> table. Until you apply it, the in-app consent gate still works but the receipts won't persist (failures are silent + logged to Crashlytics).</p>
+
+  <div class="step" data-id="mig-cli-link">
+    <div class="check"><input type="checkbox" /></div>
+    <div class="body">
+      <p><strong>Option A — Push via CLI (recommended)</strong></p>
+      <small>From the project root:</small>
+<pre>cd /Users/adithyafp_/Projects/nibbles
+supabase link --project-ref tysvrlxvaxkucdgbgfpc
+supabase db push<button class="copy-btn">Copy</button></pre>
+      <small>The CLI will prompt for the database password — it's in <code>.env.dev</code> as <code>SUPABASE_DB_PASSWORD</code>.</small>
+    </div>
+  </div>
+
+  <div class="step" data-id="mig-dashboard">
+    <div class="check"><input type="checkbox" /></div>
+    <div class="body">
+      <p><strong>Option B — Dashboard SQL editor</strong></p>
+      <small>Open the SQL editor and paste the migration body:</small>
+      <div><a class="btn" href="https://supabase.com/dashboard/project/tysvrlxvaxkucdgbgfpc/sql/new" target="_blank" rel="noopener">Open SQL editor ↗</a></div>
+<pre>CREATE TABLE IF NOT EXISTS consents (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  baby_id UUID REFERENCES babies(id) ON DELETE CASCADE,
+  consent_type TEXT NOT NULL CHECK (consent_type IN ('solids_introduction', 'under_6mo_responsibility')),
+  given_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE consents ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "users insert own consents" ON consents
+  FOR INSERT TO authenticated
+  WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY "users read own consents" ON consents
+  FOR SELECT TO authenticated
+  USING (user_id = auth.uid());
+
+CREATE INDEX consents_user_id_idx ON consents (user_id);<button class="copy-btn">Copy</button></pre>
+    </div>
+  </div>
+
+  <div class="step" data-id="mig-verify">
+    <div class="check"><input type="checkbox" /></div>
+    <div class="body">
+      <p><strong>Verify</strong></p>
+      <small>In the SQL editor:</small>
+<pre>SELECT * FROM consents LIMIT 1;<button class="copy-btn">Copy</button></pre>
+      <small>Should return <code>(0 rows)</code> with no error.</small>
+    </div>
+  </div>
+</section>
+
+<!-- ============== GOOGLE ============== -->
+<section class="card" id="google">
+  <h2>2 · Google sign-in setup <span class="badge">~15 min</span></h2>
+  <p>You'll create one Google Cloud project, configure the consent screen, then create three OAuth client IDs (iOS-dev, iOS-prod, Web).</p>
+
+  <h3>2.1 — Create project + consent screen</h3>
+
+  <div class="step" data-id="g-project">
+    <div class="check"><input type="checkbox" /></div>
+    <div class="body">
+      <p>Create a new project named <strong>"Nibbles"</strong> (or use an existing project).</p>
+      <div><a class="btn" href="https://console.cloud.google.com/projectcreate" target="_blank" rel="noopener">Create project ↗</a></div>
+    </div>
+  </div>
+
+  <div class="step" data-id="g-consent">
+    <div class="check"><input type="checkbox" /></div>
+    <div class="body">
+      <p>Configure the <strong>OAuth consent screen</strong>: type <strong>External</strong>, app name "Nibbles", support email = yours, save.</p>
+      <small>You don't need to add scopes or test users for a dev build — leave defaults.</small>
+      <div><a class="btn" href="https://console.cloud.google.com/apis/credentials/consent" target="_blank" rel="noopener">Open OAuth consent screen ↗</a></div>
+    </div>
+  </div>
+
+  <h3>2.2 — Create the three OAuth Client IDs</h3>
+
+  <div class="alert tip">
+    <strong>Where to click:</strong> <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">APIs &amp; Services → Credentials</a> → <kbd>+ Create credentials</kbd> → <strong>OAuth client ID</strong>. Repeat three times.
+  </div>
+
+  <div class="step" data-id="g-ios-dev">
+    <div class="check"><input type="checkbox" /></div>
+    <div class="body">
+      <p><strong>Client 1 — iOS-dev</strong></p>
+      <small>Application type: <strong>iOS</strong>. Name: "Nibbles iOS dev".</small>
+      <div class="field">
+        <span class="label">Bundle ID</span>
+        <span class="value">com.aydev.nibbles.dev</span>
+      </div>
+      <small>After creation, copy the Client ID — paste into section 5 below.</small>
+    </div>
+  </div>
+
+  <div class="step" data-id="g-ios-prod">
+    <div class="check"><input type="checkbox" /></div>
+    <div class="body">
+      <p><strong>Client 2 — iOS-prod</strong></p>
+      <small>Application type: <strong>iOS</strong>. Name: "Nibbles iOS prod".</small>
+      <div class="field">
+        <span class="label">Bundle ID</span>
+        <span class="value">com.aydev.nibbles</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="step" data-id="g-web">
+    <div class="check"><input type="checkbox" /></div>
+    <div class="body">
+      <p><strong>Client 3 — Web (required even though we use native flow)</strong></p>
+      <small>Application type: <strong>Web application</strong>. Name: "Nibbles Web (Supabase OAuth)".</small>
+      <div class="field">
+        <span class="label">Authorized redirect URI</span>
+        <span class="value">https://tysvrlxvaxkucdgbgfpc.supabase.co/auth/v1/callback</span>
+      </div>
+      <small>After creation, copy both <strong>Client ID</strong> and <strong>Client Secret</strong>.</small>
+    </div>
+  </div>
+
+  <div class="step" data-id="g-android">
+    <div class="check"><input type="checkbox" /></div>
+    <div class="body">
+      <p><strong>Client 4 — Android (optional, can skip for now)</strong></p>
+      <small>Required only if you want Google sign-in on Android emulator/device. Application type: <strong>Android</strong>. Package: <code>com.aydev.nibbles</code> + SHA-1 cert.</small>
+<pre># Get the SHA-1 from your debug keystore:
+cd android && ./gradlew signingReport<button class="copy-btn">Copy</button></pre>
+      <small>Copy the <code>SHA1:</code> line under <code>Variant: debug</code> → paste in Google Cloud.</small>
+    </div>
+  </div>
+
+  <div class="alert">
+    <strong>What you should have now:</strong> three (or four) Client IDs and one Web Client Secret. Keep this tab open — you'll paste them in §5.
+  </div>
+</section>
+
+<!-- ============== APPLE ============== -->
+<section class="card" id="apple">
+  <h2>3 · Apple sign-in setup <span class="badge">~25 min</span></h2>
+  <p>Apple's setup is a bit more clicky. You'll: enable the capability on your App IDs, create a Sign in with Apple Key (.p8), and create a Services ID for the Supabase callback.</p>
+
+  <h3>3.1 — Enable capability on App IDs</h3>
+
+  <div class="step" data-id="a-appid-prod">
+    <div class="check"><input type="checkbox" /></div>
+    <div class="body">
+      <p>Open <strong>Identifiers</strong> → find <code>com.aydev.nibbles</code> → <strong>Edit</strong> → check ✅ <em>Sign in with Apple</em> → Save.</p>
+      <div><a class="btn" href="https://developer.apple.com/account/resources/identifiers/list" target="_blank" rel="noopener">Open Identifiers ↗</a></div>
+    </div>
+  </div>
+
+  <div class="step" data-id="a-appid-dev">
+    <div class="check"><input type="checkbox" /></div>
+    <div class="body">
+      <p>Repeat for <code>com.aydev.nibbles.dev</code>.</p>
+      <small>If the dev App ID doesn't exist yet, create it with the same name + register the dev Bundle ID.</small>
+    </div>
+  </div>
+
+  <h3>3.2 — Create the Sign in with Apple Key (.p8)</h3>
+
+  <div class="step" data-id="a-key">
+    <div class="check"><input type="checkbox" /></div>
+    <div class="body">
+      <p>Go to <strong>Keys</strong> → <kbd>+</kbd> → name "Nibbles SIWA Key" → check ✅ Sign in with Apple → <strong>Configure</strong> → Primary App ID = <code>com.aydev.nibbles</code> → Save → Continue → Register.</p>
+      <div><a class="btn" href="https://developer.apple.com/account/resources/authkeys/list" target="_blank" rel="noopener">Open Keys ↗</a></div>
+      <div class="alert warn">
+        <strong>⚠️ You can only download the .p8 file ONCE.</strong> Save it somewhere safe (1Password, drive, etc.) Note the <strong>Key ID</strong> on the same page — it's a 10-character alphanumeric string.
+      </div>
+    </div>
+  </div>
+
+  <div class="step" data-id="a-team">
+    <div class="check"><input type="checkbox" /></div>
+    <div class="body">
+      <p>Note your <strong>Team ID</strong>.</p>
+      <small>It's in the top-right of the Apple Developer portal, next to your name. 10 characters.</small>
+    </div>
+  </div>
+
+  <h3>3.3 — Create a Services ID (for Supabase's web callback)</h3>
+
+  <div class="step" data-id="a-svc">
+    <div class="check"><input type="checkbox" /></div>
+    <div class="body">
+      <p><strong>Identifiers</strong> → <kbd>+</kbd> → choose <strong>Services IDs</strong> → Continue.</p>
+      <div class="field"><span class="label">Description</span><span class="value">Nibbles Web Service</span></div>
+      <div class="field"><span class="label">Identifier</span><span class="value">com.aydev.nibbles.web</span></div>
+      <small>The Identifier just needs to be different from your bundle ID. Click Continue → Register.</small>
+    </div>
+  </div>
+
+  <div class="step" data-id="a-svc-config">
+    <div class="check"><input type="checkbox" /></div>
+    <div class="body">
+      <p>After creation, click the Services ID → check ✅ <em>Sign in with Apple</em> → <strong>Configure</strong>:</p>
+      <div class="field"><span class="label">Primary App ID</span><span class="value">com.aydev.nibbles</span></div>
+      <div class="field"><span class="label">Domains</span><span class="value">tysvrlxvaxkucdgbgfpc.supabase.co</span></div>
+      <div class="field"><span class="label">Return URLs</span><span class="value">https://tysvrlxvaxkucdgbgfpc.supabase.co/auth/v1/callback</span></div>
+      <small>Save → Continue → Done.</small>
+    </div>
+  </div>
+
+  <h3>3.4 — Configure Xcode signing</h3>
+
+  <div class="step" data-id="a-xcode">
+    <div class="check"><input type="checkbox" /></div>
+    <div class="body">
+      <p>Open <code>ios/Runner.xcworkspace</code> in Xcode → select the <strong>Runner</strong> target → <strong>Signing &amp; Capabilities</strong>.</p>
+      <p>This project uses <strong>build configurations</strong> for flavors (not separate targets), so you'll see tabs along the top: <code>All</code>, <code>Debug</code>, <code>Release</code>, <code>Profile</code>, <code>Debug-dev</code>, <code>Release-dev</code>, <code>Debug-prod</code>, <code>Release-prod</code>, etc.</p>
+      <p>Click the <strong>All</strong> tab and verify <strong>Team</strong> is set to your Apple Developer team. If it shows "Multiple values" or any tab is blank, click each config and pick the team manually.</p>
+      <p>Also verify the Bundle Identifier per config:</p>
+      <table>
+        <tr><th>Config</th><th>Bundle ID</th></tr>
+        <tr><td><code>Debug</code> / <code>Release</code> / <code>Profile</code></td><td><code>com.aydev.nibbles</code></td></tr>
+        <tr><td><code>Debug-dev</code> / <code>Release-dev</code> / <code>Profile-dev</code></td><td><code>com.aydev.nibbles.dev</code></td></tr>
+        <tr><td><code>Debug-prod</code> / <code>Release-prod</code> / <code>Profile-prod</code></td><td><code>com.aydev.nibbles</code></td></tr>
+      </table>
+      <small>The Sign in with Apple entitlement (NIB-117) and the capability row are already in place — you should see "Sign In with Apple" at the bottom of the Signing &amp; Capabilities panel. No need to add it.</small>
+    </div>
+  </div>
+
+  <div class="alert">
+    <strong>What you should have now:</strong> .p8 file, Key ID, Team ID, Services ID. Keep them handy for §4.
+  </div>
+</section>
+
+<!-- ============== SUPABASE ============== -->
+<section class="card" id="supabase">
+  <h2>4 · Supabase dashboard <span class="badge">~5 min</span></h2>
+
+  <h3>4.1 — Google provider</h3>
+
+  <div class="step" data-id="s-google">
+    <div class="check"><input type="checkbox" /></div>
+    <div class="body">
+      <p>Open <strong>Authentication → Providers → Google</strong> → toggle <strong>Enable</strong>.</p>
+      <div><a class="btn" href="https://supabase.com/dashboard/project/tysvrlxvaxkucdgbgfpc/auth/providers" target="_blank" rel="noopener">Open providers ↗</a></div>
+      <table>
+        <tr><th>Field</th><th>Value</th></tr>
+        <tr><td>Client ID (for OAuth)</td><td>Web Client ID (from §2.2 client 3)</td></tr>
+        <tr><td>Client Secret</td><td>Web Client Secret (from §2.2 client 3)</td></tr>
+        <tr><td>Authorized Client IDs <small>(comma-separated)</small></td><td>iOS-dev ID, iOS-prod ID, Web ID</td></tr>
+      </table>
+      <small>Click <strong>Save</strong>.</small>
+    </div>
+  </div>
+
+  <h3>4.2 — Apple provider</h3>
+
+  <div class="step" data-id="s-apple">
+    <div class="check"><input type="checkbox" /></div>
+    <div class="body">
+      <p>Same page → <strong>Apple</strong> → <strong>Enable</strong>.</p>
+      <table>
+        <tr><th>Field</th><th>Value</th></tr>
+        <tr><td>Services ID</td><td><code>com.aydev.nibbles.web</code></td></tr>
+        <tr><td>Team ID</td><td>from Apple Developer top-right</td></tr>
+        <tr><td>Key ID</td><td>from §3.2</td></tr>
+        <tr><td>Secret Key (.p8)</td><td>Paste the entire <code>.p8</code> file contents, including <code>-----BEGIN PRIVATE KEY-----</code> headers.</td></tr>
+      </table>
+      <small>Click <strong>Save</strong>.</small>
+    </div>
+  </div>
+
+  <div class="alert tip">
+    Both providers should now show as "Enabled" with a green dot. If Supabase rejects either set of credentials, double-check the Client ID matches Web (not iOS) and the .p8 paste includes the BEGIN/END lines.
+  </div>
+</section>
+
+<!-- ============== CODE WIRING ============== -->
+<section class="card" id="code-wiring">
+  <h2>5 · Code wiring — paste your IDs here <span class="badge">~3 min</span></h2>
+  <p>Type or paste your values below. The HTML will generate the exact snippets to copy into the iOS Info.plist and .env files.</p>
+
+  <h3>5.1 — Inputs</h3>
+  <div class="field">
+    <span class="label">iOS-dev Client ID</span>
+    <input class="input-helper" id="in-ios-dev" placeholder="123456789-abcdef.apps.googleusercontent.com" oninput="renderSnippets()" />
+  </div>
+  <div class="field">
+    <span class="label">iOS-prod Client ID</span>
+    <input class="input-helper" id="in-ios-prod" placeholder="123456789-abcdef.apps.googleusercontent.com" oninput="renderSnippets()" />
+  </div>
+  <div class="field">
+    <span class="label">Web Client ID</span>
+    <input class="input-helper" id="in-web" placeholder="123456789-abcdef.apps.googleusercontent.com" oninput="renderSnippets()" />
+  </div>
+
+  <h3>5.2 — Add to <code>.env.dev</code></h3>
+  <p>Open <code>/Users/adithyafp_/Projects/nibbles/.env.dev</code> and add this line:</p>
+<pre id="snip-env-dev"># enter the Web Client ID above to generate this snippet
+GOOGLE_SERVER_CLIENT_ID=&lt;web client id&gt;<button class="copy-btn">Copy</button></pre>
+
+  <h3>5.3 — Add to <code>.env.prod</code></h3>
+<pre id="snip-env-prod"># enter the Web Client ID above to generate this snippet
+GOOGLE_SERVER_CLIENT_ID=&lt;web client id&gt;<button class="copy-btn">Copy</button></pre>
+
+  <h3>5.4 — Update <code>ios/Runner/Info.plist</code></h3>
+  <p>Inside the existing <code>&lt;dict&gt;</code> (near the top, alongside the other <code>&lt;key&gt;</code> entries), add:</p>
+<pre id="snip-plist">&lt;!-- enter both iOS Client IDs above to generate --&gt;<button class="copy-btn">Copy</button></pre>
+
+  <p>Inside the existing <code>&lt;key&gt;CFBundleURLTypes&lt;/key&gt;&lt;array&gt;</code> block, ADD a new dict for Google's reversed-client-ID:</p>
+<pre id="snip-url-types">&lt;!-- enter both iOS Client IDs above to generate --&gt;<button class="copy-btn">Copy</button></pre>
+  <small>The reversed-client-ID is just the Client ID with its dot-segments reversed (e.g. <code>com.googleusercontent.apps.123456789-abcdef</code>).</small>
+
+  <div class="step" data-id="w-applied">
+    <div class="check"><input type="checkbox" /></div>
+    <div class="body">
+      <p><strong>I've pasted the snippets and saved both files.</strong></p>
+      <small>If you want, I can do all of this for you — just paste the IDs back to me in chat.</small>
+    </div>
+  </div>
+</section>
+
+<!-- ============== VERIFY ============== -->
+<section class="card" id="verify">
+  <h2>6 · Verify it works <span class="badge">~5 min</span></h2>
+
+  <div class="step" data-id="v-clean">
+    <div class="check"><input type="checkbox" /></div>
+    <div class="body">
+      <p>Clean + rebuild:</p>
+<pre>cd /Users/adithyafp_/Projects/nibbles
+make clean
+make gen<button class="copy-btn">Copy</button></pre>
+    </div>
+  </div>
+
+  <div class="step" data-id="v-run">
+    <div class="check"><input type="checkbox" /></div>
+    <div class="body">
+      <p>Run on iOS simulator:</p>
+<pre>make run-dev<button class="copy-btn">Copy</button></pre>
+    </div>
+  </div>
+
+  <div class="step" data-id="v-google">
+    <div class="check"><input type="checkbox" /></div>
+    <div class="body">
+      <p>Onboard → reach <code>/auth/login</code> → tap <strong>Login with Google</strong>. The native Google chooser should appear. Pick an account → land back in the app authenticated.</p>
+      <small>If you see "Idp configuration not found" or "OAuth provider not enabled" — recheck Supabase §4.1.</small>
+    </div>
+  </div>
+
+  <div class="step" data-id="v-apple">
+    <div class="check"><input type="checkbox" /></div>
+    <div class="body">
+      <p>Tap <strong>Login with Apple</strong>. The native Apple sheet should appear. Authenticate with Touch/Face ID → back in app.</p>
+      <small>If you see "Sign in with Apple cannot be used at this time" — check Xcode signing in §3.4, and confirm App ID has the capability in §3.1.</small>
+    </div>
+  </div>
+
+  <div class="step" data-id="v-platform">
+    <div class="check"><input type="checkbox" /></div>
+    <div class="body">
+      <p>Confirm Apple button is hidden on Android (run an Android emulator if you have one set up).</p>
+      <small>This is gated by <code>Platform.isIOS</code> in the login screen.</small>
+    </div>
+  </div>
+</section>
+
+<footer>
+  Walkthrough generated for NIB-146.
+  Built artifact — open this file directly with <code>open docs/oauth-setup.html</code>.
+  Edit if anything is wrong — local-only HTML, doesn't affect production.
+</footer>
+
+</div>
+
+<script>
+(function () {
+  const STORAGE_KEY = 'nibbles-oauth-checklist-v1';
+  const INPUT_KEY = 'nibbles-oauth-inputs-v1';
+
+  const state = (function load () {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+    catch (e) { return {}; }
+  })();
+
+  const inputs = (function loadInputs () {
+    try { return JSON.parse(localStorage.getItem(INPUT_KEY) || '{}'); }
+    catch (e) { return {}; }
+  })();
+
+  function save () {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+  function saveInputs () {
+    localStorage.setItem(INPUT_KEY, JSON.stringify(inputs));
+  }
+
+  const steps = document.querySelectorAll('.step');
+  const totalEl = document.getElementById('total');
+  const doneEl = document.getElementById('done');
+  const barEl = document.getElementById('bar');
+  const bannerEl = document.getElementById('banner');
+
+  totalEl.textContent = steps.length;
+
+  function refreshProgress () {
+    let done = 0;
+    steps.forEach(s => { if (s.classList.contains('done')) done++; });
+    doneEl.textContent = done;
+    barEl.style.width = (done / steps.length * 100) + '%';
+    bannerEl.classList.toggle('show', done === steps.length);
+  }
+
+  steps.forEach(step => {
+    const id = step.dataset.id;
+    const cb = step.querySelector('input[type=checkbox]');
+    if (state[id]) {
+      cb.checked = true;
+      step.classList.add('done');
+    }
+    cb.addEventListener('change', () => {
+      state[id] = cb.checked;
+      step.classList.toggle('done', cb.checked);
+      save();
+      refreshProgress();
+    });
+  });
+
+  refreshProgress();
+
+  // Copy buttons
+  document.querySelectorAll('pre').forEach(pre => {
+    const btn = pre.querySelector('.copy-btn');
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      const text = pre.cloneNode(true);
+      const b = text.querySelector('.copy-btn');
+      if (b) b.remove();
+      navigator.clipboard.writeText(text.textContent.trim()).then(() => {
+        btn.classList.add('copied');
+        btn.textContent = 'Copied';
+        setTimeout(() => {
+          btn.classList.remove('copied');
+          btn.textContent = 'Copy';
+        }, 1400);
+      });
+    });
+  });
+
+  // Input persistence + snippet generation
+  const fields = ['in-ios-dev', 'in-ios-prod', 'in-web'];
+  fields.forEach(id => {
+    const el = document.getElementById(id);
+    if (inputs[id]) el.value = inputs[id];
+    el.addEventListener('input', () => {
+      inputs[id] = el.value;
+      saveInputs();
+    });
+  });
+
+  function reverseDomain (clientId) {
+    if (!clientId) return '';
+    // Google reversed-client-id: client id "1234-abc.apps.googleusercontent.com"
+    // becomes "com.googleusercontent.apps.1234-abc"
+    const parts = clientId.split('.');
+    return parts.reverse().join('.');
+  }
+
+  function escapeXml (s) {
+    return s.replace(/[<>&"']/g, c => ({
+      '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;'
+    }[c]));
+  }
+
+  window.renderSnippets = function () {
+    const iosDev = document.getElementById('in-ios-dev').value.trim();
+    const iosProd = document.getElementById('in-ios-prod').value.trim();
+    const web = document.getElementById('in-web').value.trim();
+
+    inputs['in-ios-dev'] = iosDev;
+    inputs['in-ios-prod'] = iosProd;
+    inputs['in-web'] = web;
+    saveInputs();
+
+    const envDev = document.getElementById('snip-env-dev');
+    const envProd = document.getElementById('snip-env-prod');
+    const plist = document.getElementById('snip-plist');
+    const urls = document.getElementById('snip-url-types');
+
+    if (web) {
+      envDev.firstChild.textContent = 'GOOGLE_SERVER_CLIENT_ID=' + web + '\n';
+      envProd.firstChild.textContent = 'GOOGLE_SERVER_CLIENT_ID=' + web + '\n';
+    } else {
+      envDev.firstChild.textContent = '# enter the Web Client ID above to generate this snippet\nGOOGLE_SERVER_CLIENT_ID=<web client id>\n';
+      envProd.firstChild.textContent = '# enter the Web Client ID above to generate this snippet\nGOOGLE_SERVER_CLIENT_ID=<web client id>\n';
+    }
+
+    if (iosDev || iosProd) {
+      // Info.plist gets a single GIDClientID. iOS-prod is the canonical bundle
+      // for the prod target. iOS-dev would need its own Info.plist or build
+      // setting; for now we comment dev next to prod so you can pick what to
+      // ship per flavor (Flutter's flavor system applies the right Info per
+      // target).
+      const pick = iosProd || iosDev;
+      const dev = iosDev ? '\n<!-- dev flavor client id (use in dev Info.plist if you split per flavor): ' + iosDev + ' -->' : '';
+      plist.firstChild.textContent =
+        '<key>GIDClientID</key>\n<string>' + pick + '</string>' + dev + '\n';
+    } else {
+      plist.firstChild.textContent = '<!-- enter both iOS Client IDs above to generate -->\n';
+    }
+
+    if (iosDev || iosProd) {
+      const pick = iosProd || iosDev;
+      urls.firstChild.textContent =
+        '<dict>\n  <key>CFBundleTypeRole</key>\n  <string>Editor</string>\n  <key>CFBundleURLSchemes</key>\n  <array>\n    <string>' + reverseDomain(pick) + '</string>\n  </array>\n</dict>\n';
+    } else {
+      urls.firstChild.textContent = '<!-- enter both iOS Client IDs above to generate -->\n';
+    }
+  };
+  renderSnippets();
+})();
+</script>
+</body>
+</html>

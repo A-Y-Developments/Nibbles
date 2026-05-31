@@ -69,3 +69,7 @@ android/key.properties
 supabase/.temp/
 supabase/.branches/
 .mcp.json
+
+# Figma audit artifacts (screenshots, raw context) — keep only AUDIT.md
+.figma-audit/**
+!.figma-audit/AUDIT.md
