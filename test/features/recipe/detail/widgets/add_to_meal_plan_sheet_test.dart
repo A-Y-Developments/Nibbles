@@ -1,17 +1,17 @@
-// Widget tests for the multi-day Add-to-Meal-Plan bottom sheet (NIB-68).
+// Widget tests for the multi-day Add-to-Meal-Plan bottom sheet
+// (NIB-84 Figma 971:9346 / 971:9481).
 //
 // Drives `showAddToMealPlanSheet(context, babyId: ...)` and asserts:
-//   * the sheet shows the 'X Days Selected' counter and an 'Add to Meal Plan'
-//     CTA
-//   * the counter updates as day rows are toggled
-//   * the CTA is disabled when 0 days are selected
+//   * the sheet renders the verbatim 'Meal Plan' title + 'X selected' counter
+//   * the bottom CTA flips between 'Add to Meal Plan' (disabled, 0 days) and
+//     'X Days Selected' (forest-dark, enabled)
+//   * tapping a day-row 'Add' button toggles selection
 //   * confirm pops the sheet with a Set<DateTime> of the picked days
 //   * the native showDatePicker IS NOT used by this sheet (no DialogRoute)
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
-import 'package:nibbles/src/common/components/controls/app_checkbox.dart';
 import 'package:nibbles/src/features/recipe/detail/widgets/add_to_meal_plan_sheet.dart';
 
 const _babyId = 'baby-001';
@@ -49,52 +49,60 @@ Future<void> _setupViewport(WidgetTester tester) async {
   addTearDown(tester.view.resetDevicePixelRatio);
 }
 
+/// Locates the bottom CTA AppPillButton (`Add to Meal Plan` or
+/// `N Day(s) Selected`).
+Finder _ctaFinder() => find.byWidgetPredicate(
+  (w) =>
+      w is AppPillButton &&
+      (w.label == 'Add to Meal Plan' ||
+          w.label.endsWith('Day Selected') ||
+          w.label.endsWith('Days Selected')),
+);
+
 void main() {
   group('AddToMealPlanSheet — initial render', () {
     testWidgets(
-      'shows the counter (0 Days Selected) + Add to Meal Plan CTA disabled',
+      'shows "Meal Plan" title, "0 selected" counter, and disabled CTA',
       (tester) async {
         await _setupViewport(tester);
         await _openSheet(tester);
 
-        expect(find.text('Add to Meal Plan'), findsWidgets);
-        expect(find.text('0 Days Selected'), findsOneWidget);
+        expect(find.text('Meal Plan'), findsOneWidget);
+        expect(find.text('0 selected'), findsOneWidget);
+        expect(find.text('Add to Meal Plan'), findsOneWidget);
 
-        // CTA AppPillButton — onPressed null when count == 0.
-        final cta = tester.widget<AppPillButton>(find.byType(AppPillButton));
+        final cta = tester.widget<AppPillButton>(_ctaFinder());
         expect(cta.onPressed, isNull);
       },
     );
 
     testWidgets(
-      'current week is expanded by default → first day rows visible',
+      'the default-expanded day row exposes an "Add" pill button',
       (tester) async {
         await _setupViewport(tester);
         await _openSheet(tester);
 
-        // The default-expanded week has 7 day-row checkboxes.
-        expect(find.byType(AppCheckbox), findsAtLeastNWidgets(7));
+        // The first day row is expanded by default → "Add" pill is visible.
+        expect(find.widgetWithText(AppPillButton, 'Add'), findsOneWidget);
       },
     );
   });
 
   group('AddToMealPlanSheet — counter + CTA gating', () {
     testWidgets(
-      'tapping a future day toggles the counter and enables the CTA',
+      'tapping the day "Add" pill toggles the counter and enables the CTA',
       (tester) async {
         await _setupViewport(tester);
         await _openSheet(tester);
 
-        // Pick a future-dated day row — the first week is current; use a row
-        // far enough out that it's in the future. Tap the LAST visible day row
-        // (typically Sunday of the current week, which is at-or-after today).
-        // To minimise flakiness across days-of-week we tap the last checkbox.
-        await tester.tap(find.byType(AppCheckbox).last);
+        await tester.tap(find.widgetWithText(AppPillButton, 'Add'));
         await tester.pump();
 
+        expect(find.text('1 selected'), findsOneWidget);
+        // CTA flips to "1 Day Selected" (singular) once a day is picked.
         expect(find.text('1 Day Selected'), findsOneWidget);
 
-        final cta = tester.widget<AppPillButton>(find.byType(AppPillButton));
+        final cta = tester.widget<AppPillButton>(_ctaFinder());
         expect(cta.onPressed, isNotNull);
       },
     );
@@ -105,15 +113,17 @@ void main() {
         await _setupViewport(tester);
         await _openSheet(tester);
 
-        await tester.tap(find.byType(AppCheckbox).last);
+        await tester.tap(find.widgetWithText(AppPillButton, 'Add'));
         await tester.pump();
-        expect(find.text('1 Day Selected'), findsOneWidget);
+        expect(find.text('1 selected'), findsOneWidget);
 
-        await tester.tap(find.byType(AppCheckbox).last);
+        // After selection the pill label flips to "Added".
+        await tester.tap(find.widgetWithText(AppPillButton, 'Added'));
         await tester.pump();
-        expect(find.text('0 Days Selected'), findsOneWidget);
+        expect(find.text('0 selected'), findsOneWidget);
+        expect(find.text('Add to Meal Plan'), findsOneWidget);
 
-        final cta = tester.widget<AppPillButton>(find.byType(AppPillButton));
+        final cta = tester.widget<AppPillButton>(_ctaFinder());
         expect(cta.onPressed, isNull);
       },
     );
@@ -126,27 +136,31 @@ void main() {
         await _setupViewport(tester);
         final pending = await _openSheet(tester);
 
-        // Collapse the current week (some of whose rows may be past-dated
-        // depending on today's weekday) and expand the NEXT week so every
-        // day-row is guaranteed to be in the future and selectable.
-        // Every WeekAccordion renders an Icons.expand_more chevron;
-        // tapping the SECOND one switches the expansion to week index 1.
-        await tester.tap(find.byIcon(Icons.expand_more).at(1));
+        // Pick day 0 (default-expanded).
+        // (Day-0 chevron is keyboard_arrow_up; days 1..13 are
+        // keyboard_arrow_down, listed in tree order.)
+        await tester.tap(find.widgetWithText(AppPillButton, 'Add'));
         await tester.pumpAndSettle(const Duration(milliseconds: 220));
 
-        // Now exactly 7 future-dated day-rows are visible. Pick the first 3.
-        await tester.tap(find.byType(AppCheckbox).at(0));
-        await tester.pump();
-        await tester.tap(find.byType(AppCheckbox).at(1));
-        await tester.pump();
-        await tester.tap(find.byType(AppCheckbox).at(2));
-        await tester.pump();
+        // Expand day 1 — at this point chevron-down list is
+        // [day1, day2, ..., day13], so .first is day1.
+        await tester.tap(find.byIcon(Icons.keyboard_arrow_down).first);
+        await tester.pumpAndSettle(const Duration(milliseconds: 220));
+        await tester.tap(find.widgetWithText(AppPillButton, 'Add'));
+        await tester.pumpAndSettle(const Duration(milliseconds: 220));
+
+        // Expand day 2 — chevron-down list is now [day0, day2, ..., day13],
+        // so day2 is at(1).
+        await tester.tap(find.byIcon(Icons.keyboard_arrow_down).at(1));
+        await tester.pumpAndSettle(const Duration(milliseconds: 220));
+        await tester.tap(find.widgetWithText(AppPillButton, 'Add'));
+        await tester.pumpAndSettle(const Duration(milliseconds: 220));
+
+        expect(find.text('3 selected'), findsOneWidget);
         expect(find.text('3 Days Selected'), findsOneWidget);
 
-        // Tap the CTA pill — its label is exactly 'Add to Meal Plan'. There
-        // are two widgets carrying that text (header title + button), so
-        // tap the AppPillButton specifically.
-        await tester.tap(find.byType(AppPillButton));
+        // Tap the CTA pill — its label is the verbatim "3 Days Selected".
+        await tester.tap(find.widgetWithText(AppPillButton, '3 Days Selected'));
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 350));
 
