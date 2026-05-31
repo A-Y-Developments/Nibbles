@@ -54,13 +54,53 @@ class MealPlanScreen extends ConsumerWidget {
     return babyIdAsync.when(
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (_, __) => const Scaffold(
-        body: Center(child: Text('Could not load baby profile.')),
+      error: (_, __) => Scaffold(
+        body: Center(
+          child: Semantics(
+            liveRegion: true,
+            container: true,
+            child: Padding(
+              padding: const EdgeInsets.all(AppSizes.pagePaddingH),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('Could not load baby profile.'),
+                  const SizedBox(height: AppSizes.sm),
+                  FilledButton(
+                    onPressed: () => ref.invalidate(currentBabyIdProvider),
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
       data: (babyId) {
         if (babyId == null) {
-          return const Scaffold(
-            body: Center(child: Text('No baby profile found.')),
+          return Scaffold(
+            body: Center(
+              child: Semantics(
+                liveRegion: true,
+                container: true,
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSizes.pagePaddingH),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('No baby profile found.'),
+                      const SizedBox(height: AppSizes.sm),
+                      FilledButton(
+                        onPressed: () => context.pushNamed(
+                          AppRoute.onboardingBabySetup.name,
+                        ),
+                        child: const Text('Set up baby profile'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           );
         }
         return _MealPlanBody(babyId: babyId);

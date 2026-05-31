@@ -3,6 +3,7 @@ import 'package:nibbles/src/app/constants/allergen_emoji.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
+import 'package:nibbles/src/common/components/chips/app_chip.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
 
 /// A single picked-recipe row for the Map Meals Plan screen (NIB-95).
@@ -130,22 +131,9 @@ class _TagsRow extends StatelessWidget {
       children: tags
           .take(3)
           .map(
-            (t) => Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSizes.sm,
-                vertical: 2,
-              ),
-              decoration: BoxDecoration(
-                color: AppColors.coralSoft,
-                borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-              ),
-              child: Text(
-                '${AllergenEmoji.get(t)} ${t.replaceAll('_', ' ')}',
-                style: AppTypography.caption.copyWith(
-                  color: AppColors.coralDeep,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+            (t) => AppChip(
+              label: t.replaceAll('_', ' '),
+              emoji: AllergenEmoji.get(t),
             ),
           )
           .toList(),

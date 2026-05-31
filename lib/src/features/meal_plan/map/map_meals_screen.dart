@@ -51,10 +51,50 @@ class MapMealsScreen extends ConsumerWidget {
     final state = ref.watch(mapMealsControllerProvider(args));
     final notifier = ref.read(mapMealsControllerProvider(args).notifier);
 
-    return Scaffold(
-      backgroundColor: AppColors.cream,
-      appBar: _MapMealsAppBar(state: state),
-      body: SafeArea(
+    return PopScope(
+      canPop: state.assignments.isEmpty && !state.isCommitting,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            backgroundColor: AppColors.surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+            ),
+            title: const Text(
+              'Discard unsaved meal mappings?',
+              style: AppTypography.sectionTitle,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: Text(
+                  'Keep',
+                  style: AppTypography.button.copyWith(
+                    color: AppColors.fgMuted,
+                  ),
+                ),
+              ),
+              FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.destructive,
+                  foregroundColor: AppColors.onGreen,
+                ),
+                onPressed: () => Navigator.of(ctx).pop(true),
+                child: Text('Discard', style: AppTypography.button),
+              ),
+            ],
+          ),
+        );
+        if ((confirmed ?? false) && context.mounted) {
+          Navigator.of(context).pop();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.cream,
+        appBar: _MapMealsAppBar(state: state),
+        body: SafeArea(
         top: false,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -112,6 +152,7 @@ class MapMealsScreen extends ConsumerWidget {
             _CommitBar(state: state, onCommit: () => _onCommit(context, ref)),
           ],
         ),
+      ),
       ),
     );
   }
@@ -195,6 +236,7 @@ class _MapMealsAppBar extends StatelessWidget implements PreferredSizeWidget {
       scrolledUnderElevation: 0,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back, color: AppColors.fgDefault),
+        tooltip: 'Back',
         onPressed: () => Navigator.of(context).maybePop(),
       ),
       title: Text('Map Meals Plan', style: AppTypography.textTheme.titleLarge),
@@ -305,30 +347,37 @@ class _CommitBar extends StatelessWidget {
           AppSizes.pagePaddingH,
           AppSizes.sp12,
         ),
-        child: SizedBox(
-          width: double.infinity,
-          height: AppSizes.buttonHeight,
-          child: FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.greenDeep,
-              foregroundColor: AppColors.onGreen,
-              disabledBackgroundColor: AppColors.borderMuted,
-              disabledForegroundColor: AppColors.fgFaint,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+        child: Semantics(
+          button: true,
+          enabled: !disabled,
+          label: state.isCommitting ? 'Saving meal plan' : label,
+          child: SizedBox(
+            width: double.infinity,
+            height: AppSizes.buttonHeight,
+            child: FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.greenDeep,
+                foregroundColor: AppColors.onGreen,
+                disabledBackgroundColor: AppColors.borderMuted,
+                disabledForegroundColor: AppColors.fgFaint,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+                ),
               ),
+              onPressed: disabled ? null : onCommit,
+              child: state.isCommitting
+                  ? const ExcludeSemantics(
+                      child: SizedBox(
+                        width: AppSizes.iconSm,
+                        height: AppSizes.iconSm,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.onGreen,
+                        ),
+                      ),
+                    )
+                  : Text(label, style: AppTypography.button),
             ),
-            onPressed: disabled ? null : onCommit,
-            child: state.isCommitting
-                ? const SizedBox(
-                    width: AppSizes.iconSm,
-                    height: AppSizes.iconSm,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppColors.onGreen,
-                    ),
-                  )
-                : Text(label, style: AppTypography.button),
           ),
         ),
       ),

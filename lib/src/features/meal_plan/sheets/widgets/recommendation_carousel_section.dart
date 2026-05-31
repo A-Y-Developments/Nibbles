@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
+import 'package:nibbles/src/common/components/inputs/app_search_field.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
 import 'package:nibbles/src/features/meal_plan/sheets/widgets/browse_meal_recipe_card.dart';
 
@@ -65,6 +66,8 @@ class RecommendationCarouselSection extends StatelessWidget {
 }
 
 /// Search text field used at the top of the master list section.
+///
+/// Delegates to [AppSearchField] for consistent look + behaviour.
 class BrowseMealSearchField extends StatelessWidget {
   const BrowseMealSearchField({
     required this.controller,
@@ -79,24 +82,11 @@ class BrowseMealSearchField extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSizes.pagePaddingH),
-      child: TextField(
+      child: AppSearchField(
         controller: controller,
+        hintText: 'Search recipes',
         onChanged: onChanged,
-        textInputAction: TextInputAction.search,
-        decoration: InputDecoration(
-          hintText: 'Search recipe',
-          prefixIcon: const Icon(Icons.search, color: AppColors.greenDeep),
-          filled: true,
-          fillColor: AppColors.bgInput,
-          border: OutlineInputBorder(
-            borderSide: BorderSide.none,
-            borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-          ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: AppSizes.md,
-            vertical: AppSizes.sm,
-          ),
-        ),
+        onSubmitted: (_) => FocusScope.of(context).unfocus(),
       ),
     );
   }

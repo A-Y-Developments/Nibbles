@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
+import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
+import 'package:nibbles/src/common/components/controls/app_checkbox.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/services/meal_plan_service.dart';
 import 'package:nibbles/src/common/services/shopping_list_service.dart';
@@ -61,11 +63,9 @@ class _AddToShoppingListModalState
     if (selected.isEmpty) return;
 
     setState(() => _submitting = true);
-    // recipeId is required by the signature but not stored in
-    // ShoppingListItem — empty string is intentional for bulk meal-plan adds.
     final result = await ref
         .read(shoppingListServiceProvider)
-        .addFromRecipe(widget.babyId, '', selected);
+        .addFromMealPlan(widget.babyId, selected);
     if (!mounted) return;
     setState(() => _submitting = false);
 
@@ -115,7 +115,7 @@ class _AddToShoppingListModalState
                   Expanded(
                     child: Text(
                       'Add to Shopping List',
-                      style: textTheme.titleLarge,
+                      style: textTheme.titleSmall,
                     ),
                   ),
                   if (!_loading &&
@@ -148,24 +148,11 @@ class _AddToShoppingListModalState
                     horizontal: AppSizes.pagePaddingH,
                     vertical: AppSizes.md,
                   ),
-                  child: FilledButton(
+                  child: AppPillButton(
+                    label: 'Add (${_selected.length}) items',
                     onPressed: _selected.isEmpty || _submitting
                         ? null
                         : _confirm,
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size.fromHeight(AppSizes.buttonHeight),
-                      backgroundColor: AppColors.primary,
-                    ),
-                    child: _submitting
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: AppColors.onPrimary,
-                            ),
-                          )
-                        : Text('Add ${_selected.length} items'),
                   ),
                 ),
               ),
@@ -205,17 +192,28 @@ class _AddToShoppingListModalState
       itemCount: items.length,
       itemBuilder: (context, index) {
         final name = items[index];
-        return CheckboxListTile(
-          title: Text(name, style: textTheme.bodyMedium),
-          value: _selected.contains(name),
-          activeColor: AppColors.primary,
-          onChanged: (checked) => setState(() {
-            if (checked ?? false) {
-              _selected = {..._selected, name};
-            } else {
-              _selected = _selected.where((s) => s != name).toSet();
-            }
-          }),
+        final selected = _selected.contains(name);
+        return Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSizes.pagePaddingH,
+            vertical: AppSizes.xs,
+          ),
+          child: Row(
+            children: [
+              AppCheckbox(
+                value: selected,
+                onChanged: (_) => setState(() {
+                  if (selected) {
+                    _selected = _selected.where((s) => s != name).toSet();
+                  } else {
+                    _selected = {..._selected, name};
+                  }
+                }),
+              ),
+              const SizedBox(width: AppSizes.sm),
+              Expanded(child: Text(name, style: textTheme.bodyMedium)),
+            ],
+          ),
         );
       },
     );
