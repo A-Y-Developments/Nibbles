@@ -7,10 +7,12 @@ import 'package:nibbles/src/routing/route_enums.dart';
 
 /// Search-results view for the Recipe Library (Figma 971:8803).
 ///
-/// Renders a flat vertical list of [RecipeGridCard]s — one card per result.
-/// The category-rows layout (NIB-53) is suppressed by the parent screen
-/// whenever `RecipeLibraryState.searchQuery` is non-empty; this widget owns
-/// only the list rendering.
+/// Renders matching recipes as a 2-column grid of [RecipeGridCard]s pinned to
+/// the design-system 158x220 box — mirrors the Figma typing-results layout
+/// where a single match sits in the first grid cell with the title wrapping
+/// onto two lines. The category-rows layout (NIB-53) is suppressed by the
+/// parent screen whenever `RecipeLibraryState.searchQuery` is non-empty; this
+/// widget owns only the grid rendering.
 class RecipeSearchResults extends StatelessWidget {
   const RecipeSearchResults({
     required this.recipes,
@@ -21,25 +23,43 @@ class RecipeSearchResults extends StatelessWidget {
   final List<Recipe> recipes;
   final Set<String> flaggedAllergenKeys;
 
+  static const double _cardWidth = 158;
+  static const double _cardHeight = 220;
+
   @override
   Widget build(BuildContext context) {
-    return ListView.separated(
+    return GridView.builder(
       padding: const EdgeInsets.fromLTRB(
         AppSizes.pagePaddingH,
         AppSizes.md,
         AppSizes.pagePaddingH,
         AppSizes.xl,
       ),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: AppSizes.sp12,
+        mainAxisSpacing: AppSizes.sp12,
+        mainAxisExtent: _cardHeight,
+      ),
       itemCount: recipes.length,
-      separatorBuilder: (_, __) => const SizedBox(height: AppSizes.sp12),
       itemBuilder: (context, index) {
         final recipe = recipes[index];
-        return RecipeGridCard(
-          recipe: recipe,
-          flaggedAllergenKeys: flaggedAllergenKeys,
-          onTap: () => context.pushNamed(
-            AppRoute.recipeDetail.name,
-            pathParameters: {'recipeId': recipe.id},
+        // Pin each cell to the 158x220 card box per Figma 971:8803 —
+        // align top-left so wider grid cells (tablets) don't stretch the
+        // card.
+        return Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: _cardWidth,
+            height: _cardHeight,
+            child: RecipeGridCard(
+              recipe: recipe,
+              flaggedAllergenKeys: flaggedAllergenKeys,
+              onTap: () => context.pushNamed(
+                AppRoute.recipeDetail.name,
+                pathParameters: {'recipeId': recipe.id},
+              ),
+            ),
           ),
         );
       },
