@@ -8,11 +8,14 @@ import 'package:nibbles/src/common/components/controls/app_segmented_control.dar
 import 'package:nibbles/src/common/domain/entities/shopping_list_item.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/features/shopping_list/shopping_list_controller.dart';
+import 'package:nibbles/src/features/shopping_list/widgets/add_ingredient_card.dart';
 import 'package:nibbles/src/features/shopping_list/widgets/clear_all_confirm_sheet.dart';
 import 'package:nibbles/src/features/shopping_list/widgets/shopping_list_menu.dart';
+import 'package:nibbles/src/features/shopping_list/widgets/swipe_reveal_row.dart';
 
-/// Shopping List root screen — Figma frames 971:9851 (populated) and
-/// 971:9989 (empty). Header (Title 3/Bold + green-deep more_horiz chip) +
+/// Shopping List root screen — Figma frames 971:9851 (populated),
+/// 971:9989 (empty), 971:9872 (add-card overlay), 971:9915 (swipe-delete).
+/// Header (Title 3/Bold + "+" add chip + green-deep more_horiz chip) +
 /// segmented control (List / Bought) + ingredient rows.
 ///
 /// Background: Grad-1 (linear-gradient 154.398deg, butterSoft → cream)
@@ -26,7 +29,10 @@ import 'package:nibbles/src/features/shopping_list/widgets/shopping_list_menu.da
 ///     (971:9958). Confirm calls the controller's `clearAll` and drops back
 ///     to the empty state; cancel dismisses the sheet.
 ///
-/// Add-item (971:9872) and swipe-delete (971:9915) remain out of scope.
+/// Per-row trailing close-X commits delete directly (no confirm modal).
+/// Swipe-left reveals a burgundy Delete pill; tap commits delete.
+/// "+" chip opens the floating Add Ingredient card over the keyboard
+/// (NIB-81 — frames 971:9872 / 971:9915).
 class ShoppingListScreen extends ConsumerWidget {
   const ShoppingListScreen({super.key});
 
@@ -65,6 +71,10 @@ class _PageScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
+      // Critical: resizeToAvoidBottomInset=false lets the floating Add card
+      // sit ABOVE the keyboard via MediaQuery.viewInsets, instead of having
+      // the whole layout reflow when the keyboard appears.
+      resizeToAvoidBottomInset: false,
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -95,6 +105,22 @@ class _ShoppingListBody extends ConsumerStatefulWidget {
 
 class _ShoppingListBodyState extends ConsumerState<_ShoppingListBody> {
   int _selectedTab = 0; // 0 = List, 1 = Bought
+
+  // Controller that tracks which row (by id) currently has its swipe
+  // reveal open. Allows tap-outside-to-close and one-open-at-a-time.
+  final SwipeRevealController _swipeController = SwipeRevealController();
+
+  bool _addCardOpen = false;
+  final TextEditingController _addController = TextEditingController();
+  final FocusNode _addFocusNode = FocusNode();
+
+  @override
+  void dispose() {
+    _swipeController.dispose();
+    _addController.dispose();
+    _addFocusNode.dispose();
+    super.dispose();
+  }
 
   Future<void> _showClearConfirmation() async {
     final confirmed = await showClearAllConfirmSheet(context);
@@ -134,6 +160,7 @@ class _ShoppingListBodyState extends ConsumerState<_ShoppingListBody> {
   }
 
   Future<void> _delete(String itemId) async {
+    _swipeController.close();
     try {
       await ref
           .read(shoppingListControllerProvider(widget.babyId).notifier)
@@ -166,6 +193,36 @@ class _ShoppingListBodyState extends ConsumerState<_ShoppingListBody> {
     }
   }
 
+  void _openAddCard() {
+    _swipeController.close();
+    setState(() => _addCardOpen = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _addFocusNode.requestFocus();
+    });
+  }
+
+  void _closeAddCard() {
+    _addFocusNode.unfocus();
+    setState(() => _addCardOpen = false);
+    _addController.clear();
+  }
+
+  Future<void> _submitAdd() async {
+    final raw = _addController.text;
+    if (raw.trim().isEmpty) return;
+    // Default per Open Question 3: keep card open, clear field after add.
+    _addController.clear();
+
+    try {
+      await ref
+          .read(shoppingListControllerProvider(widget.babyId).notifier)
+          .addManual(raw);
+    } on Exception catch (_) {
+      if (!mounted) return;
+      _showToast("Couldn't add items. Try again.");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final controllerAsync = ref.watch(
@@ -174,67 +231,98 @@ class _ShoppingListBodyState extends ConsumerState<_ShoppingListBody> {
 
     return SafeArea(
       bottom: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSizes.md,
-          AppSizes.sm,
-          AppSizes.md,
-          0,
-        ),
-        child: Column(
-          children: [
-            _ShoppingListHeader(
-              onMenuSelected: (action) {
-                switch (action) {
-                  case ShoppingListMenuAction.copy:
-                    _copyToClipboard();
-                  case ShoppingListMenuAction.clear:
-                    _showClearConfirmation();
-                }
-              },
-            ),
-            const SizedBox(height: AppSizes.sp12),
-            AppSegmentedControl(
-              segments: const ['List', 'Bought'],
-              selectedIndex: _selectedTab,
-              onChanged: (i) => setState(() => _selectedTab = i),
-            ),
-            const SizedBox(height: AppSizes.sp12),
-            Expanded(
-              child: controllerAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) => _ErrorState(
-                  onRetry: () => ref.invalidate(
-                    shoppingListControllerProvider(widget.babyId),
+      child: Stack(
+        children: [
+          // Tap anywhere outside the add card / open swipe row to dismiss them.
+          GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onTap: () {
+              if (_addCardOpen) _closeAddCard();
+              _swipeController.close();
+            },
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSizes.md,
+                AppSizes.sm,
+                AppSizes.md,
+                0,
+              ),
+              child: Column(
+                children: [
+                  _ShoppingListHeader(
+                    onAddPressed: _openAddCard,
+                    onMenuSelected: (action) {
+                      switch (action) {
+                        case ShoppingListMenuAction.copy:
+                          _copyToClipboard();
+                        case ShoppingListMenuAction.clear:
+                          _showClearConfirmation();
+                      }
+                    },
                   ),
-                ),
-                data: (state) => _selectedTab == 0
-                    ? _ItemsList(
-                        items: state.listItems,
-                        onToggle: _check,
-                        onDelete: _delete,
-                      )
-                    : _ItemsList(
-                        items: state.boughtItems,
-                        onToggle: _uncheck,
-                        onDelete: _delete,
+                  const SizedBox(height: AppSizes.sp12),
+                  AppSegmentedControl(
+                    segments: const ['List', 'Bought'],
+                    selectedIndex: _selectedTab,
+                    onChanged: (i) => setState(() => _selectedTab = i),
+                  ),
+                  const SizedBox(height: AppSizes.sp12),
+                  Expanded(
+                    child: controllerAsync.when(
+                      loading: () =>
+                          const Center(child: CircularProgressIndicator()),
+                      error: (e, _) => _ErrorState(
+                        onRetry: () => ref.invalidate(
+                          shoppingListControllerProvider(widget.babyId),
+                        ),
                       ),
+                      data: (state) => _selectedTab == 0
+                          ? _ItemsList(
+                              items: state.listItems,
+                              swipeController: _swipeController,
+                              onToggle: _check,
+                              onDelete: _delete,
+                            )
+                          : _ItemsList(
+                              items: state.boughtItems,
+                              swipeController: _swipeController,
+                              onToggle: _uncheck,
+                              onDelete: _delete,
+                            ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+          if (_addCardOpen)
+            Positioned(
+              left: AppSizes.md,
+              right: AppSizes.md,
+              bottom: MediaQuery.of(context).viewInsets.bottom + AppSizes.sm,
+              child: AddIngredientCard(
+                controller: _addController,
+                focusNode: _addFocusNode,
+                onAdd: _submitAdd,
+              ),
+            ),
+        ],
       ),
     );
   }
 }
 
 // ---------------------------------------------------------------------------
-// Header — title + green-deep more_horiz overflow chip
+// Header — title + "+" add chip + green-deep more_horiz overflow chip
 // ---------------------------------------------------------------------------
 
 class _ShoppingListHeader extends StatelessWidget {
-  const _ShoppingListHeader({required this.onMenuSelected});
+  const _ShoppingListHeader({
+    required this.onAddPressed,
+    required this.onMenuSelected,
+  });
 
+  final VoidCallback onAddPressed;
   final ValueChanged<ShoppingListMenuAction> onMenuSelected;
 
   @override
@@ -247,6 +335,8 @@ class _ShoppingListHeader extends StatelessWidget {
             style: AppTypography.textTheme.titleSmall,
           ),
         ),
+        _AddChip(onTap: onAddPressed),
+        const SizedBox(width: AppSizes.sm),
         ShoppingListOverflowMenu(
           onSelected: onMenuSelected,
           child: const _OverflowChip(),
@@ -256,8 +346,39 @@ class _ShoppingListHeader extends StatelessWidget {
   }
 }
 
-/// 40x40 green-deep rounded-square chip. Mirrors Figma 971:9943
-/// (Button-chips, bg ForestDarkn, rounded-[10px]).
+/// 40x40 green-deep rounded-square chip with "+" icon. Opens the floating
+/// Add Ingredient card. Mirrors the header chip treatment in 971:9872.
+class _AddChip extends StatelessWidget {
+  const _AddChip({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: AppColors.greenDeep,
+          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+        ),
+        alignment: Alignment.center,
+        child: const Icon(
+          Icons.add,
+          color: AppColors.onGreen,
+          size: AppSizes.iconMd,
+        ),
+      ),
+    );
+  }
+}
+
+/// 40x40 green-deep rounded-square chip hosting the more_horiz overflow.
+/// Wrapped externally by [ShoppingListOverflowMenu] which handles tap-to-open.
+/// Mirrors Figma 971:9858 / 971:9943 (Button-chips, bg ForestDarkn, rounded-[10px]).
 class _OverflowChip extends StatelessWidget {
   const _OverflowChip();
 
@@ -287,11 +408,13 @@ class _OverflowChip extends StatelessWidget {
 class _ItemsList extends StatelessWidget {
   const _ItemsList({
     required this.items,
+    required this.swipeController,
     required this.onToggle,
     required this.onDelete,
   });
 
   final List<ShoppingListItem> items;
+  final SwipeRevealController swipeController;
   final ValueChanged<String> onToggle;
   final ValueChanged<String> onDelete;
 
@@ -306,10 +429,21 @@ class _ItemsList extends StatelessWidget {
       separatorBuilder: (_, __) => const SizedBox(height: AppSizes.sm),
       itemBuilder: (_, index) {
         final item = items[index];
-        return _ShoppingItemRow(
-          item: item,
-          onToggle: () => onToggle(item.id),
+        // Optimistic placeholder id=='' would collide if multiple are pending;
+        // fall back to a createdAt-based key.
+        final rowKey = item.id.isNotEmpty
+            ? item.id
+            : 'pending-${item.createdAt.microsecondsSinceEpoch}';
+        return SwipeRevealRow(
+          key: ValueKey(rowKey),
+          rowId: rowKey,
+          controller: swipeController,
           onDelete: () => onDelete(item.id),
+          child: _ShoppingItemRow(
+            item: item,
+            onToggle: () => onToggle(item.id),
+            onDelete: () => onDelete(item.id),
+          ),
         );
       },
     );
@@ -409,6 +543,7 @@ class _SquareCheckbox extends StatelessWidget {
 
 /// Per-row cancel chip — 37x37, rounded 10, burgundy circle X icon.
 /// Mirrors Figma 898:18568 (cancel) inside Button-chips wrapper.
+/// Single-tap directly commits delete — no confirm dialog (NIB-81).
 class _CancelChip extends StatelessWidget {
   const _CancelChip({required this.onTap, required this.size});
 
