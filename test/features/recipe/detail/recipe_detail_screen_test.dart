@@ -369,9 +369,11 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 350));
 
-      // The multi-day sheet exposes a 'Days Selected' counter and a 'Close'
-      // tooltip — both unique to that sheet.
-      expect(find.textContaining('Days Selected'), findsOneWidget);
+      // The multi-day sheet renders a verbatim 'Meal Plan' title and the
+      // initial 'X selected' counter (Figma 971:9346) — both unique to that
+      // sheet.
+      expect(find.text('Meal Plan'), findsOneWidget);
+      expect(find.text('0 selected'), findsOneWidget);
     });
   });
 }
