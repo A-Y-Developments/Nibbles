@@ -374,12 +374,16 @@ class _SeeAllLink extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onPressed,
-      child: Text(
-        'See All',
-        style: textTheme.bodyMedium?.copyWith(color: AppColors.fgFaint),
+    return Semantics(
+      button: true,
+      label: 'See All',
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onPressed,
+        child: Text(
+          'See All',
+          style: textTheme.bodyMedium?.copyWith(color: AppColors.fgFaint),
+        ),
       ),
     );
   }
