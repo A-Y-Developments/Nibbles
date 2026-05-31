@@ -18,15 +18,22 @@ import 'package:nibbles/src/logging/analytics.dart';
 
 /// Bottom sheet shown via [showModalBottomSheet]. Returns the picked recipes
 /// or null on cancel. Multi-select Browse Meal sheet for the meal-plan
-/// mapper flow (NIB-87).
+/// mapper flow (NIB-87, Figma 971:8264 + 971:8334).
 ///
 /// Surfaces:
-///   * "Recommendation for {ongoing allergen}" carousel — only when an
+///   * Header — "Browse Meal" title, weekday date range
+///     ("Mon, 20 - Thu 23 April"), and a top-right close (X) icon.
+///   * "Recomendation for {ongoing allergen}" carousel — only when an
 ///     `AllergenStatus.inProgress` allergen exists per
-///     [AllergenService.getAllergenStatuses].
-///   * Tag-derived carousels — grouped by allergen tag on the loaded recipes.
-///   * Searchable master list with selected / unselected counters.
-///   * Sticky "Add (N)" CTA returning the picked [Recipe] list.
+///     [AllergenService.getAllergenStatuses]. The verbatim Figma copy
+///     intentionally retains the typo "Recomendation" until the PO
+///     clarifies (acceptance criteria).
+///   * Category-derived carousels — driven by [Recipe.category]; falls
+///     back to allergen-tag groups when no recipes carry a category.
+///   * Searchable master list with tappable selected / unselected counter
+///     pills that filter the list into a review mode.
+///   * Sticky CTA — "Add (N)" in browse mode, "Mapp Meal Plan" in review
+///     mode (verbatim Figma copy; "Map Meal Plan" PO-correction noted).
 ///
 /// Flagged-allergen recipes (those tagged with any key returned by
 /// [RecipeService.getFlaggedAllergenKeys]) are rendered visually disabled
@@ -72,6 +79,7 @@ class _BrowseMealSheet extends ConsumerStatefulWidget {
 class _BrowseMealSheetState extends ConsumerState<_BrowseMealSheet> {
   final TextEditingController _searchController = TextEditingController();
   final Set<String> _selectedRecipeIds = {};
+  final Set<String> _deselectedRecipeIds = {};
 
   List<Recipe>? _recipes;
   Set<String> _flaggedKeys = {};
@@ -79,6 +87,7 @@ class _BrowseMealSheetState extends ConsumerState<_BrowseMealSheet> {
   String _query = '';
   bool _loading = true;
   String? _error;
+  BrowseMealSelectionFilter _filter = BrowseMealSelectionFilter.none;
 
   @override
   void initState() {
@@ -150,11 +159,29 @@ class _BrowseMealSheetState extends ConsumerState<_BrowseMealSheet> {
     setState(() {
       if (_selectedRecipeIds.contains(r.id)) {
         _selectedRecipeIds.remove(r.id);
+        _deselectedRecipeIds.add(r.id);
         unawaited(analytics.logMealPrepBrowseDeselected(recipeId: r.id));
       } else {
         _selectedRecipeIds.add(r.id);
+        _deselectedRecipeIds.remove(r.id);
         unawaited(analytics.logMealPrepBrowseSelected(recipeId: r.id));
       }
+    });
+  }
+
+  void _onSelectedCounterTap() {
+    setState(() {
+      _filter = _filter == BrowseMealSelectionFilter.selected
+          ? BrowseMealSelectionFilter.none
+          : BrowseMealSelectionFilter.selected;
+    });
+  }
+
+  void _onUnselectedCounterTap() {
+    setState(() {
+      _filter = _filter == BrowseMealSelectionFilter.unselected
+          ? BrowseMealSelectionFilter.none
+          : BrowseMealSelectionFilter.unselected;
     });
   }
 
@@ -170,9 +197,20 @@ class _BrowseMealSheetState extends ConsumerState<_BrowseMealSheet> {
 
   List<Recipe> get _searchResults {
     final all = _recipes ?? const <Recipe>[];
-    if (_query.isEmpty) return all;
+    Iterable<Recipe> filtered = all;
+    switch (_filter) {
+      case BrowseMealSelectionFilter.none:
+        break;
+      case BrowseMealSelectionFilter.selected:
+        filtered = all.where((r) => _selectedRecipeIds.contains(r.id));
+      case BrowseMealSelectionFilter.unselected:
+        filtered = all.where((r) => _deselectedRecipeIds.contains(r.id));
+    }
+    if (_query.isEmpty) return filtered.toList();
     final q = _query.toLowerCase();
-    return all.where((r) => r.title.toLowerCase().contains(q)).toList();
+    return filtered
+        .where((r) => r.title.toLowerCase().contains(q))
+        .toList();
   }
 
   List<Recipe> _recommendationsFor(String allergenKey) {
@@ -182,12 +220,28 @@ class _BrowseMealSheetState extends ConsumerState<_BrowseMealSheet> {
         .toList(growable: false);
   }
 
-  /// Tag-derived groups: one carousel per allergen key present in the loaded
-  /// recipes, ordered by [kAllergenKeys], excluding the ongoing-allergen key
-  /// (already surfaced) and any flagged keys.
-  List<MapEntry<String, List<Recipe>>> _tagGroups() {
+  /// Category-derived groups: one carousel per non-null `Recipe.category`
+  /// present in the loaded recipes. Flagged-allergen recipes are excluded so
+  /// they only surface in the master list (where their disabled state is
+  /// communicated explicitly).
+  ///
+  /// If no recipes carry a category we fall back to allergen-tag groups so
+  /// the sheet still has visual structure when the seed data is sparse
+  /// (open question NIB-87 — final category set TBC by PO).
+  List<MapEntry<String, List<Recipe>>> _categoryGroups() {
     final all = _recipes ?? const <Recipe>[];
     if (all.isEmpty) return const [];
+    final byCategory = <String, List<Recipe>>{};
+    for (final r in all) {
+      if (_isUnsafe(r)) continue;
+      final cat = r.category;
+      if (cat == null || cat.isEmpty) continue;
+      byCategory.putIfAbsent(cat, () => <Recipe>[]).add(r);
+    }
+    if (byCategory.isNotEmpty) {
+      return byCategory.entries.toList(growable: false);
+    }
+    // Fallback: derived from allergen tags.
     final groups = <String, List<Recipe>>{};
     for (final key in kAllergenKeys) {
       if (key == _ongoingAllergenKey) continue;
@@ -221,11 +275,13 @@ class _BrowseMealSheetState extends ConsumerState<_BrowseMealSheet> {
               _Header(
                 startDate: widget.startDate,
                 endDate: widget.endDate,
+                onClose: () => Navigator.of(context).pop(),
               ),
               const SizedBox(height: AppSizes.md),
               Expanded(child: _body()),
               if (!_loading && _error == null) _StickyAddBar(
                 count: _selectedRecipeIds.length,
+                inReviewMode: _filter != BrowseMealSelectionFilter.none,
                 onPressed: _selectedRecipeIds.isEmpty ? null : _confirm,
               ),
             ],
@@ -260,62 +316,52 @@ class _BrowseMealSheetState extends ConsumerState<_BrowseMealSheet> {
   }
 
   Widget _content() {
-    final totalCount = (_recipes ?? const <Recipe>[]).length;
     final selectedCount = _selectedRecipeIds.length;
-    final unselectedCount = (totalCount - selectedCount).clamp(0, totalCount);
     final searchResults = _searchResults;
     final ongoingKey = _ongoingAllergenKey;
     final ongoingRecipes = ongoingKey == null
         ? const <Recipe>[]
         : _recommendationsFor(ongoingKey);
-    final tagGroups = _tagGroups();
+    final categoryGroups = _categoryGroups();
+    final inReviewMode = _filter != BrowseMealSelectionFilter.none;
 
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(
           child: Column(
             children: [
-              if (ongoingKey != null && ongoingRecipes.isNotEmpty)
-                RecommendationCarouselSection(
-                  title: 'Recommendation for '
-                      '${AllergenEmoji.get(ongoingKey)} '
-                      '${_displayName(ongoingKey)}',
-                  recipes: ongoingRecipes,
-                  selectedIds: _selectedRecipeIds,
-                  isUnsafe: _isUnsafe,
-                  onToggle: _toggleRecipe,
+              if (!inReviewMode) ...[
+                BrowseMealSearchField(
+                  controller: _searchController,
+                  onChanged: (v) => setState(() => _query = v),
                 ),
-              for (final group in tagGroups)
-                RecommendationCarouselSection(
-                  title: '${AllergenEmoji.get(group.key)} '
-                      '${_displayName(group.key)} recipes',
-                  recipes: group.value,
-                  selectedIds: _selectedRecipeIds,
-                  isUnsafe: _isUnsafe,
-                  onToggle: _toggleRecipe,
-                ),
-              const SizedBox(height: AppSizes.sm),
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSizes.pagePaddingH,
-                ),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'All recipes',
-                    style: Theme.of(context).textTheme.titleMedium,
+                const SizedBox(height: AppSizes.md),
+                if (ongoingKey != null && ongoingRecipes.isNotEmpty)
+                  RecommendationCarouselSection(
+                    title: 'Recomendation for '
+                        '${AllergenEmoji.get(ongoingKey)} '
+                        '${_displayName(ongoingKey)}',
+                    recipes: ongoingRecipes,
+                    selectedIds: _selectedRecipeIds,
+                    isUnsafe: _isUnsafe,
+                    onToggle: _toggleRecipe,
                   ),
-                ),
-              ),
-              const SizedBox(height: AppSizes.sm),
-              BrowseMealSearchField(
-                controller: _searchController,
-                onChanged: (v) => setState(() => _query = v),
-              ),
-              const SizedBox(height: AppSizes.sm),
+                for (final group in categoryGroups)
+                  RecommendationCarouselSection(
+                    title: _categoryDisplayTitle(group.key),
+                    recipes: group.value,
+                    selectedIds: _selectedRecipeIds,
+                    isUnsafe: _isUnsafe,
+                    onToggle: _toggleRecipe,
+                  ),
+              ],
               SelectionCounters(
                 selectedCount: selectedCount,
-                unselectedCount: unselectedCount,
+                unselectedCount: _deselectedRecipeIds.length,
+                activeFilter: _filter,
+                onSelectedTap: _onSelectedCounterTap,
+                onUnselectedTap: _onUnselectedCounterTap,
+                showUnselected: _deselectedRecipeIds.isNotEmpty,
               ),
               const SizedBox(height: AppSizes.sm),
             ],
@@ -360,6 +406,17 @@ class _BrowseMealSheetState extends ConsumerState<_BrowseMealSheet> {
   }
 
   String _displayName(String key) => key.replaceAll('_', ' ');
+
+  /// Renders a carousel section title from a [Recipe.category] value or an
+  /// allergen-key fallback. When the category is already a display string
+  /// (e.g. "Iron-rich Purées") we use it verbatim; allergen-key fallbacks
+  /// get an emoji prefix.
+  String _categoryDisplayTitle(String raw) {
+    if (kAllergenKeys.contains(raw)) {
+      return '${AllergenEmoji.get(raw)} ${_displayName(raw)} recipes';
+    }
+    return raw;
+  }
 }
 
 class _GrabHandle extends StatelessWidget {
@@ -377,49 +434,84 @@ class _GrabHandle extends StatelessWidget {
 }
 
 class _Header extends StatelessWidget {
-  const _Header({required this.startDate, required this.endDate});
+  const _Header({
+    required this.startDate,
+    required this.endDate,
+    required this.onClose,
+  });
 
   final DateTime startDate;
   final DateTime endDate;
+  final VoidCallback onClose;
 
-  String _format(DateTime d) {
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    return '${months[d.month - 1]} ${d.day}';
+  static const List<String> _weekdays = [
+    'Mon',
+    'Tue',
+    'Wed',
+    'Thu',
+    'Fri',
+    'Sat',
+    'Sun',
+  ];
+  static const List<String> _months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+
+  /// Figma spec format example: "Mon, 20 - Thu 23 April".
+  /// Weekday short + day of month at both ends, full month name at the tail.
+  String _formatRange() {
+    final sameDay = startDate.year == endDate.year &&
+        startDate.month == endDate.month &&
+        startDate.day == endDate.day;
+    final start = startDate;
+    final end = endDate;
+    final startW = _weekdays[start.weekday - 1];
+    final endW = _weekdays[end.weekday - 1];
+    final endM = _months[end.month - 1];
+    if (sameDay) {
+      return '$startW, ${start.day} $endM';
+    }
+    return '$startW, ${start.day} - $endW ${end.day} $endM';
   }
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final sameDay = startDate.year == endDate.year &&
-        startDate.month == endDate.month &&
-        startDate.day == endDate.day;
-    final range = sameDay
-        ? _format(startDate)
-        : '${_format(startDate)} – ${_format(endDate)}';
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSizes.pagePaddingH),
-      child: Column(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Browse Meals', style: textTheme.titleLarge),
-          const SizedBox(height: 2),
-          Text(
-            range,
-            style: textTheme.bodyMedium?.copyWith(color: AppColors.fgMuted),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Browse Meal', style: textTheme.titleLarge),
+                const SizedBox(height: 2),
+                Text(
+                  _formatRange(),
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: AppColors.fgDefault,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            onPressed: onClose,
+            icon: const Icon(Icons.close, color: AppColors.greenDeep),
+            tooltip: 'Close',
           ),
         ],
       ),
@@ -467,10 +559,23 @@ class _ErrorPlaceholder extends StatelessWidget {
 }
 
 class _StickyAddBar extends StatelessWidget {
-  const _StickyAddBar({required this.count, required this.onPressed});
+  const _StickyAddBar({
+    required this.count,
+    required this.inReviewMode,
+    required this.onPressed,
+  });
 
   final int count;
+  final bool inReviewMode;
   final VoidCallback? onPressed;
+
+  /// Floating CTA label per ticket NIB-87:
+  ///   * Browse phase  → "Add (N)"
+  ///   * Review phase  → "Mapp Meal Plan" (verbatim Figma copy; PO has the
+  ///     "Map" correction noted as an open question but the bracketed
+  ///     verbatim spelling is required until clarified).
+  String get _label =>
+      inReviewMode ? 'Mapp Meal Plan' : 'Add ($count)';
 
   @override
   Widget build(BuildContext context) {
@@ -500,7 +605,7 @@ class _StickyAddBar extends StatelessWidget {
             ),
           ),
           child: Text(
-            'Add ($count)',
+            _label,
             style: AppTypography.button.copyWith(
               color: AppColors.onPrimary,
             ),
