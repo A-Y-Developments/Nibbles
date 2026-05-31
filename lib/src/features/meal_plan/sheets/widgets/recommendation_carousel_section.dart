@@ -84,7 +84,7 @@ class BrowseMealSearchField extends StatelessWidget {
         onChanged: onChanged,
         textInputAction: TextInputAction.search,
         decoration: InputDecoration(
-          hintText: 'Search recipes',
+          hintText: 'Search recipe',
           prefixIcon: const Icon(Icons.search, color: AppColors.greenDeep),
           filled: true,
           fillColor: AppColors.bgInput,
@@ -102,16 +102,29 @@ class BrowseMealSearchField extends StatelessWidget {
   }
 }
 
-/// Counter chip showing the selected and unselected counts.
+/// Selection filter chips for the Browse Meal sheet.
+///
+/// Per Figma 971:8334, the "{N} selected" / "{N} unselected" pills are
+/// tap-targets that filter the master list to selected / unselected recipes
+/// respectively. The "unselected" chip only renders when the user has begun
+/// reviewing their picks (i.e. [showUnselected] is true).
 class SelectionCounters extends StatelessWidget {
   const SelectionCounters({
     required this.selectedCount,
     required this.unselectedCount,
+    required this.activeFilter,
+    required this.onSelectedTap,
+    required this.onUnselectedTap,
+    this.showUnselected = false,
     super.key,
   });
 
   final int selectedCount;
   final int unselectedCount;
+  final BrowseMealSelectionFilter activeFilter;
+  final VoidCallback onSelectedTap;
+  final VoidCallback onUnselectedTap;
+  final bool showUnselected;
 
   @override
   Widget build(BuildContext context) {
@@ -121,48 +134,67 @@ class SelectionCounters extends StatelessWidget {
         children: [
           _Counter(
             label: '$selectedCount selected',
-            background: AppColors.greenTint,
+            background: AppColors.butterSoft,
             foreground: AppColors.greenDeep,
+            active: activeFilter == BrowseMealSelectionFilter.selected,
+            onTap: onSelectedTap,
           ),
-          const SizedBox(width: AppSizes.sm),
-          _Counter(
-            label: '$unselectedCount unselected',
-            background: AppColors.surfaceVariant,
-            foreground: AppColors.fgMuted,
-          ),
+          if (showUnselected) ...[
+            const SizedBox(width: AppSizes.sm),
+            _Counter(
+              label: '$unselectedCount unselected',
+              background: AppColors.coralSoft,
+              foreground: AppColors.coralDeep,
+              active: activeFilter == BrowseMealSelectionFilter.unselected,
+              onTap: onUnselectedTap,
+            ),
+          ],
         ],
       ),
     );
   }
 }
 
+/// Filter modes for the selection counter chips.
+enum BrowseMealSelectionFilter { none, selected, unselected }
+
 class _Counter extends StatelessWidget {
   const _Counter({
     required this.label,
     required this.background,
     required this.foreground,
+    required this.active,
+    required this.onTap,
   });
 
   final String label;
   final Color background;
   final Color foreground;
+  final bool active;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.sp12,
-        vertical: AppSizes.xs,
-      ),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-      ),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: foreground,
-          fontWeight: FontWeight.w600,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSizes.sp12,
+          vertical: AppSizes.xs,
+        ),
+        decoration: BoxDecoration(
+          color: background,
+          borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+          border: active
+              ? Border.all(color: foreground, width: 1.5)
+              : null,
+        ),
+        child: Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: foreground,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );

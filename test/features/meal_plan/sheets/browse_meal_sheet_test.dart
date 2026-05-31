@@ -243,7 +243,82 @@ void main() {
           // All statuses safe → no ongoing allergen → no carousel header.
         );
 
-        expect(find.textContaining('Recommendation for'), findsNothing);
+        // Verbatim Figma copy intentionally preserves the typo
+        // "Recomendation" — see NIB-87 acceptance criteria.
+        expect(find.textContaining('Recomendation for'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'header renders verbatim "Browse Meal" title and weekday range',
+      (tester) async {
+        await openSheet(
+          tester,
+          recipes: const [_safeA],
+          flaggedKeys: const {},
+        );
+
+        expect(find.text('Browse Meal'), findsOneWidget);
+        // openSheet uses DateTime(2026, 5, 30) → DateTime(2026, 6, 5).
+        // 2026-05-30 is a Saturday; 2026-06-05 is a Friday.
+        expect(find.text('Sat, 30 - Fri 5 June'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'tapping selected counter chip toggles review mode + CTA label',
+      (tester) async {
+        await openSheet(
+          tester,
+          recipes: const [_safeA, _safeB],
+          flaggedKeys: const {},
+        );
+
+        // Select one recipe.
+        await tester.tap(find.text(_safeA.title).first);
+        await tester.pump();
+
+        // CTA default label.
+        expect(find.text('Add (1)'), findsOneWidget);
+        expect(find.text('Mapp Meal Plan'), findsNothing);
+
+        // Enter review mode via the selected pill.
+        await tester.tap(find.text('1 selected'));
+        await tester.pump();
+
+        expect(find.text('Mapp Meal Plan'), findsOneWidget);
+        expect(find.text('Add (1)'), findsNothing);
+      },
+    );
+
+    testWidgets('search field uses verbatim "Search recipe" hint',
+        (tester) async {
+      await openSheet(
+        tester,
+        recipes: const [_safeA, _safeB],
+        flaggedKeys: const {},
+      );
+
+      expect(find.text('Search recipe'), findsOneWidget);
+    });
+
+    testWidgets(
+      'close (X) icon dismisses the sheet with a null result',
+      (tester) async {
+        await openSheet(
+          tester,
+          recipes: const [_safeA, _safeB],
+          flaggedKeys: const {},
+        );
+
+        // The header close icon — Icons.close is unique to the sheet header.
+        await tester.tap(find.byIcon(Icons.close));
+        // Drive the sheet dismissal animation.
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
+
+        final result = await pendingResult;
+        expect(result, isNull);
       },
     );
   });
