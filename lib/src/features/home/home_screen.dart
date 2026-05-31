@@ -157,6 +157,7 @@ class _HomeContent extends StatelessWidget {
               GreetingCard(
                 babyName: baby.name,
                 ageMonths: ageMonths,
+                dateOfBirth: baby.dateOfBirth,
               ),
               const SizedBox(height: AppSizes.md),
               StatRingCard(
@@ -164,15 +165,21 @@ class _HomeContent extends StatelessWidget {
                 flaggedCount: state.flaggedCount,
                 notStartedCount: state.notStartedCount,
                 inProgressCount: state.inProgressCount,
+                todayMealCount: state.todayMealCount,
+                todayMealTarget: 2,
               ),
               const SizedBox(height: AppSizes.md),
               OngoingIntroducedCard(
                 allergenStatuses: state.allergenStatuses,
+                logCounts: state.allergenLogCounts,
               ),
               const SizedBox(height: AppSizes.md),
               const DayChipRow(),
               const SizedBox(height: AppSizes.md),
-              TodaysMealsCard(todaysMeals: state.todaysMeals),
+              TodaysMealsCard(
+                todaysMeals: state.todaysMeals,
+                recipes: state.todaysRecipes,
+              ),
               const SizedBox(height: AppSizes.md),
               const HelpfulGuidanceCard(),
               const SizedBox(height: AppSizes.xl),

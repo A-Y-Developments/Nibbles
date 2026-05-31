@@ -87,6 +87,7 @@ void main() {
               'peanut': AllergenStatus.inProgress,
               'egg': AllergenStatus.notStarted,
             },
+            logCounts: {'peanut': 2},
           ),
         ),
       );
@@ -94,9 +95,43 @@ void main() {
 
       expect(find.text('ONGOING INTRODUCED'), findsOneWidget);
       expect(find.text('Peanut'), findsOneWidget);
-      expect(find.text('Currently introducing'), findsOneWidget);
+      // Verbatim audit subhead (trailing space preserved): "2/3 times ".
+      expect(find.text('2/3 times '), findsOneWidget);
       // Peanut emoji is in the AllergenEmoji constant — renders inside thumb.
       expect(find.text('🥜'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'logCounts absent -> falls back to 0/3 times subhead (verbatim)',
+    (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          const OngoingIntroducedCard(
+            allergenStatuses: {'peanut': AllergenStatus.inProgress},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('0/3 times '), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'logCounts above target -> subhead clamps to 3/3 times',
+    (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          const OngoingIntroducedCard(
+            allergenStatuses: {'peanut': AllergenStatus.inProgress},
+            logCounts: {'peanut': 7},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('3/3 times '), findsOneWidget);
     },
   );
 

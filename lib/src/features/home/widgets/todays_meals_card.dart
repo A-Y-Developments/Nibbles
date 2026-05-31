@@ -5,30 +5,38 @@ import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
+import 'package:nibbles/src/common/components/chips/app_chip.dart';
 import 'package:nibbles/src/common/domain/entities/meal_plan_entry.dart';
+import 'package:nibbles/src/common/domain/entities/recipe.dart';
 import 'package:nibbles/src/logging/analytics.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 
 /// Home — Today's meals card (NIB-77, Figma 1242:10630).
 ///
-/// 'Today, {Month Day}' title rendered outside the white card. The card
-/// contains a butter coverage banner, a 'TODAY'S MEALS' overline + n/2 meta
-/// counter, then meal rows. Each row taps to `recipeDetail` with the entry's
-/// `recipeId`. When `todaysMeals` is empty, an inline 'No meals today'
-/// placeholder is rendered inside the card (the full-screen empty state lives
-/// in NIB-96).
+/// Header: 'Today, {Month Day}' (title3) rendered outside the white card.
+/// Card body:
+///   - 'TODAY'S MEALS' overline + `n/2` meta counter.
+///   - Butter "Great job! Everything important is covered" banner that
+///     ONLY shows when meal coverage is 100% (n >= [_dailyTarget]).
+///   - One meal row per entry, hydrated from [recipes] when available
+///     (recipe title + allergen/nutrition chips). Rows that miss recipe
+///     hydration fall back to the meal-time label so the card never blanks.
 ///
-/// Note: `MealPlanEntry` only carries `recipeId` (no recipe title or allergen
-/// tags). Until home_controller hydrates recipes, each row shows a generic
-/// thumb + the meal-time label (when present, falling back to 'Meal'). Tag
-/// chips are intentionally omitted.
+/// Each row taps to `recipeDetail` with the entry's `recipeId`. When
+/// `todaysMeals` is empty an inline "No meals today" placeholder renders
+/// (full-screen empty state lives in NIB-96).
 class TodaysMealsCard extends StatelessWidget {
   const TodaysMealsCard({
     required this.todaysMeals,
+    this.recipes = const <String, Recipe>{},
     super.key,
   });
 
   final List<MealPlanEntry> todaysMeals;
+
+  /// Recipe-id → [Recipe] map populated by the controller. Missing keys are
+  /// silently tolerated — the row falls back to the meal-time label.
+  final Map<String, Recipe> recipes;
 
   static const List<String> _shortMonths = [
     'Jan',
@@ -52,6 +60,7 @@ class TodaysMealsCard extends StatelessWidget {
     final today = DateTime.now();
     final headerTitle =
         'Today, ${_shortMonths[today.month - 1]} ${today.day}';
+    final isComplete = todaysMeals.length >= _dailyTarget;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -69,8 +78,10 @@ class TodaysMealsCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _MealsOverlineRow(count: todaysMeals.length),
-              const SizedBox(height: AppSizes.sm),
-              const _CoverageBanner(),
+              if (isComplete) ...[
+                const SizedBox(height: AppSizes.sm),
+                const _GreatJobBanner(),
+              ],
               const SizedBox(height: AppSizes.sm + 2),
               if (todaysMeals.isEmpty)
                 const _NoMealsInline()
@@ -79,7 +90,10 @@ class TodaysMealsCard extends StatelessWidget {
                   final entry = todaysMeals[i];
                   return Padding(
                     padding: EdgeInsets.only(top: i == 0 ? 0 : AppSizes.sm),
-                    child: _MealRow(entry: entry),
+                    child: _MealRow(
+                      entry: entry,
+                      recipe: recipes[entry.recipeId],
+                    ),
                   );
                 }),
             ],
@@ -125,8 +139,10 @@ class _MealsOverlineRow extends StatelessWidget {
   }
 }
 
-class _CoverageBanner extends StatelessWidget {
-  const _CoverageBanner();
+/// Butter coverage banner — verbatim audit copy "Great job! Everything
+/// important is covered". Only rendered when daily target is met.
+class _GreatJobBanner extends StatelessWidget {
+  const _GreatJobBanner();
 
   @override
   Widget build(BuildContext context) {
@@ -149,12 +165,12 @@ class _CoverageBanner extends StatelessWidget {
               shape: BoxShape.circle,
             ),
             alignment: Alignment.center,
-            child: const Text('🌱', style: TextStyle(fontSize: 14, height: 1)),
+            child: const Text('🎉', style: TextStyle(fontSize: 14, height: 1)),
           ),
           const SizedBox(width: AppSizes.sm + 2),
           Expanded(
             child: Text(
-              "Today's meals balance allergens and nutrition.",
+              'Great job! Everything important is covered',
               style: AppTypography.textTheme.labelMedium?.copyWith(
                 color: AppColors.fgStrong,
                 fontWeight: FontWeight.w700,
@@ -169,19 +185,38 @@ class _CoverageBanner extends StatelessWidget {
 }
 
 class _MealRow extends StatelessWidget {
-  const _MealRow({required this.entry});
+  const _MealRow({required this.entry, this.recipe});
 
   final MealPlanEntry entry;
+  final Recipe? recipe;
 
   String _capitalize(String value) =>
       value.isEmpty ? value : '${value[0].toUpperCase()}${value.substring(1)}';
 
   @override
   Widget build(BuildContext context) {
-    final mealTime = entry.mealTime;
-    final label = (mealTime == null || mealTime.isEmpty)
-        ? 'Meal'
-        : _capitalize(mealTime);
+    final title = recipe?.title ??
+        ((entry.mealTime?.isNotEmpty ?? false)
+            ? _capitalize(entry.mealTime!)
+            : 'Meal');
+
+    // Tag chips: up to 2 visible (category + nutritionTags), with a "+N"
+    // overflow chip when more remain. Matches the audit's "Fruit / Iron
+    // Rich / +2" layout.
+    //
+    // `recipe.allergenTags` is INTENTIONALLY excluded — that field means
+    // "this recipe CONTAINS these allergens" (safety signal), surfacing it
+    // as a friendly tag here would invert its meaning. Category + nutrition
+    // tags are the positive-attribute fields.
+    final tags = <_TagChipData>[
+      if ((recipe?.category ?? '').isNotEmpty)
+        _TagChipData(
+          label: _capitalize(recipe!.category!),
+          icon: Icons.local_florist,
+        ),
+      for (final tag in (recipe?.nutritionTags ?? const <String>[]))
+        _TagChipData(label: tag, icon: Icons.bolt),
+    ];
 
     return Material(
       color: Colors.transparent,
@@ -199,6 +234,7 @@ class _MealRow extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(AppSizes.xs),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
                 width: 56,
@@ -219,25 +255,64 @@ class _MealRow extends StatelessWidget {
               ),
               const SizedBox(width: AppSizes.sp12),
               Expanded(
-                child: Text(
-                  label,
-                  style: AppTypography.textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.fgStrong,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      title,
+                      style: AppTypography.textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.fgStrong,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (tags.isNotEmpty) ...[
+                      const SizedBox(height: AppSizes.xs),
+                      _TagChipsRow(tags: tags),
+                    ],
+                  ],
                 ),
-              ),
-              const Icon(
-                Icons.chevron_right,
-                size: AppSizes.iconMd,
-                color: AppColors.fgFaint,
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class _TagChipData {
+  const _TagChipData({required this.label, required this.icon});
+
+  final String label;
+  final IconData icon;
+}
+
+class _TagChipsRow extends StatelessWidget {
+  const _TagChipsRow({required this.tags});
+
+  final List<_TagChipData> tags;
+
+  static const int _visible = 2;
+
+  @override
+  Widget build(BuildContext context) {
+    final visible = tags.take(_visible).toList(growable: false);
+    final overflow = tags.length - visible.length;
+
+    final chips = <Widget>[
+      for (final tag in visible)
+        AppChip(label: tag.label, icon: Icon(tag.icon, size: 12)),
+      if (overflow > 0)
+        AppChip(label: '+$overflow', icon: const Icon(Icons.add, size: 12)),
+    ];
+
+    return Wrap(
+      spacing: AppSizes.xs + 2,
+      runSpacing: AppSizes.xs,
+      children: chips,
     );
   }
 }

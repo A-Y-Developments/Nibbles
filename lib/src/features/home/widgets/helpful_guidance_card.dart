@@ -9,24 +9,29 @@ import 'package:nibbles/src/common/components/cards/tip_card.dart';
 /// Renders a 'Helpful Guidance' title3 + three white tip cards (butter glyph
 /// circle, display 14/700 title, callout body) + a final 'Important Health
 /// Disclaimer' [TipCard] (butter-soft surface). Static content for MVP.
+///
+/// Copy is verbatim from the home-populated audit (node 1242:10567). The
+/// trailing space on "No fruit yet today " and the truncated body
+/// "Dinner is a good chance for ..." mirror the Figma frame exactly per
+/// AC — do not paraphrase.
 class HelpfulGuidanceCard extends StatelessWidget {
   const HelpfulGuidanceCard({super.key});
 
   static const List<_TipContent> _tips = [
     _TipContent(
-      emoji: '🥄',
-      title: 'Try one new food at a time',
-      body: 'Wait 3-5 days between new foods so reactions are easy to trace.',
+      emoji: '🍎',
+      title: 'No fruit yet today ',
+      body: 'Dinner is a good chance for ...',
     ),
     _TipContent(
-      emoji: '⏱️',
-      title: 'Watch for reactions for 24 hours',
-      body: 'Most reactions surface within the first day after a new food.',
+      emoji: '💧',
+      title: 'Offer water with each meal',
+      body: 'Small sips in an open cup from 6 month',
     ),
     _TipContent(
-      emoji: '👩‍⚕️',
-      title: 'Consult your pediatrician for concerns',
-      body: 'Reach out before introducing high-risk foods or for any reaction.',
+      emoji: '🍼',
+      title: 'Milk feeds still the priority',
+      body: 'Breastmilk or formula remains the main nutrition at 8 months',
     ),
   ];
 
