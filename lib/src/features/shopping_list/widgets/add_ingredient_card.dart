@@ -4,17 +4,93 @@ import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 
-/// Floating Add Ingredient card. Figma 971:9883 / 971:9884.
+/// Opens the "Add Ingredients" bottom sheet (backlog #9). White surface,
+/// top corners rounded 30px, lifts above the keyboard via
+/// `isScrollControlled` + viewInsets padding. Hosts [AddIngredientCard]
+/// (Ingredients field + lime Add pill). The caller owns [controller] /
+/// [focusNode] and the addManual write via [onAdd]; this sheet is purely
+/// presentational.
+Future<void> showAddIngredientSheet(
+  BuildContext context, {
+  required TextEditingController controller,
+  required FocusNode focusNode,
+  required VoidCallback onAdd,
+}) {
+  return showModalBottomSheet<void>(
+    context: context,
+    backgroundColor: AppColors.surface,
+    barrierColor: Colors.black.withValues(alpha: 0.5),
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+    ),
+    builder: (_) => _AddIngredientSheet(
+      controller: controller,
+      focusNode: focusNode,
+      onAdd: onAdd,
+    ),
+  );
+}
+
+class _AddIngredientSheet extends StatelessWidget {
+  const _AddIngredientSheet({
+    required this.controller,
+    required this.focusNode,
+    required this.onAdd,
+  });
+
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final VoidCallback onAdd;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: AppSizes.sm),
+            // Grab handle.
+            Container(
+              width: AppSizes.sp40,
+              height: AppSizes.xs,
+              decoration: BoxDecoration(
+                color: AppColors.borderSoft,
+                borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+              ),
+            ),
+            const SizedBox(height: AppSizes.md),
+            Text(
+              'Add Ingredients',
+              style: AppTypography.textTheme.titleMedium?.copyWith(
+                color: AppColors.fgStrong,
+              ),
+            ),
+            const SizedBox(height: AppSizes.sm),
+            AddIngredientCard(
+              controller: controller,
+              focusNode: focusNode,
+              onAdd: onAdd,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Add Ingredients content — Figma 971:9883 / 971:9884.
 ///
-/// 370x164 white rounded-[30px] card, shadow 0 4px 10px rgba(0,0,0,0.1).
 /// Bare borderless text field with "Ingredients" placeholder
 /// (Figtree Regular 15, color neutral-50 / fgFaint) + lime pill "Add"
 /// button (77x30, rounded-[24px], bg butter, label Parkinsans SemiBold 15
-/// in greenDeep) anchored top-right.
-///
-/// Owner provides the [controller] + [focusNode]. The caller is responsible
-/// for opening the keyboard (request focus after mount) and for the
-/// addManual write — this widget is purely presentational.
+/// in greenDeep) anchored top-right. Rendered inside the Add Ingredients
+/// bottom sheet — no card chrome of its own.
 class AddIngredientCard extends StatelessWidget {
   const AddIngredientCard({
     required this.controller,
@@ -29,20 +105,8 @@ class AddIngredientCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      // Figma fixed height — 164 — but we let it size to content so the
-      // padding/insets behave on smaller devices.
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radius3xl),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x1A000000),
-            offset: Offset(0, 4),
-            blurRadius: 10,
-          ),
-        ],
-      ),
+    return Padding(
+      // Sheet supplies the surface/rounded-top; this is just inner padding.
       padding: const EdgeInsets.symmetric(
         horizontal: AppSizes.lg,
         vertical: AppSizes.md,
@@ -56,6 +120,7 @@ class AddIngredientCard extends StatelessWidget {
           TextField(
             controller: controller,
             focusNode: focusNode,
+            autofocus: true,
             onSubmitted: (_) => onAdd(),
             textInputAction: TextInputAction.done,
             // Figma body/regular — Figtree 15/22 (matches textTheme.bodyLarge).

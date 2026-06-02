@@ -117,15 +117,15 @@ class _MealPlanDateRangeFormState extends State<MealPlanDateRangeForm> {
           isOpen: _openField == _OpenField.start,
           onTap: () => _toggleField(_OpenField.start, _startDate),
         ),
-        if (_openField == _OpenField.start) ...[
-          const SizedBox(height: AppSizes.sm),
-          InlineCalendar(
+        _CalendarReveal(
+          isOpen: _openField == _OpenField.start,
+          child: InlineCalendar(
             selectedDate: _startDate,
             focusedMonth: _focusedMonth,
             onDaySelected: _onDaySelected,
             onMonthChanged: _onMonthChanged,
           ),
-        ],
+        ),
         const SizedBox(height: AppSizes.md),
         _DateField(
           label: 'End Date',
@@ -133,16 +133,16 @@ class _MealPlanDateRangeFormState extends State<MealPlanDateRangeForm> {
           isOpen: _openField == _OpenField.end,
           onTap: () => _toggleField(_OpenField.end, _endDate),
         ),
-        if (_openField == _OpenField.end) ...[
-          const SizedBox(height: AppSizes.sm),
-          InlineCalendar(
+        _CalendarReveal(
+          isOpen: _openField == _OpenField.end,
+          child: InlineCalendar(
             selectedDate: _endDate,
             focusedMonth: _focusedMonth,
             onDaySelected: _onDaySelected,
             onMonthChanged: _onMonthChanged,
             minDate: _startDate,
           ),
-        ],
+        ),
         if (rangeError != null) ...[
           const SizedBox(height: AppSizes.xs),
           Text(
@@ -156,6 +156,41 @@ class _MealPlanDateRangeFormState extends State<MealPlanDateRangeForm> {
           onPressed: _canSubmit ? _onSubmit : null,
         ),
       ],
+    );
+  }
+}
+
+/// Eases the inline calendar in/out instead of a hard blink when the
+/// owning field toggles. Combines a [SizeTransition] (height reveal) with
+/// a [FadeTransition] via [AnimatedSwitcher] (~200ms, easeOut). Adds the
+/// `sm` gap above the calendar only while open so collapsed spacing stays
+/// flush.
+class _CalendarReveal extends StatelessWidget {
+  const _CalendarReveal({required this.isOpen, required this.child});
+
+  final bool isOpen;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 200),
+      switchInCurve: Curves.easeOut,
+      switchOutCurve: Curves.easeOut,
+      transitionBuilder: (child, animation) => SizeTransition(
+        sizeFactor: animation,
+        child: FadeTransition(opacity: animation, child: child),
+      ),
+      child: isOpen
+          ? Column(
+              key: const ValueKey<bool>(true),
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: AppSizes.sm),
+                child,
+              ],
+            )
+          : const SizedBox(width: double.infinity),
     );
   }
 }

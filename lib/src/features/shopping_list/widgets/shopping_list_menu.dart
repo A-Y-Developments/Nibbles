@@ -174,7 +174,9 @@ class _MenuRowState extends State<_MenuRow> {
           vertical: 6,
         ),
         decoration: BoxDecoration(
-          color: _pressed ? AppColors.butter : Colors.transparent,
+          // Press feedback is a neutral wash, not lime — pressing a row
+          // must not flash yellow (backlog #6).
+          color: _pressed ? AppColors.surfaceVariant : Colors.transparent,
           borderRadius: BorderRadius.circular(6),
         ),
         child: Row(
