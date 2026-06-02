@@ -92,6 +92,7 @@ flutter:
     - .env.prod
     - assets/translations/
     - assets/images/
+    - assets/images/onboarding/
     - assets/icons/
     - assets/jsons/
     # Figtree body font — bundled so google_fonts resolves from assets (no

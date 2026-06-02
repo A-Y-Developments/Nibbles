@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nibbles/gen/assets.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
-import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
 import 'package:nibbles/src/common/components/buttons/app_round_button.dart';
 import 'package:nibbles/src/common/components/controls/app_checkbox.dart';
@@ -16,7 +16,7 @@ import 'package:nibbles/src/routing/route_enums.dart';
 ///
 /// Layout per Figma frames 971:10019 / 1242:10897 / 1242:11124:
 ///   - shared eyebrow "We'll Help You with" + per-slide Parkinsans bold title
-///   - phone-mockup illustration placeholder (real SVGs pending NIB-138)
+///   - per-slide phone-mockup illustration (flattened PNGs exported from Figma)
 ///   - per-slide Figtree body copy (verbatim from spec; slide-3 duplicates
 ///     slide-2 body per audit — PO open question, do not paraphrase)
 ///   - bottom row: lime round back-arrow + forestDarkn "Let's Go" pill,
@@ -226,9 +226,7 @@ class _IntroSlide extends StatelessWidget {
             const _AppleShoplistRow(),
           ],
           Expanded(
-            child: Center(
-              child: _DeviceMockupPlaceholder(slideIndex: slideIndex),
-            ),
+            child: _SlideIllustration(slideIndex: slideIndex),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(
@@ -289,58 +287,37 @@ class _AppleShoplistRow extends StatelessWidget {
   }
 }
 
-/// Styled placeholder for the phone-frame illustration. Real SVG export is
-/// tracked under NIB-138 (Backlog) — we ship the placeholder now so the
-/// carousel structure + copy match the spec, and swap visuals when the
-/// asset import lands.
-class _DeviceMockupPlaceholder extends StatelessWidget {
-  const _DeviceMockupPlaceholder({required this.slideIndex});
+/// Per-slide phone-mockup illustration. Flattened transparent PNGs exported
+/// from Figma (file ASB9HZLodbzJCo5bjkqjy6):
+///   - slide 0 (Meal Prep): phone with the floating TODAY MEALS / ALLERGEN
+///     stats card composited over it (Figma 971:10019)
+///   - slides 1 & 2 (Grocery / Recipes): shared Shopping List mockup — slide 2
+///     reuses slide 1's frame per Figma (duplicate body flagged on NIB-60)
+///
+/// Each PNG has a baked bottom alpha-fade; rendered top-aligned and clipped so
+/// the phone dissolves into the background gradient like the Figma frames.
+class _SlideIllustration extends StatelessWidget {
+  const _SlideIllustration({required this.slideIndex});
 
   final int slideIndex;
 
-  static const _accents = <Color>[
-    AppColors.butter,
-    AppColors.greenTint,
-    AppColors.coralSoft,
-  ];
+  AssetGenImage get _asset => switch (slideIndex) {
+    0 => Assets.images.onboarding.introMealPrep,
+    _ => Assets.images.onboarding.introShoppingList,
+  };
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Device-frame proportions ~ iPhone 9:19.5.
-        final maxWidth = constraints.maxWidth;
-        final maxHeight = constraints.maxHeight;
-        final widthFromHeight = maxHeight * 9 / 19.5;
-        final width = widthFromHeight.clamp(0.0, maxWidth * 0.72);
-        final height = width * 19.5 / 9;
-        return Container(
-          width: width,
-          height: height,
-          decoration: BoxDecoration(
-            color: AppColors.cream,
-            borderRadius: BorderRadius.circular(AppSizes.radius2xl),
-            border: Border.all(
-              color: AppColors.greenDeep.withAlpha(38),
-              width: 1.5,
-            ),
-            boxShadow: AppSizes.shadowCardLifted,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSizes.md),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: _accents[slideIndex % _accents.length],
-                borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-              ),
-              child: Center(
-                child: Text(
-                  'Preview',
-                  style: AppTypography.caption.copyWith(
-                    color: AppColors.greenDeep,
-                  ),
-                ),
-              ),
+        return ClipRect(
+          child: OverflowBox(
+            alignment: Alignment.topCenter,
+            maxHeight: double.infinity,
+            child: _asset.image(
+              width: constraints.maxWidth * 0.92,
+              fit: BoxFit.fitWidth,
+              excludeFromSemantics: true,
             ),
           ),
         );

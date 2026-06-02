@@ -29,6 +29,10 @@ class $AssetsImagesGen {
   AssetGenImage get launchQuatrefoil =>
       const AssetGenImage('assets/images/launch_quatrefoil.png');
 
+  /// Directory path: assets/images/onboarding
+  $AssetsImagesOnboardingGen get onboarding =>
+      const $AssetsImagesOnboardingGen();
+
   /// List of all assets
   List<dynamic> get values => [aGitkeep, launchQuatrefoil];
 }
@@ -54,6 +58,21 @@ class $AssetsTranslationsGen {
 
   /// List of all assets
   List<String> get values => [aGitkeep];
+}
+
+class $AssetsImagesOnboardingGen {
+  const $AssetsImagesOnboardingGen();
+
+  /// File path: assets/images/onboarding/intro_meal_prep.png
+  AssetGenImage get introMealPrep =>
+      const AssetGenImage('assets/images/onboarding/intro_meal_prep.png');
+
+  /// File path: assets/images/onboarding/intro_shopping_list.png
+  AssetGenImage get introShoppingList =>
+      const AssetGenImage('assets/images/onboarding/intro_shopping_list.png');
+
+  /// List of all assets
+  List<AssetGenImage> get values => [introMealPrep, introShoppingList];
 }
 
 class Assets {
