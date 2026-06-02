@@ -1,10 +1,12 @@
 import 'dart:async';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
+import 'package:nibbles/src/common/components/cards/app_card.dart';
 import 'package:nibbles/src/common/components/chips/app_chip.dart';
 import 'package:nibbles/src/common/domain/entities/meal_plan_entry.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
@@ -85,16 +87,28 @@ class TodaysMealsCard extends StatelessWidget {
               if (todaysMeals.isEmpty)
                 const _NoMealsInline()
               else
-                ...List<Widget>.generate(todaysMeals.length, (i) {
-                  final entry = todaysMeals[i];
-                  return Padding(
-                    padding: EdgeInsets.only(top: i == 0 ? 0 : AppSizes.sm),
-                    child: _MealRow(
-                      entry: entry,
-                      recipe: recipes[entry.recipeId],
-                    ),
-                  );
-                }),
+                AppCard(
+                  variant: AppCardVariant.dashed,
+                  borderColor: AppColors.lime,
+                  borderWidth: 2,
+                  cornerRadius: AppSizes.radiusMd,
+                  padding: const EdgeInsets.all(AppSizes.sp12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: List<Widget>.generate(todaysMeals.length, (i) {
+                      final entry = todaysMeals[i];
+                      return Padding(
+                        padding: EdgeInsets.only(
+                          top: i == 0 ? 0 : AppSizes.sp12,
+                        ),
+                        child: _MealRow(
+                          entry: entry,
+                          recipe: recipes[entry.recipeId],
+                        ),
+                      );
+                    }),
+                  ),
+                ),
             ],
           ),
         ),
@@ -149,6 +163,7 @@ class _GreatJobBanner extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.butterSoft,
         borderRadius: BorderRadius.circular(AppSizes.radiusXl),
+        border: Border.all(color: AppColors.lime),
       ),
       padding: const EdgeInsets.symmetric(
         horizontal: AppSizes.md - 2,
@@ -236,23 +251,7 @@ class _MealRow extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [AppColors.tanBase, AppColors.coral],
-                  ),
-                  borderRadius: BorderRadius.circular(AppSizes.radiusLg - 2),
-                ),
-                alignment: Alignment.center,
-                child: const Text(
-                  '🍲',
-                  style: TextStyle(fontSize: 26, height: 1),
-                ),
-              ),
+              _MealThumbnail(url: recipe?.thumbnailUrl),
               const SizedBox(width: AppSizes.sp12),
               Expanded(
                 child: Column(
@@ -278,6 +277,45 @@ class _MealRow extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Meal-row thumbnail — real recipe photo at the Figma size (90x76, r10)
+/// with an emoji fallback. Mirrors browse_meal_recipe_card._Thumbnail.
+class _MealThumbnail extends StatelessWidget {
+  const _MealThumbnail({this.url});
+
+  final String? url;
+
+  static const double _w = 90;
+  static const double _h = 76;
+
+  Widget _fallback() => Container(
+    width: _w,
+    height: _h,
+    color: AppColors.surfaceVariant,
+    alignment: Alignment.center,
+    child: const Text('🍲', style: TextStyle(fontSize: 26, height: 1)),
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final radius = BorderRadius.circular(AppSizes.radiusMd);
+    if (url == null || url!.isEmpty) {
+      return ClipRRect(borderRadius: radius, child: _fallback());
+    }
+    return ClipRRect(
+      borderRadius: radius,
+      child: CachedNetworkImage(
+        imageUrl: url!,
+        width: _w,
+        height: _h,
+        fit: BoxFit.cover,
+        placeholder: (_, __) =>
+            Container(width: _w, height: _h, color: AppColors.surfaceVariant),
+        errorWidget: (_, __, ___) => _fallback(),
       ),
     );
   }

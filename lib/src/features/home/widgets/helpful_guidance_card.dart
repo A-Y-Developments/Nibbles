@@ -83,7 +83,7 @@ class _GuidanceTipCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppSizes.radiusXl),
-        boxShadow: AppSizes.shadowCard,
+        boxShadow: const [BoxShadow(color: Color(0x33EAEC8C), blurRadius: 5)],
       ),
       padding: const EdgeInsets.symmetric(
         horizontal: AppSizes.md - 2,
