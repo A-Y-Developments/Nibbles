@@ -75,11 +75,9 @@ class ReadyToStartCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [AppColors.butter, AppColors.butterSoft],
-        ),
+        // Figma 1266:12195 — solid cream card (#fffdf8), not the butter→soft
+        // gradient (which over-saturated the card vs the white spec).
+        color: AppColors.cream,
         borderRadius: BorderRadius.circular(AppSizes.radiusXl),
         boxShadow: AppSizes.shadowCard,
       ),
@@ -100,7 +98,7 @@ class ReadyToStartCard extends StatelessWidget {
             'Begin $possessive food journey by creating your first meal '
             'prep and introducing allergens safely.',
             textAlign: TextAlign.center,
-            style: textTheme.bodyLarge?.copyWith(color: AppColors.fgFaint),
+            style: textTheme.bodyLarge?.copyWith(color: AppColors.text),
           ),
           const SizedBox(height: AppSizes.lg),
           AppPillButton(label: 'Create First Meal', onPressed: onPressed),
