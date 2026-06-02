@@ -33,19 +33,10 @@ class HomeHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.md,
-        vertical: AppSizes.sm + AppSizes.xs,
-      ),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [AppColors.butter, AppColors.butterSoft],
-        ),
-        borderRadius: BorderRadius.all(Radius.circular(AppSizes.radiusLg)),
-      ),
+    // Transparent: the header now sits directly on the lime HomeHero backdrop
+    // (Figma 1266:12135) rather than a butter card of its own.
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSizes.sm),
       child: Row(
         children: [
           const _TodayPill(),
@@ -114,11 +105,7 @@ class _HeaderAvatar extends StatelessWidget {
         color: AppColors.greenDeep,
         borderRadius: BorderRadius.circular(10),
       ),
-      child: const Icon(
-        Icons.person_outline,
-        size: 20,
-        color: AppColors.cream,
-      ),
+      child: const Icon(Icons.person_outline, size: 20, color: AppColors.cream),
     );
 
     if (onTap == null) return avatar;

@@ -15,6 +15,7 @@ import 'package:nibbles/src/features/home/widgets/greeting_card.dart';
 import 'package:nibbles/src/features/home/widgets/helpful_guidance_card.dart';
 import 'package:nibbles/src/features/home/widgets/home_empty_state_full.dart';
 import 'package:nibbles/src/features/home/widgets/home_header.dart';
+import 'package:nibbles/src/features/home/widgets/home_hero.dart';
 import 'package:nibbles/src/features/home/widgets/home_no_meals_state.dart';
 import 'package:nibbles/src/features/home/widgets/ongoing_introduced_card.dart';
 import 'package:nibbles/src/features/home/widgets/stat_ring_card.dart';
@@ -173,25 +174,45 @@ class _HomeContent extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                HomeHeader(
-                  babyName: baby.name,
-                  ageMonths: ageMonths,
-                  onAvatarTap: () => context.pushNamed(AppRoute.profile.name),
-                ),
-                const SizedBox(height: AppSizes.md),
-                GreetingCard(
-                  babyName: baby.name,
-                  ageMonths: ageMonths,
-                  dateOfBirth: baby.dateOfBirth,
-                ),
-                const SizedBox(height: AppSizes.md),
-                StatRingCard(
-                  safeCount: state.safeCount,
-                  flaggedCount: state.flaggedCount,
-                  notStartedCount: state.notStartedCount,
-                  inProgressCount: state.inProgressCount,
-                  todayMealCount: state.todayMealCount,
-                  todayMealTarget: 2,
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    // Full-bleed lime hero behind header/greeting/stats —
+                    // escapes the scroll padding via negative insets.
+                    const Positioned(
+                      top: -AppSizes.pagePaddingV,
+                      left: -AppSizes.pagePaddingH,
+                      right: -AppSizes.pagePaddingH,
+                      bottom: -AppSizes.md,
+                      child: HomeHero(),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        HomeHeader(
+                          babyName: baby.name,
+                          ageMonths: ageMonths,
+                          onAvatarTap: () =>
+                              context.pushNamed(AppRoute.profile.name),
+                        ),
+                        const SizedBox(height: AppSizes.md),
+                        GreetingCard(
+                          babyName: baby.name,
+                          ageMonths: ageMonths,
+                          dateOfBirth: baby.dateOfBirth,
+                        ),
+                        const SizedBox(height: AppSizes.md),
+                        StatRingCard(
+                          safeCount: state.safeCount,
+                          flaggedCount: state.flaggedCount,
+                          notStartedCount: state.notStartedCount,
+                          inProgressCount: state.inProgressCount,
+                          todayMealCount: state.todayMealCount,
+                          todayMealTarget: 2,
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
                 const SizedBox(height: AppSizes.md),
                 ..._middleSection(

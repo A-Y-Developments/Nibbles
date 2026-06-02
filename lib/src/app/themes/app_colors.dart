@@ -50,6 +50,8 @@ abstract final class AppColors {
   static const Color butter = Color(0xFFEAEC8C);
   static const Color butterSoft = Color(0xFFFFFCD5);
   static const Color butterDark = Color(0xFFC8CA5A);
+  // Nibble primary lime (Figma --nibble-primary-lime) — home hero + accents.
+  static const Color lime = Color(0xFFEAEC98);
 
   // Coral / peach
   static const Color coral = Color(0xFFF8A175);
