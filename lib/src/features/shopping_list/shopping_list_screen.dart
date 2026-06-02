@@ -496,6 +496,9 @@ class _ShoppingItemRow extends StatelessWidget {
           decoration: BoxDecoration(
             color: AppColors.cream,
             borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+            // Figma 822:7262 — rows are elevated white cards on the Grad-1
+            // background; the shadow makes them pop vs a flat fill.
+            boxShadow: AppSizes.shadowCard,
           ),
           child: Row(
             children: [
@@ -509,8 +512,9 @@ class _ShoppingItemRow extends StatelessWidget {
                 child: Text(
                   item.name,
                   style: AppTypography.textTheme.bodyLarge?.copyWith(
-                    decoration:
-                        item.isChecked ? TextDecoration.lineThrough : null,
+                    decoration: item.isChecked
+                        ? TextDecoration.lineThrough
+                        : null,
                     color: item.isChecked ? AppColors.fgMuted : AppColors.text,
                   ),
                 ),
