@@ -18,7 +18,7 @@ import 'package:nibbles/src/utils/age_in_months.dart';
 ///   - body subtitle ("We use this to suggest the right foods…")
 ///   - quatrefoil illustration cluster + salmonGhost "X Month" age chip
 ///   - 3-column wheel (Year / Month / Day) with lime selection pill per column
-///   - bottom row: butter back round button + forestDarkn "Next" pill
+///   - bottom row: lime back round button + forestDarkn "Next" pill
 ///
 /// State written to the hoisted [OnboardingController] via `updateDob`. Then
 /// the phase-A flag `onboarding_baby_setup_done` is flipped — the router's
@@ -202,99 +202,110 @@ class _OnboardingDobScreenState extends ConsumerState<OnboardingDobScreen> {
       _maxYear - _minYear + 1,
       (i) => _minYear + i,
     );
-    final days = List<int>.generate(
-      _daysInMonth(_year, _month),
-      (i) => i + 1,
-    );
+    final days = List<int>.generate(_daysInMonth(_year, _month), (i) => i + 1);
 
     return Scaffold(
-      backgroundColor: AppColors.cream,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSizes.pagePaddingH,
-            vertical: AppSizes.pagePaddingV,
+      backgroundColor: Colors.transparent,
+      // Grad-1 background — linear-gradient(~154.4deg, #FFFCD5 19.168%,
+      // #F5F5F5 50%). Same pattern as profile/starting-guide screens.
+      body: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment(-0.460, -0.888),
+            end: Alignment(0.460, 0.888),
+            stops: [0.19168, 0.5],
+            colors: [AppColors.butterSoft, Color(0xFFF5F5F5)],
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Center(
-                child: Text.rich(
-                  TextSpan(
-                    style: textTheme.titleLarge,
-                    children: [
-                      const TextSpan(text: 'When was '),
-                      TextSpan(
-                        text: firstName,
-                        style: textTheme.titleLarge?.copyWith(
-                          color: AppColors.coral,
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSizes.pagePaddingH,
+              vertical: AppSizes.pagePaddingV,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Text.rich(
+                    TextSpan(
+                      style: textTheme.titleLarge,
+                      children: [
+                        const TextSpan(text: 'When was '),
+                        TextSpan(
+                          text: firstName,
+                          style: textTheme.titleLarge?.copyWith(
+                            color: AppColors.coral,
+                          ),
                         ),
-                      ),
-                      const TextSpan(text: ' born?'),
-                    ],
+                        const TextSpan(text: ' born?'),
+                      ],
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                const SizedBox(height: AppSizes.sm),
+                Text(
+                  'We use this to suggest the right foods at the right time.',
+                  style: textTheme.bodyLarge?.copyWith(
+                    color: AppColors.fgMuted,
                   ),
                   textAlign: TextAlign.center,
                 ),
-              ),
-              const SizedBox(height: AppSizes.sm),
-              Text(
-                'We use this to suggest the right foods at the right time.',
-                style: textTheme.bodyLarge?.copyWith(color: AppColors.fgMuted),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppSizes.xl),
-              const Center(child: Quatrefoil()),
-              const SizedBox(height: AppSizes.md),
-              Center(
-                child: _AgeChip(
-                  key: const Key('onboarding_dob_age_label'),
-                  label: _ageLabel(_selected),
+                const SizedBox(height: AppSizes.xl),
+                const Center(child: Quatrefoil()),
+                const SizedBox(height: AppSizes.md),
+                Center(
+                  child: _AgeChip(
+                    key: const Key('onboarding_dob_age_label'),
+                    label: _ageLabel(_selected),
+                  ),
                 ),
-              ),
-              const SizedBox(height: AppSizes.lg),
-              _DateWheelRow(
-                yearCtrl: _yearCtrl,
-                monthCtrl: _monthCtrl,
-                dayCtrl: _dayCtrl,
-                years: years,
-                months: _monthAbbr,
-                days: days,
-                selectedYearIndex: _year - _minYear,
-                selectedMonthIndex: _month - 1,
-                selectedDayIndex: _day - 1,
-                wheelHeight: _wheelHeight,
-                itemExtent: _wheelItemExtent,
-                onYearChanged: _onYearChanged,
-                onMonthChanged: _onMonthChanged,
-                onDayChanged: _onDayChanged,
-              ),
-              const Spacer(),
-              Row(
-                children: [
-                  AppRoundButton(
-                    key: const Key('onboarding_dob_back'),
-                    tone: AppRoundButtonTone.butter,
-                    icon: const Icon(Icons.arrow_back_rounded),
-                    semanticLabel: 'Back',
-                    onPressed: () {
-                      if (context.canPop()) {
-                        context.pop();
-                      } else {
-                        context.goNamed(AppRoute.onboardingName.name);
-                      }
-                    },
-                  ),
-                  const SizedBox(width: AppSizes.sm),
-                  Expanded(
-                    child: AppPillButton(
-                      key: const Key('onboarding_dob_next'),
-                      label: 'Next',
-                      onPressed: _onNext,
+                const SizedBox(height: AppSizes.lg),
+                _DateWheelRow(
+                  yearCtrl: _yearCtrl,
+                  monthCtrl: _monthCtrl,
+                  dayCtrl: _dayCtrl,
+                  years: years,
+                  months: _monthAbbr,
+                  days: days,
+                  selectedYearIndex: _year - _minYear,
+                  selectedMonthIndex: _month - 1,
+                  selectedDayIndex: _day - 1,
+                  wheelHeight: _wheelHeight,
+                  itemExtent: _wheelItemExtent,
+                  onYearChanged: _onYearChanged,
+                  onMonthChanged: _onMonthChanged,
+                  onDayChanged: _onDayChanged,
+                ),
+                const Spacer(),
+                Row(
+                  children: [
+                    AppRoundButton(
+                      key: const Key('onboarding_dob_back'),
+                      tone: AppRoundButtonTone.lime,
+                      icon: const Icon(Icons.arrow_back_rounded),
+                      semanticLabel: 'Back',
+                      onPressed: () {
+                        if (context.canPop()) {
+                          context.pop();
+                        } else {
+                          context.goNamed(AppRoute.onboardingName.name);
+                        }
+                      },
                     ),
-                  ),
-                ],
-              ),
-            ],
+                    const SizedBox(width: AppSizes.sm),
+                    Expanded(
+                      child: AppPillButton(
+                        key: const Key('onboarding_dob_next'),
+                        label: 'Next',
+                        onPressed: _onNext,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -443,7 +454,7 @@ class _DateWheelColumn extends StatelessWidget {
       children: [
         Text(
           header,
-          style: textTheme.labelMedium?.copyWith(color: AppColors.fgStrong),
+          style: textTheme.labelMedium?.copyWith(color: AppColors.fgFaint),
         ),
         const SizedBox(height: AppSizes.sm),
         SizedBox(
@@ -452,13 +463,14 @@ class _DateWheelColumn extends StatelessWidget {
             scrollController: controller,
             itemExtent: itemExtent,
             squeeze: 1.1,
-            backgroundColor: AppColors.cream,
-            selectionOverlay: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSizes.xs),
+            backgroundColor: Colors.transparent,
+            selectionOverlay: Center(
               child: Container(
+                width: 70,
+                height: AppSizes.chipHeight,
                 decoration: BoxDecoration(
-                  color: AppColors.butter,
-                  borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+                  color: AppColors.lime,
+                  borderRadius: BorderRadius.circular(AppSizes.radiusLg),
                 ),
               ),
             ),
@@ -468,12 +480,8 @@ class _DateWheelColumn extends StatelessWidget {
               return Center(
                 child: Text(
                   itemBuilder(i),
-                  style: textTheme.labelLarge?.copyWith(
-                    color: isSelected
-                        ? AppColors.greenDeep
-                        : AppColors.fgFaint,
-                    fontWeight:
-                        isSelected ? FontWeight.w700 : FontWeight.w600,
+                  style: textTheme.labelMedium?.copyWith(
+                    color: isSelected ? AppColors.greenDeep : AppColors.fgFaint,
                   ),
                 ),
               );

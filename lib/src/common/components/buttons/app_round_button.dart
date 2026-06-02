@@ -3,7 +3,7 @@ import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 
 /// Background tone for [AppRoundButton] — maps to kit `.rbtn--*`.
-enum AppRoundButtonTone { white, ghost, green, butter }
+enum AppRoundButtonTone { white, ghost, green, butter, lime }
 
 /// Sizing for [AppRoundButton]. `regular` = 44 circle, `small` = 32 circle.
 enum AppRoundButtonSize { regular, small }
@@ -39,12 +39,13 @@ class AppRoundButton extends StatelessWidget {
         return AppColors.greenDeep;
       case AppRoundButtonTone.butter:
         return AppColors.butter;
+      case AppRoundButtonTone.lime:
+        return AppColors.lime;
     }
   }
 
-  Color get _foreground => tone == AppRoundButtonTone.green
-      ? AppColors.cream
-      : AppColors.greenDeep;
+  Color get _foreground =>
+      tone == AppRoundButtonTone.green ? AppColors.cream : AppColors.greenDeep;
 
   @override
   Widget build(BuildContext context) {
