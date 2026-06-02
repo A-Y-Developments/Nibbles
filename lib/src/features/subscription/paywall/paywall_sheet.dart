@@ -15,30 +15,10 @@ import 'package:nibbles/src/features/subscription/paywall/paywall_state.dart';
 import 'package:nibbles/src/logging/analytics.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 
-/// Opens [PaywallSheet] as a modal bottom sheet (Figma "Overlay - subsplan",
-/// frame 1216:11727). Top corners are rounded 30 per spec; the sheet is
-/// `isScrollControlled` so the content can fill ~92% of screen height on
-/// short devices without clipping the trial card / CTAs.
-///
-/// Returns once the sheet is dismissed (Close X, scrim tap, or a successful
-/// purchase that pops the sheet from inside).
-Future<void> showPaywallSheet(BuildContext context) {
-  return showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: AppColors.cream,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-    ),
-    builder: (_) => const PaywallSheet(),
-  );
-}
-
-/// Stateless sheet body. Hosted directly inside [showPaywallSheet] for the
-/// real entry-point flow (Go Premium → bottom sheet) and inside
-/// `PaywallScreen` as a full-page scaffold so the existing
-/// `/subscription/paywall` GoRoute still compiles. The two surfaces share
-/// state via the same [paywallControllerProvider] instance.
+/// Paywall body for `PaywallScreen` (the full-page `/subscription/paywall`
+/// route). Named `PaywallSheet` for history — it is no longer shown as a modal
+/// sheet. The `Column[ header, Expanded(scroll), footer ]` layout fills
+/// whatever height the page hands it.
 class PaywallSheet extends ConsumerStatefulWidget {
   const PaywallSheet({super.key});
 
@@ -58,9 +38,7 @@ class _PaywallSheetState extends ConsumerState<PaywallSheet> {
 
   Future<void> _logScreenView() async {
     try {
-      await ref
-          .read(analyticsProvider)
-          .logScreenView(screenName: 'paywall');
+      await ref.read(analyticsProvider).logScreenView(screenName: 'paywall');
     } on Object catch (_) {
       // Analytics is best-effort; never surface to the UI.
     }
@@ -79,10 +57,7 @@ class _PaywallSheetState extends ConsumerState<PaywallSheet> {
         context.goNamed(AppRoute.subscriptionSuccess.name);
       },
       failure: (error) {
-        _showErrorDialog(
-          title: 'Purchase failed',
-          message: error.message,
-        );
+        _showErrorDialog(title: 'Purchase failed', message: error.message);
       },
     );
   }
@@ -104,10 +79,7 @@ class _PaywallSheetState extends ConsumerState<PaywallSheet> {
         final message = error is NotFoundException
             ? 'No active subscription found.'
             : error.message;
-        _showErrorDialog(
-          title: 'Restore failed',
-          message: message,
-        );
+        _showErrorDialog(title: 'Restore failed', message: message);
       },
     );
   }
@@ -145,40 +117,32 @@ class _PaywallSheetState extends ConsumerState<PaywallSheet> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(paywallControllerProvider);
-    final media = MediaQuery.of(context);
 
-    return SafeArea(
-      top: false,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: media.size.height * 0.92,
-        ),
-        // Sheet padding from Figma: px 24 / py 12.
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSizes.lg,
-            vertical: AppSizes.sp12,
-          ),
-          child: _PaywallBody(
-            state: state,
-            onClose: state.action == PaywallAction.none
-                ? () => Navigator.of(context).pop()
-                : null,
-            onRestore: state.action == PaywallAction.none ? _onRestore : null,
-            onPurchase: state.action == PaywallAction.none && state.phase ==
-                    PaywallPhase.ready
-                ? _onPurchase
-                : null,
-            onViewAllPlans: state.action == PaywallAction.none
-                ? _onViewAllPlans
-                : null,
-            onRetry: state.action == PaywallAction.none
-                ? () => ref
-                    .read(paywallControllerProvider.notifier)
-                    .reloadOfferings()
-                : null,
-          ),
-        ),
+    // Page padding from Figma: px 24 / py 12. Fills the height handed down by
+    // PaywallScreen's Scaffold + SafeArea.
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSizes.lg,
+        vertical: AppSizes.sp12,
+      ),
+      child: _PaywallBody(
+        state: state,
+        onClose: state.action == PaywallAction.none
+            ? () => Navigator.of(context).pop()
+            : null,
+        onRestore: state.action == PaywallAction.none ? _onRestore : null,
+        onPurchase:
+            state.action == PaywallAction.none &&
+                state.phase == PaywallPhase.ready
+            ? _onPurchase
+            : null,
+        onViewAllPlans: state.action == PaywallAction.none
+            ? _onViewAllPlans
+            : null,
+        onRetry: state.action == PaywallAction.none
+            ? () =>
+                  ref.read(paywallControllerProvider.notifier).reloadOfferings()
+            : null,
       ),
     );
   }
@@ -215,10 +179,7 @@ class _PaywallBody extends StatelessWidget {
         ),
         Expanded(
           child: SingleChildScrollView(
-            child: _ScrollContent(
-              state: state,
-              onRetry: onRetry,
-            ),
+            child: _ScrollContent(state: state, onRetry: onRetry),
           ),
         ),
         // Footer column gap to scroll content == 24 (Figma column gap).
@@ -331,7 +292,8 @@ class _ScrollContent extends StatelessWidget {
             onRetry: onRetry,
           ),
           PaywallPhase.ready => _TrialCard(
-            offering: state.offering ??
+            offering:
+                state.offering ??
                 // Defensive — phase=ready always carries an offering.
                 const SubscriptionOffering(
                   productId: '',
@@ -595,8 +557,7 @@ class _TrialCard extends StatelessWidget {
                 TextSpan(
                   // Use bundled Parkinsans Bold for the price token (Nunito
                   // is not in pubspec; runtime GoogleFonts download removed).
-                  text:
-                      '${offering.priceString} ${offering.periodLabel}',
+                  text: '${offering.priceString} ${offering.periodLabel}',
                   style: const TextStyle(
                     fontFamily: FontFamily.parkinsans,
                     fontSize: 15,
@@ -679,9 +640,7 @@ class _TrialCardError extends StatelessWidget {
               onPressed: onRetry,
               style: TextButton.styleFrom(
                 foregroundColor: AppColors.destructive,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSizes.sm,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: AppSizes.sm),
                 minimumSize: const Size(48, 48),
               ),
               child: const Text('Retry'),
