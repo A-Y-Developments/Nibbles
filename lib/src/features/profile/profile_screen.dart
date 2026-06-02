@@ -18,6 +18,7 @@ import 'package:nibbles/src/features/profile/widgets/profile_header.dart';
 import 'package:nibbles/src/features/profile/widgets/settings_row.dart';
 import 'package:nibbles/src/logging/analytics.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
+import 'package:nibbles/src/utils/age_in_months.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -145,9 +146,8 @@ class _ProfileContent extends ConsumerWidget {
                       ProfileAvatarCard(
                         name: baby.name,
                         ageLabel: _ageLabel(baby.dateOfBirth),
-                        onEdit: () => context.pushNamed(
-                          AppRoute.profileEdit.name,
-                        ),
+                        onEdit: () =>
+                            context.pushNamed(AppRoute.profileEdit.name),
                       ),
                       const PremiumTeaserCard(),
                       const SizedBox(height: AppSizes.lg),
@@ -156,9 +156,8 @@ class _ProfileContent extends ConsumerWidget {
                         title: 'Manage Subscription',
                         subtitle: state.subscriptionLabel ?? 'No Subscription',
                         // NIB-73 — push the Manage Subscription screen.
-                        onTap: () => context.pushNamed(
-                          AppRoute.manageSubscription.name,
-                        ),
+                        onTap: () =>
+                            context.pushNamed(AppRoute.manageSubscription.name),
                       ),
                       const SizedBox(height: AppSizes.sp12),
                       SettingsRow(
@@ -192,13 +191,14 @@ class _ProfileContent extends ConsumerWidget {
   }
 
   String _ageLabel(DateTime dob) {
-    // Figma audit (node 1189:12442) verbatim: "6 month 88 days" — i.e. "month"
-    // singular regardless of count, "days" plural regardless of count.
+    // Figma audit (1189:12442): "month" singular, "days" plural. Reuse the
+    // shared ageInMonths helper (day-of-month adjusted) + days since the most
+    // recent month anniversary so months/days stay consistent with Home (was
+    // total-age-in-days, e.g. "9 month 246 days").
     final now = DateTime.now();
-    final totalMonths = (now.year - dob.year) * 12 + now.month - dob.month;
-    final months = totalMonths < 0 ? 0 : totalMonths;
-    final monthStart = DateTime(now.year, now.month - months, dob.day);
-    final days = now.difference(monthStart).inDays;
+    final months = ageInMonths(dob, now: now);
+    final anniversary = DateTime(dob.year, dob.month + months, dob.day);
+    final days = now.difference(anniversary).inDays;
     final clampedDays = days < 0 ? 0 : days;
     return '$months month $clampedDays days';
   }
@@ -229,7 +229,7 @@ class _ProfileContent extends ConsumerWidget {
       switch (result) {
         case Success():
           unawaited(ref.read(analyticsProvider).logLogout());
-          // GoRouter redirect handles navigation to /auth/login.
+        // GoRouter redirect handles navigation to /auth/login.
         case Failure():
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
