@@ -162,7 +162,8 @@ class _MealPlanDateRangeFormState extends State<MealPlanDateRangeForm> {
 
 /// Single labelled date field. `value` is the currently chosen date —
 /// rendered as `dd/MM/yyyy` to match Figma's verbatim placeholder
-/// (`17/04/2026`). Open state paints a green-deep border + subtle glow.
+/// (`17/04/2026`). Border is forestdarkn (green-deep) at rest per Figma; the
+/// open state thickens it to 2px and switches the fill to white.
 class _DateField extends StatelessWidget {
   const _DateField({
     required this.label,
@@ -180,7 +181,9 @@ class _DateField extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final displayText = _formatDate(value);
-    final borderColor = isOpen ? AppColors.greenDeep : AppColors.borderSoft;
+    // Figma date Input = #eaeaea fill + forestdarkn (greenDeep) border at rest
+    // (971:8199); the open state only thickens it.
+    const borderColor = AppColors.greenDeep;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -205,18 +208,7 @@ class _DateField extends StatelessWidget {
             decoration: BoxDecoration(
               color: isOpen ? AppColors.surface : AppColors.bgInput,
               borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-              border: Border.all(
-                color: borderColor,
-                width: isOpen ? 2 : 1,
-              ),
-              boxShadow: isOpen
-                  ? [
-                      BoxShadow(
-                        color: AppColors.green.withValues(alpha: 0.15),
-                        spreadRadius: 3,
-                      ),
-                    ]
-                  : null,
+              border: Border.all(color: borderColor, width: isOpen ? 2 : 1),
             ),
             child: Row(
               children: [
