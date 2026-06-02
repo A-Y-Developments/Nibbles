@@ -27,6 +27,7 @@ class StatRingCard extends StatelessWidget {
     this.todayMealCount = 0,
     this.todayMealTarget = 0,
     this.hasIronRichRecipes = false,
+    this.onAllergenTap,
     super.key,
   });
 
@@ -43,6 +44,9 @@ class StatRingCard extends StatelessWidget {
 
   // Gates the '✓ Iron Rich' chip; hidden by default per spec.
   final bool hasIronRichRecipes;
+
+  // Optional tap on the ALLERGEN ring — routes to the allergen tracker.
+  final VoidCallback? onAllergenTap;
 
   /// Canonical allergen board length — see `.claude/rules/domain.md`.
   static const int _allergenTotal = 9;
@@ -83,12 +87,16 @@ class StatRingCard extends StatelessWidget {
               ),
               const SizedBox(width: AppSizes.sp12),
               Expanded(
-                child: _StatRing(
-                  label: 'ALLERGEN',
-                  value: '$safeCount',
-                  max: '/$_allergenTotal',
-                  numerator: safeCount,
-                  denominator: _allergenTotal,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: onAllergenTap,
+                  child: _StatRing(
+                    label: 'ALLERGEN',
+                    value: '$safeCount',
+                    max: '/$_allergenTotal',
+                    numerator: safeCount,
+                    denominator: _allergenTotal,
+                  ),
                 ),
               ),
             ],

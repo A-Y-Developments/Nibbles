@@ -160,16 +160,23 @@ class _HomeContent extends StatelessWidget {
     final ageMonths = _monthsBetween(baby.dateOfBirth, DateTime.now());
     final variant = state.variant;
 
+    // Lime hero paints to y=0 behind the status bar (top: false), so the
+    // scroll content carries the top safe inset itself to clear the notch.
+    final topInset = MediaQuery.of(context).padding.top;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
+        top: false,
         child: RefreshIndicator(
           onRefresh: onRefresh,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSizes.pagePaddingH,
-              vertical: AppSizes.pagePaddingV,
+            padding: EdgeInsets.fromLTRB(
+              AppSizes.pagePaddingH,
+              AppSizes.pagePaddingV + topInset,
+              AppSizes.pagePaddingH,
+              AppSizes.pagePaddingV,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -178,13 +185,14 @@ class _HomeContent extends StatelessWidget {
                   clipBehavior: Clip.none,
                   children: [
                     // Full-bleed lime hero behind header/greeting/stats —
-                    // escapes the scroll padding via negative insets.
-                    const Positioned(
-                      top: -AppSizes.pagePaddingV,
+                    // escapes the scroll padding via negative insets and
+                    // pulls past the top safe inset to reach the screen edge.
+                    Positioned(
+                      top: -(AppSizes.pagePaddingV + topInset),
                       left: -AppSizes.pagePaddingH,
                       right: -AppSizes.pagePaddingH,
                       bottom: -AppSizes.md,
-                      child: HomeHero(),
+                      child: const HomeHero(),
                     ),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -209,6 +217,9 @@ class _HomeContent extends StatelessWidget {
                           inProgressCount: state.inProgressCount,
                           todayMealCount: state.todayMealCount,
                           todayMealTarget: 2,
+                          onAllergenTap: () => context.pushNamed(
+                            AppRoute.allergenTracker.name,
+                          ),
                         ),
                       ],
                     ),

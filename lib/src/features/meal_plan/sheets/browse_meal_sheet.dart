@@ -300,7 +300,10 @@ class _BrowseMealSheetState extends ConsumerState<_BrowseMealSheet> {
         child: ConstrainedBox(
           constraints: BoxConstraints(maxHeight: maxHeight),
           child: Padding(
-            padding: EdgeInsets.only(bottom: mediaQuery.viewInsets.bottom),
+            padding: EdgeInsets.only(
+              top: mediaQuery.padding.top,
+              bottom: mediaQuery.viewInsets.bottom,
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
