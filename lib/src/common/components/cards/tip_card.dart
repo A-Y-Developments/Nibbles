@@ -26,6 +26,9 @@ class TipCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.butterSoft,
         borderRadius: BorderRadius.circular(AppSizes.radiusXl),
+        // Figma tip cards are cream + a lime hairline border (home
+        // 1266:12201 + Helpful Guidance stack).
+        border: Border.all(color: AppColors.lime),
       ),
       padding: const EdgeInsets.symmetric(
         horizontal: AppSizes.md,
