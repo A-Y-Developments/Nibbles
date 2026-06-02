@@ -210,22 +210,16 @@ class _DateField extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppSizes.radiusMd),
               border: Border.all(color: borderColor, width: isOpen ? 2 : 1),
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    displayText,
-                    style: AppTypography.textTheme.bodyLarge?.copyWith(
-                      color: AppColors.fgStrong,
-                    ),
-                  ),
+            // No trailing calendar icon — Figma 971:8199 date inputs show only
+            // the date text; the field still opens the inline calendar on tap.
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                displayText,
+                style: AppTypography.textTheme.bodyLarge?.copyWith(
+                  color: AppColors.fgStrong,
                 ),
-                const Icon(
-                  Icons.calendar_today_outlined,
-                  size: AppSizes.iconSm,
-                  color: AppColors.greenDeep,
-                ),
-              ],
+              ),
             ),
           ),
         ),
