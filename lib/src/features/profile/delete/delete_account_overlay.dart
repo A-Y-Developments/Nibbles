@@ -111,9 +111,7 @@ class _DeleteAccountSheetState extends ConsumerState<_DeleteAccountSheet> {
       canPop: !submitting,
       child: SafeArea(
         child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxHeight: media.size.height * 0.92,
-          ),
+          constraints: BoxConstraints(maxHeight: media.size.height * 0.92),
           child: Padding(
             padding: EdgeInsets.only(bottom: media.viewInsets.bottom),
             child: SingleChildScrollView(
@@ -168,9 +166,10 @@ class _DeleteAccountSheetState extends ConsumerState<_DeleteAccountSheet> {
                     const SizedBox(height: AppSizes.sp12),
                     // Callout / Regular — Figtree 14/22, Black (#2c2c2c), left.
                     Text(
-                      'After your account is deleted, you will permanently lose '
-                      'your profile, meal history, preferences, and subscription '
-                      'data. This action cannot be undone.',
+                      'After your account is deleted, you will '
+                      'permanently lose your profile, meal history, '
+                      'preferences, and subscription data. This action '
+                      'cannot be undone.',
                       textAlign: TextAlign.left,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: AppColors.text,
@@ -181,7 +180,9 @@ class _DeleteAccountSheetState extends ConsumerState<_DeleteAccountSheet> {
                       const SizedBox(height: AppSizes.sp12),
                       _InlineError(
                         message: state.errorMessage!,
-                        onRetry: reasonPicked && !submitting ? _onContinue : null,
+                        onRetry: reasonPicked && !submitting
+                            ? _onContinue
+                            : null,
                       ),
                     ],
                     // Figma: warning-to-CTA stack gap (column → bottom stack).
@@ -228,10 +229,7 @@ class _SheetHeader extends StatelessWidget {
           onPressed: onClose,
           tooltip: 'Close',
           padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(
-            minWidth: 34,
-            minHeight: 33,
-          ),
+          constraints: const BoxConstraints(minWidth: 34, minHeight: 33),
           style: IconButton.styleFrom(
             shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(30)),

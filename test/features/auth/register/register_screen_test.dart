@@ -34,8 +34,7 @@ GoRouter _routerFor(Widget screen) => GoRouter(
     GoRoute(
       path: AppRoute.onboardingBabySetup.path,
       name: AppRoute.onboardingBabySetup.name,
-      builder: (_, __) =>
-          const Scaffold(body: Text('Baby setup stub')),
+      builder: (_, __) => const Scaffold(body: Text('Baby setup stub')),
     ),
   ],
 );
@@ -68,7 +67,8 @@ void main() {
   ];
 
   testWidgets(
-    'renders Quatrefoil logo mark, email + password fields, and submit — NO name field',
+    'renders Quatrefoil logo mark, email + password fields, and submit '
+    '— NO name field',
     (tester) async {
       await tester.pumpWidget(_wrap(const RegisterScreen(), buildOverrides()));
       await tester.pumpAndSettle();
@@ -96,65 +96,57 @@ void main() {
     expect(find.byKey(const Key('register_apple_button')), findsOneWidget);
   });
 
-  testWidgets(
-    'valid-email checkmark appears only when EmailInput.isValid',
-    (tester) async {
-      await tester.pumpWidget(_wrap(const RegisterScreen(), buildOverrides()));
-      await tester.pumpAndSettle();
+  testWidgets('valid-email checkmark appears only when EmailInput.isValid', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_wrap(const RegisterScreen(), buildOverrides()));
+    await tester.pumpAndSettle();
 
-      Finder checkInEmailField() => find.descendant(
-        of: find.byKey(const Key('register_email_field')),
-        matching: find.byIcon(Icons.check_circle_rounded),
-      );
+    Finder checkInEmailField() => find.descendant(
+      of: find.byKey(const Key('register_email_field')),
+      matching: find.byIcon(Icons.check_circle_rounded),
+    );
 
-      // Initial — empty field, no check.
-      expect(checkInEmailField(), findsNothing);
+    // Initial — empty field, no check.
+    expect(checkInEmailField(), findsNothing);
 
-      // Invalid input — no check.
-      await tester.enterText(
-        find.byKey(const Key('register_email_field')),
-        'not-an-email',
-      );
-      await tester.pump();
-      expect(checkInEmailField(), findsNothing);
+    // Invalid input — no check.
+    await tester.enterText(
+      find.byKey(const Key('register_email_field')),
+      'not-an-email',
+    );
+    await tester.pump();
+    expect(checkInEmailField(), findsNothing);
 
-      // Valid input — check appears.
-      await tester.enterText(
-        find.byKey(const Key('register_email_field')),
-        'jane@example.com',
-      );
-      await tester.pump();
-      expect(checkInEmailField(), findsOneWidget);
-    },
-  );
+    // Valid input — check appears.
+    await tester.enterText(
+      find.byKey(const Key('register_email_field')),
+      'jane@example.com',
+    );
+    await tester.pump();
+    expect(checkInEmailField(), findsOneWidget);
+  });
 
-  testWidgets(
-    'password toggle flips obscureText (eye -> eye-off icon swap)',
-    (tester) async {
-      await tester.pumpWidget(_wrap(const RegisterScreen(), buildOverrides()));
-      await tester.pumpAndSettle();
+  testWidgets('password toggle flips obscureText (eye -> eye-off icon swap)', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_wrap(const RegisterScreen(), buildOverrides()));
+    await tester.pumpAndSettle();
 
-      Finder iconInPasswordField(IconData icon) => find.descendant(
-        of: find.byKey(const Key('register_password_field')),
-        matching: find.byIcon(icon),
-      );
+    Finder iconInPasswordField(IconData icon) => find.descendant(
+      of: find.byKey(const Key('register_password_field')),
+      matching: find.byIcon(icon),
+    );
 
-      expect(
-        iconInPasswordField(Icons.visibility_off_outlined),
-        findsOneWidget,
-      );
-      expect(iconInPasswordField(Icons.visibility_outlined), findsNothing);
+    expect(iconInPasswordField(Icons.visibility_off_outlined), findsOneWidget);
+    expect(iconInPasswordField(Icons.visibility_outlined), findsNothing);
 
-      await tester.tap(iconInPasswordField(Icons.visibility_off_outlined));
-      await tester.pump();
+    await tester.tap(iconInPasswordField(Icons.visibility_off_outlined));
+    await tester.pump();
 
-      expect(iconInPasswordField(Icons.visibility_outlined), findsOneWidget);
-      expect(
-        iconInPasswordField(Icons.visibility_off_outlined),
-        findsNothing,
-      );
-    },
-  );
+    expect(iconInPasswordField(Icons.visibility_outlined), findsOneWidget);
+    expect(iconInPasswordField(Icons.visibility_off_outlined), findsNothing);
+  });
 
   testWidgets(
     'Google tap calls controller.signInWithGoogle and logs analytics',
@@ -180,86 +172,80 @@ void main() {
     },
   );
 
-  testWidgets(
-    'Apple tap calls controller.signInWithApple and logs analytics',
-    (tester) async {
-      when(
-        () => mockRepo.signInWithApple(),
-      ).thenAnswer((_) async => const Result.success(true));
+  testWidgets('Apple tap calls controller.signInWithApple and logs analytics', (
+    tester,
+  ) async {
+    when(
+      () => mockRepo.signInWithApple(),
+    ).thenAnswer((_) async => const Result.success(true));
 
-      await tester.pumpWidget(_wrap(const RegisterScreen(), buildOverrides()));
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(_wrap(const RegisterScreen(), buildOverrides()));
+    await tester.pumpAndSettle();
 
-      final appleBtn = find.byKey(const Key('register_apple_button'));
-      await tester.ensureVisible(appleBtn);
-      await tester.pumpAndSettle();
-      await tester.tap(appleBtn);
-      await tester.pumpAndSettle();
+    final appleBtn = find.byKey(const Key('register_apple_button'));
+    await tester.ensureVisible(appleBtn);
+    await tester.pumpAndSettle();
+    await tester.tap(appleBtn);
+    await tester.pumpAndSettle();
 
-      verify(() => mockRepo.signInWithApple()).called(1);
-      expect(
-        fakeAnalytics.eventNames,
-        containsAllInOrder(['sign_up_method_selected', 'sign_up_success']),
-      );
-    },
-  );
+    verify(() => mockRepo.signInWithApple()).called(1);
+    expect(
+      fakeAnalytics.eventNames,
+      containsAllInOrder(['sign_up_method_selected', 'sign_up_success']),
+    );
+  });
 
-  testWidgets(
-    'cancel-OAuth (Success(false)) shows NO error caption',
-    (tester) async {
-      when(
-        () => mockRepo.signInWithGoogle(),
-      ).thenAnswer((_) async => const Result.success(false));
+  testWidgets('cancel-OAuth (Success(false)) shows NO error caption', (
+    tester,
+  ) async {
+    when(
+      () => mockRepo.signInWithGoogle(),
+    ).thenAnswer((_) async => const Result.success(false));
 
-      await tester.pumpWidget(_wrap(const RegisterScreen(), buildOverrides()));
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(_wrap(const RegisterScreen(), buildOverrides()));
+    await tester.pumpAndSettle();
 
-      final googleBtn = find.byKey(const Key('register_google_button'));
-      await tester.ensureVisible(googleBtn);
-      await tester.pumpAndSettle();
-      await tester.tap(googleBtn);
-      await tester.pumpAndSettle();
+    final googleBtn = find.byKey(const Key('register_google_button'));
+    await tester.ensureVisible(googleBtn);
+    await tester.pumpAndSettle();
+    await tester.tap(googleBtn);
+    await tester.pumpAndSettle();
 
-      expect(find.textContaining('failed'), findsNothing);
-      expect(find.textContaining('cancel'), findsNothing);
-      expect(
-        fakeAnalytics.eventNames,
-        containsAllInOrder([
-          'sign_up_method_selected',
-          'social_login_cancelled',
-        ]),
-      );
-    },
-  );
+    expect(find.textContaining('failed'), findsNothing);
+    expect(find.textContaining('cancel'), findsNothing);
+    expect(
+      fakeAnalytics.eventNames,
+      containsAllInOrder(['sign_up_method_selected', 'social_login_cancelled']),
+    );
+  });
 
-  testWidgets(
-    'submit failure renders the controller error message verbatim',
-    (tester) async {
-      when(() => mockRepo.signUp(any(), any())).thenAnswer(
-        (_) async =>
-            const Result.failure(ServerException('Email already in use.')),
-      );
+  testWidgets('submit failure renders the controller error message verbatim', (
+    tester,
+  ) async {
+    when(() => mockRepo.signUp(any(), any())).thenAnswer(
+      (_) async =>
+          const Result.failure(ServerException('Email already in use.')),
+    );
 
-      await tester.pumpWidget(_wrap(const RegisterScreen(), buildOverrides()));
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(_wrap(const RegisterScreen(), buildOverrides()));
+    await tester.pumpAndSettle();
 
-      // Submit button is gated on isValid — enter a valid email + 8+ char pw.
-      await tester.enterText(
-        find.byKey(const Key('register_email_field')),
-        'jane@example.com',
-      );
-      await tester.enterText(
-        find.byKey(const Key('register_password_field')),
-        'password123',
-      );
-      await tester.pump();
+    // Submit button is gated on isValid — enter a valid email + 8+ char pw.
+    await tester.enterText(
+      find.byKey(const Key('register_email_field')),
+      'jane@example.com',
+    );
+    await tester.enterText(
+      find.byKey(const Key('register_password_field')),
+      'password123',
+    );
+    await tester.pump();
 
-      await tester.tap(find.byKey(const Key('register_submit_button')));
-      await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('register_submit_button')));
+    await tester.pumpAndSettle();
 
-      expect(find.text('Email already in use.'), findsOneWidget);
-    },
-  );
+    expect(find.text('Email already in use.'), findsOneWidget);
+  });
 
   testWidgets(
     'renders verbatim Figma copy — title, body, social labels, footer link',

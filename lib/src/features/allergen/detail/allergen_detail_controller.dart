@@ -20,11 +20,11 @@ class AllergenDetailController extends _$AllergenDetailController {
 
     final allergensResult = await service.getAllergens();
     _throwIfFailure(allergensResult);
-    final allergen = allergensResult.dataOrNull!
-        .firstWhere(
-          (Allergen a) => a.key == allergenKey,
-          orElse: () => throw UnknownException('Allergen "$allergenKey" not found.'),
-        );
+    final allergen = allergensResult.dataOrNull!.firstWhere(
+      (Allergen a) => a.key == allergenKey,
+      orElse: () =>
+          throw UnknownException('Allergen "$allergenKey" not found.'),
+    );
 
     final logsResult = await service.getLogs(baby.id, allergenKey: allergenKey);
     _throwIfFailure(logsResult);
