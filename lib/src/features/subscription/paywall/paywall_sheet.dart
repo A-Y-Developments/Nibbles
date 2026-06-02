@@ -127,9 +127,6 @@ class _PaywallSheetState extends ConsumerState<PaywallSheet> {
       ),
       child: _PaywallBody(
         state: state,
-        onClose: state.action == PaywallAction.none
-            ? () => Navigator.of(context).pop()
-            : null,
         onRestore: state.action == PaywallAction.none ? _onRestore : null,
         onPurchase:
             state.action == PaywallAction.none &&
@@ -153,7 +150,6 @@ class _PaywallSheetState extends ConsumerState<PaywallSheet> {
 class _PaywallBody extends StatelessWidget {
   const _PaywallBody({
     required this.state,
-    required this.onClose,
     required this.onRestore,
     required this.onPurchase,
     required this.onViewAllPlans,
@@ -161,7 +157,6 @@ class _PaywallBody extends StatelessWidget {
   });
 
   final PaywallState state;
-  final VoidCallback? onClose;
   final VoidCallback? onRestore;
   final VoidCallback? onPurchase;
   final VoidCallback? onViewAllPlans;
@@ -173,7 +168,6 @@ class _PaywallBody extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _SheetHeader(
-          onClose: onClose,
           onRestore: onRestore,
           restoreSpinning: state.action == PaywallAction.restoring,
         ),
@@ -195,36 +189,18 @@ class _PaywallBody extends StatelessWidget {
 }
 
 class _SheetHeader extends StatelessWidget {
-  const _SheetHeader({
-    required this.onClose,
-    required this.onRestore,
-    required this.restoreSpinning,
-  });
+  const _SheetHeader({required this.onRestore, required this.restoreSpinning});
 
-  final VoidCallback? onClose;
   final VoidCallback? onRestore;
   final bool restoreSpinning;
 
   @override
   Widget build(BuildContext context) {
-    // Close uses default 48x48 hit area to meet a11y minimum.
-    // Visual shape (radius 30) is preserved via style; only the
-    // restrictive SizedBox(34x33) + BoxConstraints(33/34) are dropped.
+    // No close affordance: the paywall is a forced entitlement gate (NIB-144)
+    // with nowhere to dismiss to. Only "Restore purchase" sits in the header.
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        IconButton(
-          key: const Key('paywall_close_button'),
-          icon: const Icon(Icons.close, size: AppSizes.iconMd),
-          color: AppColors.text,
-          onPressed: onClose,
-          tooltip: 'Close',
-          style: IconButton.styleFrom(
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(30)),
-            ),
-          ),
-        ),
         SizedBox(
           height: 42,
           child: TextButton(

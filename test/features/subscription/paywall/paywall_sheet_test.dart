@@ -100,12 +100,8 @@ const _kOffering = SubscriptionOffering(
 
 Widget _buildSut({required SubscriptionService Function() factory}) {
   return ProviderScope(
-    overrides: [
-      subscriptionServiceProvider.overrideWith(factory),
-    ],
-    child: const MaterialApp(
-      home: Scaffold(body: PaywallSheet()),
-    ),
+    overrides: [subscriptionServiceProvider.overrideWith(factory)],
+    child: const MaterialApp(home: Scaffold(body: PaywallSheet())),
   );
 }
 
@@ -167,15 +163,12 @@ void main() {
         .map((rt) => rt.text.toPlainText())
         .toList();
     expect(
-      richTexts.any(
-        (text) => text.contains(r'Then billed at $12.34 yearly'),
-      ),
+      richTexts.any((text) => text.contains(r'Then billed at $12.34 yearly')),
       isTrue,
       reason: 'rendered trial card spans: $richTexts',
     );
 
-    // All four CTA keys are wired.
-    expect(find.byKey(const Key('paywall_close_button')), findsOneWidget);
+    // CTA keys are wired (no close button — forced entitlement gate, NIB-144).
     expect(
       find.byKey(const Key('paywall_restore_purchase_button')),
       findsOneWidget,
@@ -208,10 +201,7 @@ void main() {
     );
     // First pump — the controller has scheduled the offerings load but it
     // hasn't resolved yet, so the loading card is visible.
-    expect(
-      find.byKey(const Key('paywall_trial_card_loading')),
-      findsOneWidget,
-    );
+    expect(find.byKey(const Key('paywall_trial_card_loading')), findsOneWidget);
     // Resolve so the test ends cleanly (no pending timers).
     await tester.pump();
   });
