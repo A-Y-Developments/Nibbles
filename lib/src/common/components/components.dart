@@ -7,6 +7,7 @@ export 'brand/petal_blob.dart';
 export 'brand/quatrefoil.dart';
 export 'buttons/app_pill_button.dart';
 export 'buttons/app_round_button.dart';
+export 'buttons/social_auth_button.dart';
 export 'calendar/day_chip.dart';
 export 'calendar/week_strip.dart';
 export 'cards/app_card.dart';

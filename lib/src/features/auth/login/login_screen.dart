@@ -74,9 +74,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   // Smart apostrophe per Figma copy.
                   'Login to continue tracking your\nbaby’s healthy growth.',
                   textAlign: TextAlign.center,
-                  style: textTheme.bodyLarge?.copyWith(
-                    color: AppColors.text,
-                  ),
+                  style: textTheme.bodyLarge?.copyWith(color: AppColors.text),
                 ),
                 const SizedBox(height: AppSizes.xl),
                 AppTextField(
@@ -137,12 +135,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: AppSizes.lg),
                 const _OrDivider(),
                 const SizedBox(height: AppSizes.md),
-                _GoogleLoginButton(
+                SocialAuthButton(
+                  key: const Key('login_google_button'),
+                  provider: SocialAuthProvider.google,
+                  label: 'Login with Google',
                   isLoading: state.isLoading,
                   onPressed: controller.signInWithGoogle,
                 ),
                 const SizedBox(height: AppSizes.md),
-                _AppleLoginButton(
+                SocialAuthButton(
+                  key: const Key('login_apple_button'),
+                  provider: SocialAuthProvider.apple,
+                  label: 'Login with Apple Account',
                   isLoading: state.isLoading,
                   onPressed: controller.signInWithApple,
                 ),
@@ -172,10 +176,7 @@ class _LoginLogoMark extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          Quatrefoil(
-            size: _size,
-            coreColor: AppColors.butter,
-          ),
+          Quatrefoil(size: _size, coreColor: AppColors.butter),
           Text(
             'n',
             style: TextStyle(
@@ -193,10 +194,7 @@ class _LoginLogoMark extends StatelessWidget {
 }
 
 class _PasswordSuffixIcon extends StatelessWidget {
-  const _PasswordSuffixIcon({
-    required this.obscure,
-    required this.onToggle,
-  });
+  const _PasswordSuffixIcon({required this.obscure, required this.onToggle});
 
   final bool obscure;
   final VoidCallback onToggle;
@@ -238,132 +236,6 @@ class _OrDivider extends StatelessWidget {
         ),
         const Expanded(child: Divider(color: AppColors.borderSoft)),
       ],
-    );
-  }
-}
-
-/// White pill with the Google "G" mark + black "Login with Google" label.
-class _GoogleLoginButton extends StatelessWidget {
-  const _GoogleLoginButton({required this.isLoading, required this.onPressed});
-
-  final bool isLoading;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final disabled = isLoading;
-    return Material(
-      key: const Key('login_google_button'),
-      color: AppColors.surface,
-      shape: const StadiumBorder(
-        side: BorderSide(color: AppColors.borderSoft),
-      ),
-      child: InkWell(
-        onTap: disabled ? null : onPressed,
-        customBorder: const StadiumBorder(),
-        child: SizedBox(
-          height: AppSizes.buttonHeight,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const ExcludeSemantics(child: _GoogleGlyph(size: 24)),
-              const SizedBox(width: AppSizes.sm),
-              Text(
-                'Login with Google',
-                style: TextStyle(
-                  fontFamily: FontFamily.parkinsans,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  height: 20 / 13,
-                  color: disabled ? AppColors.fgMuted : AppColors.text,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Stylized Google "G" mark — single-color blue brand glyph rendered as a
-/// circular badge with the "G" letterform centered. Used in lieu of bundling a
-/// brand SVG; the social sign-in row only needs an unmistakable recognition
-/// cue.
-class _GoogleGlyph extends StatelessWidget {
-  const _GoogleGlyph({required this.size});
-
-  // Google Brand "Mountain View" blue — recognised brand primary.
-  static const Color _googleBlue = Color(0xFF4285F4);
-
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      alignment: Alignment.center,
-      decoration: const BoxDecoration(
-        color: _googleBlue,
-        shape: BoxShape.circle,
-      ),
-      child: Text(
-        'G',
-        style: TextStyle(
-          fontFamily: FontFamily.parkinsans,
-          fontSize: size * 0.66,
-          fontWeight: FontWeight.w700,
-          height: 1,
-          color: AppColors.surface,
-        ),
-      ),
-    );
-  }
-}
-
-/// Black pill with the Apple glyph + white "Login with Apple Account" label.
-class _AppleLoginButton extends StatelessWidget {
-  const _AppleLoginButton({required this.isLoading, required this.onPressed});
-
-  final bool isLoading;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final disabled = isLoading;
-    return Material(
-      key: const Key('login_apple_button'),
-      color: AppColors.text,
-      shape: const StadiumBorder(),
-      child: InkWell(
-        onTap: disabled ? null : onPressed,
-        customBorder: const StadiumBorder(),
-        child: SizedBox(
-          height: AppSizes.buttonHeight,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.apple_rounded,
-                color: AppColors.surface,
-                size: AppSizes.iconMd,
-              ),
-              const SizedBox(width: AppSizes.sm),
-              Text(
-                'Login with Apple Account',
-                style: TextStyle(
-                  fontFamily: FontFamily.parkinsans,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  height: 20 / 13,
-                  color: disabled ? AppColors.fgFaint : AppColors.surface,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

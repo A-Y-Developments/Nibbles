@@ -29,12 +29,12 @@ class RegisterScreen extends ConsumerWidget {
     // exactly once.
     final emailFormatError =
         state.email.isNotValid && state.email.value.isNotEmpty
-            ? 'Please enter a valid email.'
-            : null;
+        ? 'Please enter a valid email.'
+        : null;
     final passwordFormatError =
         state.password.isNotValid && state.password.value.isNotEmpty
-            ? 'Password must be at least 8 characters.'
-            : null;
+        ? 'Password must be at least 8 characters.'
+        : null;
 
     final emailErrorText = state.errorMessage ?? emailFormatError;
     final passwordErrorText = passwordFormatError;
@@ -120,16 +120,17 @@ class RegisterScreen extends ConsumerWidget {
                       : () async {
                           final ok = await controller.submit();
                           if (ok && context.mounted) {
-                            context.goNamed(
-                              AppRoute.onboardingBabySetup.name,
-                            );
+                            context.goNamed(AppRoute.onboardingBabySetup.name);
                           }
                         },
                 ),
                 const SizedBox(height: AppSizes.lg),
                 const _OrDivider(),
                 const SizedBox(height: AppSizes.md),
-                _GoogleSignUpButton(
+                SocialAuthButton(
+                  key: const Key('register_google_button'),
+                  provider: SocialAuthProvider.google,
+                  label: 'Sign Up with Google',
                   isLoading: state.isLoading,
                   onPressed: () async {
                     final ok = await controller.signInWithGoogle();
@@ -139,7 +140,10 @@ class RegisterScreen extends ConsumerWidget {
                   },
                 ),
                 const SizedBox(height: AppSizes.md),
-                _AppleSignUpButton(
+                SocialAuthButton(
+                  key: const Key('register_apple_button'),
+                  provider: SocialAuthProvider.apple,
+                  label: 'Sign Up with Apple Account',
                   isLoading: state.isLoading,
                   onPressed: () async {
                     final ok = await controller.signInWithApple();
@@ -240,140 +244,6 @@ class _OrDivider extends StatelessWidget {
         ),
         const Expanded(child: Divider(color: AppColors.borderSoft)),
       ],
-    );
-  }
-}
-
-/// White pill with the Google "G" mark + black "Sign Up with Google" label.
-class _GoogleSignUpButton extends StatelessWidget {
-  const _GoogleSignUpButton({
-    required this.isLoading,
-    required this.onPressed,
-  });
-
-  final bool isLoading;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final disabled = isLoading;
-    return Material(
-      key: const Key('register_google_button'),
-      color: AppColors.surface,
-      shape: const StadiumBorder(
-        side: BorderSide(color: AppColors.borderSoft),
-      ),
-      child: InkWell(
-        onTap: disabled ? null : onPressed,
-        customBorder: const StadiumBorder(),
-        child: SizedBox(
-          height: AppSizes.buttonHeight,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const _GoogleGlyph(size: 24),
-              const SizedBox(width: AppSizes.sm),
-              Text(
-                'Sign Up with Google',
-                style: TextStyle(
-                  fontFamily: FontFamily.parkinsans,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  height: 20 / 13,
-                  color: disabled ? AppColors.fgMuted : AppColors.text,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Stylized Google "G" mark — single-color blue brand glyph rendered as a
-/// circular badge with the "G" letterform centered. Used in lieu of bundling a
-/// brand SVG; the social sign-in row only needs an unmistakable recognition
-/// cue.
-class _GoogleGlyph extends StatelessWidget {
-  const _GoogleGlyph({required this.size});
-
-  // Google Brand "Mountain View" blue — recognised brand primary.
-  static const Color _googleBlue = Color(0xFF4285F4);
-
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    return ExcludeSemantics(
-      child: Container(
-        width: size,
-        height: size,
-        alignment: Alignment.center,
-        decoration: const BoxDecoration(
-          color: _googleBlue,
-          shape: BoxShape.circle,
-        ),
-        child: Text(
-          'G',
-          style: TextStyle(
-            fontFamily: FontFamily.parkinsans,
-            fontSize: size * 0.66,
-            fontWeight: FontWeight.w700,
-            height: 1,
-            color: AppColors.surface,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Black pill with the Apple glyph + white "Sign Up with Apple Account" label.
-class _AppleSignUpButton extends StatelessWidget {
-  const _AppleSignUpButton({
-    required this.isLoading,
-    required this.onPressed,
-  });
-
-  final bool isLoading;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final disabled = isLoading;
-    return Material(
-      key: const Key('register_apple_button'),
-      color: AppColors.text,
-      shape: const StadiumBorder(),
-      child: InkWell(
-        onTap: disabled ? null : onPressed,
-        customBorder: const StadiumBorder(),
-        child: SizedBox(
-          height: AppSizes.buttonHeight,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.apple_rounded,
-                color: AppColors.surface,
-                size: AppSizes.iconMd,
-              ),
-              const SizedBox(width: AppSizes.sm),
-              Text(
-                'Sign Up with Apple Account',
-                style: TextStyle(
-                  fontFamily: FontFamily.parkinsans,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  height: 20 / 13,
-                  color: disabled ? AppColors.fgFaint : AppColors.surface,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

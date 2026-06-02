@@ -92,6 +92,7 @@ flutter:
     - .env.prod
     - assets/translations/
     - assets/images/
+    - assets/images/auth/
     - assets/images/onboarding/
     - assets/icons/
     - assets/jsons/
