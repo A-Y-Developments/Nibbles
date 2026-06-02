@@ -90,15 +90,15 @@ class _AppTextFieldState extends State<AppTextField> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final hasError = widget.errorText != null;
     final focused = _focusNode.hasFocus;
     final errorColor = widget.errorColor ?? AppColors.error;
 
-    final borderColor = hasError
-        ? errorColor
-        : focused
-            ? AppColors.greenDeep
-            : AppColors.borderSoft;
+    OutlineInputBorder borderOf(Color color, double width) {
+      return OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+        borderSide: BorderSide(color: color, width: width),
+      );
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -114,70 +114,46 @@ class _AppTextFieldState extends State<AppTextField> {
           ),
           const SizedBox(height: AppSizes.sm),
         ],
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 120),
-          height: AppSizes.fieldHeight,
-          decoration: BoxDecoration(
-            color: focused ? AppColors.surface : AppColors.bgInput,
-            borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-            border: Border.all(
-              color: borderColor,
-              width: focused || hasError ? 2 : 1,
+        // Single box driven by the field's own InputDecoration — no wrapping
+        // container and no hard-edged focus shadow (the previous spreadRadius
+        // BoxShadow rendered a phantom second border). Border + fill + error
+        // caption + suffix icon are all native decoration slots.
+        TextField(
+          controller: widget.controller,
+          focusNode: _focusNode,
+          enabled: widget.enabled,
+          obscureText: widget.obscureText,
+          keyboardType: widget.keyboardType,
+          textInputAction: widget.textInputAction,
+          onChanged: widget.onChanged,
+          onSubmitted: widget.onSubmitted,
+          autocorrect: widget.autocorrect,
+          enableSuggestions: widget.enableSuggestions,
+          textCapitalization: widget.textCapitalization,
+          style: theme.textTheme.bodyLarge?.copyWith(color: AppColors.fgStrong),
+          cursorColor: AppColors.greenDeep,
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: focused ? AppColors.surface : AppColors.bgInput,
+            isDense: true,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: AppSizes.md,
+              vertical: AppSizes.sp12 + 1,
             ),
-            boxShadow: focused && !hasError
-                ? [
-                    BoxShadow(
-                      color: AppColors.green.withValues(alpha: 0.18),
-                      spreadRadius: 3,
-                    ),
-                  ]
-                : null,
-          ),
-          alignment: Alignment.center,
-          padding: const EdgeInsets.symmetric(horizontal: AppSizes.md - 2),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: widget.controller,
-                  focusNode: _focusNode,
-                  enabled: widget.enabled,
-                  obscureText: widget.obscureText,
-                  keyboardType: widget.keyboardType,
-                  textInputAction: widget.textInputAction,
-                  onChanged: widget.onChanged,
-                  onSubmitted: widget.onSubmitted,
-                  autocorrect: widget.autocorrect,
-                  enableSuggestions: widget.enableSuggestions,
-                  textCapitalization: widget.textCapitalization,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    color: AppColors.fgStrong,
-                  ),
-                  cursorColor: AppColors.greenDeep,
-                  decoration: InputDecoration(
-                    isCollapsed: true,
-                    border: InputBorder.none,
-                    hintText: widget.hintText,
-                    hintStyle: theme.textTheme.bodyLarge?.copyWith(
-                      color: AppColors.greenSoft,
-                    ),
-                  ),
-                ),
-              ),
-              if (widget.suffixIcon != null) ...[
-                const SizedBox(width: AppSizes.sm),
-                widget.suffixIcon!,
-              ],
-            ],
+            hintText: widget.hintText,
+            hintStyle: theme.textTheme.bodyLarge?.copyWith(
+              color: AppColors.greenSoft,
+            ),
+            suffixIcon: widget.suffixIcon,
+            enabledBorder: borderOf(AppColors.borderSoft, 1),
+            disabledBorder: borderOf(AppColors.borderSoft, 1),
+            focusedBorder: borderOf(AppColors.greenDeep, 2),
+            errorBorder: borderOf(errorColor, 1),
+            focusedErrorBorder: borderOf(errorColor, 2),
+            errorText: widget.errorText,
+            errorStyle: theme.textTheme.bodySmall?.copyWith(color: errorColor),
           ),
         ),
-        if (hasError) ...[
-          const SizedBox(height: AppSizes.xs),
-          Text(
-            widget.errorText!,
-            style: theme.textTheme.bodySmall?.copyWith(color: errorColor),
-          ),
-        ],
       ],
     );
   }

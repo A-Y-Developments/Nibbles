@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
+import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/common/domain/enums/gender.dart';
 import 'package:nibbles/src/features/onboarding/baby_setup/baby_setup_controller.dart';
 import 'package:nibbles/src/features/onboarding/baby_setup/baby_setup_state.dart';
@@ -82,17 +83,15 @@ class _NameStep extends StatelessWidget {
         const SizedBox(height: AppSizes.lg),
         Text("What's your baby's name?", style: textTheme.headlineLarge),
         const SizedBox(height: AppSizes.xl),
-        TextField(
+        AppTextField(
           key: const Key('baby_name_field'),
-          onChanged: controller.updateName,
+          hintText: "Baby's name",
           textCapitalization: TextCapitalization.words,
-          decoration: InputDecoration(
-            labelText: "Baby's name",
-            errorText:
-                state.babyName.isNotValid && state.babyName.value.isNotEmpty
-                ? 'Please enter a valid name.'
-                : null,
-          ),
+          onChanged: controller.updateName,
+          errorText:
+              state.babyName.isNotValid && state.babyName.value.isNotEmpty
+              ? 'Please enter a valid name.'
+              : null,
         ),
         const Spacer(),
         SizedBox(

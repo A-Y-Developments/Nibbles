@@ -147,10 +147,7 @@ class _FeedbackEntryScreen extends StatelessWidget {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SafeArea(
-            bottom: false,
-            child: _FeedbackHeader(onBack: onBack),
-          ),
+          SafeArea(bottom: false, child: _FeedbackHeader(onBack: onBack)),
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(
@@ -162,10 +159,7 @@ class _FeedbackEntryScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _FeedbackField(
-                    initialValue: message,
-                    onChanged: onChanged,
-                  ),
+                  _FeedbackField(initialValue: message, onChanged: onChanged),
                   const SizedBox(height: AppSizes.sp12),
                   Text(
                     'Thank you. We read every message.',
@@ -329,10 +323,7 @@ class _FeedbackHeader extends StatelessWidget {
 /// Multiline textarea matching the kit `.field` fill (bgInput) + radiusMd.
 /// Sized for 5-8 visible lines. Placeholder matches the Figma copy exactly.
 class _FeedbackField extends StatefulWidget {
-  const _FeedbackField({
-    required this.initialValue,
-    required this.onChanged,
-  });
+  const _FeedbackField({required this.initialValue, required this.onChanged});
 
   final String initialValue;
   final ValueChanged<String> onChanged;
@@ -377,14 +368,6 @@ class _FeedbackFieldState extends State<_FeedbackField> {
           color: focused ? AppColors.greenDeep : AppColors.borderSoft,
           width: focused ? 2 : 1,
         ),
-        boxShadow: focused
-            ? [
-                BoxShadow(
-                  color: AppColors.green.withValues(alpha: 0.18),
-                  spreadRadius: 3,
-                ),
-              ]
-            : null,
       ),
       padding: const EdgeInsets.symmetric(
         horizontal: AppSizes.md - 2,
