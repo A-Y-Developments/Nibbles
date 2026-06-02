@@ -160,9 +160,11 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
         babyName: baby.name,
         ageMonths: ageInMonths(baby.dateOfBirth),
         onCreateMealPlan: _onCreateMealPlanFromEmpty,
-        overflowButton: Builder(
-          builder: (btnContext) => MealPlanOverflowButton(
-            onTap: () => _openEmptyStateMenu(btnContext),
+        overflowButton: _NoFlashMenuTheme(
+          child: Builder(
+            builder: (btnContext) => MealPlanOverflowButton(
+              onTap: () => _openEmptyStateMenu(btnContext),
+            ),
           ),
         ),
       );
@@ -556,9 +558,11 @@ class _PopulatedView extends StatelessWidget {
           babyName: baby.name,
           ageMonths: ageInMonths(baby.dateOfBirth),
           dayCount: days.length,
-          overflowButton: Builder(
-            builder: (btnContext) => MealPlanOverflowButton(
-              onTap: () => _openScreenMenu(btnContext),
+          overflowButton: _NoFlashMenuTheme(
+            child: Builder(
+              builder: (btnContext) => MealPlanOverflowButton(
+                onTap: () => _openScreenMenu(btnContext),
+              ),
             ),
           ),
         ),
@@ -647,6 +651,28 @@ class _PopulatedView extends StatelessWidget {
       ],
     );
     if (action != null) onScreenMenuSelected(action);
+  }
+}
+
+/// Strips the grey/tinted [InkWell] splash + highlight from the overflow
+/// menu rows. `showMenu` captures the ambient [Theme] from the trigger
+/// context, so wrapping the overflow button here makes the popup rows
+/// stay white on press — only a resting `highlight` row paints lime.
+class _NoFlashMenuTheme extends StatelessWidget {
+  const _NoFlashMenuTheme({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Theme(
+      data: Theme.of(context).copyWith(
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        hoverColor: Colors.transparent,
+      ),
+      child: child,
+    );
   }
 }
 

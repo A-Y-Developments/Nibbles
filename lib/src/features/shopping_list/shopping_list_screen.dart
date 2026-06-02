@@ -31,7 +31,7 @@ import 'package:nibbles/src/features/shopping_list/widgets/swipe_reveal_row.dart
 ///
 /// Per-row trailing close-X commits delete directly (no confirm modal).
 /// Swipe-left reveals a burgundy Delete pill; tap commits delete.
-/// "+" chip opens the floating Add Ingredient card over the keyboard
+/// "+" chip opens the Add Ingredients bottom sheet over the keyboard
 /// (NIB-81 — frames 971:9872 / 971:9915).
 class ShoppingListScreen extends ConsumerWidget {
   const ShoppingListScreen({super.key});
@@ -71,9 +71,8 @@ class _PageScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      // Critical: resizeToAvoidBottomInset=false lets the floating Add card
-      // sit ABOVE the keyboard via MediaQuery.viewInsets, instead of having
-      // the whole layout reflow when the keyboard appears.
+      // Critical: resizeToAvoidBottomInset=false stops the list behind the
+      // Add Ingredients sheet from reflowing when the keyboard appears.
       resizeToAvoidBottomInset: false,
       body: Container(
         decoration: const BoxDecoration(
@@ -110,7 +109,6 @@ class _ShoppingListBodyState extends ConsumerState<_ShoppingListBody> {
   // reveal open. Allows tap-outside-to-close and one-open-at-a-time.
   final SwipeRevealController _swipeController = SwipeRevealController();
 
-  bool _addCardOpen = false;
   final TextEditingController _addController = TextEditingController();
   final FocusNode _addFocusNode = FocusNode();
 
@@ -195,16 +193,12 @@ class _ShoppingListBodyState extends ConsumerState<_ShoppingListBody> {
 
   void _openAddCard() {
     _swipeController.close();
-    setState(() => _addCardOpen = true);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _addFocusNode.requestFocus();
-    });
-  }
-
-  void _closeAddCard() {
-    _addFocusNode.unfocus();
-    setState(() => _addCardOpen = false);
-    _addController.clear();
+    showAddIngredientSheet(
+      context,
+      controller: _addController,
+      focusNode: _addFocusNode,
+      onAdd: _submitAdd,
+    ).whenComplete(_addController.clear);
   }
 
   Future<void> _submitAdd() async {
@@ -236,10 +230,7 @@ class _ShoppingListBodyState extends ConsumerState<_ShoppingListBody> {
           // Tap anywhere outside the add card / open swipe row to dismiss them.
           GestureDetector(
             behavior: HitTestBehavior.translucent,
-            onTap: () {
-              if (_addCardOpen) _closeAddCard();
-              _swipeController.close();
-            },
+            onTap: _swipeController.close,
             child: Padding(
               padding: const EdgeInsets.fromLTRB(
                 AppSizes.md,
@@ -295,17 +286,6 @@ class _ShoppingListBodyState extends ConsumerState<_ShoppingListBody> {
               ),
             ),
           ),
-          if (_addCardOpen)
-            Positioned(
-              left: AppSizes.md,
-              right: AppSizes.md,
-              bottom: MediaQuery.of(context).viewInsets.bottom + AppSizes.sm,
-              child: AddIngredientCard(
-                controller: _addController,
-                focusNode: _addFocusNode,
-                onAdd: _submitAdd,
-              ),
-            ),
         ],
       ),
     );
