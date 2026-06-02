@@ -81,9 +81,12 @@ class _StartingGuideHubScreenState
       backgroundColor: Colors.transparent,
       body: Container(
         decoration: const BoxDecoration(
+          // Grad-1 (matches profile_screen): CSS
+          // linear-gradient(152.612deg, #FFFCD5 19.168%, #F5F5F5 50%).
           gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            begin: Alignment(-0.460, -0.888),
+            end: Alignment(0.460, 0.888),
+            stops: [0.19168, 0.5],
             colors: [AppColors.butterSoft, Color(0xFFF5F5F5)],
           ),
         ),

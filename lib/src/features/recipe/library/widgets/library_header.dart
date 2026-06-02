@@ -125,7 +125,10 @@ class _SearchInput extends StatelessWidget {
                 hintStyle: AppTypography.textTheme.bodyLarge?.copyWith(
                   color: AppColors.fgFaint,
                 ),
+                filled: false,
                 border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
                 isDense: true,
                 contentPadding: EdgeInsets.zero,
               ),
