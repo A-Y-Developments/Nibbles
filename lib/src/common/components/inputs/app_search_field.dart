@@ -52,7 +52,10 @@ class AppSearchField extends StatelessWidget {
               cursorColor: AppColors.greenDeep,
               decoration: InputDecoration(
                 isCollapsed: true,
+                filled: false,
                 border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
                 hintText: hintText,
                 hintStyle: theme.textTheme.bodyLarge?.copyWith(
                   color: AppColors.greenSoft,
