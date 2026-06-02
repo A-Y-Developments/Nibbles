@@ -21,7 +21,7 @@ import 'package:nibbles/src/routing/route_enums.dart';
 /// support" remains on row 1 pending PO cleanup.
 const List<String> _signLabels = [
   // ignore: no_adjacent_strings_in_list — verbatim Figma copy spans two phrases
-  'Can sit upright with minimal support. ' +
+  'Can sit upright with minimal support. '
       'Good head and neck control (can hold head steady)',
   'Sits upright with minimal support',
   "Loss of the tongue-thrust reflex (doesn't automatically push food out).",
@@ -192,15 +192,9 @@ class _HeroCard extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.only(top: overlap),
-          child: _SignsCard(
-            signsMet: signsMet,
-            answers: answers,
-            ready: ready,
-          ),
+          child: _SignsCard(signsMet: signsMet, answers: answers, ready: ready),
         ),
-        const Quatrefoil(
-          coreColor: AppColors.greenSoft,
-        ),
+        const Quatrefoil(coreColor: AppColors.greenSoft),
       ],
     );
   }
@@ -247,10 +241,7 @@ class _SignsCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                _ScoreChip(
-                  signsMet: signsMet,
-                  total: _signLabels.length,
-                ),
+                _ScoreChip(signsMet: signsMet, total: _signLabels.length),
               ],
             ),
             const SizedBox(height: AppSizes.md),
@@ -293,9 +284,7 @@ class _ScoreChip extends StatelessWidget {
         ),
         child: Text(
           '$signsMet/$total',
-          style: textTheme.labelMedium?.copyWith(
-            color: AppColors.coralDeep,
-          ),
+          style: textTheme.labelMedium?.copyWith(color: AppColors.coralDeep),
         ),
       ),
     );

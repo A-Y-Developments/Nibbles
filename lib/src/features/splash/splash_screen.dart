@@ -69,10 +69,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         SizedBox(height: AppSizes.md),
         FittedBox(
           fit: BoxFit.scaleDown,
-          child: Text(
-            'nibbles',
-            style: AppTypography.brandWordmark,
-          ),
+          child: Text('nibbles', style: AppTypography.brandWordmark),
         ),
       ],
     );
@@ -84,10 +81,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   /// While a retry is re-running the build (the previous error is carried over
   /// during the brand-minimum delay), the CTA is disabled so rapid taps can't
   /// keep restarting boot — guards against a tight retry loop when offline.
-  Widget _buildError(
-    BuildContext context, {
-    required bool isReloading,
-  }) {
+  Widget _buildError(BuildContext context, {required bool isReloading}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSizes.pagePaddingH),
       child: Column(
@@ -102,9 +96,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
           Text(
             "We couldn't get things ready. Please check your connection "
             'and try again.',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: AppColors.destructive,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(color: AppColors.destructive),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppSizes.xl),
@@ -114,7 +108,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
               enabled: false,
               button: true,
               liveRegion: true,
-              child: SizedBox(
+              child: const SizedBox(
                 height: AppSizes.buttonHeightSm,
                 child: Center(
                   child: SizedBox.square(
