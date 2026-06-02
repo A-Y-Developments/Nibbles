@@ -22,39 +22,42 @@ class RecipeDetailHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSizes.md,
-        AppSizes.sm,
-        AppSizes.md,
-        AppSizes.sm,
-      ),
-      child: Row(
-        children: [
-          AppRoundButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: onBack,
-            semanticLabel: 'Back',
-          ),
-          Expanded(
-            child: Center(
-              child: Text(
-                'Recipe Detail',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: AppColors.fgStrong,
+    return SafeArea(
+      bottom: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSizes.md,
+          AppSizes.sm,
+          AppSizes.md,
+          AppSizes.sm,
+        ),
+        child: Row(
+          children: [
+            AppRoundButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: onBack,
+              semanticLabel: 'Back',
+            ),
+            Expanded(
+              child: Center(
+                child: Text(
+                  'Recipe Detail',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: AppColors.fgStrong,
+                  ),
                 ),
               ),
             ),
-          ),
-          if (onOverflow != null)
-            AppRoundButton(
-              icon: const Icon(Icons.more_horiz),
-              onPressed: onOverflow,
-              semanticLabel: 'More options',
-            )
-          else
-            const SizedBox(width: AppSizes.roundButton),
-        ],
+            if (onOverflow != null)
+              AppRoundButton(
+                icon: const Icon(Icons.more_horiz),
+                onPressed: onOverflow,
+                semanticLabel: 'More options',
+              )
+            else
+              const SizedBox(width: AppSizes.roundButton),
+          ],
+        ),
       ),
     );
   }

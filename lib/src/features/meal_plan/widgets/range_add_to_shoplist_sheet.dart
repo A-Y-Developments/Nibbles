@@ -172,9 +172,9 @@ class _RangeAddToShoplistSheetState
           child: SafeArea(
             top: false,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(
+              padding: EdgeInsets.fromLTRB(
                 AppSizes.sp12,
-                AppSizes.lg,
+                AppSizes.lg + MediaQuery.of(context).padding.top,
                 AppSizes.sp12,
                 AppSizes.md,
               ),
