@@ -25,8 +25,6 @@ mixin _$OnboardingState {
       throw _privateConstructorUsedError; // Seeded as a length-5 nullable list so the readiness screen can index
   // safely on first build; kept in sync with [readinessQuestionCount].
   List<bool?> get readinessAnswers => throw _privateConstructorUsedError;
-  bool get readinessReady => throw _privateConstructorUsedError;
-  bool get consentAccepted => throw _privateConstructorUsedError;
   bool get isSubmitting => throw _privateConstructorUsedError;
   String? get submitErrorMessage => throw _privateConstructorUsedError;
 
@@ -49,8 +47,6 @@ abstract class $OnboardingStateCopyWith<$Res> {
     DateTime? dob,
     bool? pediatricianApproved,
     List<bool?> readinessAnswers,
-    bool readinessReady,
-    bool consentAccepted,
     bool isSubmitting,
     String? submitErrorMessage,
   });
@@ -75,8 +71,6 @@ class _$OnboardingStateCopyWithImpl<$Res, $Val extends OnboardingState>
     Object? dob = freezed,
     Object? pediatricianApproved = freezed,
     Object? readinessAnswers = null,
-    Object? readinessReady = null,
-    Object? consentAccepted = null,
     Object? isSubmitting = null,
     Object? submitErrorMessage = freezed,
   }) {
@@ -98,14 +92,6 @@ class _$OnboardingStateCopyWithImpl<$Res, $Val extends OnboardingState>
                 ? _value.readinessAnswers
                 : readinessAnswers // ignore: cast_nullable_to_non_nullable
                       as List<bool?>,
-            readinessReady: null == readinessReady
-                ? _value.readinessReady
-                : readinessReady // ignore: cast_nullable_to_non_nullable
-                      as bool,
-            consentAccepted: null == consentAccepted
-                ? _value.consentAccepted
-                : consentAccepted // ignore: cast_nullable_to_non_nullable
-                      as bool,
             isSubmitting: null == isSubmitting
                 ? _value.isSubmitting
                 : isSubmitting // ignore: cast_nullable_to_non_nullable
@@ -134,8 +120,6 @@ abstract class _$$OnboardingStateImplCopyWith<$Res>
     DateTime? dob,
     bool? pediatricianApproved,
     List<bool?> readinessAnswers,
-    bool readinessReady,
-    bool consentAccepted,
     bool isSubmitting,
     String? submitErrorMessage,
   });
@@ -159,8 +143,6 @@ class __$$OnboardingStateImplCopyWithImpl<$Res>
     Object? dob = freezed,
     Object? pediatricianApproved = freezed,
     Object? readinessAnswers = null,
-    Object? readinessReady = null,
-    Object? consentAccepted = null,
     Object? isSubmitting = null,
     Object? submitErrorMessage = freezed,
   }) {
@@ -182,14 +164,6 @@ class __$$OnboardingStateImplCopyWithImpl<$Res>
             ? _value._readinessAnswers
             : readinessAnswers // ignore: cast_nullable_to_non_nullable
                   as List<bool?>,
-        readinessReady: null == readinessReady
-            ? _value.readinessReady
-            : readinessReady // ignore: cast_nullable_to_non_nullable
-                  as bool,
-        consentAccepted: null == consentAccepted
-            ? _value.consentAccepted
-            : consentAccepted // ignore: cast_nullable_to_non_nullable
-                  as bool,
         isSubmitting: null == isSubmitting
             ? _value.isSubmitting
             : isSubmitting // ignore: cast_nullable_to_non_nullable
@@ -217,8 +191,6 @@ class _$OnboardingStateImpl implements _OnboardingState {
       null,
       null,
     ],
-    this.readinessReady = false,
-    this.consentAccepted = false,
     this.isSubmitting = false,
     this.submitErrorMessage,
   }) : _readinessAnswers = readinessAnswers;
@@ -248,19 +220,13 @@ class _$OnboardingStateImpl implements _OnboardingState {
 
   @override
   @JsonKey()
-  final bool readinessReady;
-  @override
-  @JsonKey()
-  final bool consentAccepted;
-  @override
-  @JsonKey()
   final bool isSubmitting;
   @override
   final String? submitErrorMessage;
 
   @override
   String toString() {
-    return 'OnboardingState(babyName: $babyName, dob: $dob, pediatricianApproved: $pediatricianApproved, readinessAnswers: $readinessAnswers, readinessReady: $readinessReady, consentAccepted: $consentAccepted, isSubmitting: $isSubmitting, submitErrorMessage: $submitErrorMessage)';
+    return 'OnboardingState(babyName: $babyName, dob: $dob, pediatricianApproved: $pediatricianApproved, readinessAnswers: $readinessAnswers, isSubmitting: $isSubmitting, submitErrorMessage: $submitErrorMessage)';
   }
 
   @override
@@ -277,10 +243,6 @@ class _$OnboardingStateImpl implements _OnboardingState {
               other._readinessAnswers,
               _readinessAnswers,
             ) &&
-            (identical(other.readinessReady, readinessReady) ||
-                other.readinessReady == readinessReady) &&
-            (identical(other.consentAccepted, consentAccepted) ||
-                other.consentAccepted == consentAccepted) &&
             (identical(other.isSubmitting, isSubmitting) ||
                 other.isSubmitting == isSubmitting) &&
             (identical(other.submitErrorMessage, submitErrorMessage) ||
@@ -294,8 +256,6 @@ class _$OnboardingStateImpl implements _OnboardingState {
     dob,
     pediatricianApproved,
     const DeepCollectionEquality().hash(_readinessAnswers),
-    readinessReady,
-    consentAccepted,
     isSubmitting,
     submitErrorMessage,
   );
@@ -318,8 +278,6 @@ abstract class _OnboardingState implements OnboardingState {
     final DateTime? dob,
     final bool? pediatricianApproved,
     final List<bool?> readinessAnswers,
-    final bool readinessReady,
-    final bool consentAccepted,
     final bool isSubmitting,
     final String? submitErrorMessage,
   }) = _$OnboardingStateImpl;
@@ -334,10 +292,6 @@ abstract class _OnboardingState implements OnboardingState {
   // safely on first build; kept in sync with [readinessQuestionCount].
   @override
   List<bool?> get readinessAnswers;
-  @override
-  bool get readinessReady;
-  @override
-  bool get consentAccepted;
   @override
   bool get isSubmitting;
   @override

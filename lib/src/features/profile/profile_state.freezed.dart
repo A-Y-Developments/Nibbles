@@ -18,7 +18,6 @@ final _privateConstructorUsedError = UnsupportedError(
 /// @nodoc
 mixin _$ProfileState {
   Baby? get baby => throw _privateConstructorUsedError;
-  String? get email => throw _privateConstructorUsedError;
   String? get subscriptionLabel => throw _privateConstructorUsedError;
 
   /// Create a copy of ProfileState
@@ -35,7 +34,7 @@ abstract class $ProfileStateCopyWith<$Res> {
     $Res Function(ProfileState) then,
   ) = _$ProfileStateCopyWithImpl<$Res, ProfileState>;
   @useResult
-  $Res call({Baby? baby, String? email, String? subscriptionLabel});
+  $Res call({Baby? baby, String? subscriptionLabel});
 
   $BabyCopyWith<$Res>? get baby;
 }
@@ -54,21 +53,13 @@ class _$ProfileStateCopyWithImpl<$Res, $Val extends ProfileState>
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? baby = freezed,
-    Object? email = freezed,
-    Object? subscriptionLabel = freezed,
-  }) {
+  $Res call({Object? baby = freezed, Object? subscriptionLabel = freezed}) {
     return _then(
       _value.copyWith(
             baby: freezed == baby
                 ? _value.baby
                 : baby // ignore: cast_nullable_to_non_nullable
                       as Baby?,
-            email: freezed == email
-                ? _value.email
-                : email // ignore: cast_nullable_to_non_nullable
-                      as String?,
             subscriptionLabel: freezed == subscriptionLabel
                 ? _value.subscriptionLabel
                 : subscriptionLabel // ignore: cast_nullable_to_non_nullable
@@ -102,7 +93,7 @@ abstract class _$$ProfileStateImplCopyWith<$Res>
   ) = __$$ProfileStateImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({Baby? baby, String? email, String? subscriptionLabel});
+  $Res call({Baby? baby, String? subscriptionLabel});
 
   @override
   $BabyCopyWith<$Res>? get baby;
@@ -121,21 +112,13 @@ class __$$ProfileStateImplCopyWithImpl<$Res>
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? baby = freezed,
-    Object? email = freezed,
-    Object? subscriptionLabel = freezed,
-  }) {
+  $Res call({Object? baby = freezed, Object? subscriptionLabel = freezed}) {
     return _then(
       _$ProfileStateImpl(
         baby: freezed == baby
             ? _value.baby
             : baby // ignore: cast_nullable_to_non_nullable
                   as Baby?,
-        email: freezed == email
-            ? _value.email
-            : email // ignore: cast_nullable_to_non_nullable
-                  as String?,
         subscriptionLabel: freezed == subscriptionLabel
             ? _value.subscriptionLabel
             : subscriptionLabel // ignore: cast_nullable_to_non_nullable
@@ -148,18 +131,16 @@ class __$$ProfileStateImplCopyWithImpl<$Res>
 /// @nodoc
 
 class _$ProfileStateImpl implements _ProfileState {
-  const _$ProfileStateImpl({this.baby, this.email, this.subscriptionLabel});
+  const _$ProfileStateImpl({this.baby, this.subscriptionLabel});
 
   @override
   final Baby? baby;
-  @override
-  final String? email;
   @override
   final String? subscriptionLabel;
 
   @override
   String toString() {
-    return 'ProfileState(baby: $baby, email: $email, subscriptionLabel: $subscriptionLabel)';
+    return 'ProfileState(baby: $baby, subscriptionLabel: $subscriptionLabel)';
   }
 
   @override
@@ -168,13 +149,12 @@ class _$ProfileStateImpl implements _ProfileState {
         (other.runtimeType == runtimeType &&
             other is _$ProfileStateImpl &&
             (identical(other.baby, baby) || other.baby == baby) &&
-            (identical(other.email, email) || other.email == email) &&
             (identical(other.subscriptionLabel, subscriptionLabel) ||
                 other.subscriptionLabel == subscriptionLabel));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, baby, email, subscriptionLabel);
+  int get hashCode => Object.hash(runtimeType, baby, subscriptionLabel);
 
   /// Create a copy of ProfileState
   /// with the given fields replaced by the non-null parameter values.
@@ -188,14 +168,11 @@ class _$ProfileStateImpl implements _ProfileState {
 abstract class _ProfileState implements ProfileState {
   const factory _ProfileState({
     final Baby? baby,
-    final String? email,
     final String? subscriptionLabel,
   }) = _$ProfileStateImpl;
 
   @override
   Baby? get baby;
-  @override
-  String? get email;
   @override
   String? get subscriptionLabel;
 
