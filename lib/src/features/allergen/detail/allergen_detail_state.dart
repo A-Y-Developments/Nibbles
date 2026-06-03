@@ -11,7 +11,6 @@ class AllergenDetailState with _$AllergenDetailState {
     required Allergen allergen,
     required List<AllergenLog> logs,
     required AllergenStatus status,
-    required String babyId,
     required String babyName,
     // First introduced = min(logDate), Last given = max(logDate).
     // Null when there are 0 logs.
