@@ -165,18 +165,24 @@ class _ConfirmationView extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Container(
-          width: AppSizes.iconXl + AppSizes.md,
-          height: AppSizes.iconXl + AppSizes.md,
-          decoration: const BoxDecoration(
-            color: AppColors.butter,
-            shape: BoxShape.circle,
-          ),
-          alignment: Alignment.center,
-          child: const Icon(
-            Icons.mark_email_read_outlined,
-            size: AppSizes.iconLg,
-            color: AppColors.greenDeep,
+        // Left-align the badge to match the left-aligned title/body below;
+        // a bare Container in a stretch column would be forced full-width
+        // and the circle would render centered.
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Container(
+            width: AppSizes.iconXl + AppSizes.md,
+            height: AppSizes.iconXl + AppSizes.md,
+            decoration: const BoxDecoration(
+              color: AppColors.butter,
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
+            child: const Icon(
+              Icons.mark_email_read_outlined,
+              size: AppSizes.iconLg,
+              color: AppColors.greenDeep,
+            ),
           ),
         ),
         const SizedBox(height: AppSizes.lg),
