@@ -67,7 +67,7 @@ class ContainsAllergensCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSizes.xs),
           Text(
-            'This recipe contains the following of the big 9 allergens',
+            'This recipe contains the following of the big 11 allergens',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: AppColors.fgDefault,
             ),
