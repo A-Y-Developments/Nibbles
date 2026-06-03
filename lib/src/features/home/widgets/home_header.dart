@@ -103,17 +103,21 @@ class _HeaderAvatar extends StatelessWidget {
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: AppColors.greenDeep,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
       ),
       child: const Icon(Icons.person_outline, size: 20, color: AppColors.cream),
     );
 
     if (onTap == null) return avatar;
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: avatar,
+    return Semantics(
+      button: true,
+      label: 'Profile',
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: avatar,
+      ),
     );
   }
 }
