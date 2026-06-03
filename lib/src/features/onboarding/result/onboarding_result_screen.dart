@@ -72,75 +72,85 @@ class OnboardingResultScreen extends ConsumerWidget {
     final firstName = _firstToken(babyNameRaw);
     final signsMet = answers.where((a) => a ?? false).length;
     final ready = signsMet >= readinessReadyThreshold;
+    final outcomeTitle = ready
+        ? '$firstName is ready for solids at this time'
+        : '$firstName is not ready for solids at this time';
 
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSizes.pagePaddingH,
-            vertical: AppSizes.pagePaddingV,
+      // Grad-1 wash (butterSoft → grey) — every onboarding screen carries it.
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [AppColors.butterSoft, Color(0xFFF5F5F5)],
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      if (ready) ...[
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSizes.pagePaddingH,
+              vertical: AppSizes.pagePaddingV,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        if (ready) ...[
+                          Text(
+                            'New Journey Unlock!',
+                            textAlign: TextAlign.center,
+                            style: textTheme.titleSmall?.copyWith(
+                              color: AppColors.fgStrong,
+                            ),
+                          ),
+                          const SizedBox(height: AppSizes.sm),
+                        ],
                         Text(
-                          'New Journey Unlock!',
+                          outcomeTitle,
                           textAlign: TextAlign.center,
-                          style: textTheme.titleSmall?.copyWith(
+                          style: textTheme.headlineSmall?.copyWith(
                             color: AppColors.fgStrong,
                           ),
                         ),
-                        const SizedBox(height: AppSizes.sm),
-                      ],
-                      Text(
-                        ready
-                            ? '$firstName is ready for solids at this time'
-                            : '$firstName is not ready for solids at this time',
-                        textAlign: TextAlign.center,
-                        style: textTheme.headlineSmall?.copyWith(
-                          color: AppColors.fgStrong,
+                        const SizedBox(height: AppSizes.xl),
+                        _HeroCard(
+                          signsMet: signsMet,
+                          answers: answers,
+                          ready: ready,
                         ),
-                      ),
-                      const SizedBox(height: AppSizes.xl),
-                      _HeroCard(
-                        signsMet: signsMet,
-                        answers: answers,
-                        ready: ready,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: AppSizes.md),
-              Row(
-                children: [
-                  AppRoundButton(
-                    key: const Key('onboarding_result_back'),
-                    icon: const Icon(Icons.arrow_back_rounded),
-                    tone: AppRoundButtonTone.butter,
-                    semanticLabel: 'Back',
-                    onPressed: () => _onBack(context),
-                  ),
-                  const SizedBox(width: AppSizes.sp12),
-                  Expanded(
-                    child: AppPillButton(
-                      key: const Key('onboarding_result_next'),
-                      label: 'Next',
-                      onPressed: () =>
-                          context.goNamed(AppRoute.onboardingConsent.name),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ],
+                ),
+                const SizedBox(height: AppSizes.md),
+                Row(
+                  children: [
+                    AppRoundButton(
+                      key: const Key('onboarding_result_back'),
+                      icon: const Icon(Icons.arrow_back_rounded),
+                      tone: AppRoundButtonTone.butter,
+                      semanticLabel: 'Back',
+                      onPressed: () => _onBack(context),
+                    ),
+                    const SizedBox(width: AppSizes.sp12),
+                    Expanded(
+                      child: AppPillButton(
+                        key: const Key('onboarding_result_next'),
+                        label: 'Next',
+                        onPressed: () =>
+                            context.goNamed(AppRoute.onboardingConsent.name),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -180,7 +190,8 @@ class _HeroCard extends StatelessWidget {
   final List<bool?> answers;
   final bool ready;
 
-  static const double _heroSize = 96;
+  // Figma readiness-ready/not-ready hero "Group 78" is 154x154.
+  static const double _heroSize = 154;
 
   @override
   Widget build(BuildContext context) {
@@ -194,7 +205,7 @@ class _HeroCard extends StatelessWidget {
           padding: const EdgeInsets.only(top: overlap),
           child: _SignsCard(signsMet: signsMet, answers: answers, ready: ready),
         ),
-        const Quatrefoil(coreColor: AppColors.greenSoft),
+        const Quatrefoil(size: _heroSize, coreColor: AppColors.greenSoft),
       ],
     );
   }

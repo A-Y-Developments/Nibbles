@@ -43,7 +43,6 @@ class _OnboardingConsentScreenState
     extends ConsumerState<OnboardingConsentScreen> {
   // Default to the safer 2-checkbox path when DOB is missing (spec step 2).
   static const int _defaultAgeMonths = 6;
-  static const int _earlySolidsThresholdMonths = 6;
 
   late List<bool> _checks;
 
@@ -56,7 +55,7 @@ class _OnboardingConsentScreenState
   }
 
   int _countFor(int ageMonths) =>
-      ageMonths >= _earlySolidsThresholdMonths ? 2 : 3;
+      ageMonths >= onboardingEarlySolidsThresholdMonths ? 2 : 3;
 
   bool get _allChecked => _checks.every((c) => c);
 
@@ -104,79 +103,88 @@ class _OnboardingConsentScreenState
       // prevent racing the createBaby call with orphaned baby rows.
       canPop: !isSubmitting,
       child: Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSizes.pagePaddingH,
-            vertical: AppSizes.pagePaddingV,
+        // Grad-1 wash — every onboarding screen carries it.
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [AppColors.butterSoft, Color(0xFFF5F5F5)],
+            ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                'Before we start, some housekeeping',
-                textAlign: TextAlign.center,
-                style: textTheme.displaySmall,
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSizes.pagePaddingH,
+                vertical: AppSizes.pagePaddingV,
               ),
-              const SizedBox(height: AppSizes.lg),
-              // Figma audit calls the cluster at 220x220; we render at 180
-              // so the 3-checkbox <6mo variant still fits without scrolling on
-              // ~5.5" devices (the cluster scales linearly via [PetalBlob]).
-              const Center(child: PetalBlob(size: 180)),
-              const SizedBox(height: AppSizes.xl),
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      for (var i = 0; i < _checks.length; i++) ...[
-                        _ConsentCheckboxRow(
-                          key: Key('onboarding_consent_checkbox_$i'),
-                          label: _labelFor(i),
-                          value: _checks[i],
-                          onChanged: (v) => _toggle(i, value: v),
-                        ),
-                        if (i < _checks.length - 1)
-                          const SizedBox(height: AppSizes.sm),
-                      ],
-                      if (errorMessage != null) ...[
-                        const SizedBox(height: AppSizes.md),
-                        _InlineError(
-                          key: const Key('onboarding_consent_error'),
-                          message: errorMessage,
-                          onRetry: canConfirm ? _onConfirm : null,
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: AppSizes.md),
-              Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  AppRoundButton(
-                    key: const Key('onboarding_consent_back'),
-                    icon: const Icon(Icons.arrow_back_rounded),
-                    tone: AppRoundButtonTone.butter,
-                    semanticLabel: 'Back',
-                    // Gate back during submit to prevent orphan-baby race.
-                    onPressed: isSubmitting ? null : _onBack,
+                  Text(
+                    'Before we start, some housekeeping',
+                    textAlign: TextAlign.center,
+                    // Figma Title 1/Bold 22 (sibling onboarding titles also 22).
+                    style: textTheme.titleLarge,
                   ),
-                  const SizedBox(width: AppSizes.sp12),
+                  const SizedBox(height: AppSizes.lg),
+                  // Figma cluster is 220x220; rendered at 180 so the 3-box
+                  // <6mo variant fits without scrolling on ~5.5" devices.
+                  const Center(child: PetalBlob(size: 180)),
+                  const SizedBox(height: AppSizes.xl),
                   Expanded(
-                    child: AppPillButton(
-                      key: const Key('onboarding_consent_submit'),
-                      label: ctaLabel,
-                      onPressed: canConfirm ? _onConfirm : null,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          for (var i = 0; i < _checks.length; i++) ...[
+                            _ConsentCheckboxRow(
+                              key: Key('onboarding_consent_checkbox_$i'),
+                              label: _labelFor(i),
+                              value: _checks[i],
+                              onChanged: (v) => _toggle(i, value: v),
+                            ),
+                            if (i < _checks.length - 1)
+                              const SizedBox(height: AppSizes.sm),
+                          ],
+                          if (errorMessage != null) ...[
+                            const SizedBox(height: AppSizes.md),
+                            _InlineError(
+                              key: const Key('onboarding_consent_error'),
+                              message: errorMessage,
+                              onRetry: canConfirm ? _onConfirm : null,
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
+                  ),
+                  const SizedBox(height: AppSizes.md),
+                  Row(
+                    children: [
+                      AppRoundButton(
+                        key: const Key('onboarding_consent_back'),
+                        icon: const Icon(Icons.arrow_back_rounded),
+                        tone: AppRoundButtonTone.butter,
+                        semanticLabel: 'Back',
+                        // Gate back during submit to prevent orphan-baby race.
+                        onPressed: isSubmitting ? null : _onBack,
+                      ),
+                      const SizedBox(width: AppSizes.sp12),
+                      Expanded(
+                        child: AppPillButton(
+                          key: const Key('onboarding_consent_submit'),
+                          label: ctaLabel,
+                          onPressed: canConfirm ? _onConfirm : null,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
+            ),
           ),
         ),
-      ),
       ),
     );
   }
@@ -237,12 +245,9 @@ class _ConsentCheckboxRow extends StatelessWidget {
               Padding(
                 // Nudge the checkbox down so it visually aligns with the first
                 // line of label text.
-                padding: const EdgeInsets.only(top: 2),
+                padding: const EdgeInsets.only(top: AppSizes.sp2),
                 child: ExcludeSemantics(
-                  child: AppCheckbox(
-                    value: value,
-                    onChanged: onChanged,
-                  ),
+                  child: AppCheckbox(value: value, onChanged: onChanged),
                 ),
               ),
               const SizedBox(width: AppSizes.sp12),
@@ -267,11 +272,7 @@ class _ConsentCheckboxRow extends StatelessWidget {
 /// Retry is null while submit is in-flight or the boxes are unchecked so the
 /// user can't fire a duplicate submit mid-request.
 class _InlineError extends StatelessWidget {
-  const _InlineError({
-    required this.message,
-    required this.onRetry,
-    super.key,
-  });
+  const _InlineError({required this.message, required this.onRetry, super.key});
 
   final String message;
   final VoidCallback? onRetry;

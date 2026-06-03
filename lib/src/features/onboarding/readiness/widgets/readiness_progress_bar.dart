@@ -10,8 +10,8 @@ import 'package:nibbles/src/app/themes/app_sizes.dart';
 /// (.figma-audit/onboarding/readiness-check-{1..6}/screenshot.png):
 ///
 ///   step 0 (Q1)  -> coral peach   (gate / intro)
-///   step 1 (Q2)  -> destructive   (burgundy)
-///   step 2 (Q3)  -> destructive   (burgundy)
+///   step 1 (Q2)  -> burgundy
+///   step 2 (Q3)  -> burgundy
 ///   step 3 (Q4)  -> coral         (salmon)
 ///   step 4 (Q5)  -> butter        (lime)
 ///   step 5 (Q6)  -> green         (forest)
@@ -37,8 +37,8 @@ class ReadinessProgressBar extends StatelessWidget {
   /// the NIB-83 stepCount (6).
   static const List<Color> _stepFillColors = <Color>[
     AppColors.coral,
-    AppColors.destructive,
-    AppColors.destructive,
+    AppColors.burgundy,
+    AppColors.burgundy,
     AppColors.coral,
     AppColors.butter,
     AppColors.green,
@@ -78,14 +78,13 @@ class ReadinessProgressBar extends StatelessWidget {
           width: double.infinity,
           child: Stack(
             children: [
-              const ColoredBox(
-                color: trackColor,
-                child: SizedBox.expand(),
-              ),
+              const ColoredBox(color: trackColor, child: SizedBox.expand()),
               TweenAnimationBuilder<double>(
                 duration: const Duration(milliseconds: 320),
                 curve: Curves.easeOut,
-                tween: Tween<double>(begin: fraction, end: fraction),
+                // end-only so width tweens from the prior fraction to the new
+                // one on step change (begin==end would snap with no motion).
+                tween: Tween<double>(end: fraction),
                 builder: (context, value, _) => FractionallySizedBox(
                   widthFactor: value.clamp(0.0, 1.0),
                   child: TweenAnimationBuilder<Color?>(

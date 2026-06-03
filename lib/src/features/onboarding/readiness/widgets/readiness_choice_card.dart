@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
+import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/brand/quatrefoil.dart';
 
 /// Large square choice card used in the NIB-83 readiness questionnaire.
@@ -32,9 +33,9 @@ class ReadinessChoiceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
     final borderColor = selected ? AppColors.greenDeep : AppColors.green;
-    final borderWidth = selected ? 2.5 : 1.5;
+    // Figma readiness-check forest stroke is 2; selected 2.5 is kit-derived.
+    final borderWidth = selected ? 2.5 : 2.0;
     final surface = selected ? AppColors.butterSoft : AppColors.cream;
 
     return Semantics(
@@ -66,9 +67,9 @@ class ReadinessChoiceCard extends StatelessWidget {
                     child: Text(
                       label,
                       textAlign: TextAlign.center,
-                      style: textTheme.bodyMedium?.copyWith(
+                      // Figma card label = Headline/SemiBold (Parkinsans 15/22).
+                      style: AppTypography.headline.copyWith(
                         color: AppColors.greenDeep,
-                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
@@ -94,10 +95,7 @@ class _NibbleIcon extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          Quatrefoil(
-            size: AppSizes.xxl,
-            coreColor: AppColors.butter,
-          ),
+          Quatrefoil(size: AppSizes.xxl, coreColor: AppColors.butter),
           Icon(
             Icons.cancel_outlined,
             size: AppSizes.iconMd,
