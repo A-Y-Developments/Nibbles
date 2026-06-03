@@ -99,31 +99,18 @@ class OnboardingController extends _$OnboardingController {
     state = state.copyWith(readinessAnswers: List<bool?>.unmodifiable(next));
   }
 
-  void setReadinessReady({required bool ready}) {
-    state = state.copyWith(readinessReady: ready);
-  }
-
-  /// Derives the readiness-ready flag from current answers, persists the
-  /// local-flag, and updates state. Called from the readiness screen's finish
-  /// step so the flag is flipped inside the controller before the router
-  /// redirect runs — avoids the race between fire-and-forget flag write and
-  /// GoRouter reading the stale value.
+  /// Persists the readiness-done local flag from inside the controller so it is
+  /// flipped before the router redirect runs — avoids the race between a
+  /// fire-and-forget flag write and GoRouter reading the stale value. The
+  /// readiness outcome is derived independently on the result screen (majority
+  /// gate), so no state field is written here.
   void completeReadiness() {
-    final allMet = state.readinessAnswers.every((a) => a ?? false);
-    state = state.copyWith(readinessReady: allMet);
     ref.read(localFlagServiceProvider).setOnboardingReadinessDone();
   }
 
   // ---------------------------------------------------------------------------
   // Consent + submit stage (P1)
   // ---------------------------------------------------------------------------
-
-  void setConsentAccepted({required bool accepted}) {
-    state = state.copyWith(
-      consentAccepted: accepted,
-      submitErrorMessage: null,
-    );
-  }
 
   /// Persists the baby on consent submit. Returns true on success — caller is
   /// expected to set `onboarding_done` and navigate to `/home`. On failure the

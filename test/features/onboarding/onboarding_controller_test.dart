@@ -133,15 +133,14 @@ void main() {
       expect(state.dob, DateTime(2025, 6));
     });
 
-    test('setReadinessAnswers + setReadinessReady update state', () {
+    test('setReadinessAnswers updates state', () {
       final container = _makeContainer(_MockBabyProfileService());
-      container.read(onboardingControllerProvider.notifier)
-        ..setReadinessAnswers(<bool?>[true, false, null])
-        ..setReadinessReady(ready: true);
+      container
+          .read(onboardingControllerProvider.notifier)
+          .setReadinessAnswers(<bool?>[true, false, null]);
 
       final state = container.read(onboardingControllerProvider);
       expect(state.readinessAnswers, [true, false, null]);
-      expect(state.readinessReady, isTrue);
     });
 
     test(
@@ -168,16 +167,5 @@ void main() {
       },
     );
 
-    test('setConsentAccepted toggles consent flag and clears submit error', () {
-      final container = _makeContainer(_MockBabyProfileService());
-      container
-          .read(onboardingControllerProvider.notifier)
-          .setConsentAccepted(accepted: true);
-
-      expect(
-        container.read(onboardingControllerProvider).consentAccepted,
-        isTrue,
-      );
-    });
   });
 }

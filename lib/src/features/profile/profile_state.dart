@@ -7,7 +7,6 @@ part 'profile_state.freezed.dart';
 class ProfileState with _$ProfileState {
   const factory ProfileState({
     Baby? baby,
-    String? email,
     String? subscriptionLabel,
   }) = _ProfileState;
 }

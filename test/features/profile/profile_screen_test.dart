@@ -83,13 +83,12 @@ final _fakeBaby = Baby(
 
 ProfileState _populatedState() => ProfileState(
       baby: _fakeBaby,
-      email: 'lily@example.com',
       subscriptionLabel: 'No Subscription',
     );
 
 // ---------------------------------------------------------------------------
-// Fake ProfileController — bypasses the Supabase.instance.client.auth call
-// the real notifier makes inside build().
+// Fake ProfileController — returns a fixed state so the test doesn't depend on
+// the real notifier's baby-profile service read inside build().
 // ---------------------------------------------------------------------------
 
 class _FakeProfileController extends ProfileController {

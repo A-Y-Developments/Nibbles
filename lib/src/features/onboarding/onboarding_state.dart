@@ -32,8 +32,6 @@ class OnboardingState with _$OnboardingState {
     // safely on first build; kept in sync with [readinessQuestionCount].
     @Default(<bool?>[null, null, null, null, null])
     List<bool?> readinessAnswers,
-    @Default(false) bool readinessReady,
-    @Default(false) bool consentAccepted,
     @Default(false) bool isSubmitting,
     String? submitErrorMessage,
   }) = _OnboardingState;

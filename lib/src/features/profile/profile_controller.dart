@@ -1,7 +1,6 @@
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/features/profile/profile_state.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'profile_controller.g.dart';
 
@@ -15,7 +14,6 @@ class ProfileController extends _$ProfileController {
   @override
   Future<ProfileState> build(String babyId) async {
     final baby = await ref.read(babyProfileServiceProvider).getBaby();
-    final email = Supabase.instance.client.auth.currentUser?.email;
 
     // SubscriptionService is M2-deferred (NIB-73). Stub the label until the
     // paywall ships.
@@ -23,7 +21,6 @@ class ProfileController extends _$ProfileController {
 
     return ProfileState(
       baby: baby,
-      email: email,
       subscriptionLabel: subscriptionLabel,
     );
   }
