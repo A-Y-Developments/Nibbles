@@ -321,4 +321,36 @@ void main() {
       expect(find.text("TODAY'S MEALS"), findsOneWidget);
     });
   });
+
+  group('TodaysMealsCard — meal row a11y', () {
+    testWidgets(
+      'meal row exposes a labelled button + tap navigates to recipe detail',
+      (tester) async {
+        tester.view.physicalSize = const Size(1080, 2400);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        final handle = tester.ensureSemantics();
+
+        await tester.pumpWidget(
+          _wrap(
+            TodaysMealsCard(
+              todaysMeals: [_entry('m1', 'r1')],
+              recipes: {'r1': _recipe()},
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        const label = 'Meal, Chicken Liver, Apple & Sweet Potato Purée';
+        expect(find.bySemanticsLabel(label), findsOneWidget);
+
+        await tester.tap(find.bySemanticsLabel(label));
+        await tester.pumpAndSettle();
+        expect(find.text('RECIPE_STUB:r1'), findsOneWidget);
+
+        handle.dispose();
+      },
+    );
+  });
 }

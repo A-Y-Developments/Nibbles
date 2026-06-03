@@ -55,6 +55,13 @@ class OngoingIntroducedCard extends StatelessWidget {
     final name = AllergenEmoji.displayName(key);
     final filled = (logCounts[key] ?? 0).clamp(0, _target);
 
+    void handleTap() {
+      unawaited(
+        Analytics.instance.logHomeOngoingAllergenTapped(allergenKey: key),
+      );
+      context.pushNamed(AppRoute.allergenTracker.name);
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -65,62 +72,61 @@ class OngoingIntroducedCard extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppSizes.sm),
-        Material(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusXl),
-          child: InkWell(
+        Semantics(
+          button: true,
+          label: '$name, introduced $filled of $_target times',
+          excludeSemantics: true,
+          onTap: handleTap,
+          child: Material(
+            color: AppColors.surface,
             borderRadius: BorderRadius.circular(AppSizes.radiusXl),
-            onTap: () {
-              unawaited(
-                Analytics.instance.logHomeOngoingAllergenTapped(
-                  allergenKey: key,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(AppSizes.radiusXl),
+              onTap: handleTap,
+              child: Ink(
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(AppSizes.radiusXl),
+                  boxShadow: AppSizes.shadowCard,
                 ),
-              );
-              context.pushNamed(AppRoute.allergenTracker.name);
-            },
-            child: Ink(
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(AppSizes.radiusXl),
-                boxShadow: AppSizes.shadowCard,
-              ),
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSizes.md - 2,
-                vertical: AppSizes.sp12,
-              ),
-              child: Row(
-                children: [
-                  _CoralThumb(emoji: emoji),
-                  const SizedBox(width: AppSizes.sp12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(name, style: AppTypography.emptyStateTitle),
-                        const SizedBox(height: AppSizes.sp2),
-                        Text(
-                          '$filled/$_target times ',
-                          style: AppTypography.caption.copyWith(
-                            color: AppColors.fgFaint,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSizes.md - 2,
+                  vertical: AppSizes.sp12,
+                ),
+                child: Row(
+                  children: [
+                    _CoralThumb(emoji: emoji),
+                    const SizedBox(width: AppSizes.sp12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(name, style: AppTypography.emptyStateTitle),
+                          const SizedBox(height: AppSizes.sp2),
+                          Text(
+                            '$filled/$_target times ',
+                            style: AppTypography.caption.copyWith(
+                              color: AppColors.fgFaint,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: AppSizes.sm),
-                        AppSegmentedProgressBar(
-                          filledCount: filled,
-                          tone: AppSegmentedProgressTone.coral,
-                          height: 6,
-                        ),
-                      ],
+                          const SizedBox(height: AppSizes.sm),
+                          AppSegmentedProgressBar(
+                            filledCount: filled,
+                            tone: AppSegmentedProgressTone.coral,
+                            height: 6,
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: AppSizes.sm),
-                  const Icon(
-                    Icons.chevron_right,
-                    size: AppSizes.iconMd,
-                    color: AppColors.fgFaint,
-                  ),
-                ],
+                    const SizedBox(width: AppSizes.sm),
+                    const Icon(
+                      Icons.chevron_right,
+                      size: AppSizes.iconMd,
+                      color: AppColors.fgFaint,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

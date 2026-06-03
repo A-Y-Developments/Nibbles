@@ -233,48 +233,54 @@ class _MealRow extends StatelessWidget {
         _TagChipData(label: tag, icon: Icons.bolt),
     ];
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-        onTap: () {
-          unawaited(
-            Analytics.instance.logRecipeViewed(recipeId: entry.recipeId),
-          );
-          context.pushNamed(
-            AppRoute.recipeDetail.name,
-            pathParameters: {'recipeId': entry.recipeId},
-          );
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(AppSizes.xs),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _MealThumbnail(url: recipe?.thumbnailUrl),
-              const SizedBox(width: AppSizes.sp12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      title,
-                      style: AppTypography.textTheme.labelLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.fgStrong,
+    void handleTap() {
+      unawaited(Analytics.instance.logRecipeViewed(recipeId: entry.recipeId));
+      context.pushNamed(
+        AppRoute.recipeDetail.name,
+        pathParameters: {'recipeId': entry.recipeId},
+      );
+    }
+
+    return Semantics(
+      button: true,
+      label: 'Meal, $title',
+      excludeSemantics: true,
+      onTap: handleTap,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+          onTap: handleTap,
+          child: Padding(
+            padding: const EdgeInsets.all(AppSizes.xs),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _MealThumbnail(url: recipe?.thumbnailUrl),
+                const SizedBox(width: AppSizes.sp12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        title,
+                        style: AppTypography.textTheme.labelLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.fgStrong,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (tags.isNotEmpty) ...[
-                      const SizedBox(height: AppSizes.xs),
-                      _TagChipsRow(tags: tags),
+                      if (tags.isNotEmpty) ...[
+                        const SizedBox(height: AppSizes.xs),
+                        _TagChipsRow(tags: tags),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
