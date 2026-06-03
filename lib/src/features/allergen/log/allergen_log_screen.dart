@@ -449,7 +449,7 @@ class _NotesField extends StatelessWidget {
         decoration: InputDecoration(
           isCollapsed: true,
           border: InputBorder.none,
-          hintText: 'My baby love it, no reaction',
+          hintText: 'My baby loves it, no reaction',
           hintStyle: textTheme.bodyLarge?.copyWith(color: AppColors.fgFaint),
         ),
       ),
