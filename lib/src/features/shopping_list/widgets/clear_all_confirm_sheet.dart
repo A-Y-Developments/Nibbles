@@ -20,7 +20,9 @@ Future<bool?> showClearAllConfirmSheet(BuildContext context) {
     barrierColor: Colors.black.withValues(alpha: 0.5),
     isScrollControlled: true,
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(AppSizes.radius3xl),
+      ),
     ),
     builder: (_) => const _ClearAllConfirmSheet(),
   );
@@ -50,7 +52,10 @@ class _ClearAllConfirmSheet extends StatelessWidget {
                 child: Text(
                   'Are you sure you want to delete?',
                   textAlign: TextAlign.center,
-                  style: AppTypography.textTheme.titleSmall,
+                  // Figma 971:9982 — Parkinsans Bold 17 (titleSmall is w600).
+                  style: AppTypography.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ),

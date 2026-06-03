@@ -416,7 +416,7 @@ class _ItemsList extends StatelessWidget {
     return ListView.separated(
       padding: const EdgeInsets.only(bottom: AppSizes.md),
       itemCount: items.length,
-      separatorBuilder: (_, __) => const SizedBox(height: AppSizes.sm),
+      separatorBuilder: (_, __) => const SizedBox(height: AppSizes.sp12),
       itemBuilder: (_, index) {
         final item = items[index];
         // Optimistic placeholder id=='' would collide if multiple are pending;
@@ -606,7 +606,8 @@ class _EmptyState extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           const Quatrefoil(size: 153),
-          const SizedBox(height: AppSizes.sm),
+          // Figma 971:9989 empty-state gap-[10px] (no 10px spacing token).
+          const SizedBox(height: 10),
           Text(
             "You don't have any list yet",
             textAlign: TextAlign.center,
