@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
@@ -42,15 +41,7 @@ class RecipeCategoryRow extends StatelessWidget {
             AppSizes.pagePaddingH,
             AppSizes.sp12,
           ),
-          child: Text(
-            title,
-            style: AppTypography.textTheme.titleSmall?.copyWith(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              height: 22 / 15,
-              color: AppColors.fgStrong,
-            ),
-          ),
+          child: Text(title, style: AppTypography.headline),
         ),
         SizedBox(
           height: _cardHeight,
