@@ -49,16 +49,10 @@ class AllergenDetailController extends _$AllergenDetailController {
       allergen: allergen,
       logs: logs,
       status: status,
-      babyId: baby.id,
       babyName: baby.name,
       firstIntroduced: firstIntroduced,
       lastGiven: lastGiven,
     );
-  }
-
-  Future<void> refresh() async {
-    ref.invalidateSelf();
-    await future;
   }
 
   void _throwIfFailure<T>(Result<T> result) {

@@ -62,7 +62,7 @@ class DetailHeaderCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: AppSizes.sp2),
                 Text(
                   _subtext,
                   style: textTheme.bodySmall?.copyWith(

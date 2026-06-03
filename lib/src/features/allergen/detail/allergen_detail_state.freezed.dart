@@ -20,7 +20,6 @@ mixin _$AllergenDetailState {
   Allergen get allergen => throw _privateConstructorUsedError;
   List<AllergenLog> get logs => throw _privateConstructorUsedError;
   AllergenStatus get status => throw _privateConstructorUsedError;
-  String get babyId => throw _privateConstructorUsedError;
   String get babyName =>
       throw _privateConstructorUsedError; // First introduced = min(logDate), Last given = max(logDate).
   // Null when there are 0 logs.
@@ -45,7 +44,6 @@ abstract class $AllergenDetailStateCopyWith<$Res> {
     Allergen allergen,
     List<AllergenLog> logs,
     AllergenStatus status,
-    String babyId,
     String babyName,
     DateTime? firstIntroduced,
     DateTime? lastGiven,
@@ -72,7 +70,6 @@ class _$AllergenDetailStateCopyWithImpl<$Res, $Val extends AllergenDetailState>
     Object? allergen = null,
     Object? logs = null,
     Object? status = null,
-    Object? babyId = null,
     Object? babyName = null,
     Object? firstIntroduced = freezed,
     Object? lastGiven = freezed,
@@ -91,10 +88,6 @@ class _$AllergenDetailStateCopyWithImpl<$Res, $Val extends AllergenDetailState>
                 ? _value.status
                 : status // ignore: cast_nullable_to_non_nullable
                       as AllergenStatus,
-            babyId: null == babyId
-                ? _value.babyId
-                : babyId // ignore: cast_nullable_to_non_nullable
-                      as String,
             babyName: null == babyName
                 ? _value.babyName
                 : babyName // ignore: cast_nullable_to_non_nullable
@@ -136,7 +129,6 @@ abstract class _$$AllergenDetailStateImplCopyWith<$Res>
     Allergen allergen,
     List<AllergenLog> logs,
     AllergenStatus status,
-    String babyId,
     String babyName,
     DateTime? firstIntroduced,
     DateTime? lastGiven,
@@ -163,7 +155,6 @@ class __$$AllergenDetailStateImplCopyWithImpl<$Res>
     Object? allergen = null,
     Object? logs = null,
     Object? status = null,
-    Object? babyId = null,
     Object? babyName = null,
     Object? firstIntroduced = freezed,
     Object? lastGiven = freezed,
@@ -182,10 +173,6 @@ class __$$AllergenDetailStateImplCopyWithImpl<$Res>
             ? _value.status
             : status // ignore: cast_nullable_to_non_nullable
                   as AllergenStatus,
-        babyId: null == babyId
-            ? _value.babyId
-            : babyId // ignore: cast_nullable_to_non_nullable
-                  as String,
         babyName: null == babyName
             ? _value.babyName
             : babyName // ignore: cast_nullable_to_non_nullable
@@ -210,7 +197,6 @@ class _$AllergenDetailStateImpl implements _AllergenDetailState {
     required this.allergen,
     required final List<AllergenLog> logs,
     required this.status,
-    required this.babyId,
     required this.babyName,
     this.firstIntroduced,
     this.lastGiven,
@@ -229,8 +215,6 @@ class _$AllergenDetailStateImpl implements _AllergenDetailState {
   @override
   final AllergenStatus status;
   @override
-  final String babyId;
-  @override
   final String babyName;
   // First introduced = min(logDate), Last given = max(logDate).
   // Null when there are 0 logs.
@@ -241,7 +225,7 @@ class _$AllergenDetailStateImpl implements _AllergenDetailState {
 
   @override
   String toString() {
-    return 'AllergenDetailState(allergen: $allergen, logs: $logs, status: $status, babyId: $babyId, babyName: $babyName, firstIntroduced: $firstIntroduced, lastGiven: $lastGiven)';
+    return 'AllergenDetailState(allergen: $allergen, logs: $logs, status: $status, babyName: $babyName, firstIntroduced: $firstIntroduced, lastGiven: $lastGiven)';
   }
 
   @override
@@ -253,7 +237,6 @@ class _$AllergenDetailStateImpl implements _AllergenDetailState {
                 other.allergen == allergen) &&
             const DeepCollectionEquality().equals(other._logs, _logs) &&
             (identical(other.status, status) || other.status == status) &&
-            (identical(other.babyId, babyId) || other.babyId == babyId) &&
             (identical(other.babyName, babyName) ||
                 other.babyName == babyName) &&
             (identical(other.firstIntroduced, firstIntroduced) ||
@@ -268,7 +251,6 @@ class _$AllergenDetailStateImpl implements _AllergenDetailState {
     allergen,
     const DeepCollectionEquality().hash(_logs),
     status,
-    babyId,
     babyName,
     firstIntroduced,
     lastGiven,
@@ -291,7 +273,6 @@ abstract class _AllergenDetailState implements AllergenDetailState {
     required final Allergen allergen,
     required final List<AllergenLog> logs,
     required final AllergenStatus status,
-    required final String babyId,
     required final String babyName,
     final DateTime? firstIntroduced,
     final DateTime? lastGiven,
@@ -303,8 +284,6 @@ abstract class _AllergenDetailState implements AllergenDetailState {
   List<AllergenLog> get logs;
   @override
   AllergenStatus get status;
-  @override
-  String get babyId;
   @override
   String get babyName; // First introduced = min(logDate), Last given = max(logDate).
   // Null when there are 0 logs.
