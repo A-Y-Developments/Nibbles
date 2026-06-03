@@ -33,24 +33,31 @@ class CancelReasonChip extends StatelessWidget {
         ? const BorderSide(color: AppColors.green, width: 1.5)
         : BorderSide.none;
 
-    return Material(
-      color: fill,
-      shape: RoundedRectangleBorder(
-        side: border,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        child: SizedBox(
-          width: double.infinity,
-          child: Padding(
-            // Figma: padding 12 on all sides.
-            padding: const EdgeInsets.all(AppSizes.sp12),
-            child: Text(
-              label,
-              style: AppTypography.headline.copyWith(
-                color: fg,
+    // Single-select choice: expose selected + button role so a screen reader
+    // announces which reason is picked (mirrors ReasonChoiceRow / SettingsRow).
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      child: ExcludeSemantics(
+        child: Material(
+          color: fill,
+          shape: RoundedRectangleBorder(
+            side: border,
+            borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+          ),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+            child: SizedBox(
+              width: double.infinity,
+              child: Padding(
+                // Figma: padding 12 on all sides.
+                padding: const EdgeInsets.all(AppSizes.sp12),
+                child: Text(
+                  label,
+                  style: AppTypography.headline.copyWith(color: fg),
+                ),
               ),
             ),
           ),

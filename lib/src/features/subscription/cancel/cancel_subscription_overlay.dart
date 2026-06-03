@@ -36,7 +36,7 @@ Future<void> showCancelSubscriptionOverlay(BuildContext context) {
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(
         // Figma sheet top corner radius = 30.
-        top: Radius.circular(30),
+        top: Radius.circular(AppSizes.radius3xl),
       ),
     ),
     builder: (_) => const _CancelSubscriptionSheet(),
@@ -231,7 +231,9 @@ class _SheetHeader extends StatelessWidget {
           constraints: const BoxConstraints(minWidth: 34, minHeight: 33),
           style: IconButton.styleFrom(
             shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(30)),
+              borderRadius: BorderRadius.all(
+                Radius.circular(AppSizes.radius3xl),
+              ),
             ),
           ),
         ),
@@ -331,9 +333,7 @@ class _CancelButton extends StatelessWidget {
           child: Center(
             child: Text(
               'Cancel',
-              style: AppTypography.headline.copyWith(
-                color: fg,
-              ),
+              style: AppTypography.headline.copyWith(color: fg),
             ),
           ),
         ),
