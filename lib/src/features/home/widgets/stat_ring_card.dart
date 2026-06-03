@@ -87,15 +87,23 @@ class StatRingCard extends StatelessWidget {
               ),
               const SizedBox(width: AppSizes.sp12),
               Expanded(
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
+                child: Semantics(
+                  button: onAllergenTap != null,
+                  label:
+                      'Allergen progress, $safeCount of '
+                      '$_allergenTotal safe',
+                  excludeSemantics: true,
                   onTap: onAllergenTap,
-                  child: _StatRing(
-                    label: 'ALLERGEN',
-                    value: '$safeCount',
-                    max: '/$_allergenTotal',
-                    numerator: safeCount,
-                    denominator: _allergenTotal,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: onAllergenTap,
+                    child: _StatRing(
+                      label: 'ALLERGEN',
+                      value: '$safeCount',
+                      max: '/$_allergenTotal',
+                      numerator: safeCount,
+                      denominator: _allergenTotal,
+                    ),
                   ),
                 ),
               ),

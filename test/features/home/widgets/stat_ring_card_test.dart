@@ -104,4 +104,38 @@ void main() {
       expect(find.text('✓ Active Program Allergens'), findsOneWidget);
     });
   });
+
+  group('StatRingCard — allergen ring a11y', () {
+    testWidgets(
+      'tappable ALLERGEN ring exposes a labelled button + fires onAllergenTap',
+      (tester) async {
+        final handle = tester.ensureSemantics();
+        var tapped = false;
+
+        await tester.pumpWidget(
+          _wrap(
+            StatRingCard(
+              safeCount: 3,
+              flaggedCount: 0,
+              notStartedCount: 6,
+              inProgressCount: 0,
+              onAllergenTap: () => tapped = true,
+            ),
+          ),
+        );
+
+        expect(
+          find.bySemanticsLabel('Allergen progress, 3 of 9 safe'),
+          findsOneWidget,
+        );
+
+        await tester.tap(
+          find.bySemanticsLabel('Allergen progress, 3 of 9 safe'),
+        );
+        expect(tapped, isTrue);
+
+        handle.dispose();
+      },
+    );
+  });
 }

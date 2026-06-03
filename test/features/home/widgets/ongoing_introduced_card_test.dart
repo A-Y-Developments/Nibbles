@@ -190,4 +190,25 @@ void main() {
 
     expect(find.text('TRACKER_STUB'), findsOneWidget);
   });
+
+  testWidgets('exposes a labelled button via Semantics (a11y)', (tester) async {
+    final handle = tester.ensureSemantics();
+
+    await tester.pumpWidget(
+      _wrap(
+        const OngoingIntroducedCard(
+          allergenStatuses: {'peanut': AllergenStatus.inProgress},
+          logCounts: {'peanut': 2},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.bySemanticsLabel('Peanut, introduced 2 of 3 times'),
+      findsOneWidget,
+    );
+
+    handle.dispose();
+  });
 }
