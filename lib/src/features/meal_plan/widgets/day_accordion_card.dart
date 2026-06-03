@@ -144,10 +144,7 @@ class _Header extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Text(
-              dateLabel,
-              style: AppTypography.textTheme.titleMedium,
-            ),
+            child: Text(dateLabel, style: AppTypography.textTheme.titleMedium),
           ),
           // Green-filled rounded-square overflow button (Figma 971:8619).
           PopupMenuButton<DayCardMenuAction>(
@@ -413,7 +410,7 @@ class _AllergenTagChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final emoji = AllergenEmoji.get(tag);
-    final name = tag.replaceAll('_', ' ');
+    final name = AllergenEmoji.displayName(tag);
     return AppChip(
       label: name,
       emoji: emoji,

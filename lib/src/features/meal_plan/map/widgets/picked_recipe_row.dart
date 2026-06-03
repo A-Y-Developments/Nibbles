@@ -132,7 +132,7 @@ class _TagsRow extends StatelessWidget {
           .take(3)
           .map(
             (t) => AppChip(
-              label: t.replaceAll('_', ' '),
+              label: AllergenEmoji.displayName(t),
               emoji: AllergenEmoji.get(t),
             ),
           )
