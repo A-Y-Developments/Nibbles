@@ -63,15 +63,6 @@ class HomeState with _$HomeState {
   /// Today's meal count.
   int get todayMealCount => todaysMeals.length;
 
-  /// True when the baby exists but has zero allergen logs (everything still
-  /// [AllergenStatus.notStarted]) and no meals planned. Retained for
-  /// back-compat — the screen now branches on [variant] instead.
-  bool get hasNoActivity =>
-      todayMealCount == 0 &&
-      safeCount == 0 &&
-      flaggedCount == 0 &&
-      inProgressCount == 0;
-
   /// NIB-96 Home dashboard variant selector. Maps the user's progression
   /// state to one of four Figma frames: ready-to-start empty, ready-to-start
   /// with ongoing, no-meals-mapped, and populated.

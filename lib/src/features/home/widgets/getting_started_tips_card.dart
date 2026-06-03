@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/cards/tip_card.dart';
 
@@ -18,7 +19,7 @@ class GettingStartedTipsCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Helpful Guidance', style: AppTypography.sectionTitle),
-        SizedBox(height: 12),
+        SizedBox(height: AppSizes.sp12),
         TipCard(
           title: 'Getting Started Tips',
           body:
