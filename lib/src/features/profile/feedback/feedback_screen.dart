@@ -186,6 +186,9 @@ class _FeedbackEntryScreen extends StatelessWidget {
                 key: const Key('feedback_send_button'),
                 label: 'Send Feedback',
                 variant: AppPillButtonVariant.ghost,
+                // Figma 1207:15287 = h42; small(40) is the closest token and
+                // matches the delete-overlay Continue CTA.
+                size: AppPillButtonSize.small,
                 onPressed: canSubmit ? onSubmit : null,
               ),
             ),
