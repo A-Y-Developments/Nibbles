@@ -72,8 +72,6 @@ class SettingsRow extends StatelessWidget {
                               subtitle!,
                               style: theme.textTheme.bodyLarge?.copyWith(
                                 color: AppColors.text,
-                                fontSize: 15,
-                                height: 22 / 15,
                               ),
                             ),
                           ],

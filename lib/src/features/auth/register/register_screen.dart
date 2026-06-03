@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:nibbles/gen/fonts.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
+import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/features/auth/register/register_controller.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
@@ -265,18 +266,14 @@ class _LoginFooter extends StatelessWidget {
         InkWell(
           key: const Key('register_login_link'),
           onTap: () => context.goNamed(AppRoute.login.name),
-          child: const Padding(
-            padding: EdgeInsets.symmetric(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
               horizontal: AppSizes.xs,
               vertical: AppSizes.xs,
             ),
             child: Text(
               'Login',
-              style: TextStyle(
-                fontFamily: FontFamily.parkinsans,
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                height: 22 / 15,
+              style: AppTypography.headline.copyWith(
                 color: AppColors.burgundy,
               ),
             ),

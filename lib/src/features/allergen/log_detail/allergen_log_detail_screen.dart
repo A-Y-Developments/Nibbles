@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:nibbles/gen/fonts.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
+import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
@@ -339,13 +339,7 @@ class _FieldLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: const TextStyle(
-        fontFamily: FontFamily.parkinsans,
-        fontSize: 15,
-        height: 22 / 15,
-        fontWeight: FontWeight.w600,
-        color: AppColors.fgStrong,
-      ),
+      style: AppTypography.headline,
     );
   }
 }
@@ -449,13 +443,7 @@ class _AttachmentBlock extends ConsumerWidget {
                     if (title != null && title.isNotEmpty)
                       Text(
                         title,
-                        style: const TextStyle(
-                          fontFamily: FontFamily.parkinsans,
-                          fontSize: 15,
-                          height: 22 / 15,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.fgStrong,
-                        ),
+                        style: AppTypography.headline,
                       ),
                     if (description != null && description.isNotEmpty) ...[
                       if (title != null && title.isNotEmpty)

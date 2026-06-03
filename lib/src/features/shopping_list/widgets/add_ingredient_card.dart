@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:nibbles/gen/fonts.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
@@ -161,13 +160,9 @@ class _AddPillButton extends StatelessWidget {
           color: AppColors.butter,
           borderRadius: BorderRadius.circular(AppSizes.radius2xl),
         ),
-        child: const Text(
+        child: Text(
           'Add',
-          style: TextStyle(
-            fontFamily: FontFamily.parkinsans,
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            height: 22 / 15,
+          style: AppTypography.headline.copyWith(
             color: AppColors.greenDeep,
           ),
         ),

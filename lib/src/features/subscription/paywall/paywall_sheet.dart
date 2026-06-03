@@ -225,12 +225,8 @@ class _SheetHeader extends StatelessWidget {
                   )
                 : Text(
                     'Restore purchase',
-                    style: AppTypography.button.copyWith(
-                      fontFamily: FontFamily.parkinsans,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
+                    style: AppTypography.headline.copyWith(
                       color: AppColors.text,
-                      height: 22 / 15,
                     ),
                   ),
           ),
@@ -421,20 +417,11 @@ class _FeatureRow extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: const TextStyle(
-                  fontFamily: FontFamily.parkinsans,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  height: 22 / 15,
-                  color: AppColors.text,
-                ),
+                style: AppTypography.headline,
               ),
               Text(
                 subtitle,
                 style: AppTypography.textTheme.bodyLarge?.copyWith(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w400,
-                  height: 22 / 15,
                   color: AppColors.text,
                 ),
               ),
@@ -475,13 +462,7 @@ class _SocialProof extends StatelessWidget {
         const SizedBox(height: AppSizes.xs),
         const Text(
           'Already help 150+ parents',
-          style: TextStyle(
-            fontFamily: FontFamily.parkinsans,
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            height: 22 / 15,
-            color: AppColors.text,
-          ),
+          style: AppTypography.headline,
         ),
       ],
     );
@@ -511,21 +492,12 @@ class _TrialCard extends StatelessWidget {
           Text(
             // Verbatim copy: "3 Days Free" (capitalised exactly as Figma).
             '${offering.trialDays} Days Free',
-            style: const TextStyle(
-              fontFamily: FontFamily.parkinsans,
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              height: 22 / 15,
-              color: AppColors.text,
-            ),
+            style: AppTypography.headline,
           ),
           const SizedBox(height: AppSizes.xs),
           RichText(
             text: TextSpan(
               style: AppTypography.textTheme.bodyLarge?.copyWith(
-                fontSize: 15,
-                fontWeight: FontWeight.w400,
-                height: 22 / 15,
                 color: AppColors.text,
               ),
               children: [
@@ -672,12 +644,8 @@ class _Footer extends StatelessWidget {
                         )
                       : Text(
                           r'Try for $0',
-                          style: AppTypography.button.copyWith(
-                            fontFamily: FontFamily.parkinsans,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
+                          style: AppTypography.headline.copyWith(
                             color: AppColors.cream,
-                            height: 22 / 15,
                           ),
                         ),
                 ),
@@ -698,12 +666,8 @@ class _Footer extends StatelessWidget {
                 child: Center(
                   child: Text(
                     'View all plans',
-                    style: AppTypography.button.copyWith(
-                      fontFamily: FontFamily.parkinsans,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
+                    style: AppTypography.headline.copyWith(
                       color: AppColors.text,
-                      height: 22 / 15,
                     ),
                   ),
                 ),

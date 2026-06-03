@@ -80,8 +80,6 @@ class ProfileAvatarCard extends StatelessWidget {
             ageLabel,
             style: theme.textTheme.bodyLarge?.copyWith(
               color: AppColors.text,
-              fontSize: 15,
-              height: 22 / 15,
             ),
             textAlign: TextAlign.center,
           ),
