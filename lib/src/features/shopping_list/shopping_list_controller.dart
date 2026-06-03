@@ -49,9 +49,15 @@ class ShoppingListController extends _$ShoppingListController {
       throw result.errorOrNull!;
     }
 
-    // Reload to replace placeholder with server-assigned ID
+    // Reload to swap the placeholder id for the server-assigned id. The write
+    // already succeeded, so a refetch read-failure is P3 (background) — don't
+    // let it re-enter the add path and surface a false P2 "add failed" toast.
     ref.invalidateSelf();
-    await future;
+    try {
+      await future;
+    } on Exception catch (_) {
+      // Keep the optimistic row; the list reconciles on the next load.
+    }
   }
 
   Future<void> check(String itemId) async {

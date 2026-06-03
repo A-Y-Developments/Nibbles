@@ -21,7 +21,9 @@ Future<void> showAddIngredientSheet(
     barrierColor: Colors.black.withValues(alpha: 0.5),
     isScrollControlled: true,
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(AppSizes.radius3xl),
+      ),
     ),
     builder: (_) => _AddIngredientSheet(
       controller: controller,
@@ -162,9 +164,7 @@ class _AddPillButton extends StatelessWidget {
         ),
         child: Text(
           'Add',
-          style: AppTypography.headline.copyWith(
-            color: AppColors.greenDeep,
-          ),
+          style: AppTypography.headline.copyWith(color: AppColors.greenDeep),
         ),
       ),
     );
