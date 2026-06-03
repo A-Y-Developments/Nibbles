@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
+import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
 import 'package:nibbles/src/common/components/buttons/app_round_button.dart';
 import 'package:nibbles/src/common/components/inputs/app_text_field.dart';
@@ -159,7 +160,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
   Widget build(BuildContext context) {
     final formState =
         ref.watch(profileEditControllerProvider(widget.babyId)).valueOrNull ??
-            widget.formState;
+        widget.formState;
     final controller = ref.read(
       profileEditControllerProvider(widget.babyId).notifier,
     );
@@ -172,12 +173,9 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
 
     void goBack() => context.canPop() ? context.pop() : context.go('/home');
 
-    final labelStyle = theme.textTheme.titleSmall?.copyWith(
-      fontSize: 15,
-      fontWeight: FontWeight.w600,
-      height: 22 / 15,
-      color: AppColors.fgStrong,
-    );
+    // Figma field label = Headline/SemiBold (Parkinsans 15/22) — the
+    // shared AppTypography.headline token (NIB token consolidation).
+    const labelStyle = AppTypography.headline;
 
     return _ProfileEditScaffold(
       body: SafeArea(
@@ -211,8 +209,9 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
                           focusNode: _firstNameFocus,
                           onChanged: controller.updateFirstName,
                           textInputAction: TextInputAction.next,
-                          onSubmitted: (_) => FocusScope.of(context)
-                              .requestFocus(_lastNameFocus),
+                          onSubmitted: (_) => FocusScope.of(
+                            context,
+                          ).requestFocus(_lastNameFocus),
                         ),
                       ),
                     ),
@@ -229,8 +228,8 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
                           focusNode: _lastNameFocus,
                           onChanged: controller.updateLastName,
                           textInputAction: TextInputAction.next,
-                          onSubmitted: (_) => FocusScope.of(context)
-                              .requestFocus(_emailFocus),
+                          onSubmitted: (_) =>
+                              FocusScope.of(context).requestFocus(_emailFocus),
                         ),
                       ),
                     ),
@@ -306,9 +305,9 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     final message = result.emailChanged
         ? 'Please check your inbox to confirm the new email.'
         : 'Profile updated.';
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
     context.pop();
   }
 }
