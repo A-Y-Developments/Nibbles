@@ -196,10 +196,8 @@ class _RecipeContent extends StatelessWidget {
   final VoidCallback onReadGuideTap;
   final Future<void> Function() onRefresh;
 
-  List<Recipe> get _allRecipes => state.recipesByCategory.values
-      .expand((rs) => rs)
-      .toSet()
-      .toList();
+  List<Recipe> get _allRecipes =>
+      state.recipesByCategory.values.expand((rs) => rs).toSet().toList();
 
   List<Recipe> get _recommendations {
     final key = state.ongoingAllergenKey;
@@ -241,7 +239,9 @@ class _RecipeContent extends StatelessWidget {
             ReadGuideBanner(onTap: onReadGuideTap),
           if (ongoingKey != null && recommendations.isNotEmpty)
             RecipeCategoryRow(
-              title: 'Recommendation for ${_displayName(ongoingKey)} '
+              title:
+                  'Recommendation for '
+                  '${AllergenEmoji.displayName(ongoingKey)} '
                   '${AllergenEmoji.get(ongoingKey)}',
               recipes: recommendations,
               flaggedAllergenKeys: state.flaggedAllergenKeys,
@@ -258,20 +258,6 @@ class _RecipeContent extends StatelessWidget {
       ),
     );
   }
-
-  static const _allergenNames = {
-    'peanut': 'Peanut',
-    'egg': 'Egg',
-    'dairy': 'Dairy',
-    'tree_nuts': 'Tree Nuts',
-    'sesame': 'Sesame',
-    'soy': 'Soy',
-    'wheat': 'Wheat',
-    'fish': 'Fish',
-    'shellfish': 'Shellfish',
-  };
-
-  static String _displayName(String key) => _allergenNames[key] ?? key;
 }
 
 class _ErrorView extends StatelessWidget {

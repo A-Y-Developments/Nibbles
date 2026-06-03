@@ -46,19 +46,13 @@ class OngoingIntroducedCard extends StatelessWidget {
     return null;
   }
 
-  String _displayName(String key) =>
-      key.replaceAll('_', ' ').split(' ').map(_capitalize).join(' ');
-
-  String _capitalize(String word) =>
-      word.isEmpty ? word : '${word[0].toUpperCase()}${word.substring(1)}';
-
   @override
   Widget build(BuildContext context) {
     final key = _ongoingKey;
     if (key == null) return const SizedBox.shrink();
 
     final emoji = AllergenEmoji.get(key);
-    final name = _displayName(key);
+    final name = AllergenEmoji.displayName(key);
     final filled = (logCounts[key] ?? 0).clamp(0, _target);
 
     return Column(

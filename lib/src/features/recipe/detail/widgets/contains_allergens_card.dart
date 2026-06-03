@@ -23,14 +23,6 @@ class ContainsAllergensCard extends StatelessWidget {
   final List<String> allergenTags;
   final Map<String, AllergenStatus> statuses;
 
-  String _humanize(String raw) {
-    return raw
-        .split('_')
-        .where((w) => w.isNotEmpty)
-        .map((w) => '${w[0].toUpperCase()}${w.substring(1)}')
-        .join(' ');
-  }
-
   AppChipTone _toneFor(String tag) {
     final status = statuses[tag] ?? AllergenStatus.notStarted;
     return switch (status) {
@@ -79,7 +71,7 @@ class ContainsAllergensCard extends StatelessWidget {
             children: [
               for (final tag in allergenTags)
                 AppChip(
-                  label: _humanize(tag),
+                  label: AllergenEmoji.displayName(tag),
                   tone: _toneFor(tag),
                   emoji: AllergenEmoji.get(tag),
                 ),
