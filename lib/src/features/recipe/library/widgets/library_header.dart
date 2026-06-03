@@ -7,8 +7,8 @@ import 'package:nibbles/src/app/themes/app_typography.dart';
 ///
 /// Sits inside the butter-gradient page background. Composes:
 ///   * a 17/Bold 'Recipe Library' title row
-///   * a search row — neutral-10-filled 48x input with a forest-dark border
-///     (placeholder 'Search recipe') + a 47x47 forest-dark filter chip
+///   * a search row — neutral-10-filled 40h input with a forest-dark border
+///     (placeholder 'Search recipe') + a 40x40 forest-dark filter chip
 ///     pinned to the right
 ///
 /// The search field is uncontrolled here — callers own the
@@ -32,9 +32,9 @@ class LibraryHeader extends StatelessWidget {
   final ValueChanged<String> onSearchChanged;
   final VoidCallback onBookmarkTap;
 
-  // Figma sizes (971:8650 input, 894:6480 button-chips).
-  static const double _inputHeight = 48;
-  static const double _chipSize = 47;
+  // Figma sizes (971:8650 input 38 in a 40 row, 894:6480 button-chips 40x40).
+  static const double _inputHeight = 40;
+  static const double _chipSize = 40;
 
   @override
   Widget build(BuildContext context) {
@@ -70,10 +70,7 @@ class LibraryHeader extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: AppSizes.sp12),
-                _FilterChipButton(
-                  size: _chipSize,
-                  onTap: onBookmarkTap,
-                ),
+                _FilterChipButton(size: _chipSize, onTap: onBookmarkTap),
               ],
             ),
           ],
