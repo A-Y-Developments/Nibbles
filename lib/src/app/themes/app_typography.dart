@@ -149,6 +149,15 @@ abstract final class AppTypography {
     color: AppColors.text,
   );
 
+  // headline — Figma Headline/SemiBold (15/22 h1.467). Parkinsans display.
+  static const TextStyle headline = TextStyle(
+    fontFamily: FontFamily.parkinsans,
+    fontSize: 15,
+    fontWeight: FontWeight.w600,
+    height: 22 / 15,
+    color: AppColors.fgStrong,
+  );
+
   // emptyStateTitle — components-empty-state.html .ttl spec:
   // 700 16px/1.2 var(--font-display) color var(--fg-strong).
   static const TextStyle emptyStateTitle = TextStyle(
