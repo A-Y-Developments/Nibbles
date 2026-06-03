@@ -19,4 +19,24 @@ abstract final class AllergenEmoji {
 
   /// Returns the emoji for [allergenKey], or an empty string if not found.
   static String get(String allergenKey) => map[allergenKey] ?? '';
+
+  /// Proper-cased display name per allergen key (e.g. 'tree_nuts' →
+  /// 'Tree Nuts'). Single source of truth so casing stays consistent
+  /// app-wide — use instead of ad-hoc `key.replaceAll('_', ' ')`.
+  static const Map<String, String> nameMap = {
+    'peanut': 'Peanut',
+    'egg': 'Egg',
+    'dairy': 'Dairy',
+    'tree_nuts': 'Tree Nuts',
+    'sesame': 'Sesame',
+    'soy': 'Soy',
+    'wheat': 'Wheat',
+    'fish': 'Fish',
+    'shellfish': 'Shellfish',
+  };
+
+  /// Display name for [allergenKey]; falls back to a humanized key
+  /// (underscores → spaces) for any unmapped key.
+  static String displayName(String allergenKey) =>
+      nameMap[allergenKey] ?? allergenKey.replaceAll('_', ' ');
 }

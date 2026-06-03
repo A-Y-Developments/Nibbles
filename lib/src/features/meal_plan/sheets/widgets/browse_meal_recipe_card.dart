@@ -29,9 +29,7 @@ class BrowseMealRecipeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final borderColor = selected
-        ? AppColors.primary
-        : AppColors.borderSoft;
+    final borderColor = selected ? AppColors.primary : AppColors.borderSoft;
 
     return Opacity(
       opacity: unsafe ? 0.5 : 1,
@@ -166,11 +164,7 @@ class _SelectIndicator extends StatelessWidget {
         ),
       ),
       child: selected
-          ? const Icon(
-              Icons.check,
-              size: 16,
-              color: AppColors.onPrimary,
-            )
+          ? const Icon(Icons.check, size: 16, color: AppColors.onPrimary)
           : null,
     );
   }
@@ -180,10 +174,7 @@ class _UnsafeBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.sm,
-        vertical: 2,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: AppSizes.sm, vertical: 2),
       decoration: BoxDecoration(
         color: AppColors.destructiveSoft,
         borderRadius: BorderRadius.circular(AppSizes.radiusFull),
@@ -326,11 +317,8 @@ class _RowThumbnail extends StatelessWidget {
       width: size,
       height: size,
       fit: BoxFit.cover,
-      placeholder: (_, __) => Container(
-        width: size,
-        height: size,
-        color: AppColors.surfaceVariant,
-      ),
+      placeholder: (_, __) =>
+          Container(width: size, height: size, color: AppColors.surfaceVariant),
       errorWidget: (_, __, ___) => Container(
         width: size,
         height: size,
@@ -346,7 +334,7 @@ class _RowThumbnail extends StatelessWidget {
 }
 
 String _formatFlaggedTags(List<String> tags) => tags
-    .map((t) => '${AllergenEmoji.get(t)} ${t.replaceAll('_', ' ')}')
+    .map((t) => '${AllergenEmoji.get(t)} ${AllergenEmoji.displayName(t)}')
     .join(', ');
 
 class _RowSelectIndicator extends StatelessWidget {
@@ -370,11 +358,7 @@ class _RowSelectIndicator extends StatelessWidget {
         border: Border.all(color: border),
       ),
       child: selected
-          ? const Icon(
-              Icons.check,
-              size: 16,
-              color: AppColors.onPrimary,
-            )
+          ? const Icon(Icons.check, size: 16, color: AppColors.onPrimary)
           : null,
     );
   }

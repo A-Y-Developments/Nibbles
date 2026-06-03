@@ -39,10 +39,7 @@ class SelectedDaySlotList extends StatelessWidget {
 
 /// Cream-tinted dashed container holding the assigned recipe rows.
 class _PopulatedDayContainer extends StatelessWidget {
-  const _PopulatedDayContainer({
-    required this.recipes,
-    required this.onRemove,
-  });
+  const _PopulatedDayContainer({required this.recipes, required this.onRemove});
 
   final List<Recipe> recipes;
   final ValueChanged<String> onRemove;
@@ -179,7 +176,7 @@ class _TagsRow extends StatelessWidget {
           .take(3)
           .map(
             (t) => AppChip(
-              label: t.replaceAll('_', ' '),
+              label: AllergenEmoji.displayName(t),
               emoji: AllergenEmoji.get(t),
             ),
           )
