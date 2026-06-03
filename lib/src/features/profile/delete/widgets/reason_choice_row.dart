@@ -29,23 +29,30 @@ class ReasonChoiceRow extends StatelessWidget {
     final fill = selected ? AppColors.butter : AppColors.butterSoft;
     final fg = selected ? AppColors.greenDeep : AppColors.text;
 
-    return Material(
-      color: fill,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        child: SizedBox(
-          width: double.infinity,
-          child: Padding(
-            // Figma: padding 12 on all sides.
-            padding: const EdgeInsets.all(AppSizes.sp12),
-            child: Text(
-              label,
-              style: AppTypography.headline.copyWith(
-                color: fg,
+    // Single-select choice: expose selected + button role so a screen reader
+    // announces which reason is picked (mirrors SettingsRow / RadioPill).
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      child: ExcludeSemantics(
+        child: Material(
+          color: fill,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+          ),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+            child: SizedBox(
+              width: double.infinity,
+              child: Padding(
+                // Figma: padding 12 on all sides.
+                padding: const EdgeInsets.all(AppSizes.sp12),
+                child: Text(
+                  label,
+                  style: AppTypography.headline.copyWith(color: fg),
+                ),
               ),
             ),
           ),
