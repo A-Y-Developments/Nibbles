@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:nibbles/gen/fonts.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
@@ -50,12 +49,8 @@ class CancelReasonChip extends StatelessWidget {
             padding: const EdgeInsets.all(AppSizes.sp12),
             child: Text(
               label,
-              style: AppTypography.button.copyWith(
-                fontFamily: FontFamily.parkinsans,
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
+              style: AppTypography.headline.copyWith(
                 color: fg,
-                height: 22 / 15,
               ),
             ),
           ),

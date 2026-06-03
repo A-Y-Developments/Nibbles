@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:nibbles/gen/fonts.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
@@ -332,12 +331,8 @@ class _CancelButton extends StatelessWidget {
           child: Center(
             child: Text(
               'Cancel',
-              style: AppTypography.button.copyWith(
-                fontFamily: FontFamily.parkinsans,
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
+              style: AppTypography.headline.copyWith(
                 color: fg,
-                height: 22 / 15,
               ),
             ),
           ),

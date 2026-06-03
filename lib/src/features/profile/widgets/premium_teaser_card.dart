@@ -61,8 +61,6 @@ class PremiumTeaserCard extends StatelessWidget {
             'Unlock premium personalized guidance and exclusive recipes.',
             style: theme.textTheme.bodyLarge?.copyWith(
               color: AppColors.text,
-              fontSize: 15,
-              height: 22 / 15,
             ),
           ),
         ],

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:nibbles/gen/fonts.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
+import 'package:nibbles/src/app/themes/app_typography.dart';
 
 /// Width of the burgundy Delete pill revealed behind the row.
 const double _deleteRevealWidth = 100;
@@ -172,13 +172,9 @@ class _DeletePill extends StatelessWidget {
           color: AppColors.burgundy,
           borderRadius: BorderRadius.circular(AppSizes.radius2xl),
         ),
-        child: const Text(
+        child: Text(
           'Delete',
-          style: TextStyle(
-            fontFamily: FontFamily.parkinsans,
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            height: 22 / 15,
+          style: AppTypography.headline.copyWith(
             color: AppColors.onGreen,
           ),
         ),

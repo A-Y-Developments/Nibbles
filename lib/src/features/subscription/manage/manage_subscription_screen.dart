@@ -225,8 +225,6 @@ class _NotSubscribedSection extends StatelessWidget {
     final theme = Theme.of(context);
     final body = theme.textTheme.bodyLarge?.copyWith(
       color: AppColors.text,
-      fontSize: 15,
-      height: 22 / 15,
     );
 
     return _BrandCard(
@@ -262,8 +260,6 @@ class _SubscribedSection extends StatelessWidget {
     final theme = Theme.of(context);
     final body = theme.textTheme.bodyLarge?.copyWith(
       color: AppColors.text,
-      fontSize: 15,
-      height: 22 / 15,
     );
     final planLabel = info.planLabel ?? 'Premium';
 
@@ -381,8 +377,6 @@ class _Timeline extends StatelessWidget {
     final theme = Theme.of(context);
     final labelStyle = theme.textTheme.bodyLarge?.copyWith(
       color: AppColors.text,
-      fontSize: 15,
-      height: 22 / 15,
     );
 
     return Column(
