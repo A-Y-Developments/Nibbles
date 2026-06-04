@@ -174,4 +174,20 @@ void main() {
       expect(find.byKey(const Key('forgot_submit_button')), findsNothing);
     },
   );
+
+  testWidgets('email field disables autocorrect + suggestions', (tester) async {
+    await tester.pumpWidget(
+      _wrap(const ForgotPasswordScreen(), buildOverrides()),
+    );
+    await tester.pumpAndSettle();
+
+    final textField = tester.widget<TextField>(
+      find.descendant(
+        of: find.byKey(const Key('forgot_email_field')),
+        matching: find.byType(TextField),
+      ),
+    );
+    expect(textField.autocorrect, isFalse);
+    expect(textField.enableSuggestions, isFalse);
+  });
 }

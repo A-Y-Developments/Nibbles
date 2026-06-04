@@ -83,6 +83,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   label: 'Email address',
                   hintText: 'Email address',
                   keyboardType: TextInputType.emailAddress,
+                  autocorrect: false,
+                  enableSuggestions: false,
                   textInputAction: TextInputAction.next,
                   focusNode: _emailFocus,
                   onChanged: controller.updateEmail,
@@ -171,24 +173,30 @@ class _LoginLogoMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const SizedBox(
-      width: _size,
-      height: _size,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Quatrefoil(size: _size, coreColor: AppColors.butter),
-          Text(
-            'n',
-            style: TextStyle(
-              fontFamily: FontFamily.parkinsans,
-              fontSize: 70,
-              fontWeight: FontWeight.w800,
-              height: 1,
-              color: AppColors.greenDeep,
-            ),
+    return Semantics(
+      label: 'Nibbles',
+      image: true,
+      child: const ExcludeSemantics(
+        child: SizedBox(
+          width: _size,
+          height: _size,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Quatrefoil(size: _size, coreColor: AppColors.butter),
+              Text(
+                'n',
+                style: TextStyle(
+                  fontFamily: FontFamily.parkinsans,
+                  fontSize: 70,
+                  fontWeight: FontWeight.w800,
+                  height: 1,
+                  color: AppColors.greenDeep,
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

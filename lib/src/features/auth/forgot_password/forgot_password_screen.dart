@@ -135,6 +135,8 @@ class _InputView extends StatelessWidget {
           key: const Key('forgot_email_field'),
           hintText: 'Email address',
           keyboardType: TextInputType.emailAddress,
+          autocorrect: false,
+          enableSuggestions: false,
           textInputAction: TextInputAction.done,
           onChanged: onEmailChanged,
           onSubmitted: (_) => state.isLoading ? null : onSubmit(),
