@@ -52,10 +52,7 @@ class ReadGuideBanner extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text(
-            'New to Starting Solids?',
-            style: _bannerTitleStyle,
-          ),
+          const Text('New to Starting Solids?', style: _bannerTitleStyle),
           const SizedBox(height: AppSizes.sp12),
           Text(
             'Start your baby’s food journey the right way with simple '
@@ -103,22 +100,25 @@ class _ReadGuideCta extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(AppSizes.lg),
-      child: InkWell(
+    return Semantics(
+      button: true,
+      label: 'Read Guide',
+      excludeSemantics: true,
+      onTap: onTap,
+      child: Material(
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(AppSizes.lg),
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.all(AppSizes.radiusMd),
-          decoration: BoxDecoration(
-            border: Border.all(color: AppColors.cream),
-            borderRadius: BorderRadius.circular(AppSizes.lg),
-          ),
-          alignment: Alignment.center,
-          child: const Text(
-            'Read Guide',
-            style: _ctaLabelStyle,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppSizes.lg),
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.all(AppSizes.radiusMd),
+            decoration: BoxDecoration(
+              border: Border.all(color: AppColors.cream),
+              borderRadius: BorderRadius.circular(AppSizes.lg),
+            ),
+            alignment: Alignment.center,
+            child: const Text('Read Guide', style: _ctaLabelStyle),
           ),
         ),
       ),
