@@ -306,52 +306,66 @@ class _RecipeRow extends StatelessWidget {
     final visible = tags.take(_maxVisibleTags).toList();
     final overflow = tags.length - visible.length;
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
+    final flaggedNames = tags
+        .where(flaggedAllergenKeys.contains)
+        .map(AllergenEmoji.displayName)
+        .toList();
+    final semanticsLabel = flaggedNames.isEmpty
+        ? title
+        : '$title, flagged: ${flaggedNames.join(', ')}';
+
+    return Semantics(
+      button: true,
+      label: semanticsLabel,
+      excludeSemantics: true,
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.sp12,
-          vertical: AppSizes.sm,
-        ),
-        decoration: BoxDecoration(
-          color: AppColors.butterSoft,
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        ),
-        child: Row(
-          children: [
-            _Thumbnail(url: recipe?.thumbnailUrl),
-            const SizedBox(width: AppSizes.sp12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    title,
-                    style: AppTypography.textTheme.labelMedium,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (tags.isNotEmpty) ...[
-                    const SizedBox(height: AppSizes.xs),
-                    Wrap(
-                      spacing: AppSizes.xs,
-                      runSpacing: AppSizes.xs,
-                      children: [
-                        for (final tag in visible)
-                          _AllergenTagChip(
-                            tag: tag,
-                            flagged: flaggedAllergenKeys.contains(tag),
-                          ),
-                        if (overflow > 0) _OverflowChip(count: overflow),
-                      ],
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSizes.sp12,
+            vertical: AppSizes.sm,
+          ),
+          decoration: BoxDecoration(
+            color: AppColors.butterSoft,
+            borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+          ),
+          child: Row(
+            children: [
+              _Thumbnail(url: recipe?.thumbnailUrl),
+              const SizedBox(width: AppSizes.sp12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      title,
+                      style: AppTypography.textTheme.labelMedium,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
+                    if (tags.isNotEmpty) ...[
+                      const SizedBox(height: AppSizes.xs),
+                      Wrap(
+                        spacing: AppSizes.xs,
+                        runSpacing: AppSizes.xs,
+                        children: [
+                          for (final tag in visible)
+                            _AllergenTagChip(
+                              tag: tag,
+                              flagged: flaggedAllergenKeys.contains(tag),
+                            ),
+                          if (overflow > 0) _OverflowChip(count: overflow),
+                        ],
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
