@@ -308,6 +308,33 @@ void main() {
         expect(callCount, 2);
       },
     );
+
+    testWidgets(
+      'commit failure surfaces the failure message in the dialog',
+      (tester) async {
+        when(
+          () => mockMealPlanService.appendMealsToRange(
+            babyId: any(named: 'babyId'),
+            startDate: any(named: 'startDate'),
+            endDate: any(named: 'endDate'),
+            assignments: any(named: 'assignments'),
+          ),
+        ).thenAnswer((_) async => const Result.failure(NetworkException()));
+
+        await pumpMap(tester);
+
+        await tester.tap(find.text(_recipeA.title));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text(_recipeB.title));
+        await tester.pumpAndSettle();
+        await tester.tap(find.widgetWithText(FilledButton, 'Complete Mapping'));
+        await tester.pumpAndSettle();
+
+        // The dialog now shows the controller's real failure message (the P1
+        // connectivity string) instead of a generic hardcoded line.
+        expect(find.text('No internet connection.'), findsOneWidget);
+      },
+    );
   });
 }
 

@@ -176,6 +176,12 @@ class MapMealsScreen extends ConsumerWidget {
   }
 
   Future<void> _showRetryDialog(BuildContext context, WidgetRef ref) async {
+    // Surface the controller's actual failure message (e.g. the P1
+    // "No internet connection..." string on a connectivity failure) rather
+    // than a generic hardcoded line.
+    final message =
+        ref.read(mapMealsControllerProvider(args)).errorMessage ??
+        'Please try again';
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -190,7 +196,7 @@ class MapMealsScreen extends ConsumerWidget {
             style: AppTypography.sectionTitle,
           ),
           content: Text(
-            'Please try again',
+            message,
             style: AppTypography.textTheme.bodyMedium,
           ),
           actions: [
