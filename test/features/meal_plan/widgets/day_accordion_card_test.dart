@@ -38,6 +38,7 @@ Future<void> _pumpCard(
   required bool isExpanded,
   VoidCallback? onToggle,
   VoidCallback? onAdd,
+  ValueChanged<String>? onRecipeTap,
   Set<String> flaggedAllergenKeys = const {},
 }) {
   return tester.pumpWidget(
@@ -51,7 +52,7 @@ Future<void> _pumpCard(
           isExpanded: isExpanded,
           onToggle: onToggle ?? () {},
           onAdd: onAdd ?? () {},
-          onRecipeTap: (_) {},
+          onRecipeTap: onRecipeTap ?? (_) {},
           onMenuSelected: (_) {},
         ),
       ),
@@ -77,28 +78,25 @@ void main() {
       expect(find.text('No meal plan yet.'), findsNothing);
     });
 
-    testWidgets(
-      'expanded + entries: recipe row renders with title + tag chips '
-      '+ Add pill',
-      (tester) async {
-        await _pumpCard(
-          tester,
-          entries: [_entry()],
-          recipes: {
-            'r-1': _recipe(tags: const ['peanut', 'egg']),
-          },
-          isExpanded: true,
-        );
+    testWidgets('expanded + entries: recipe row renders with title + tag chips '
+        '+ Add pill', (tester) async {
+      await _pumpCard(
+        tester,
+        entries: [_entry()],
+        recipes: {
+          'r-1': _recipe(tags: const ['peanut', 'egg']),
+        },
+        isExpanded: true,
+      );
 
-        expect(find.text('Peanut Butter Toast'), findsOneWidget);
-        expect(find.text('Add'), findsOneWidget);
-        // Tag chips render with replaced underscore labels.
-        expect(find.text('peanut'), findsOneWidget);
-        expect(find.text('egg'), findsOneWidget);
-        // No empty-state hint.
-        expect(find.text('No meal plan yet.'), findsNothing);
-      },
-    );
+      expect(find.text('Peanut Butter Toast'), findsOneWidget);
+      expect(find.text('Add'), findsOneWidget);
+      // Tag chips render with replaced underscore labels.
+      expect(find.text('Peanut'), findsOneWidget);
+      expect(find.text('Egg'), findsOneWidget);
+      // No empty-state hint.
+      expect(find.text('No meal plan yet.'), findsNothing);
+    });
 
     testWidgets(
       'expanded + entries: 3+ tags renders +N overflow chip after first 2',
@@ -113,13 +111,13 @@ void main() {
         );
 
         // First 2 tags visible.
-        expect(find.text('peanut'), findsOneWidget);
-        expect(find.text('egg'), findsOneWidget);
+        expect(find.text('Peanut'), findsOneWidget);
+        expect(find.text('Egg'), findsOneWidget);
         // 4 - 2 = +2 overflow chip.
         expect(find.text('+2'), findsOneWidget);
         // Hidden tags should not render their labels.
-        expect(find.text('dairy'), findsNothing);
-        expect(find.text('soy'), findsNothing);
+        expect(find.text('Dairy'), findsNothing);
+        expect(find.text('Soy'), findsNothing);
       },
     );
 
@@ -168,6 +166,48 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(added, 1);
+    });
+
+    testWidgets('recipe row exposes a labelled button + fires onRecipeTap', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      String? tappedRecipeId;
+      await _pumpCard(
+        tester,
+        entries: [_entry()],
+        recipes: {'r-1': _recipe()},
+        isExpanded: true,
+        onRecipeTap: (id) => tappedRecipeId = id,
+      );
+
+      expect(find.bySemanticsLabel('Peanut Butter Toast'), findsOneWidget);
+
+      await tester.tap(find.bySemanticsLabel('Peanut Butter Toast'));
+      await tester.pumpAndSettle();
+      expect(tappedRecipeId, 'r-1');
+
+      handle.dispose();
+    });
+
+    testWidgets('flagged allergen is surfaced in the row button label', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      await _pumpCard(
+        tester,
+        entries: [_entry()],
+        recipes: {'r-1': _recipe()},
+        isExpanded: true,
+        flaggedAllergenKeys: const {'peanut'},
+      );
+
+      expect(
+        find.bySemanticsLabel('Peanut Butter Toast, flagged: Peanut'),
+        findsOneWidget,
+      );
+
+      handle.dispose();
     });
   });
 }
