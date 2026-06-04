@@ -81,10 +81,16 @@ class _ShoppingListOverflowMenuState extends State<ShoppingListOverflowMenu> {
             ],
           );
         },
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
+        child: Semantics(
+          button: true,
+          label: 'More options',
+          excludeSemantics: true,
           onTap: _toggle,
-          child: widget.child,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: _toggle,
+            child: widget.child,
+          ),
         ),
       ),
     );
@@ -161,35 +167,41 @@ class _MenuRowState extends State<_MenuRow> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
+    return Semantics(
+      button: true,
+      label: widget.label,
+      excludeSemantics: true,
       onTap: widget.onTap,
-      onTapDown: (_) => _setPressed(true),
-      onTapCancel: () => _setPressed(false),
-      onTapUp: (_) => _setPressed(false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 80),
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.sp12,
-          vertical: 6,
-        ),
-        decoration: BoxDecoration(
-          // Press feedback is a neutral wash, not lime — pressing a row
-          // must not flash yellow (backlog #6).
-          color: _pressed ? AppColors.surfaceVariant : Colors.transparent,
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: Row(
-          children: [
-            Icon(widget.icon, size: 18, color: AppColors.text),
-            const SizedBox(width: AppSizes.sm),
-            Expanded(
-              child: Text(
-                widget.label,
-                style: AppTypography.textTheme.bodyLarge,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: widget.onTap,
+        onTapDown: (_) => _setPressed(true),
+        onTapCancel: () => _setPressed(false),
+        onTapUp: (_) => _setPressed(false),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 80),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSizes.sp12,
+            vertical: 6,
+          ),
+          decoration: BoxDecoration(
+            // Press feedback is a neutral wash, not lime — pressing a row
+            // must not flash yellow (backlog #6).
+            color: _pressed ? AppColors.surfaceVariant : Colors.transparent,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Row(
+            children: [
+              Icon(widget.icon, size: 18, color: AppColors.text),
+              const SizedBox(width: AppSizes.sm),
+              Expanded(
+                child: Text(
+                  widget.label,
+                  style: AppTypography.textTheme.bodyLarge,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
