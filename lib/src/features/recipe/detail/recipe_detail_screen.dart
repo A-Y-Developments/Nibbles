@@ -99,7 +99,9 @@ class _RecipeDetailBody extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: detailAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(
+          child: CircularProgressIndicator(semanticsLabel: 'Loading recipe'),
+        ),
         error: (error, _) => _ErrorView(
           onRetry: () => ref.invalidate(
             recipeDetailControllerProvider(babyId, recipeId),

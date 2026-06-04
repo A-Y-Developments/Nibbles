@@ -349,7 +349,7 @@ class _RemoveButton extends StatelessWidget {
       label: 'Remove $name',
       child: InkResponse(
         onTap: onPressed,
-        radius: 24,
+        radius: AppSizes.lg,
         child: const SizedBox(
           width: AppSizes.xxl,
           height: AppSizes.xxl,
