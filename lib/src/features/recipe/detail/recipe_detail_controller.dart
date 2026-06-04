@@ -27,13 +27,15 @@ class RecipeDetailController extends _$RecipeDetailController {
       allergenSvc.getLogs(babyId),
     ).wait;
 
+    // Only the recipe is essential — without it there is nothing to render.
+    // The allergen program/logs are SECONDARY (they only tint the
+    // "Contains allergens" chips); a failure there must NOT collapse the whole
+    // screen, so they degrade to safe defaults (P3) instead of throwing.
     if (recipeResult.isFailure) throw recipeResult.errorOrNull!;
-    if (programResult.isFailure) throw programResult.errorOrNull!;
-    if (logsResult.isFailure) throw logsResult.errorOrNull!;
 
     final recipe = recipeResult.dataOrNull!;
-    final currentKey = programResult.dataOrNull!.currentAllergenKey;
-    final allLogs = logsResult.dataOrNull!;
+    final currentKey = programResult.dataOrNull?.currentAllergenKey ?? '';
+    final allLogs = logsResult.dataOrNull ?? const <AllergenLog>[];
 
     // Derive status per allergen tag on this recipe.
     final statuses = <String, AllergenStatus>{};
