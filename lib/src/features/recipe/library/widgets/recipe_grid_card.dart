@@ -41,46 +41,52 @@ class RecipeGridCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isUnsafe = _hasUnsafeAllergen;
 
-    return GestureDetector(
+    return Semantics(
+      button: true,
+      label: isUnsafe ? '${recipe.title}, not safe' : recipe.title,
+      excludeSemantics: true,
       onTap: onTap,
-      child: Opacity(
-        opacity: isUnsafe ? 0.85 : 1,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          child: ColoredBox(
-            color: AppColors.cream,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _CardThumbnail(url: recipe.thumbnailUrl, isUnsafe: isUnsafe),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSizes.sp12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        SizedBox(
-                          height: _titleBlockHeight,
-                          child: Text(
-                            recipe.title,
-                            style: const TextStyle(
-                              fontFamily: FontFamily.parkinsans,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              height: 20 / 13,
-                              color: AppColors.fgStrong,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Opacity(
+          opacity: isUnsafe ? 0.85 : 1,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+            child: ColoredBox(
+              color: AppColors.cream,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _CardThumbnail(url: recipe.thumbnailUrl, isUnsafe: isUnsafe),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSizes.sp12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          SizedBox(
+                            height: _titleBlockHeight,
+                            child: Text(
+                              recipe.title,
+                              style: const TextStyle(
+                                fontFamily: FontFamily.parkinsans,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                height: 20 / 13,
+                                color: AppColors.fgStrong,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                        _NutritionChipRow(tags: recipe.nutritionTags),
-                      ],
+                          _NutritionChipRow(tags: recipe.nutritionTags),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
