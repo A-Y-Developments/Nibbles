@@ -151,20 +151,26 @@ class _AddPillButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
+    return Semantics(
+      button: true,
+      label: 'Add',
+      excludeSemantics: true,
       onTap: onTap,
-      child: Container(
-        width: 77,
-        height: 30,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: AppColors.butter,
-          borderRadius: BorderRadius.circular(AppSizes.radius2xl),
-        ),
-        child: Text(
-          'Add',
-          style: AppTypography.headline.copyWith(color: AppColors.greenDeep),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Container(
+          width: 77,
+          height: 30,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: AppColors.butter,
+            borderRadius: BorderRadius.circular(AppSizes.radius2xl),
+          ),
+          child: Text(
+            'Add',
+            style: AppTypography.headline.copyWith(color: AppColors.greenDeep),
+          ),
         ),
       ),
     );
