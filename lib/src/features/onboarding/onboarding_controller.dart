@@ -122,6 +122,11 @@ class OnboardingController extends _$OnboardingController {
   /// hole, but if any future path lands a user here with missing input we
   /// surface an inline P1 message instead of silently no-op'ing.
   Future<bool> submit() async {
+    // Re-entrancy guard: a second call while a createBaby is already in flight
+    // (e.g. a double-tap before isSubmitting repaints) would issue a second
+    // non-idempotent createBaby and orphan a duplicate baby row.
+    if (state.isSubmitting) return false;
+
     if (state.dob == null || !state.babyName.isValid) {
       state = state.copyWith(
         submitErrorMessage: "We're missing your baby's name or date of birth. "

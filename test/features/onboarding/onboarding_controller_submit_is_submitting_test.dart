@@ -156,4 +156,31 @@ void main() {
       );
     },
   );
+
+  test(
+    're-entrant submit while in-flight returns false and never calls '
+    'createBaby twice (no orphan baby rows)',
+    () async {
+      final completer = Completer<Result<Baby>>();
+      when(
+        () => babyProfile.createBaby(any(), any()),
+      ).thenAnswer((_) => completer.future);
+
+      final container = _makeContainer(babyProfile);
+      final controller = container.read(onboardingControllerProvider.notifier)
+        ..updateName('Lily')
+        ..updateDob(DateTime(2025, 6));
+
+      // First call is in-flight (isSubmitting=true, awaiting createBaby).
+      final pending = controller.submit();
+      // Second call before the first resolves must be rejected by the guard.
+      final reentrant = await controller.submit();
+      expect(reentrant, isFalse);
+
+      completer.complete(Result.success(_fakeBaby));
+      await pending;
+
+      verify(() => babyProfile.createBaby(any(), any())).called(1);
+    },
+  );
 }
