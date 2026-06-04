@@ -29,11 +29,7 @@ import 'package:nibbles/src/routing/route_enums.dart';
 /// Pops with a [bool] result — `true` when a log was saved (caller should
 /// invalidate upstream lists).
 class AllergenLogScreen extends ConsumerStatefulWidget {
-  const AllergenLogScreen({
-    required this.allergenKey,
-    this.logId,
-    super.key,
-  });
+  const AllergenLogScreen({required this.allergenKey, this.logId, super.key});
 
   final String allergenKey;
   final String? logId;
@@ -403,8 +399,9 @@ class _DateField extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppSizes.radiusMd),
               border: Border.all(color: AppColors.borderSoft),
             ),
-            padding:
-                const EdgeInsets.symmetric(horizontal: AppSizes.fieldPaddingH),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSizes.fieldPaddingH,
+            ),
             alignment: Alignment.centerLeft,
             child: Text(
               hasValue ? value! : hint,
@@ -458,10 +455,7 @@ class _NotesField extends StatelessWidget {
 }
 
 class _ReactionToggleRow extends StatelessWidget {
-  const _ReactionToggleRow({
-    required this.hadReaction,
-    required this.onToggle,
-  });
+  const _ReactionToggleRow({required this.hadReaction, required this.onToggle});
 
   final bool hadReaction;
   final VoidCallback onToggle;
@@ -520,19 +514,25 @@ class _AttachmentBlock extends StatelessWidget {
       padding: const EdgeInsets.all(AppSizes.sp12),
       child: SizedBox(
         height: AppSizes.buttonHeight,
-        child: Material(
-          color: AppColors.butter,
-          shape: const StadiumBorder(),
-          child: InkWell(
-            key: const Key('attachment_add_picture'),
-            customBorder: const StadiumBorder(),
-            onTap: onOpenSheet,
-            child: Center(
-              child: Text(
-                hasAttachment ? 'Edit Picture' : 'Add Picture',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: AppColors.greenDeep,
-                  fontWeight: FontWeight.w700,
+        child: Semantics(
+          button: true,
+          label: hasAttachment ? 'Edit Picture' : 'Add Picture',
+          excludeSemantics: true,
+          onTap: onOpenSheet,
+          child: Material(
+            color: AppColors.butter,
+            shape: const StadiumBorder(),
+            child: InkWell(
+              key: const Key('attachment_add_picture'),
+              customBorder: const StadiumBorder(),
+              onTap: onOpenSheet,
+              child: Center(
+                child: Text(
+                  hasAttachment ? 'Edit Picture' : 'Add Picture',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: AppColors.greenDeep,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ),
