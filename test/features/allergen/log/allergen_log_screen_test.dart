@@ -44,9 +44,7 @@ void main() {
         _MockAllergenLogController.new,
       ),
     ],
-    child: const MaterialApp(
-      home: AllergenLogScreen(allergenKey: 'peanut'),
-    ),
+    child: const MaterialApp(home: AllergenLogScreen(allergenKey: 'peanut')),
   );
 
   group('AllergenLogScreen (CREATE)', () {
@@ -72,11 +70,12 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('log_date_field')), findsOneWidget);
-      expect(find.text('My baby love it, no reaction'), findsOneWidget);
+      expect(find.text('My baby loves it, no reaction'), findsOneWidget);
     });
 
-    testWidgets('shows Add Picture CTA inside attachment block',
-        (tester) async {
+    testWidgets('shows Add Picture CTA inside attachment block', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
 
@@ -84,8 +83,21 @@ void main() {
       expect(find.text('Add Picture'), findsOneWidget);
     });
 
-    testWidgets('shows reaction switch wired to controller state',
-        (tester) async {
+    testWidgets('attachment CTA exposes a labelled button (a11y)', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(buildSubject());
+      await tester.pumpAndSettle();
+
+      expect(find.bySemanticsLabel('Add Picture'), findsOneWidget);
+
+      handle.dispose();
+    });
+
+    testWidgets('shows reaction switch wired to controller state', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
 
