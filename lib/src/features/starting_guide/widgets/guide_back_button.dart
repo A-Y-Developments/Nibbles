@@ -12,19 +12,25 @@ class GuideBackButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      shape: const CircleBorder(),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: onTap,
-        child: const SizedBox(
-          width: AppSizes.roundButtonSm,
-          height: AppSizes.roundButtonSm,
-          child: Icon(
-            Icons.arrow_back_rounded,
-            color: AppColors.greenDeep,
-            size: AppSizes.iconMd,
+    return Semantics(
+      button: true,
+      label: 'Back',
+      excludeSemantics: true,
+      onTap: onTap,
+      child: Material(
+        color: Colors.transparent,
+        shape: const CircleBorder(),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onTap,
+          child: const SizedBox(
+            width: AppSizes.roundButtonSm,
+            height: AppSizes.roundButtonSm,
+            child: Icon(
+              Icons.arrow_back_rounded,
+              color: AppColors.greenDeep,
+              size: AppSizes.iconMd,
+            ),
           ),
         ),
       ),
