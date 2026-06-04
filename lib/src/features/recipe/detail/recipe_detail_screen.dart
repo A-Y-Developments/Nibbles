@@ -40,9 +40,7 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      unawaited(
-        Analytics.instance.logRecipeViewed(recipeId: widget.recipeId),
-      );
+      unawaited(Analytics.instance.logRecipeViewed(recipeId: widget.recipeId));
     });
   }
 
@@ -103,15 +101,11 @@ class _RecipeDetailBody extends ConsumerWidget {
           child: CircularProgressIndicator(semanticsLabel: 'Loading recipe'),
         ),
         error: (error, _) => _ErrorView(
-          onRetry: () => ref.invalidate(
-            recipeDetailControllerProvider(babyId, recipeId),
-          ),
+          onRetry: () =>
+              ref.invalidate(recipeDetailControllerProvider(babyId, recipeId)),
         ),
-        data: (state) => _RecipeContent(
-          babyId: babyId,
-          recipeId: recipeId,
-          state: state,
-        ),
+        data: (state) =>
+            _RecipeContent(babyId: babyId, recipeId: recipeId, state: state),
       ),
     );
   }
@@ -135,10 +129,7 @@ class _ErrorView extends StatelessWidget {
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: AppSizes.sm),
-            FilledButton(
-              onPressed: onRetry,
-              child: const Text('Retry'),
-            ),
+            FilledButton(onPressed: onRetry, child: const Text('Retry')),
           ],
         ),
       ),
@@ -181,10 +172,7 @@ class _RecipeContentState extends ConsumerState<_RecipeContent> {
   }
 
   Future<void> _handleAddToMealPlan() async {
-    final dates = await showAddToMealPlanSheet(
-      context,
-      babyId: widget.babyId,
-    );
+    final dates = await showAddToMealPlanSheet(context, babyId: widget.babyId);
     if (dates == null || dates.isEmpty) return;
     if (!mounted) return;
 
@@ -199,9 +187,7 @@ class _RecipeContentState extends ConsumerState<_RecipeContent> {
       _showToast();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Couldn't add to meal plan. Try again."),
-        ),
+        const SnackBar(content: Text("Couldn't add to meal plan. Try again.")),
       );
     }
   }
@@ -223,9 +209,9 @@ class _RecipeContentState extends ConsumerState<_RecipeContent> {
     if (!mounted) return;
 
     if (result.isSuccess) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Added to shopping list.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Added to shopping list.')));
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Couldn't add items. Try again.")),
@@ -264,8 +250,9 @@ class _RecipeContentState extends ConsumerState<_RecipeContent> {
                 color: AppColors.greenDeep,
               ),
               title: const Text('Add to Shopping List'),
-              onTap: () => Navigator.of(sheetContext)
-                  .pop(_OverflowAction.addToShoppingList),
+              onTap: () => Navigator.of(
+                sheetContext,
+              ).pop(_OverflowAction.addToShoppingList),
             ),
             const SizedBox(height: AppSizes.sm),
           ],
@@ -324,20 +311,24 @@ class _RecipeContentState extends ConsumerState<_RecipeContent> {
                               statuses: state.allergenStatuses,
                             ),
                           ],
-                          const SizedBox(height: AppSizes.md),
-                          IconSection(
-                            icon: Icons.shopping_basket_outlined,
-                            title: 'Ingredients',
-                            child: _IngredientsList(
-                              ingredients: recipe.ingredients,
+                          if (recipe.ingredients.isNotEmpty) ...[
+                            const SizedBox(height: AppSizes.md),
+                            IconSection(
+                              icon: Icons.shopping_basket_outlined,
+                              title: 'Ingredients',
+                              child: _IngredientsList(
+                                ingredients: recipe.ingredients,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: AppSizes.lg),
-                          IconSection(
-                            icon: Icons.format_list_numbered,
-                            title: 'Method',
-                            child: _StepsList(steps: recipe.steps),
-                          ),
+                          ],
+                          if (recipe.steps.isNotEmpty) ...[
+                            const SizedBox(height: AppSizes.lg),
+                            IconSection(
+                              icon: Icons.format_list_numbered,
+                              title: 'Method',
+                              child: _StepsList(steps: recipe.steps),
+                            ),
+                          ],
                           if (state.utensils != null &&
                               state.utensils!.isNotEmpty) ...[
                             const SizedBox(height: AppSizes.lg),
@@ -377,11 +368,8 @@ class _RecipeContentState extends ConsumerState<_RecipeContent> {
                               title: 'Notes',
                               child: Text(
                                 recipe.notes!,
-                                style: Theme.of(
-                                  context,
-                                ).textTheme.bodyMedium?.copyWith(
-                                  color: AppColors.fgDefault,
-                                ),
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(color: AppColors.fgDefault),
                               ),
                             ),
                           ],

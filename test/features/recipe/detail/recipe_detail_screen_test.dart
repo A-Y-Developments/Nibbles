@@ -214,10 +214,7 @@ void main() {
         expect(find.byType(RecipeBannerCard), findsOneWidget);
         expect(find.text(_recipe.title), findsWidgets);
         // "Best for $ageRange" subtitle line in banner card.
-        expect(
-          find.text('Best for ${_recipe.ageRange}'),
-          findsOneWidget,
-        );
+        expect(find.text('Best for ${_recipe.ageRange}'), findsOneWidget);
         // Ingredients section header.
         expect(find.text('Ingredients'), findsOneWidget);
         // Method section header.
@@ -426,6 +423,49 @@ void main() {
       // Exposed as a @visibleForTesting top-level constant so the auto-dismiss
       // duration is locked in tests.
       expect(kAddedToMealPlanToastDuration, const Duration(seconds: 3));
+    });
+  });
+
+  group('RecipeDetailScreen — empty section guards', () {
+    const bareRecipe = Recipe(
+      id: 'r-bare',
+      title: 'Bare Recipe',
+      ageRange: '6+ months',
+      allergenTags: [],
+      ingredients: [],
+      steps: [],
+      howToServe: 'Serve.',
+    );
+
+    testWidgets('empty ingredients/steps -> no Ingredients/Method headers', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        state: const RecipeDetailState(
+          recipe: bareRecipe,
+          currentAllergenKey: '',
+        ),
+        recipeId: 'r-bare',
+      );
+
+      expect(find.text('Ingredients'), findsNothing);
+      expect(find.text('Method'), findsNothing);
+    });
+
+    testWidgets('non-empty ingredients/steps -> headers present', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        state: const RecipeDetailState(
+          recipe: _recipe,
+          currentAllergenKey: 'peanut',
+        ),
+      );
+
+      expect(find.text('Ingredients'), findsOneWidget);
+      expect(find.text('Method'), findsOneWidget);
     });
   });
 }
