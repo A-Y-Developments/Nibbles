@@ -78,8 +78,7 @@ class DayChipRow extends StatelessWidget {
         itemBuilder: (context, index) {
           final day = days[index];
           final isSelected = _isSameDay(day, selectedDay);
-          final isFilled =
-              filledDays.any((d) => _isSameDay(d, day));
+          final isFilled = filledDays.any((d) => _isSameDay(d, day));
           return _DayChip(
             day: day,
             isSelected: isSelected,
@@ -127,45 +126,47 @@ class _DayChip extends StatelessWidget {
       borderColor = AppColors.borderSoft;
     }
 
-    return GestureDetector(
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      label: '$abbrev ${day.day} $monthAbbrev',
+      excludeSemantics: true,
       onTap: onTap,
-      child: Container(
-        width: AppSizes.dayChipW,
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-          border: Border.all(color: borderColor),
-        ),
-        padding: const EdgeInsets.symmetric(
-          vertical: AppSizes.sm,
-          horizontal: AppSizes.xs,
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (isFilled && !isSelected)
-              Icon(
-                Icons.check,
-                color: fg,
-                size: AppSizes.iconSm,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: AppSizes.dayChipW,
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+            border: Border.all(color: borderColor),
+          ),
+          padding: const EdgeInsets.symmetric(
+            vertical: AppSizes.sm,
+            horizontal: AppSizes.xs,
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (isFilled && !isSelected)
+                Icon(Icons.check, color: fg, size: AppSizes.iconSm),
+              Text(
+                abbrev,
+                style: AppTypography.caption.copyWith(
+                  color: fg,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            Text(
-              abbrev,
-              style: AppTypography.caption.copyWith(
-                color: fg,
-                fontWeight: FontWeight.w600,
+              Text(
+                '${day.day} $monthAbbrev',
+                style: AppTypography.caption.copyWith(
+                  color: fg,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-            ),
-            Text(
-              '${day.day} $monthAbbrev',
-              style: AppTypography.caption.copyWith(
-                color: fg,
-                fontWeight: FontWeight.w700,
-                fontSize: 12,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

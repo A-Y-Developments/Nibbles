@@ -26,59 +26,68 @@ class PickedRecipeRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    final label = assignedLabel == null
+        ? recipe.title
+        : '${recipe.title}, assigned to $assignedLabel';
+    return Semantics(
+      button: true,
+      label: label,
+      excludeSemantics: true,
       onTap: onTap,
-      borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-      child: Container(
-        padding: const EdgeInsets.all(AppSizes.sp12),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-          border: Border.all(color: AppColors.borderSoft),
-        ),
-        child: Row(
-          children: [
-            _Thumbnail(url: recipe.thumbnailUrl),
-            const SizedBox(width: AppSizes.sp12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    recipe.title,
-                    style: AppTypography.bodyBold,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (recipe.allergenTags.isNotEmpty) ...[
-                    const SizedBox(height: AppSizes.xs),
-                    _TagsRow(tags: recipe.allergenTags),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+        child: Container(
+          padding: const EdgeInsets.all(AppSizes.sp12),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+            border: Border.all(color: AppColors.borderSoft),
+          ),
+          child: Row(
+            children: [
+              _Thumbnail(url: recipe.thumbnailUrl),
+              const SizedBox(width: AppSizes.sp12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      recipe.title,
+                      style: AppTypography.bodyBold,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (recipe.allergenTags.isNotEmpty) ...[
+                      const SizedBox(height: AppSizes.xs),
+                      _TagsRow(tags: recipe.allergenTags),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-            if (assignedLabel != null) ...[
-              const SizedBox(width: AppSizes.sm),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSizes.sm,
-                  vertical: AppSizes.xs,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.greenTint,
-                  borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-                ),
-                child: Text(
-                  assignedLabel!,
-                  style: AppTypography.caption.copyWith(
-                    color: AppColors.greenDeep,
-                    fontWeight: FontWeight.w700,
+              if (assignedLabel != null) ...[
+                const SizedBox(width: AppSizes.sm),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSizes.sm,
+                    vertical: AppSizes.xs,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.greenTint,
+                    borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+                  ),
+                  child: Text(
+                    assignedLabel!,
+                    style: AppTypography.caption.copyWith(
+                      color: AppColors.greenDeep,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
-              ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
