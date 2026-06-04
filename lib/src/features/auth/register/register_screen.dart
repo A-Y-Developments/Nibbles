@@ -85,6 +85,8 @@ class RegisterScreen extends ConsumerWidget {
                   label: 'Email address',
                   hintText: 'Email address',
                   keyboardType: TextInputType.emailAddress,
+                  autocorrect: false,
+                  enableSuggestions: false,
                   textInputAction: TextInputAction.next,
                   onChanged: controller.updateEmail,
                   errorText: emailErrorText,
@@ -263,18 +265,23 @@ class _LoginFooter extends StatelessWidget {
           style: textTheme.bodyLarge?.copyWith(color: AppColors.text),
         ),
         const SizedBox(width: AppSizes.xs),
-        InkWell(
-          key: const Key('register_login_link'),
-          onTap: () => context.goNamed(AppRoute.login.name),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSizes.xs,
-              vertical: AppSizes.xs,
-            ),
-            child: Text(
-              'Login',
-              style: AppTypography.headline.copyWith(
-                color: AppColors.burgundy,
+        Semantics(
+          button: true,
+          label: 'Login',
+          excludeSemantics: true,
+          child: InkWell(
+            key: const Key('register_login_link'),
+            onTap: () => context.goNamed(AppRoute.login.name),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSizes.xs,
+                vertical: AppSizes.xs,
+              ),
+              child: Text(
+                'Login',
+                style: AppTypography.headline.copyWith(
+                  color: AppColors.burgundy,
+                ),
               ),
             ),
           ),
