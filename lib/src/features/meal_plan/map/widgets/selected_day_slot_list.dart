@@ -115,6 +115,7 @@ class _AssignedRecipeCard extends StatelessWidget {
           const SizedBox(width: AppSizes.sm),
           IconButton(
             onPressed: onRemove,
+            tooltip: 'Remove from day',
             icon: const Icon(
               Icons.delete_outline,
               color: AppColors.fgMuted,
