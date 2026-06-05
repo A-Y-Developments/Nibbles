@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -177,6 +179,33 @@ void main() {
         // {isSubmitting: true, errorMessage: null}.
         final state = container.read(deleteAccountControllerProvider);
         expect(state.errorMessage, isNull);
+      },
+    );
+
+    test(
+      're-entrancy: a second submit while one is in-flight returns false and '
+      'does NOT fire the destructive deleteAccount twice',
+      () async {
+        final gate = Completer<Result<void>>();
+        when(() => mockAccountRepo.requestAccountDeletion(any()))
+            .thenAnswer((_) => gate.future);
+
+        final controller = readController();
+        // First submit runs synchronously up to the deleteAccount await, so
+        // isSubmitting is already true when the second (double-tap) lands.
+        final first = controller.submit('Other');
+        final second = await controller.submit('Other');
+
+        // The in-flight guard rejects the second tap immediately.
+        expect(second, isFalse);
+
+        gate.complete(const Result.success(null));
+        expect(await first, isTrue);
+
+        // Exactly one destructive RPC despite the double-tap.
+        verify(
+          () => mockAccountRepo.requestAccountDeletion('Other'),
+        ).called(1);
       },
     );
   });
