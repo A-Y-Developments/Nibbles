@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/common/services/local_flag_service.dart';
 import 'package:nibbles/src/features/onboarding/dob/onboarding_dob_screen.dart';
@@ -222,4 +223,44 @@ void main() {
       isNotNull,
     );
   });
+
+  testWidgets(
+    'selection lime band renders BEHIND the picker text, not over it '
+    '(no opaque selectionOverlay)',
+    (tester) async {
+      final container = _makeContainer(flags: flags);
+      await _pumpScreen(tester, container: container);
+
+      final wheel = find.byKey(const Key('onboarding_dob_year_wheel'));
+
+      // The CupertinoPicker no longer paints an opaque selectionOverlay —
+      // it is an empty SizedBox so the value text stays legible.
+      final picker = tester.widget<CupertinoPicker>(
+        find.descendant(of: wheel, matching: find.byType(CupertinoPicker)),
+      );
+      expect(picker.selectionOverlay, isA<SizedBox>());
+
+      // A lime band Container sits inside the same column as a sibling of the
+      // picker (the background pill). Match by its lime decoration color.
+      final limeBand = find.descendant(
+        of: wheel,
+        matching: find.byWidgetPredicate(
+          (w) =>
+              w is Container &&
+              w.decoration is BoxDecoration &&
+              (w.decoration! as BoxDecoration).color == AppColors.lime,
+        ),
+      );
+      expect(limeBand, findsOneWidget);
+
+      // The selected value text (greenDeep) still renders.
+      final selectedText = find.descendant(
+        of: wheel,
+        matching: find.byWidgetPredicate(
+          (w) => w is Text && w.style?.color == AppColors.greenDeep,
+        ),
+      );
+      expect(selectedText, findsWidgets);
+    },
+  );
 }

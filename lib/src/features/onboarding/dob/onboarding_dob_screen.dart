@@ -421,9 +421,9 @@ class _DateWheelRow extends StatelessWidget {
   }
 }
 
-/// A single column: header label + CupertinoPicker with a lime rounded pill
-/// `selectionOverlay`. Selected row text rendered in forestDarkn; off-rows in
-/// muted neutral per the Figma render.
+/// A single column: header label + CupertinoPicker stacked over a centered
+/// lime rounded pill band. The band renders behind the text so the selected
+/// row (greenDeep) stays legible; off-rows muted neutral per the Figma render.
 class _DateWheelColumn extends StatelessWidget {
   const _DateWheelColumn({
     required this.header,
@@ -459,13 +459,10 @@ class _DateWheelColumn extends StatelessWidget {
         const SizedBox(height: AppSizes.sm),
         SizedBox(
           height: height,
-          child: CupertinoPicker(
-            scrollController: controller,
-            itemExtent: itemExtent,
-            squeeze: 1.1,
-            backgroundColor: Colors.transparent,
-            selectionOverlay: Center(
-              child: Container(
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Container(
                 width: 70,
                 height: AppSizes.chipHeight,
                 decoration: BoxDecoration(
@@ -473,19 +470,28 @@ class _DateWheelColumn extends StatelessWidget {
                   borderRadius: BorderRadius.circular(AppSizes.radiusLg),
                 ),
               ),
-            ),
-            onSelectedItemChanged: onSelectedItemChanged,
-            children: List<Widget>.generate(itemCount, (i) {
-              final isSelected = i == selectedIndex;
-              return Center(
-                child: Text(
-                  itemBuilder(i),
-                  style: textTheme.labelMedium?.copyWith(
-                    color: isSelected ? AppColors.greenDeep : AppColors.fgFaint,
-                  ),
-                ),
-              );
-            }),
+              CupertinoPicker(
+                scrollController: controller,
+                itemExtent: itemExtent,
+                squeeze: 1.1,
+                backgroundColor: Colors.transparent,
+                selectionOverlay: const SizedBox.shrink(),
+                onSelectedItemChanged: onSelectedItemChanged,
+                children: List<Widget>.generate(itemCount, (i) {
+                  final isSelected = i == selectedIndex;
+                  return Center(
+                    child: Text(
+                      itemBuilder(i),
+                      style: textTheme.labelMedium?.copyWith(
+                        color: isSelected
+                            ? AppColors.greenDeep
+                            : AppColors.fgFaint,
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ],
           ),
         ),
       ],
