@@ -7,6 +7,8 @@
 //   4. Resets isSubmitting=false.
 //   5. Returns true on Success, false on Failure.
 
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nibbles/src/common/services/subscription_service.dart';
@@ -97,6 +99,53 @@ void main() {
       expect(
         container.read(cancelSubscriptionControllerProvider).isSubmitting,
         isFalse,
+      );
+    },
+  );
+
+  test(
+    're-entrancy: a second submit while one is in-flight returns false and '
+    'does NOT launch or re-log the intent events twice',
+    () async {
+      final analytics = FakeAnalytics();
+      final gate = Completer<bool>();
+      var launchCalls = 0;
+      Future<bool> gatedLaunch(
+        Uri uri, {
+        LaunchMode mode = LaunchMode.platformDefault,
+      }) {
+        launchCalls += 1;
+        return gate.future;
+      }
+
+      final container = ProviderContainer(
+        overrides: [
+          analyticsProvider.overrideWithValue(analytics),
+          subscriptionLaunchUrlProvider.overrideWithValue(gatedLaunch),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final controller =
+          container.read(cancelSubscriptionControllerProvider.notifier);
+      // First submit runs synchronously up to the launch await, so
+      // isSubmitting is already true when the second (double-tap) lands.
+      final first = controller.submit(CancelReason.achievedGoal);
+      final second = await controller.submit(CancelReason.achievedGoal);
+
+      // The in-flight guard rejects the second tap immediately.
+      expect(second, isFalse);
+      expect(launchCalls, 1);
+
+      gate.complete(true);
+      expect(await first, isTrue);
+
+      // Exactly one set of intent events despite the double-tap.
+      expect(
+        analytics.calls
+            .where((c) => c.name == 'subscription_cancel_started')
+            .length,
+        1,
       );
     },
   );
