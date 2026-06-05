@@ -143,8 +143,11 @@ class OnboardingResultScreen extends ConsumerWidget {
                       child: AppPillButton(
                         key: const Key('onboarding_result_next'),
                         label: 'Next',
+                        // Push (not go) so consent's back button gets a real
+                        // reverse pop. Safe: result + consent share phase C, so
+                        // popping consent->result is not redirect-bounced.
                         onPressed: () =>
-                            context.goNamed(AppRoute.onboardingConsent.name),
+                            context.pushNamed(AppRoute.onboardingConsent.name),
                       ),
                     ),
                   ],
