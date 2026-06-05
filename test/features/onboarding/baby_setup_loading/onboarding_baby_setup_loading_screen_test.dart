@@ -76,9 +76,12 @@ void main() {
       await tester.pump();
 
       // Advance past the min-dwell so the controller flips to `ready` and
-      // the screen schedules its push to /home.
+      // the screen schedules its push to /home. The celebration animations
+      // repeat() forever, so `pumpAndSettle` would hang — pump explicit frames
+      // to let the GoRouter nav transition settle instead.
       await tester.pump(BabySetupLoadingController.minDwell);
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
 
       expect(find.text('HOME_STUB'), findsOneWidget);
       expect(
@@ -119,12 +122,47 @@ void main() {
       await tester.pumpWidget(_buildSut(router: router));
       await tester.pump();
 
+      // `pumpAndSettle` would hang on the forever-repeating celebration
+      // animations — pump explicit frames to settle the nav transition.
       await tester.pump(BabySetupLoadingController.maxTimeout);
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
 
       expect(
         router.routerDelegate.currentConfiguration.uri.path,
         AppRoute.home.path,
+      );
+    },
+  );
+
+  testWidgets(
+    'celebration animation controllers are running (rotation advances)',
+    (tester) async {
+      await tester.pumpWidget(
+        _buildSut(
+          router: _routerFor(const OnboardingBabySetupLoadingScreen()),
+        ),
+      );
+      await tester.pump();
+
+      final rotation = tester.widget<RotationTransition>(
+        find.descendant(
+          of: find.byKey(const Key('onboarding_baby_setup_loading_blob')),
+          matching: find.byType(RotationTransition),
+        ),
+      );
+      final before = rotation.turns.value;
+
+      // Advance a fraction of the dwell — the looping controller must tick.
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(rotation.turns.value, isNot(equals(before)));
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('onboarding_baby_setup_loading_blob')),
+          matching: find.byType(ScaleTransition),
+        ),
+        findsOneWidget,
       );
     },
   );
