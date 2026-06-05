@@ -26,6 +26,14 @@ class CancelSubscriptionController extends _$CancelSubscriptionController {
   CancelSubscriptionState build() => const CancelSubscriptionState();
 
   Future<bool> submit(CancelReason reason) async {
+    // Re-entrancy guard: the overlay's Continue CTA disable is presentational
+    // (isSubmitting flips on a next-frame rebuild), so a same-frame double-tap
+    // can re-enter before the button greys out — double-firing the deep-link
+    // launch + both intent analytics events. Mirror PaywallController
+    // (purchaseDefault/restore) + delete-account (PR #337): bail if already in
+    // flight.
+    if (state.isSubmitting) return false;
+
     state = state.copyWith(isSubmitting: true);
 
     // Fire-and-forget intent events BEFORE the deep-link so we capture
