@@ -20,6 +20,7 @@ import 'package:nibbles/src/common/domain/enums/gender.dart';
 import 'package:nibbles/src/common/services/allergen_service.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/features/allergen/tracker/allergen_tracker_screen.dart';
+import 'package:nibbles/src/features/allergen/tracker/widgets/allergen_progress_card.dart';
 import 'package:nibbles/src/features/allergen/tracker/widgets/start_introduce_card.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 
@@ -159,7 +160,13 @@ void main() {
             recorder
               ..lastName = AppRoute.allergenDetail.name
               ..lastPathParams = st.pathParameters;
-            return const Scaffold(body: Text('DETAIL_STUB'));
+            // Poppable so the "refresh on return" test can navigate back.
+            return Scaffold(
+              body: TextButton(
+                onPressed: ctx.pop,
+                child: const Text('DETAIL_STUB'),
+              ),
+            );
           },
         ),
         GoRoute(
@@ -337,6 +344,52 @@ void main() {
         // After tapping See All, Big 11 sections are shown.
         expect(find.text('Already Tried'), findsOneWidget);
         expect(find.text('Allergen Exposure'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'Tapping an allergen tile navigates to detail; returning refreshes '
+      'the tracker so per-allergen status is not stale',
+      (tester) async {
+        stubReads(
+          statuses: {
+            'peanut': AllergenStatus.safe,
+            for (final a in _allergens.skip(1))
+              a.key: AllergenStatus.notStarted,
+          },
+          logs: [
+            _makeLog(id: 'p1', allergenKey: 'peanut'),
+            _makeLog(id: 'p2', allergenKey: 'peanut'),
+            _makeLog(id: 'p3', allergenKey: 'peanut'),
+          ],
+        );
+        final recorder = _PushRecorder();
+        await tester.pumpWidget(buildSubject(recorder));
+        await tester.pumpAndSettle();
+
+        // Big 11 renders an AllergenProgressCard for the tried (safe) peanut.
+        await tester.tap(find.text('Big 11'));
+        await tester.pumpAndSettle();
+
+        // Initial load fetched statuses exactly once (segment switch is local).
+        verify(() => mockService.getAllergenStatuses(any())).called(1);
+
+        final card = find.byType(AllergenProgressCard).first;
+        await tester.ensureVisible(card);
+        await tester.tap(card);
+        await tester.pumpAndSettle();
+
+        // Navigated to allergen-detail with the tapped key.
+        expect(recorder.lastName, AppRoute.allergenDetail.name);
+        expect(recorder.lastPathParams?['allergenKey'], 'peanut');
+        expect(find.text('DETAIL_STUB'), findsOneWidget);
+
+        // Return to the tracker → it must re-fetch (detail may have added a
+        // log that changed this allergen's derived status).
+        await tester.tap(find.text('DETAIL_STUB'));
+        await tester.pumpAndSettle();
+
+        verify(() => mockService.getAllergenStatuses(any())).called(1);
       },
     );
   });

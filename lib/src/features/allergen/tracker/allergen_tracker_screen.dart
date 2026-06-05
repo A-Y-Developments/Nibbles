@@ -268,7 +268,8 @@ class _TrackerContent extends ConsumerWidget {
             statuses: state.statuses,
             logs: state.logs,
             onStartIntroduce: onStartIntroduce,
-            onAllergenTap: (a) => _openAllergenDetail(context, a.key),
+            onAllergenTap: (a) =>
+                unawaited(_openAllergenDetail(context, ref, a.key)),
           )
         else
           _OngoingList(
@@ -277,7 +278,8 @@ class _TrackerContent extends ConsumerWidget {
             allergens: state.allergens,
             statuses: state.statuses,
             logs: state.logs,
-            onAllergenTap: (a) => _openAllergenDetail(context, a.key),
+            onAllergenTap: (a) =>
+                unawaited(_openAllergenDetail(context, ref, a.key)),
             onSeeAll: onSeeAll,
           ),
         const SliverToBoxAdapter(child: SizedBox(height: AppSizes.xl)),
@@ -285,11 +287,21 @@ class _TrackerContent extends ConsumerWidget {
     );
   }
 
-  void _openAllergenDetail(BuildContext context, String allergenKey) {
-    context.pushNamed(
+  Future<void> _openAllergenDetail(
+    BuildContext context,
+    WidgetRef ref,
+    String allergenKey,
+  ) async {
+    await context.pushNamed(
       AppRoute.allergenDetail.name,
       pathParameters: {'allergenKey': allergenKey},
     );
+    // Adding a log inside the detail screen changes this allergen's derived
+    // status; detail invalidates only its own provider, so refresh the tracker
+    // on return to avoid showing a stale per-allergen status.
+    if (context.mounted) {
+      ref.invalidate(allergenTrackerControllerProvider(babyId));
+    }
   }
 }
 
