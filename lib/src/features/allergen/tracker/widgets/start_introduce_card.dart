@@ -59,7 +59,7 @@ class StartIntroduceCard extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(allergen.name, style: textTheme.titleSmall),
-                const SizedBox(height: 2),
+                const SizedBox(height: AppSizes.sp2),
                 Text(
                   'Not Tried',
                   style: textTheme.bodyMedium?.copyWith(

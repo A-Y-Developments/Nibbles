@@ -93,7 +93,7 @@ class AllergenProgressCard extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(allergen.name, style: textTheme.titleSmall),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: AppSizes.sp2),
                     Text(
                       // Figma verbatim: keeps the trailing space on "N/3 times ".
                       '$clamped/3 times ',
