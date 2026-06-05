@@ -90,7 +90,9 @@ class _OnboardingNameScreenState extends ConsumerState<OnboardingNameScreen> {
     final last = _lastTrimmed;
     final joined = last.isEmpty ? first : '$first $last';
     ref.read(onboardingControllerProvider.notifier).updateName(joined);
-    context.goNamed(AppRoute.onboardingDob.name);
+    // Push (not go) so DOB's back button gets a real reverse pop. Safe: name +
+    // dob share phase A, so popping dob->name is not bounced by the redirect.
+    context.pushNamed(AppRoute.onboardingDob.name);
   }
 
   @override
