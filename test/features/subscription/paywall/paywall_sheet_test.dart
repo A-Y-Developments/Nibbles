@@ -31,6 +31,7 @@ import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/domain/entities/subscription_offering.dart';
 import 'package:nibbles/src/common/services/subscription_service.dart';
 import 'package:nibbles/src/features/subscription/paywall/paywall_sheet.dart';
+import 'package:nibbles/src/features/subscription/paywall/widgets/all_plans_sheet.dart';
 
 // ---------------------------------------------------------------------------
 // Firebase shim — replicates the home/recipe test pattern. The paywall
@@ -298,12 +299,12 @@ void main() {
   });
 
   // -------------------------------------------------------------------------
-  // View all plans — TODO surface (NIB-61 not built) — shows snackbar.
+  // View all plans — opens the all-plans overlay (NIB-61 wired). The single
+  // live offering surfaces as a one-plan list (single-plan edge case), so the
+  // sheet renders the offering's price label verbatim.
   // -------------------------------------------------------------------------
 
-  testWidgets('view all plans surfaces the placeholder snackbar', (
-    tester,
-  ) async {
+  testWidgets('view all plans opens the all-plans sheet', (tester) async {
     await tester.pumpWidget(
       _buildSut(
         factory: () => _FakeSubscriptionService(
@@ -318,11 +319,17 @@ void main() {
     await tester.pump();
 
     await tester.tap(find.byKey(const Key('paywall_view_all_plans_button')));
-    await tester.pump();
+    await tester.pumpAndSettle();
 
+    // The all-plans sheet is mounted and shows the live offering's price.
+    expect(find.byType(AllPlansSheet), findsOneWidget);
+    expect(find.text(r'$12.34 yearly'), findsOneWidget);
+    expect(find.text('Continue'), findsOneWidget);
+
+    // The placeholder snackbar is gone.
     expect(
       find.byKey(const Key('paywall_view_all_plans_snackbar')),
-      findsOneWidget,
+      findsNothing,
     );
   });
 }
