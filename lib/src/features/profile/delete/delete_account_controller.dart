@@ -64,6 +64,13 @@ class DeleteAccountController extends _$DeleteAccountController {
   DeleteAccountState build() => const DeleteAccountState();
 
   Future<bool> submit(String reason) async {
+    // Re-entrancy guard: the overlay's Continue CTA disable is presentational
+    // (isSubmitting flips on a next-frame rebuild), so a fast double-tap can
+    // fire submit() twice before the button greys out — and this op is
+    // DESTRUCTIVE. Mirror feedback_controller + onboarding (PR #330): bail if a
+    // submission is already in flight so deleteAccount can't run twice.
+    if (state.isSubmitting) return false;
+
     state = state.copyWith(isSubmitting: true, errorMessage: null);
 
     final result = await ref
