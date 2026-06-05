@@ -413,5 +413,48 @@ void main() {
         expect(state.logId, isNull);
       },
     );
+
+    test(
+      'hydrateForEdit clears a stale isSaved when re-editing the same log '
+      '(keepAlive — no phantom bounce)',
+      () => runWithAnalyticsGuard(() async {
+        final existing = _makeLog(id: 'log-edit', notes: 'note');
+        when(
+          () => mockService.getLogs(
+            any(),
+            allergenKey: any(named: 'allergenKey'),
+          ),
+        ).thenAnswer((_) async => Result.success([existing]));
+        when(
+          () => mockService.updateAllergenLog(
+            log: any(named: 'log'),
+            newPhotoLocalPath: any(named: 'newPhotoLocalPath'),
+            oldPhotoPath: any(named: 'oldPhotoPath'),
+          ),
+        ).thenAnswer((_) async => Result.success(existing));
+
+        final controller = readController();
+        // First edit + save → isSaved flips true; the keepAlive controller
+        // retains it after the screen pops.
+        await controller.hydrateForEdit(
+          babyId: _babyId,
+          allergenKey: _allergenKey,
+          logId: 'log-edit',
+        );
+        await controller.submit(babyId: _babyId, allergenKey: _allergenKey);
+        expect(readState().isSaved, isTrue);
+
+        // Re-enter EDIT for the SAME log (idempotent short-circuit): the stale
+        // isSaved must be cleared so the screen's save-listener cannot bounce
+        // on the first interaction.
+        await controller.hydrateForEdit(
+          babyId: _babyId,
+          allergenKey: _allergenKey,
+          logId: 'log-edit',
+        );
+        expect(readState().isSaved, isFalse);
+        expect(readState().logId, 'log-edit');
+      }),
+    );
   });
 }
