@@ -7,10 +7,13 @@ import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/domain/entities/allergen.dart';
 import 'package:nibbles/src/common/domain/entities/allergen_log.dart';
 import 'package:nibbles/src/common/domain/entities/baby.dart';
+import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
 import 'package:nibbles/src/common/domain/enums/emoji_taste.dart';
 import 'package:nibbles/src/common/domain/enums/gender.dart';
 import 'package:nibbles/src/common/services/allergen_service.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
+import 'package:nibbles/src/common/services/helpers/derive_allergen_status.dart';
+import 'package:nibbles/src/common/services/local_flag_service.dart';
 import 'package:nibbles/src/features/allergen/log_detail/allergen_log_detail_screen.dart';
 import 'package:nibbles/src/logging/analytics.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
@@ -20,6 +23,8 @@ import '../../../support/fake_analytics.dart';
 class _MockAllergenService extends Mock implements AllergenService {}
 
 class _MockBabyProfileService extends Mock implements BabyProfileService {}
+
+class _MockLocalFlagService extends Mock implements LocalFlagService {}
 
 const _babyId = 'baby-001';
 const _allergenKey = 'peanut';
@@ -65,10 +70,12 @@ AllergenLog _makeLog({
 void main() {
   late _MockAllergenService mockService;
   late _MockBabyProfileService mockBabyService;
+  late _MockLocalFlagService mockFlags;
 
   setUp(() {
     mockService = _MockAllergenService();
     mockBabyService = _MockBabyProfileService();
+    mockFlags = _MockLocalFlagService();
     when(() => mockBabyService.getBaby()).thenAnswer((_) async => _baby);
     when(
       () => mockService.getAllergens(),
@@ -76,6 +83,11 @@ void main() {
     when(
       () => mockService.getSignedPhotoUrl(any()),
     ).thenAnswer((_) async => const Result.success('https://photo.test/p.jpg'));
+    // Default: AL-08 already shown → the post-delete gate short-circuits and
+    // the screen just pops (the behaviour the non-completion tests expect).
+    when(
+      () => mockFlags.isProgramCompletionShown(any()),
+    ).thenReturn(true);
   });
 
   void stubLogs(List<AllergenLog> logs) {
@@ -109,6 +121,11 @@ void main() {
           name: AppRoute.allergenLogEdit.name,
           builder: (_, __) => const Scaffold(body: Text('EDIT_STUB')),
         ),
+        GoRoute(
+          path: AppRoute.allergenComplete.path,
+          name: AppRoute.allergenComplete.name,
+          builder: (_, __) => const Scaffold(body: Text('AL08_STUB')),
+        ),
       ],
     );
 
@@ -116,6 +133,7 @@ void main() {
       overrides: [
         allergenServiceProvider.overrideWithValue(mockService),
         babyProfileServiceProvider.overrideWithValue(mockBabyService),
+        localFlagServiceProvider.overrideWithValue(mockFlags),
         analyticsProvider.overrideWithValue(FakeAnalytics()),
       ],
       child: MaterialApp.router(routerConfig: router),
@@ -292,6 +310,50 @@ void main() {
             logId: _logId,
             photoPath: 'allergen-attachments/$_babyId/p.jpg',
           ),
+        ).called(1);
+      },
+    );
+
+    testWidgets(
+      'Deleting a log that completes the program (all allergens safe, AL-08 '
+      'not yet shown) flips the once-only flag + routes to AL-08, not pop',
+      (tester) async {
+        // A reaction log whose deletion flips its allergen flagged → safe,
+        // completing the program (every allergen derives to safe post-delete).
+        stubLogs([_makeLog(hadReaction: true, notes: 'Rash on cheek')]);
+        when(
+          () => mockService.deleteAllergenLog(
+            logId: any(named: 'logId'),
+            photoPath: any(named: 'photoPath'),
+          ),
+        ).thenAnswer((_) async => const Result.success(null));
+        when(
+          () => mockFlags.isProgramCompletionShown(any()),
+        ).thenReturn(false);
+        when(
+          () => mockFlags.markProgramCompletionShown(any()),
+        ).thenAnswer((_) async {});
+        when(() => mockService.getAllergenStatuses(any())).thenAnswer(
+          (_) async => Result.success({
+            for (final key in kAllergenKeys) key: AllergenStatus.safe,
+          }),
+        );
+
+        await tester.pumpWidget(buildSubject());
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byKey(const Key('log_detail_menu')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('log_actions_menu_delete')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('delete_log_confirm_button')));
+        await tester.pumpAndSettle();
+
+        // Routed to AL-08 instead of popping back to the detail's parent.
+        expect(find.text('AL08_STUB'), findsOneWidget);
+        expect(find.text('ROOT_STUB'), findsNothing);
+        verify(
+          () => mockFlags.markProgramCompletionShown(_babyId),
         ).called(1);
       },
     );
