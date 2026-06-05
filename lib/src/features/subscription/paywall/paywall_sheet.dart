@@ -10,8 +10,10 @@ import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/brand/brand_logo.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/domain/entities/subscription_offering.dart';
+import 'package:nibbles/src/common/domain/entities/subscription_plan.dart';
 import 'package:nibbles/src/features/subscription/paywall/paywall_controller.dart';
 import 'package:nibbles/src/features/subscription/paywall/paywall_state.dart';
+import 'package:nibbles/src/features/subscription/paywall/widgets/all_plans_sheet.dart';
 import 'package:nibbles/src/logging/analytics.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 
@@ -84,14 +86,25 @@ class _PaywallSheetState extends ConsumerState<PaywallSheet> {
     );
   }
 
-  void _onViewAllPlans() {
-    // TODO(NIB-61): push the All-plans picker sheet when it ships.
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        key: Key('paywall_view_all_plans_snackbar'),
-        content: Text('All plans coming soon.'),
+  Future<void> _onViewAllPlans() async {
+    final offering = ref.read(paywallControllerProvider).offering;
+    if (offering == null) return;
+    // Until NIB-18 ships a real RevenueCat plan catalog, the only live price
+    // is the single stub offering — surface it as a one-plan list (the sheet's
+    // single-plan edge case). The selected plan is purely informational: the
+    // purchase pipeline is still the offering-default `purchaseDefault`.
+    final plans = [
+      SubscriptionPlan(
+        id: offering.productId,
+        title: '${offering.trialDays} Days Free',
+        priceLabel: '${offering.priceString} ${offering.periodLabel}',
+        period: SubscriptionPlanPeriod.annual,
+        isRecommended: true,
       ),
-    );
+    ];
+    final selected = await showAllPlansSheet(context, plans: plans);
+    if (!mounted || selected == null) return;
+    await _onPurchase();
   }
 
   Future<void> _showErrorDialog({
@@ -133,7 +146,9 @@ class _PaywallSheetState extends ConsumerState<PaywallSheet> {
                 state.phase == PaywallPhase.ready
             ? _onPurchase
             : null,
-        onViewAllPlans: state.action == PaywallAction.none
+        onViewAllPlans:
+            state.action == PaywallAction.none &&
+                state.phase == PaywallPhase.ready
             ? _onViewAllPlans
             : null,
         onRetry: state.action == PaywallAction.none

@@ -96,6 +96,25 @@ void main() {
         expect(_borderColorOf(tester, 'Monthly'), AppColors.borderMuted);
       },
     );
+
+    testWidgets(
+      'each plan card exposes button + selected a11y state',
+      (tester) async {
+        await _setupViewport(tester);
+        await _pumpSheet(tester, plans: const [_annual, _monthly]);
+
+        expect(
+          tester.getSemantics(find.bySemanticsLabel(r'Annual, $29.99 yearly')),
+          containsSemantics(isButton: true, isSelected: true),
+        );
+        expect(
+          tester.getSemantics(
+            find.bySemanticsLabel(r'Monthly, $4.99 monthly'),
+          ),
+          containsSemantics(isButton: true, isSelected: false),
+        );
+      },
+    );
   });
 
   group('AllPlansSheet — selection inversion', () {

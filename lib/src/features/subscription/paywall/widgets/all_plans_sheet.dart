@@ -8,19 +8,12 @@ import 'package:nibbles/src/logging/analytics.dart';
 
 /// Pixel constants pulled verbatim from the Figma audit (frame 1216:11891 —
 /// see /Users/adithyafp_/Projects/nibbles/.figma-audit/subscription-no-plan/
-/// overlay-all-plans/report.md). Kept private — these are spec-locked
-/// non-token values (sheet corner radius, card radius, badge offset, etc.)
-/// not currently in `AppSizes` and not reused elsewhere yet.
-const double _kSheetTopRadius = 30;
-const double _kColumnGap = 24;
-const double _kPlanCardRadius = 10;
-const double _kPlanCardPadding = 12;
-const double _kPlanCardGap = 4;
-const double _kBadgePaddingH = 12;
-const double _kBadgePaddingV = 4;
-const double _kBadgeRadius = 30;
+/// overlay-all-plans/report.md). Spec values that map byte-identically to a
+/// design token use `AppSizes` directly at the call site; only these two stay
+/// local: 34 has no `AppSizes` token, and 42 coincides with
+/// `AppSizes.segmentedHeight` but is semantically a button height (a
+/// coincidental value collision, not a reusable token).
 const double _kContinueHeight = 42;
-const double _kContinueRadius = 24;
 const double _kCloseButtonSize = 34;
 
 /// Plan name + price text styles per the Figma `Headline/SemiBold` (Parkinsans
@@ -59,7 +52,7 @@ Future<SubscriptionPlan?> showAllPlansSheet(
     backgroundColor: AppColors.surface,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(
-        top: Radius.circular(_kSheetTopRadius),
+        top: Radius.circular(AppSizes.radius3xl),
       ),
     ),
     builder: (_) => AllPlansSheet(
@@ -162,7 +155,7 @@ class _AllPlansSheetState extends State<AllPlansSheet> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             _CloseButton(onTap: _onClose),
-            const SizedBox(height: _kColumnGap),
+            const SizedBox(height: AppSizes.lg),
             // Per spec edge case — single configured package hides the
             // selection chrome (no card border treatment, no "Recomended"
             // badge) and shows only the Continue CTA. We still render the
@@ -172,7 +165,7 @@ class _AllPlansSheetState extends State<AllPlansSheet> {
               _SinglePlanRow(plan: widget.plans.first)
             else
               ..._buildPlanList(),
-            const SizedBox(height: _kColumnGap),
+            const SizedBox(height: AppSizes.lg),
             _ContinueButton(onPressed: _onContinue),
           ],
         ),
@@ -183,7 +176,7 @@ class _AllPlansSheetState extends State<AllPlansSheet> {
   List<Widget> _buildPlanList() {
     final widgets = <Widget>[];
     for (var i = 0; i < widget.plans.length; i++) {
-      if (i > 0) widgets.add(const SizedBox(height: _kColumnGap));
+      if (i > 0) widgets.add(const SizedBox(height: AppSizes.lg));
       final plan = widget.plans[i];
       widgets.add(
         _PlanCard(
@@ -246,7 +239,7 @@ class _SinglePlanRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(plan.title, style: _kPlanTitleStyle),
-          const SizedBox(height: _kPlanCardGap),
+          const SizedBox(height: AppSizes.xs),
           Text(
             plan.priceLabel,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -283,26 +276,35 @@ class _PlanCard extends StatelessWidget {
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        Material(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(_kPlanCardRadius),
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(_kPlanCardRadius),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(_kPlanCardPadding),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(_kPlanCardRadius),
-                border: Border.all(color: borderColor),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(plan.title, style: _kPlanTitleStyle),
-                  const SizedBox(height: _kPlanCardGap),
-                  Text(plan.priceLabel, style: priceStyle),
-                ],
+        // Single-select plan card: expose selected + button role so a screen
+        // reader announces which plan is picked (mirrors CancelReasonChip).
+        Semantics(
+          button: true,
+          selected: isSelected,
+          label: '${plan.title}, ${plan.priceLabel}',
+          child: ExcludeSemantics(
+            child: Material(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+              child: InkWell(
+                onTap: onTap,
+                borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(AppSizes.sp12),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+                    border: Border.all(color: borderColor),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(plan.title, style: _kPlanTitleStyle),
+                      const SizedBox(height: AppSizes.xs),
+                      Text(plan.priceLabel, style: priceStyle),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
@@ -326,12 +328,12 @@ class _RecommendedBadge extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: AppColors.coral,
-        borderRadius: BorderRadius.circular(_kBadgeRadius),
+        borderRadius: BorderRadius.circular(AppSizes.radius3xl),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(
-          horizontal: _kBadgePaddingH,
-          vertical: _kBadgePaddingV,
+          horizontal: AppSizes.sp12,
+          vertical: AppSizes.xs,
         ),
         // "Recomended" is intentionally misspelled — verbatim per Figma spec
         // (frame 1216:11898). Pending PO confirmation before fixing.
@@ -359,10 +361,10 @@ class _ContinueButton extends StatelessWidget {
       height: _kContinueHeight,
       child: Material(
         color: AppColors.greenDeep,
-        borderRadius: BorderRadius.circular(_kContinueRadius),
+        borderRadius: BorderRadius.circular(AppSizes.radius2xl),
         child: InkWell(
           onTap: onPressed,
-          borderRadius: BorderRadius.circular(_kContinueRadius),
+          borderRadius: BorderRadius.circular(AppSizes.radius2xl),
           child: Center(
             child: Text(
               'Continue',
