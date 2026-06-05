@@ -215,4 +215,40 @@ void main() {
       expect(state.readinessAnswers[4], isNull);
     },
   );
+
+  testWidgets(
+    'question content scrolls on a short viewport — no RenderFlex overflow, '
+    'Next footer still present',
+    (tester) async {
+      // A short viewport that overflowed the old rigid Column + Spacer layout
+      // (the other tests bump to 420x900 precisely to avoid that overflow).
+      await tester.binding.setSurfaceSize(const Size(360, 480));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      container.read(onboardingControllerProvider.notifier).updateName('Lily');
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp.router(
+            routerConfig: _routerFor(const OnboardingReadinessScreen()),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Pre-fix this threw a "RenderFlex overflowed" error at this height.
+      expect(tester.takeException(), isNull);
+      // The question content now lives in a scroll view; the footer CTA stays
+      // pinned (rendered outside the scroll view).
+      expect(find.byType(SingleChildScrollView), findsOneWidget);
+      expect(
+        find.byKey(const Key('onboarding_readiness_next')),
+        findsOneWidget,
+      );
+      expect(find.text('1 of 6 Questions'), findsOneWidget);
+    },
+  );
 }
