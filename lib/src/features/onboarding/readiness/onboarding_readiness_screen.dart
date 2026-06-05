@@ -145,66 +145,79 @@ class _OnboardingReadinessScreenState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: AppSizes.md),
-              Semantics(
-                liveRegion: true,
-                container: true,
-                label:
-                    'Question ${_currentIndex + 1} of $_readinessTotalSteps',
-                child: Center(
-                  child: Text(
-                    '${_currentIndex + 1} of $_readinessTotalSteps Questions',
-                    key: const Key('onboarding_readiness_counter'),
-                    style: textTheme.bodyMedium?.copyWith(
-                      color: AppColors.fgStrong,
-                      fontWeight: FontWeight.w600,
-                    ),
+              // Scroll the question content so short devices / large text
+              // scales never overflow; the Back/Next footer stays pinned to
+              // the bottom (mirrors the result + consent siblings).
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: AppSizes.md),
+                      Semantics(
+                        liveRegion: true,
+                        container: true,
+                        label:
+                            'Question ${_currentIndex + 1} of '
+                            '$_readinessTotalSteps',
+                        child: Center(
+                          child: Text(
+                            '${_currentIndex + 1} of '
+                            '$_readinessTotalSteps Questions',
+                            key: const Key('onboarding_readiness_counter'),
+                            style: textTheme.bodyMedium?.copyWith(
+                              color: AppColors.fgStrong,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: AppSizes.sm),
+                      ReadinessProgressBar(
+                        stepCount: _readinessTotalSteps,
+                        currentIndex: _currentIndex,
+                      ),
+                      const SizedBox(height: AppSizes.xl),
+                      Text(
+                        title,
+                        textAlign: TextAlign.center,
+                        style: textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: AppSizes.md),
+                      Text(
+                        step.body,
+                        textAlign: TextAlign.center,
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: AppColors.fgMuted,
+                        ),
+                      ),
+                      const SizedBox(height: AppSizes.lg),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: ReadinessChoiceCard(
+                              key: const Key('readiness_choice_yes'),
+                              label: step.yesLabel,
+                              selected: currentAnswer ?? false,
+                              onTap: () => _recordAnswer(isYes: true),
+                            ),
+                          ),
+                          const SizedBox(width: AppSizes.md),
+                          Expanded(
+                            child: ReadinessChoiceCard(
+                              key: const Key('readiness_choice_unsure'),
+                              label: step.noLabel,
+                              selected: currentAnswer == false,
+                              onTap: () => _recordAnswer(isYes: false),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
               ),
-              const SizedBox(height: AppSizes.sm),
-              ReadinessProgressBar(
-                stepCount: _readinessTotalSteps,
-                currentIndex: _currentIndex,
-              ),
-              const SizedBox(height: AppSizes.xl),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: textTheme.titleLarge,
-              ),
-              const SizedBox(height: AppSizes.md),
-              Text(
-                step.body,
-                textAlign: TextAlign.center,
-                style: textTheme.bodyMedium?.copyWith(
-                  color: AppColors.fgMuted,
-                ),
-              ),
-              const SizedBox(height: AppSizes.lg),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: ReadinessChoiceCard(
-                      key: const Key('readiness_choice_yes'),
-                      label: step.yesLabel,
-                      selected: currentAnswer ?? false,
-                      onTap: () => _recordAnswer(isYes: true),
-                    ),
-                  ),
-                  const SizedBox(width: AppSizes.md),
-                  Expanded(
-                    child: ReadinessChoiceCard(
-                      key: const Key('readiness_choice_unsure'),
-                      label: step.noLabel,
-                      selected: currentAnswer == false,
-                      onTap: () => _recordAnswer(isYes: false),
-                    ),
-                  ),
-                ],
-              ),
-              const Spacer(),
               Padding(
                 padding: const EdgeInsets.only(bottom: AppSizes.pagePaddingV),
                 child: Row(
