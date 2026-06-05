@@ -32,16 +32,13 @@ void main() {
     sut = BabyProfileService(mockRepo);
   });
 
-  group('BabyProfileService.createBaby', () {
+  group('BabyProfileService.createBaby (atomic via repo RPC)', () {
     test(
-      'returns Result.success(baby) and calls both repo methods on success',
+      'delegates to repo.createBaby and never does the old 2nd write',
       () async {
         when(
           () => mockRepo.createBaby(any(), any(), any()),
         ).thenAnswer((_) async => Result.success(_fakeBaby));
-        when(
-          () => mockRepo.createAllergenProgramState(any()),
-        ).thenAnswer((_) async => const Result.success(null));
 
         final result = await sut.createBaby(
           'Lily',
@@ -54,34 +51,13 @@ void main() {
         verify(
           () => mockRepo.createBaby('Lily', DateTime(2024, 6), Gender.female),
         ).called(1);
-        verify(() => mockRepo.createAllergenProgramState('baby-001')).called(1);
+        // Atomicity now lives in the RPC; the service must NOT issue the old
+        // separate program-state write (the source of the orphan/dup bug).
+        verifyNever(() => mockRepo.createAllergenProgramState(any()));
       },
     );
 
-    test(
-      'returns Result.failure when createAllergenProgramState fails',
-      () async {
-        when(
-          () => mockRepo.createBaby(any(), any(), any()),
-        ).thenAnswer((_) async => Result.success(_fakeBaby));
-        when(() => mockRepo.createAllergenProgramState(any())).thenAnswer(
-          (_) async => const Result.failure(
-            ServerException('Failed to create program state'),
-          ),
-        );
-
-        final result = await sut.createBaby(
-          'Lily',
-          DateTime(2024, 6),
-          Gender.female,
-        );
-
-        expect(result.isFailure, isTrue);
-      },
-    );
-
-    test('returns Result.failure without calling createAllergenProgramState '
-        'when baby creation fails', () async {
+    test('propagates a repo.createBaby failure', () async {
       when(() => mockRepo.createBaby(any(), any(), any())).thenAnswer(
         (_) async => const Result.failure(ServerException('DB error')),
       );
@@ -97,15 +73,11 @@ void main() {
     });
 
     test(
-      'succeeds with NO gender argument — defaults to preferNotToSay '
-      'and remains atomic',
+      'defaults gender to preferNotToSay when omitted',
       () async {
         when(
           () => mockRepo.createBaby(any(), any(), any()),
         ).thenAnswer((_) async => Result.success(_fakeBaby));
-        when(
-          () => mockRepo.createAllergenProgramState(any()),
-        ).thenAnswer((_) async => const Result.success(null));
 
         final result = await sut.createBaby('Lily', DateTime(2024, 6));
 
@@ -114,13 +86,13 @@ void main() {
           () => mockRepo.createBaby(
             'Lily',
             DateTime(2024, 6),
-            // Explicit Gender.preferNotToSay is the assertion of this test —
-            // mocktail needs the literal value to match the captured argument.
+            // Explicit value is the assertion of this test — mocktail needs the
+            // literal to match the captured argument.
             // ignore: avoid_redundant_argument_values
             Gender.preferNotToSay,
           ),
         ).called(1);
-        verify(() => mockRepo.createAllergenProgramState('baby-001')).called(1);
+        verifyNever(() => mockRepo.createAllergenProgramState(any()));
       },
     );
   });

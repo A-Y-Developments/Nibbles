@@ -47,18 +47,22 @@ class BabyProfileRepositoryImpl implements BabyProfileRepository {
     Gender gender = Gender.preferNotToSay,
   ]) async {
     try {
-      final data = await _supabase
-          .from('babies')
-          .insert({
-            'user_id': _userId,
-            'name': name,
-            'date_of_birth': dob.toIso8601String().split('T').first,
-            'gender': gender.toJson(),
-            'onboarding_completed': true,
-          })
-          .select()
-          .single();
-      return Result.success(BabyResponse.fromJson(data).toDomain());
+      // Atomic: the `create_baby_with_program` RPC inserts the baby row AND its
+      // allergen_program_state row in one transaction (migration
+      // 20260605000001). Replaces the old two-write sequence that could orphan
+      // a baby row and duplicate it on retry.
+      final res = await _supabase.rpc<dynamic>(
+        'create_baby_with_program',
+        params: {
+          'p_name': name,
+          'p_date_of_birth': dob.toIso8601String().split('T').first,
+          'p_gender': gender.toJson(),
+        },
+      );
+      final row = res is List
+          ? res.first as Map<String, dynamic>
+          : res as Map<String, dynamic>;
+      return Result.success(BabyResponse.fromJson(row).toDomain());
     } on AppException catch (e) {
       return Result.failure(e);
     } on PostgrestException catch (e) {

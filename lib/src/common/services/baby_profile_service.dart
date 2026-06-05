@@ -12,8 +12,12 @@ class BabyProfileService {
 
   final BabyProfileRepository _repo;
 
-  /// Creates baby row + allergen_program_state row atomically (sequential).
-  /// If allergen_program_state insert fails, returns Failure.
+  /// Creates the baby row + its allergen_program_state row ATOMICALLY.
+  ///
+  /// Atomicity lives at the repository/DB layer: the repository's `createBaby`
+  /// calls the `create_baby_with_program` Postgres RPC, which does both inserts
+  /// in a single transaction. A failure can therefore never orphan a baby row
+  /// or duplicate it on retry (unlike the old app-side two-write sequence).
   ///
   /// Gender is optional — the redesigned onboarding (NIB-120) drops the
   /// selector. Defaults to [Gender.preferNotToSay] when omitted.
@@ -21,18 +25,7 @@ class BabyProfileService {
     String name,
     DateTime dob, [
     Gender gender = Gender.preferNotToSay,
-  ]) async {
-    final babyResult = await _repo.createBaby(name, dob, gender);
-    if (babyResult.isFailure) return babyResult;
-
-    final baby = babyResult.dataOrNull!;
-    final programResult = await _repo.createAllergenProgramState(baby.id);
-    if (programResult.isFailure) {
-      return Result.failure(programResult.errorOrNull!);
-    }
-
-    return Result.success(baby);
-  }
+  ]) => _repo.createBaby(name, dob, gender);
 
   Future<Baby?> getBaby() => _repo.getBaby();
 
