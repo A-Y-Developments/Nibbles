@@ -11,7 +11,9 @@ import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/domain/entities/allergen_log.dart';
+import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
 import 'package:nibbles/src/common/services/allergen_service.dart';
+import 'package:nibbles/src/common/services/local_flag_service.dart';
 import 'package:nibbles/src/features/allergen/detail/allergen_detail_controller.dart';
 import 'package:nibbles/src/features/allergen/log_detail/allergen_log_detail_controller.dart';
 import 'package:nibbles/src/features/allergen/log_detail/allergen_log_detail_state.dart';
@@ -196,6 +198,36 @@ class _LogDetailViewState extends ConsumerState<_LogDetailView> {
     ref
       ..invalidate(allergenDetailControllerProvider(_allergenKey))
       ..invalidate(allergenTrackerControllerProvider(_state.babyId));
+
+    // AL-08 reachability gate (NIB-128), mirrored from the log capture screen.
+    // Deleting a *reaction* log can flip its allergen flagged → safe (when 3+
+    // clean logs remain), which may complete the program. The save path runs
+    // this same gate after a write; the delete path must too, or the AL-08
+    // completion screen is silently missed. The once-only
+    // `program_completion_shown_{babyId}` flag prevents re-showing it.
+    final babyId = _state.babyId;
+    final flagService = ref.read(localFlagServiceProvider);
+    if (!flagService.isProgramCompletionShown(babyId)) {
+      final statusesResult = await ref
+          .read(allergenServiceProvider)
+          .getAllergenStatuses(babyId);
+      if (!mounted) return;
+      final statuses = statusesResult.dataOrNull;
+      final allSafe =
+          statuses != null &&
+          statuses.isNotEmpty &&
+          statuses.values.every(
+            (AllergenStatus s) => s == AllergenStatus.safe,
+          );
+      if (allSafe) {
+        await flagService.markProgramCompletionShown(babyId);
+        if (!mounted) return;
+        context.goNamed(AppRoute.allergenComplete.name);
+        return;
+      }
+    }
+
+    if (!mounted) return;
     context.pop();
   }
 
