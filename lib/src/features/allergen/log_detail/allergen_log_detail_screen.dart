@@ -479,7 +479,7 @@ class _AttachmentBlock extends ConsumerWidget {
                       ),
                     if (description != null && description.isNotEmpty) ...[
                       if (title != null && title.isNotEmpty)
-                        const SizedBox(height: 2),
+                        const SizedBox(height: AppSizes.sp2),
                       Text(
                         description,
                         style: GoogleFonts.figtree(
