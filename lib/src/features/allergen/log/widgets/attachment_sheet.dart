@@ -246,47 +246,57 @@ class _PhotoPreview extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final radius = BorderRadius.circular(AppSizes.radiusLg);
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        key: const Key('attachment_photo_tap'),
-        onTap: onTap,
-        borderRadius: radius,
-        child: Container(
-          height: 195,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: AppColors.bgInput,
-            borderRadius: radius,
-          ),
-          alignment: Alignment.center,
-          child: photoPath != null
-              ? ClipRRect(
-                  borderRadius: radius,
-                  child: Image.file(
-                    File(photoPath!),
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    height: 195,
-                  ),
-                )
-              : Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.add_a_photo_outlined,
-                      color: AppColors.fgFaint,
-                      size: AppSizes.iconLg,
+    // Button role + curated label so screen readers announce the tap target
+    // (the inner "Tap to add photo" caption is absent once a photo is set, and
+    // an Image.file alone carries no accessible name). excludeSemantics is safe
+    // here — the InkWell wraps no other interactive children.
+    return Semantics(
+      button: true,
+      label: photoPath != null ? 'Change photo' : 'Add photo',
+      excludeSemantics: true,
+      onTap: onTap,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          key: const Key('attachment_photo_tap'),
+          onTap: onTap,
+          borderRadius: radius,
+          child: Container(
+            height: 195,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: AppColors.bgInput,
+              borderRadius: radius,
+            ),
+            alignment: Alignment.center,
+            child: photoPath != null
+                ? ClipRRect(
+                    borderRadius: radius,
+                    child: Image.file(
+                      File(photoPath!),
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: 195,
                     ),
-                    const SizedBox(height: AppSizes.sm),
-                    Text(
-                      'Tap to add photo',
-                      style: textTheme.bodyMedium?.copyWith(
+                  )
+                : Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.add_a_photo_outlined,
                         color: AppColors.fgFaint,
+                        size: AppSizes.iconLg,
                       ),
-                    ),
-                  ],
-                ),
+                      const SizedBox(height: AppSizes.sm),
+                      Text(
+                        'Tap to add photo',
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: AppColors.fgFaint,
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
         ),
       ),
     );

@@ -107,5 +107,27 @@ void main() {
         expect(box.value!.photoPath, isNull);
       },
     );
+
+    testWidgets(
+      'photo preview is an "Add photo" button that opens the source picker',
+      (tester) async {
+        final handle = tester.ensureSemantics();
+        await _openSheet(tester);
+
+        // a11y: the tap target carries a button role + curated label. Pre-fix
+        // the only node was the "Tap to add photo" caption (which vanishes once
+        // a photo is set, and an Image.file alone has no accessible name).
+        expect(find.bySemanticsLabel('Add photo'), findsOneWidget);
+
+        await tester.tap(find.bySemanticsLabel('Add photo'));
+        await tester.pumpAndSettle();
+
+        // Tapping fires _pickPhoto → the Camera/Gallery source sheet.
+        expect(find.text('Camera'), findsOneWidget);
+        expect(find.text('Gallery'), findsOneWidget);
+
+        handle.dispose();
+      },
+    );
   });
 }
