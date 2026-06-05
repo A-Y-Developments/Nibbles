@@ -81,7 +81,15 @@ class AllergenLogController extends _$AllergenLogController {
     required String allergenKey,
     required String logId,
   }) async {
-    if (state.hydrated && state.logId == logId) return;
+    if (state.hydrated && state.logId == logId) {
+      // Re-entering EDIT for the SAME log: clear any stale `isSaved` left by a
+      // previous save of this log. The controller is keepAlive, so without
+      // this the screen's save-listener trips on the first interaction and
+      // bounces the user out — dropping the second edit + returning a phantom
+      // saved=true.
+      if (state.isSaved) state = state.copyWith(isSaved: false);
+      return;
+    }
 
     state = state.copyWith(isLoading: true);
 
