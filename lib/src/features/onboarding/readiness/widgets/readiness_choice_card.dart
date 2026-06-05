@@ -2,14 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
-import 'package:nibbles/src/common/components/brand/quatrefoil.dart';
+import 'package:nibbles/src/common/components/brand/petal_blob.dart';
 
 /// Large square choice card used in the NIB-83 readiness questionnaire.
 ///
-/// Composition matches the Figma frames
-/// (.figma-audit/onboarding/readiness-check-{1..6}/screenshot.png):
-/// a cream square with forest stroke, centered butter Quatrefoil with a
-/// cancel-X overlay glyph, and a centered label below.
+/// A cream square with forest stroke, the centered brand Nibble mascot
+/// (butter petals + green nibble center, shared with the consent screen),
+/// and a centered label below.
 ///
 /// PRIVATE to the readiness feature — composes theme tokens only, NOT a
 /// shared DS component. See spec: do not promote to lib/src/common/components.
@@ -83,26 +82,13 @@ class ReadinessChoiceCard extends StatelessWidget {
   }
 }
 
-/// Butter Quatrefoil with a small cancel-X overlay, per the Figma frames.
+/// Brand Nibble mascot — butter petals with a green nibble center, matching
+/// the consent screen's [PetalBlob] mark.
 class _NibbleIcon extends StatelessWidget {
   const _NibbleIcon();
 
   @override
   Widget build(BuildContext context) {
-    return const SizedBox(
-      width: AppSizes.xxl,
-      height: AppSizes.xxl,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Quatrefoil(size: AppSizes.xxl, coreColor: AppColors.butter),
-          Icon(
-            Icons.cancel_outlined,
-            size: AppSizes.iconMd,
-            color: AppColors.greenDeep,
-          ),
-        ],
-      ),
-    );
+    return const PetalBlob(size: AppSizes.xxl);
   }
 }
