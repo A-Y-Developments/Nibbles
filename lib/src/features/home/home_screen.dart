@@ -160,6 +160,13 @@ class _HomeContent extends StatelessWidget {
     final ageMonths = _monthsBetween(baby.dateOfBirth, DateTime.now());
     final variant = state.variant;
 
+    // Light up the '✓ Iron Rich' stat chip when any of today's meals is an
+    // iron-rich recipe (Figma 1242:10567). The StatRingCard param existed but
+    // was never wired — home is the call-site that supplies the data.
+    final hasIronRichRecipes = state.todaysRecipes.values.any(
+      (r) => r.nutritionTags.any((t) => t.toLowerCase().contains('iron')),
+    );
+
     // Lime hero paints to y=0 behind the status bar (top: false), so the
     // scroll content carries the top safe inset itself to clear the notch.
     final topInset = MediaQuery.of(context).padding.top;
@@ -217,6 +224,7 @@ class _HomeContent extends StatelessWidget {
                           inProgressCount: state.inProgressCount,
                           todayMealCount: state.todayMealCount,
                           todayMealTarget: 2,
+                          hasIronRichRecipes: hasIronRichRecipes,
                           onAllergenTap: () => context.pushNamed(
                             AppRoute.allergenTracker.name,
                           ),

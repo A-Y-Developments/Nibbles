@@ -43,6 +43,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/common/domain/entities/baby.dart';
 import 'package:nibbles/src/common/domain/entities/meal_plan_entry.dart';
+import 'package:nibbles/src/common/domain/entities/recipe.dart';
 import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
 import 'package:nibbles/src/common/domain/enums/gender.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
@@ -363,6 +364,48 @@ void main() {
       expect(find.text('Breakfast'), findsOneWidget);
       expect(find.text('Lunch'), findsOneWidget);
     });
+
+    testWidgets(
+      "today's iron-rich recipe lights up the '✓ Iron Rich' stat chip",
+      (tester) async {
+        // Figma 1242:10567 — the stat card shows '✓ Iron Rich' when any of
+        // today's meals is an iron-rich recipe. home wires hasIronRichRecipes
+        // from todaysRecipes.
+        final state = _populatedState().copyWith(
+          todaysRecipes: const {
+            'recipe-aaa': Recipe(
+              id: 'recipe-aaa',
+              title: 'Iron Purée',
+              ageRange: '6+ months',
+              allergenTags: [],
+              ingredients: [],
+              steps: [],
+              howToServe: '',
+              nutritionTags: ['iron_rich'],
+            ),
+          },
+        );
+
+        await _pump(
+          tester,
+          overrides: _overridesFor(babyId: _babyId, state: state),
+        );
+
+        expect(find.text('✓ Iron Rich'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      "no iron-rich recipe today -> no '✓ Iron Rich' chip",
+      (tester) async {
+        await _pump(
+          tester,
+          overrides: _overridesFor(babyId: _babyId, state: _populatedState()),
+        );
+
+        expect(find.text('✓ Iron Rich'), findsNothing);
+      },
+    );
   });
 
   group('HomeScreen — readyToStartEmpty variant (baby + no activity)', () {
