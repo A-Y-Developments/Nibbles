@@ -80,6 +80,17 @@ class InfoCardBlock extends GuideBlock {
   final String body;
 }
 
+/// Two [InfoCardBlock]s rendered side by side in one row — equal width, equal
+/// height. Mirrors the "EVIDENCE INFORMED" + "No Fluf" pair on Baby's First
+/// Nibbles (Figma 971:8730), which sits two-up below the full-width
+/// "SIMPLE AND PRACTICAL" card.
+class InfoCardRowBlock extends GuideBlock {
+  const InfoCardRowBlock({required this.left, required this.right});
+
+  final InfoCardBlock left;
+  final InfoCardBlock right;
+}
+
 /// Grid of small icon tiles (e.g. Iron / Minerals / Vitamins / Zinc; or the
 /// 7 iron-rich foods grid on Feeding Principles). Renders as a wrap of
 /// rounded tiles with a green-deep baby-face glyph above each label.
@@ -220,13 +231,15 @@ const List<GuideArticle> kStartingGuideArticles = [
             'Designed for busy parents with realistic recipes and actionable '
             'steps.',
       ),
-      InfoCardBlock(
-        title: 'EVIDENCE INFORMED',
-        body: 'Based on current pediatric nutrition guidelines.',
-      ),
-      InfoCardBlock(
-        title: 'No Fluf',
-        body: 'No overcomplication. Just food that makes sense for you.',
+      InfoCardRowBlock(
+        left: InfoCardBlock(
+          title: 'EVIDENCE INFORMED',
+          body: 'Based on current pediatric nutrition guidelines.',
+        ),
+        right: InfoCardBlock(
+          title: 'No Fluf',
+          body: 'No overcomplication. Just food that makes sense for you.',
+        ),
       ),
       SectionHeadingBlock('Nibbles Goals'),
       NumberedListCardBlock(

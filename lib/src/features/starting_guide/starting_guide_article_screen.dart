@@ -181,6 +181,30 @@ Widget _buildBlock(GuideBlock block, ValueChanged<GuideCta> onCta) {
       );
     case InfoCardBlock():
       return GuideInfoCard(title: block.title, body: block.body);
+    case InfoCardRowBlock():
+      // Two equal-width, equal-height info cards side by side (Figma 971:8730).
+      // IntrinsicHeight bounds the row so `stretch` can equalise card heights
+      // inside the unbounded-height scroll view.
+      return IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: GuideInfoCard(
+                title: block.left.title,
+                body: block.left.body,
+              ),
+            ),
+            const SizedBox(width: AppSizes.md),
+            Expanded(
+              child: GuideInfoCard(
+                title: block.right.title,
+                body: block.right.body,
+              ),
+            ),
+          ],
+        ),
+      );
     case IconTileGridBlock():
       return GuideIconTileGrid(labels: block.labels);
     case ChipGridCardBlock():
