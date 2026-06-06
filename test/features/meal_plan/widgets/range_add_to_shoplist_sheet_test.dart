@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/services/meal_plan_service.dart';
@@ -116,6 +117,17 @@ void main() {
       // Baseline = all selected → toggle reads "Unselect All", Add (N=count).
       expect(find.text('Unselect All'), findsOneWidget);
       expect(find.text('Add (${_ingredients.length})'), findsOneWidget);
+      // Figma 971:7908 — the toggle is a butter-filled button (not outlined).
+      final toggleBtn = tester.widget<FilledButton>(
+        find.ancestor(
+          of: find.text('Unselect All'),
+          matching: find.byType(FilledButton),
+        ),
+      );
+      expect(
+        toggleBtn.style?.backgroundColor?.resolve({}),
+        AppColors.butter,
+      );
       // Range fetch invoked with the range bounds.
       verify(
         () =>

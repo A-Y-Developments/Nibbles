@@ -414,11 +414,14 @@ class _BottomActions extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: OutlinedButton(
+            child: FilledButton(
               onPressed: submitting ? null : onToggleAll,
-              style: OutlinedButton.styleFrom(
+              style: FilledButton.styleFrom(
                 minimumSize: const Size.fromHeight(AppSizes.xxl),
-                side: const BorderSide(color: AppColors.greenDeep),
+                backgroundColor: AppColors.butter,
+                disabledBackgroundColor: AppColors.butter.withValues(
+                  alpha: 0.5,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppSizes.radius2xl),
                 ),
