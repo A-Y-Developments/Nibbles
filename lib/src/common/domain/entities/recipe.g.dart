@@ -26,6 +26,13 @@ _$RecipeImpl _$$RecipeImplFromJson(Map<String, dynamic> json) => _$RecipeImpl(
           .toList() ??
       const <String>[],
   category: json['category'] as String?,
+  utensils: (json['utensils'] as List<dynamic>?)
+      ?.map((e) => e as String)
+      .toList(),
+  storageNote: json['storageNote'] as String?,
+  freezerNote: json['freezerNote'] as String?,
+  textureTip: json['textureTip'] as String?,
+  whyThisMeal: json['whyThisMeal'] as String?,
 );
 
 Map<String, dynamic> _$$RecipeImplToJson(_$RecipeImpl instance) =>
@@ -41,4 +48,9 @@ Map<String, dynamic> _$$RecipeImplToJson(_$RecipeImpl instance) =>
       'thumbnailUrl': instance.thumbnailUrl,
       'nutritionTags': instance.nutritionTags,
       'category': instance.category,
+      'utensils': instance.utensils,
+      'storageNote': instance.storageNote,
+      'freezerNote': instance.freezerNote,
+      'textureTip': instance.textureTip,
+      'whyThisMeal': instance.whyThisMeal,
     };

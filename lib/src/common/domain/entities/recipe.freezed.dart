@@ -32,6 +32,11 @@ mixin _$Recipe {
   String? get thumbnailUrl => throw _privateConstructorUsedError;
   List<String> get nutritionTags => throw _privateConstructorUsedError;
   String? get category => throw _privateConstructorUsedError;
+  List<String>? get utensils => throw _privateConstructorUsedError;
+  String? get storageNote => throw _privateConstructorUsedError;
+  String? get freezerNote => throw _privateConstructorUsedError;
+  String? get textureTip => throw _privateConstructorUsedError;
+  String? get whyThisMeal => throw _privateConstructorUsedError;
 
   /// Serializes this Recipe to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -59,6 +64,11 @@ abstract class $RecipeCopyWith<$Res> {
     String? thumbnailUrl,
     List<String> nutritionTags,
     String? category,
+    List<String>? utensils,
+    String? storageNote,
+    String? freezerNote,
+    String? textureTip,
+    String? whyThisMeal,
   });
 }
 
@@ -88,6 +98,11 @@ class _$RecipeCopyWithImpl<$Res, $Val extends Recipe>
     Object? thumbnailUrl = freezed,
     Object? nutritionTags = null,
     Object? category = freezed,
+    Object? utensils = freezed,
+    Object? storageNote = freezed,
+    Object? freezerNote = freezed,
+    Object? textureTip = freezed,
+    Object? whyThisMeal = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -135,6 +150,26 @@ class _$RecipeCopyWithImpl<$Res, $Val extends Recipe>
                 ? _value.category
                 : category // ignore: cast_nullable_to_non_nullable
                       as String?,
+            utensils: freezed == utensils
+                ? _value.utensils
+                : utensils // ignore: cast_nullable_to_non_nullable
+                      as List<String>?,
+            storageNote: freezed == storageNote
+                ? _value.storageNote
+                : storageNote // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            freezerNote: freezed == freezerNote
+                ? _value.freezerNote
+                : freezerNote // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            textureTip: freezed == textureTip
+                ? _value.textureTip
+                : textureTip // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            whyThisMeal: freezed == whyThisMeal
+                ? _value.whyThisMeal
+                : whyThisMeal // ignore: cast_nullable_to_non_nullable
+                      as String?,
           )
           as $Val,
     );
@@ -161,6 +196,11 @@ abstract class _$$RecipeImplCopyWith<$Res> implements $RecipeCopyWith<$Res> {
     String? thumbnailUrl,
     List<String> nutritionTags,
     String? category,
+    List<String>? utensils,
+    String? storageNote,
+    String? freezerNote,
+    String? textureTip,
+    String? whyThisMeal,
   });
 }
 
@@ -189,6 +229,11 @@ class __$$RecipeImplCopyWithImpl<$Res>
     Object? thumbnailUrl = freezed,
     Object? nutritionTags = null,
     Object? category = freezed,
+    Object? utensils = freezed,
+    Object? storageNote = freezed,
+    Object? freezerNote = freezed,
+    Object? textureTip = freezed,
+    Object? whyThisMeal = freezed,
   }) {
     return _then(
       _$RecipeImpl(
@@ -236,6 +281,26 @@ class __$$RecipeImplCopyWithImpl<$Res>
             ? _value.category
             : category // ignore: cast_nullable_to_non_nullable
                   as String?,
+        utensils: freezed == utensils
+            ? _value._utensils
+            : utensils // ignore: cast_nullable_to_non_nullable
+                  as List<String>?,
+        storageNote: freezed == storageNote
+            ? _value.storageNote
+            : storageNote // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        freezerNote: freezed == freezerNote
+            ? _value.freezerNote
+            : freezerNote // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        textureTip: freezed == textureTip
+            ? _value.textureTip
+            : textureTip // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        whyThisMeal: freezed == whyThisMeal
+            ? _value.whyThisMeal
+            : whyThisMeal // ignore: cast_nullable_to_non_nullable
+                  as String?,
       ),
     );
   }
@@ -256,10 +321,16 @@ class _$RecipeImpl implements _Recipe {
     this.thumbnailUrl,
     final List<String> nutritionTags = const <String>[],
     this.category,
+    final List<String>? utensils,
+    this.storageNote,
+    this.freezerNote,
+    this.textureTip,
+    this.whyThisMeal,
   }) : _allergenTags = allergenTags,
        _ingredients = ingredients,
        _steps = steps,
-       _nutritionTags = nutritionTags;
+       _nutritionTags = nutritionTags,
+       _utensils = utensils;
 
   factory _$RecipeImpl.fromJson(Map<String, dynamic> json) =>
       _$$RecipeImplFromJson(json);
@@ -311,10 +382,28 @@ class _$RecipeImpl implements _Recipe {
 
   @override
   final String? category;
+  final List<String>? _utensils;
+  @override
+  List<String>? get utensils {
+    final value = _utensils;
+    if (value == null) return null;
+    if (_utensils is EqualUnmodifiableListView) return _utensils;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(value);
+  }
+
+  @override
+  final String? storageNote;
+  @override
+  final String? freezerNote;
+  @override
+  final String? textureTip;
+  @override
+  final String? whyThisMeal;
 
   @override
   String toString() {
-    return 'Recipe(id: $id, title: $title, ageRange: $ageRange, allergenTags: $allergenTags, ingredients: $ingredients, steps: $steps, howToServe: $howToServe, notes: $notes, thumbnailUrl: $thumbnailUrl, nutritionTags: $nutritionTags, category: $category)';
+    return 'Recipe(id: $id, title: $title, ageRange: $ageRange, allergenTags: $allergenTags, ingredients: $ingredients, steps: $steps, howToServe: $howToServe, notes: $notes, thumbnailUrl: $thumbnailUrl, nutritionTags: $nutritionTags, category: $category, utensils: $utensils, storageNote: $storageNote, freezerNote: $freezerNote, textureTip: $textureTip, whyThisMeal: $whyThisMeal)';
   }
 
   @override
@@ -345,7 +434,16 @@ class _$RecipeImpl implements _Recipe {
               _nutritionTags,
             ) &&
             (identical(other.category, category) ||
-                other.category == category));
+                other.category == category) &&
+            const DeepCollectionEquality().equals(other._utensils, _utensils) &&
+            (identical(other.storageNote, storageNote) ||
+                other.storageNote == storageNote) &&
+            (identical(other.freezerNote, freezerNote) ||
+                other.freezerNote == freezerNote) &&
+            (identical(other.textureTip, textureTip) ||
+                other.textureTip == textureTip) &&
+            (identical(other.whyThisMeal, whyThisMeal) ||
+                other.whyThisMeal == whyThisMeal));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -363,6 +461,11 @@ class _$RecipeImpl implements _Recipe {
     thumbnailUrl,
     const DeepCollectionEquality().hash(_nutritionTags),
     category,
+    const DeepCollectionEquality().hash(_utensils),
+    storageNote,
+    freezerNote,
+    textureTip,
+    whyThisMeal,
   );
 
   /// Create a copy of Recipe
@@ -392,6 +495,11 @@ abstract class _Recipe implements Recipe {
     final String? thumbnailUrl,
     final List<String> nutritionTags,
     final String? category,
+    final List<String>? utensils,
+    final String? storageNote,
+    final String? freezerNote,
+    final String? textureTip,
+    final String? whyThisMeal,
   }) = _$RecipeImpl;
 
   factory _Recipe.fromJson(Map<String, dynamic> json) = _$RecipeImpl.fromJson;
@@ -418,6 +526,16 @@ abstract class _Recipe implements Recipe {
   List<String> get nutritionTags;
   @override
   String? get category;
+  @override
+  List<String>? get utensils;
+  @override
+  String? get storageNote;
+  @override
+  String? get freezerNote;
+  @override
+  String? get textureTip;
+  @override
+  String? get whyThisMeal;
 
   /// Create a copy of Recipe
   /// with the given fields replaced by the non-null parameter values.
