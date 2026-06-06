@@ -49,6 +49,11 @@ Map<String, dynamic> _row({
   String? thumbnailUrl,
   List<dynamic>? nutritionTags,
   String? category,
+  List<dynamic>? utensils,
+  String? storageNote,
+  String? freezerNote,
+  String? textureTip,
+  String? whyThisMeal,
 }) => <String, dynamic>{
   'id': id,
   'title': title,
@@ -61,6 +66,11 @@ Map<String, dynamic> _row({
   'thumbnail_url': thumbnailUrl,
   'nutrition_tags': nutritionTags,
   'category': category,
+  'utensils': utensils,
+  'storage_note': storageNote,
+  'freezer_note': freezerNote,
+  'texture_tip': textureTip,
+  'why_this_meal': whyThisMeal,
 };
 
 void main() {
@@ -120,6 +130,29 @@ void main() {
         expect(roundtripped.category, 'Purees');
       },
     );
+
+    test('roundtrip preserves detail fields (utensils + storage/tip copy)', () {
+      const original = Recipe(
+        id: 'r1',
+        title: 'Pea Puree',
+        ageRange: '6m+',
+        allergenTags: [],
+        ingredients: [],
+        steps: [],
+        howToServe: 'Serve.',
+        utensils: ['Spoon', 'Steamer'],
+        storageNote: 'Fridge 3 days.',
+        freezerNote: 'Freeze 1 month.',
+        textureTip: 'Mash well.',
+        whyThisMeal: 'Iron-rich first food.',
+      );
+      final roundtripped = Recipe.fromJson(original.toJson());
+      expect(roundtripped.utensils, ['Spoon', 'Steamer']);
+      expect(roundtripped.storageNote, 'Fridge 3 days.');
+      expect(roundtripped.freezerNote, 'Freeze 1 month.');
+      expect(roundtripped.textureTip, 'Mash well.');
+      expect(roundtripped.whyThisMeal, 'Iron-rich first food.');
+    });
   });
 
   // ---------------------------------------------------------------------------
@@ -196,6 +229,36 @@ void main() {
         expect(recipe.category, isNull);
       },
     );
+
+    test(
+      'row with detail fields → entity carries utensils + storage/tip copy',
+      () async {
+        final recipe = await runRowMap(
+          _row(
+            id: 'r-detail',
+            utensils: ['Spoon', 'Steamer'],
+            storageNote: 'Fridge 3 days.',
+            freezerNote: 'Freeze 1 month.',
+            textureTip: 'Mash well.',
+            whyThisMeal: 'Iron-rich first food.',
+          ),
+        );
+        expect(recipe!.utensils, ['Spoon', 'Steamer']);
+        expect(recipe.storageNote, 'Fridge 3 days.');
+        expect(recipe.freezerNote, 'Freeze 1 month.');
+        expect(recipe.textureTip, 'Mash well.');
+        expect(recipe.whyThisMeal, 'Iron-rich first food.');
+      },
+    );
+
+    test('detail fields null → entity has null detail fields', () async {
+      final recipe = await runRowMap(_row());
+      expect(recipe!.utensils, isNull);
+      expect(recipe.storageNote, isNull);
+      expect(recipe.freezerNote, isNull);
+      expect(recipe.textureTip, isNull);
+      expect(recipe.whyThisMeal, isNull);
+    });
   });
 }
 
