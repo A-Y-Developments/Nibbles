@@ -331,6 +331,42 @@ const List<GuideArticle> kStartingGuideArticles = [
       ),
     ],
   ),
+  // ── 5 Sign Readiness (Figma 1474:50031) ──────────────────────────────────
+  GuideArticle(
+    slug: 'readiness-signs',
+    title: 'Signs Your Baby Is Ready for Solids',
+    subtitle: 'Every baby develops at their own pace, so these signs are '
+        'generally more important than the calendar.',
+    blocks: [
+      HeroCardBlock(
+        title: '5 Sign Readiness',
+        body: 'Every baby develops at their own pace, so these signs are '
+            'generally more important than the calendar.',
+      ),
+      SectionHeadingBlock('Asther readiness result'),
+      ParagraphBlock(
+        'Most babies are ready at around six months, but these developmental '
+        'signs are the most important indicators.',
+      ),
+      ChecklistCardBlock(
+        title: 'Readiness Signs',
+        score: '3/5',
+        items: [
+          // Long copy kept on a single line per item so the literals are
+          // const (required by the outer `const List` constructor) and the
+          // `no_adjacent_strings_in_list` lint stays happy.
+          // ignore: lines_longer_than_80_chars
+          'Can sit upright with minimal support. Good head and neck control (can hold head steady)',
+          'Sits upright with minimal support',
+          // See the comment above the first item — same reason.
+          // ignore: lines_longer_than_80_chars
+          'Loss of the tongue-thrust reflex (doesn’t automatically push food out).',
+          'Shows interest in food (watching, reaching, opening mouth).',
+          'Can bring objects to their mouth.',
+        ],
+      ),
+    ],
+  ),
   // ── Feeding Principles (Figma 1474:50514) ────────────────────────────────
   GuideArticle(
     slug: 'feeding-principles',
@@ -408,42 +444,6 @@ const List<GuideArticle> kStartingGuideArticles = [
           label: 'Start Introducing Allergens',
           routeName: 'allergen-tracker',
         ),
-      ),
-    ],
-  ),
-  // ── 5 Sign Readiness (Figma 1474:50031) ──────────────────────────────────
-  GuideArticle(
-    slug: 'readiness-signs',
-    title: 'Signs Your Baby Is Ready for Solids',
-    subtitle: 'Every baby develops at their own pace, so these signs are '
-        'generally more important than the calendar.',
-    blocks: [
-      HeroCardBlock(
-        title: '5 Sign Readiness',
-        body: 'Every baby develops at their own pace, so these signs are '
-            'generally more important than the calendar.',
-      ),
-      SectionHeadingBlock('Asther readiness result'),
-      ParagraphBlock(
-        'Most babies are ready at around six months, but these developmental '
-        'signs are the most important indicators.',
-      ),
-      ChecklistCardBlock(
-        title: 'Readiness Signs',
-        score: '3/5',
-        items: [
-          // Long copy kept on a single line per item so the literals are
-          // const (required by the outer `const List` constructor) and the
-          // `no_adjacent_strings_in_list` lint stays happy.
-          // ignore: lines_longer_than_80_chars
-          'Can sit upright with minimal support. Good head and neck control (can hold head steady)',
-          'Sits upright with minimal support',
-          // See the comment above the first item — same reason.
-          // ignore: lines_longer_than_80_chars
-          'Loss of the tongue-thrust reflex (doesn’t automatically push food out).',
-          'Shows interest in food (watching, reaching, opening mouth).',
-          'Can bring objects to their mouth.',
-        ],
       ),
     ],
   ),

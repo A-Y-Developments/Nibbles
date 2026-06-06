@@ -121,11 +121,14 @@ void main() {
       },
     );
 
-    testWidgets('renders the hub header title and subtitle', (tester) async {
+    testWidgets('renders the hub header title (no subtitle, per Figma)', (
+      tester,
+    ) async {
       await pump(tester);
 
+      // Figma 971:8642 — the hub header is title-only; there is no subtitle.
       expect(find.text('Starting Guide'), findsWidgets);
-      expect(find.textContaining('Bite-sized reads'), findsOneWidget);
+      expect(find.textContaining('Bite-sized reads'), findsNothing);
     });
   });
 
