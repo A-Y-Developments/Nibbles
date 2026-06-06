@@ -79,7 +79,6 @@ class AppChip extends StatelessWidget {
         color: _background,
         borderRadius: BorderRadius.circular(AppSizes.radiusFull),
       ),
-      alignment: Alignment.center,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
