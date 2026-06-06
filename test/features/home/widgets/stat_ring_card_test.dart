@@ -63,6 +63,46 @@ void main() {
     });
   });
 
+  group('StatRingCard — Active Program Allergens chip gating', () {
+    testWidgets(
+      'no allergen activity (all notStarted) -> no Active chip (empty state)',
+      (tester) async {
+        // Figma 1266:12135 ready-to-start-empty shows no chips under the rings.
+        await tester.pumpWidget(
+          _wrap(
+            const StatRingCard(
+              safeCount: 0,
+              flaggedCount: 0,
+              notStartedCount: 9,
+              inProgressCount: 0,
+            ),
+          ),
+        );
+
+        expect(find.text('✓ Active Program Allergens'), findsNothing);
+        expect(find.byType(AppChip), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'an in-progress allergen -> Active Program Allergens chip shows',
+      (tester) async {
+        await tester.pumpWidget(
+          _wrap(
+            const StatRingCard(
+              safeCount: 0,
+              flaggedCount: 0,
+              notStartedCount: 8,
+              inProgressCount: 1,
+            ),
+          ),
+        );
+
+        expect(find.text('✓ Active Program Allergens'), findsOneWidget);
+      },
+    );
+  });
+
   group('StatRingCard — Iron Rich chip gating', () {
     testWidgets(
       'hasIronRichRecipes = false -> only Active Program Allergens chip',

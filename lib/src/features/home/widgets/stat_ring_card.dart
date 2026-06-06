@@ -55,11 +55,16 @@ class StatRingCard extends StatelessWidget {
   Widget build(BuildContext context) {
     // Chip tone matches `HomeScreen.jsx` (neutral / coral-soft) — the
     // screen-level composition outranks the generic catalogue here.
-    // 'Active Program Allergens' renders unconditionally per spec — only
-    // 'Iron Rich' is gated on the optional [hasIronRichRecipes] arg.
+    // 'Active Program Allergens' is gated on the program having started
+    // (≥1 allergen introduced): Figma's ready-to-start-empty frame
+    // (1266:12135) shows NO chip when nothing is active. 'Iron Rich' is
+    // gated on the optional [hasIronRichRecipes] arg.
+    final hasActiveProgramAllergens =
+        safeCount + flaggedCount + inProgressCount > 0;
     final chips = <Widget>[
       if (hasIronRichRecipes) const AppChip(label: '✓ Iron Rich'),
-      const AppChip(label: '✓ Active Program Allergens'),
+      if (hasActiveProgramAllergens)
+        const AppChip(label: '✓ Active Program Allergens'),
     ];
 
     return Container(
