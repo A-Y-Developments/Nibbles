@@ -17,22 +17,21 @@ class RecipeDetailState with _$RecipeDetailState {
 
   const RecipeDetailState._();
 
-  /// Optional list of utensils for this recipe. Returns null until the
-  /// `Recipe` entity surfaces a utensils field (NIB-129 only added
-  /// `nutritionTags` + `category`; the rest is pending). Routed through a
-  /// getter so callers stay compile-clean and the UI conditionally hides
-  /// the section.
-  List<String>? get utensils => null;
+  /// Optional list of utensils for this recipe, sourced from the entity.
+  /// Returns null when the recipe has no utensils (null or empty) so the UI
+  /// conditionally hides the section.
+  List<String>? get utensils =>
+      (recipe.utensils?.isEmpty ?? true) ? null : recipe.utensils;
 
-  /// Optional fridge storage note. Null until backed by the entity.
-  String? get storageNote => null;
+  /// Optional fridge storage note, sourced from the entity.
+  String? get storageNote => recipe.storageNote;
 
-  /// Optional freezer storage note. Null until backed by the entity.
-  String? get freezerNote => null;
+  /// Optional freezer storage note, sourced from the entity.
+  String? get freezerNote => recipe.freezerNote;
 
-  /// Optional "Texture Tip" body copy. Null until backed by the entity.
-  String? get textureTip => null;
+  /// Optional "Texture Tip" body copy, sourced from the entity.
+  String? get textureTip => recipe.textureTip;
 
-  /// Optional "Why this meal" body copy. Null until backed by the entity.
-  String? get whyThisMeal => null;
+  /// Optional "Why this meal" body copy, sourced from the entity.
+  String? get whyThisMeal => recipe.whyThisMeal;
 }

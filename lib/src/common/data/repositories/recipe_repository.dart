@@ -157,6 +157,7 @@ class RecipeRepositoryImpl implements RecipeRepository {
     final rawIngredients = (row['ingredients'] as List<dynamic>)
         .cast<Map<String, dynamic>>();
     final rawNutritionTags = row['nutrition_tags'] as List<dynamic>?;
+    final rawUtensils = row['utensils'] as List<dynamic>?;
     return Recipe(
       id: row['id'] as String,
       title: row['title'] as String,
@@ -170,6 +171,11 @@ class RecipeRepositoryImpl implements RecipeRepository {
       nutritionTags:
           rawNutritionTags?.map((e) => e as String).toList() ?? <String>[],
       category: row['category'] as String?,
+      utensils: rawUtensils?.cast<String>(),
+      storageNote: row['storage_note'] as String?,
+      freezerNote: row['freezer_note'] as String?,
+      textureTip: row['texture_tip'] as String?,
+      whyThisMeal: row['why_this_meal'] as String?,
     );
   }
 }
