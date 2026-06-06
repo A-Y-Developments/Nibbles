@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:nibbles/gen/fonts.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
+import 'package:nibbles/src/common/components/brand/quatrefoil.dart';
 
 /// First-launch 'New to Starting Solids?' banner for the Recipe Library
 /// (Figma 971:8644 → 1015:6820). Forest-green card with white title, white
@@ -34,10 +35,6 @@ class ReadGuideBanner extends StatelessWidget {
         AppSizes.pagePaddingH,
         0,
       ),
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.sp12,
-        vertical: AppSizes.lg,
-      ),
       decoration: BoxDecoration(
         color: AppColors.green,
         borderRadius: BorderRadius.circular(AppSizes.sp12),
@@ -49,19 +46,55 @@ class ReadGuideBanner extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Text('New to Starting Solids?', style: _bannerTitleStyle),
-          const SizedBox(height: AppSizes.sp12),
-          Text(
-            'Start your baby’s food journey the right way with simple '
-            'basics.',
-            style: _bannerBodyStyle,
-          ),
-          const SizedBox(height: AppSizes.sp12),
-          _ReadGuideCta(onTap: onTap),
-        ],
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppSizes.sp12),
+        child: Stack(
+          children: [
+            // Decorative brand quatrefoil blobs (Figma 1015:6820) — lighter
+            // sage shapes clustered at the banner's top-right, clipped.
+            const Positioned(
+              top: -30,
+              right: -22,
+              child: Quatrefoil(
+                size: 104,
+                petalColor: AppColors.greenSoft,
+                coreColor: AppColors.greenSoft,
+              ),
+            ),
+            const Positioned(
+              top: 26,
+              right: -44,
+              child: Quatrefoil(
+                size: 76,
+                petalColor: AppColors.greenSoft,
+                coreColor: AppColors.greenSoft,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSizes.sp12,
+                vertical: AppSizes.lg,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text(
+                    'New to Starting Solids?',
+                    style: _bannerTitleStyle,
+                  ),
+                  const SizedBox(height: AppSizes.sp12),
+                  Text(
+                    'Start your baby’s food journey the right way with simple '
+                    'basics.',
+                    style: _bannerBodyStyle,
+                  ),
+                  const SizedBox(height: AppSizes.sp12),
+                  _ReadGuideCta(onTap: onTap),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
