@@ -181,6 +181,25 @@ void main() {
     );
 
     testWidgets(
+      "'first-nibbles' lays EVIDENCE INFORMED + No Fluf side by side",
+      (tester) async {
+        await _pump(tester, slug: 'first-nibbles');
+
+        final evidence = find.text('EVIDENCE INFORMED');
+        final noFluf = find.text('No Fluf');
+        expect(evidence, findsOneWidget);
+        expect(noFluf, findsOneWidget);
+
+        // Figma 971:8730 — the two cards share a row: same top edge, No Fluf
+        // sits to the right of EVIDENCE INFORMED.
+        final ePos = tester.getTopLeft(evidence);
+        final nPos = tester.getTopLeft(noFluf);
+        expect(ePos.dy, nPos.dy);
+        expect(nPos.dx, greaterThan(ePos.dx));
+      },
+    );
+
+    testWidgets(
       "'first-nibbles' primary CTA → routes to recipe-library",
       (tester) async {
         const slug = 'first-nibbles';
