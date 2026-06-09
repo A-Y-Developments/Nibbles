@@ -20,6 +20,7 @@ class AppPillButton extends StatelessWidget {
     this.size = AppPillButtonSize.full,
     this.expand = true,
     this.leading,
+    this.identifier,
     super.key,
   });
 
@@ -33,6 +34,10 @@ class AppPillButton extends StatelessWidget {
 
   /// Optional leading widget (e.g. a `+` icon for "Add" buttons).
   final Widget? leading;
+
+  /// Stable semantics identifier for UI automation (maps to
+  /// accessibilityIdentifier on iOS).
+  final String? identifier;
 
   bool get _isSmall => size == AppPillButtonSize.small;
 
@@ -88,31 +93,30 @@ class AppPillButton extends StatelessWidget {
           const SizedBox(width: AppSizes.xs),
         ],
         Flexible(
-          child: Text(
-            label,
-            style: textStyle,
-            overflow: TextOverflow.ellipsis,
-          ),
+          child: Text(label, style: textStyle, overflow: TextOverflow.ellipsis),
         ),
       ],
     );
 
-    return Material(
-      color: _background(variant),
-      shape: StadiumBorder(
-        side: isSecondary && !_disabled
-            ? const BorderSide(color: AppColors.greenDeep, width: 1.5)
-            : BorderSide.none,
-      ),
-      child: InkWell(
-        onTap: onPressed,
-        customBorder: const StadiumBorder(),
-        child: SizedBox(
-          height: height,
-          width: expand ? double.infinity : null,
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: hPad),
-            child: Center(child: child),
+    return Semantics(
+      identifier: identifier,
+      child: Material(
+        color: _background(variant),
+        shape: StadiumBorder(
+          side: isSecondary && !_disabled
+              ? const BorderSide(color: AppColors.greenDeep, width: 1.5)
+              : BorderSide.none,
+        ),
+        child: InkWell(
+          onTap: onPressed,
+          customBorder: const StadiumBorder(),
+          child: SizedBox(
+            height: height,
+            width: expand ? double.infinity : null,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: hPad),
+              child: Center(child: child),
+            ),
           ),
         ),
       ),

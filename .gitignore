@@ -65,6 +65,8 @@ android/key.properties
 .claude/context/
 
 # Tool-generated / temp
+.claude/worktrees/
+.claude/scheduled_tasks.lock
 .superset/
 supabase/.temp/
 supabase/.branches/

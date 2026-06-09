@@ -21,6 +21,7 @@ class SocialAuthButton extends StatelessWidget {
     required this.label,
     required this.onPressed,
     this.isLoading = false,
+    this.identifier,
     super.key,
   });
 
@@ -28,6 +29,10 @@ class SocialAuthButton extends StatelessWidget {
   final String label;
   final VoidCallback onPressed;
   final bool isLoading;
+
+  /// Stable semantics identifier for UI automation (maps to
+  /// accessibilityIdentifier on iOS).
+  final String? identifier;
 
   static const double _logoSize = 28;
 
@@ -44,30 +49,33 @@ class SocialAuthButton extends StatelessWidget {
         ? const StadiumBorder()
         : const StadiumBorder(side: BorderSide(color: AppColors.borderSoft));
 
-    return Material(
-      color: background,
-      shape: shape,
-      child: InkWell(
-        onTap: disabled ? null : onPressed,
-        customBorder: const StadiumBorder(),
-        child: SizedBox(
-          height: AppSizes.buttonHeight,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ExcludeSemantics(child: _logo(disabled)),
-              const SizedBox(width: AppSizes.sp12),
-              Text(
-                label,
-                style: TextStyle(
-                  fontFamily: FontFamily.parkinsans,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  height: 20 / 13,
-                  color: foreground,
+    return Semantics(
+      identifier: identifier,
+      child: Material(
+        color: background,
+        shape: shape,
+        child: InkWell(
+          onTap: disabled ? null : onPressed,
+          customBorder: const StadiumBorder(),
+          child: SizedBox(
+            height: AppSizes.buttonHeight,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ExcludeSemantics(child: _logo(disabled)),
+                const SizedBox(width: AppSizes.sp12),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontFamily: FontFamily.parkinsans,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    height: 20 / 13,
+                    color: foreground,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

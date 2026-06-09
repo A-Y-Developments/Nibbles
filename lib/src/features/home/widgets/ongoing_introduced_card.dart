@@ -75,6 +75,7 @@ class OngoingIntroducedCard extends StatelessWidget {
         Semantics(
           button: true,
           label: '$name, introduced $filled of $_target times',
+          identifier: 'home_allergen_tracker_card',
           excludeSemantics: true,
           onTap: handleTap,
           child: Material(

@@ -44,6 +44,7 @@ class RecipeGridCard extends StatelessWidget {
     return Semantics(
       button: true,
       label: isUnsafe ? '${recipe.title}, not safe' : recipe.title,
+      identifier: 'recipe_card_${recipe.id}',
       excludeSemantics: true,
       onTap: onTap,
       child: GestureDetector(

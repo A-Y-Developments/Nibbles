@@ -4,10 +4,18 @@ import 'package:nibbles/src/app/themes/app_sizes.dart';
 
 /// One destination in [AppBottomNav].
 class AppBottomNavItem {
-  const AppBottomNavItem({required this.icon, required this.label});
+  const AppBottomNavItem({
+    required this.icon,
+    required this.label,
+    this.identifier,
+  });
 
   final IconData icon;
   final String label;
+
+  /// Stable semantics identifier for UI automation (maps to
+  /// accessibilityIdentifier on iOS).
+  final String? identifier;
 }
 
 /// Canonical bottom nav — the floating rounded-28 card + shadowCard variant
@@ -26,10 +34,26 @@ class AppBottomNav extends StatelessWidget {
   final List<AppBottomNavItem> items;
 
   static const List<AppBottomNavItem> defaultItems = [
-    AppBottomNavItem(icon: Icons.home_outlined, label: 'Home'),
-    AppBottomNavItem(icon: Icons.restaurant_outlined, label: 'Meals'),
-    AppBottomNavItem(icon: Icons.shopping_cart_outlined, label: 'Grocery'),
-    AppBottomNavItem(icon: Icons.menu_book_outlined, label: 'Recipes'),
+    AppBottomNavItem(
+      icon: Icons.home_outlined,
+      label: 'Home',
+      identifier: 'nav_tab_home',
+    ),
+    AppBottomNavItem(
+      icon: Icons.restaurant_outlined,
+      label: 'Meals',
+      identifier: 'nav_tab_meal_plan',
+    ),
+    AppBottomNavItem(
+      icon: Icons.shopping_cart_outlined,
+      label: 'Grocery',
+      identifier: 'nav_tab_shopping_list',
+    ),
+    AppBottomNavItem(
+      icon: Icons.menu_book_outlined,
+      label: 'Recipes',
+      identifier: 'nav_tab_recipe_library',
+    ),
   ];
 
   @override
@@ -69,35 +93,38 @@ class _Tab extends StatelessWidget {
   Widget build(BuildContext context) {
     final fg = active ? AppColors.greenDeep : AppColors.fgFaint;
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.md - 2,
-          vertical: AppSizes.sm,
-        ),
-        decoration: BoxDecoration(
-          color: active ? AppColors.butter : Colors.transparent,
-          borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(item.icon, size: 22, color: fg),
-            const SizedBox(height: 3),
-            Text(
-              item.label,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0,
-                    height: 1,
-                    color: fg,
-                  ),
-            ),
-          ],
+    return Semantics(
+      identifier: item.identifier,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSizes.md - 2,
+            vertical: AppSizes.sm,
+          ),
+          decoration: BoxDecoration(
+            color: active ? AppColors.butter : Colors.transparent,
+            borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(item.icon, size: 22, color: fg),
+              const SizedBox(height: 3),
+              Text(
+                item.label,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0,
+                  height: 1,
+                  color: fg,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -113,6 +113,7 @@ class _HeaderAvatar extends StatelessWidget {
     return Semantics(
       button: true,
       label: 'Profile',
+      identifier: 'home_profile_avatar',
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
