@@ -82,6 +82,7 @@ class RegisterScreen extends ConsumerWidget {
                 const SizedBox(height: AppSizes.xl),
                 AppTextField(
                   key: const Key('register_email_field'),
+                  identifier: 'register_email_field',
                   label: 'Email address',
                   hintText: 'Email address',
                   keyboardType: TextInputType.emailAddress,
@@ -102,6 +103,7 @@ class RegisterScreen extends ConsumerWidget {
                 const SizedBox(height: AppSizes.md),
                 AppTextField(
                   key: const Key('register_password_field'),
+                  identifier: 'register_password_field',
                   label: 'Password',
                   hintText: 'Password',
                   obscureText: state.obscure,
@@ -117,6 +119,7 @@ class RegisterScreen extends ConsumerWidget {
                 const SizedBox(height: AppSizes.lg),
                 AppPillButton(
                   key: const Key('register_submit_button'),
+                  identifier: 'register_submit_button',
                   label: state.isLoading ? 'Signing up…' : 'Sign Up',
                   onPressed: (!state.isValid || state.isLoading)
                       ? null
@@ -132,6 +135,7 @@ class RegisterScreen extends ConsumerWidget {
                 const SizedBox(height: AppSizes.md),
                 SocialAuthButton(
                   key: const Key('register_google_button'),
+                  identifier: 'register_google_button',
                   provider: SocialAuthProvider.google,
                   label: 'Sign Up with Google',
                   isLoading: state.isLoading,
@@ -145,6 +149,7 @@ class RegisterScreen extends ConsumerWidget {
                 const SizedBox(height: AppSizes.md),
                 SocialAuthButton(
                   key: const Key('register_apple_button'),
+                  identifier: 'register_apple_button',
                   provider: SocialAuthProvider.apple,
                   label: 'Sign Up with Apple Account',
                   isLoading: state.isLoading,
@@ -268,6 +273,7 @@ class _LoginFooter extends StatelessWidget {
         Semantics(
           button: true,
           label: 'Login',
+          identifier: 'register_login_link',
           excludeSemantics: true,
           child: InkWell(
             key: const Key('register_login_link'),

@@ -64,6 +64,10 @@ Generated files (`*.freezed.dart`, `*.g.dart`) ARE committed to source control.
 | `make clean` | `flutter clean && flutter pub get` |
 | `make fix` | `dart fix --apply && dart format .` |
 
+## Simulator (UI verification)
+
+Canonical sim: **iPhone 17 / iOS 26.0** — the only sim with `com.aydev.nibbles.dev` installed. Resolve UDID by name (`xcrun simctl list devices | grep "iPhone 17 ("`), don't hardcode it. Drive UI with `axe`: coordinates from `describe-ui` frames (point space), tap at frame center, verify every action with a screenshot — axe exit 0 only means the gesture was delivered. Dev test account for automated flows: see `.env.dev` (`TEST_ACCOUNT_EMAIL` / `TEST_ACCOUNT_PASSWORD`).
+
 ---
 
 ## Agent Roles

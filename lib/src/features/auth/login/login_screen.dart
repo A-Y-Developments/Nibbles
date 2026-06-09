@@ -80,6 +80,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: AppSizes.xl),
                 AppTextField(
                   key: const Key('login_email_field'),
+                  identifier: 'login_email_field',
                   label: 'Email address',
                   hintText: 'Email address',
                   keyboardType: TextInputType.emailAddress,
@@ -94,6 +95,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: AppSizes.md),
                 AppTextField(
                   key: const Key('login_password_field'),
+                  identifier: 'login_password_field',
                   label: 'Password',
                   hintText: 'Password',
                   obscureText: state.obscure,
@@ -113,16 +115,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: AppSizes.xs),
                 Align(
                   alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () =>
-                        context.goNamed(AppRoute.forgotPassword.name),
-                    child: const Text(
-                      'Forgot password?',
-                      style: TextStyle(
-                        fontFamily: FontFamily.parkinsans,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.burgundy,
+                  child: Semantics(
+                    identifier: 'login_forgot_password_link',
+                    child: TextButton(
+                      onPressed: () =>
+                          context.goNamed(AppRoute.forgotPassword.name),
+                      child: const Text(
+                        'Forgot password?',
+                        style: TextStyle(
+                          fontFamily: FontFamily.parkinsans,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.burgundy,
+                        ),
                       ),
                     ),
                   ),
@@ -130,6 +135,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: AppSizes.md),
                 AppPillButton(
                   key: const Key('login_submit_button'),
+                  identifier: 'login_submit_button',
                   label: state.isLoading ? 'Logging in…' : 'Login',
                   onPressed: (state.isLoading || !canSubmit)
                       ? null
@@ -140,6 +146,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: AppSizes.md),
                 SocialAuthButton(
                   key: const Key('login_google_button'),
+                  identifier: 'login_google_button',
                   provider: SocialAuthProvider.google,
                   label: 'Login with Google',
                   isLoading: state.isLoading,
@@ -148,6 +155,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: AppSizes.md),
                 SocialAuthButton(
                   key: const Key('login_apple_button'),
+                  identifier: 'login_apple_button',
                   provider: SocialAuthProvider.apple,
                   label: 'Login with Apple Account',
                   isLoading: state.isLoading,
@@ -266,15 +274,14 @@ class _SignUpFooter extends StatelessWidget {
         Semantics(
           button: true,
           label: 'Sign up',
+          identifier: 'login_signup_link',
           excludeSemantics: true,
           child: TextButton(
             key: const Key('login_signup_link'),
             onPressed: () => context.goNamed(AppRoute.register.name),
             child: Text(
               'Sign Up',
-              style: AppTypography.headline.copyWith(
-                color: AppColors.burgundy,
-              ),
+              style: AppTypography.headline.copyWith(color: AppColors.burgundy),
             ),
           ),
         ),

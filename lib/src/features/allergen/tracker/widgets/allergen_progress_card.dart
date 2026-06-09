@@ -65,58 +65,61 @@ class AllergenProgressCard extends StatelessWidget {
     final trailingChip = _trailingChip();
     final clamped = cleanLogCount.clamp(0, 3);
 
-    return AppCard(
-      onTap: onTap,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: AppSizes.avatarMd,
-                height: AppSizes.avatarMd,
-                decoration: const BoxDecoration(
-                  color: AppColors.coralSoft,
-                  shape: BoxShape.circle,
+    return Semantics(
+      identifier: 'allergen_card_${allergen.key}',
+      child: AppCard(
+        onTap: onTap,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: AppSizes.avatarMd,
+                  height: AppSizes.avatarMd,
+                  decoration: const BoxDecoration(
+                    color: AppColors.coralSoft,
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    allergen.emoji,
+                    style: const TextStyle(fontSize: 24, height: 1),
+                  ),
                 ),
-                alignment: Alignment.center,
-                child: Text(
-                  allergen.emoji,
-                  style: const TextStyle(fontSize: 24, height: 1),
-                ),
-              ),
-              const SizedBox(width: AppSizes.sp12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(allergen.name, style: textTheme.titleSmall),
-                    const SizedBox(height: AppSizes.sp2),
-                    Text(
-                      // Figma verbatim: keeps the trailing space on "N/3 times ".
-                      '$clamped/3 times ',
-                      style: textTheme.bodyMedium?.copyWith(
-                        color: AppColors.fgMuted,
+                const SizedBox(width: AppSizes.sp12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(allergen.name, style: textTheme.titleSmall),
+                      const SizedBox(height: AppSizes.sp2),
+                      Text(
+                        // Figma verbatim: keeps the trailing space on "N/3 times ".
+                        '$clamped/3 times ',
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: AppColors.fgMuted,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              if (trailingChip != null) trailingChip,
-            ],
-          ),
-          const SizedBox(height: AppSizes.sp12),
-          AppSegmentedProgressBar(filledCount: clamped, tone: _barTone),
-          if (totalLogCount > cleanLogCount) ...[
-            const SizedBox(height: AppSizes.xs),
-            Text(
-              '$totalLogCount log${totalLogCount == 1 ? '' : 's'} total',
-              style: textTheme.bodySmall,
+                if (trailingChip != null) trailingChip,
+              ],
             ),
+            const SizedBox(height: AppSizes.sp12),
+            AppSegmentedProgressBar(filledCount: clamped, tone: _barTone),
+            if (totalLogCount > cleanLogCount) ...[
+              const SizedBox(height: AppSizes.xs),
+              Text(
+                '$totalLogCount log${totalLogCount == 1 ? '' : 's'} total',
+                style: textTheme.bodySmall,
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

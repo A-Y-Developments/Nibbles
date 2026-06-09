@@ -23,6 +23,7 @@ class AppTextField extends StatefulWidget {
     this.autocorrect = true,
     this.enableSuggestions = true,
     this.textCapitalization = TextCapitalization.none,
+    this.identifier,
     super.key,
   });
 
@@ -57,6 +58,10 @@ class AppTextField extends StatefulWidget {
 
   /// Forwarded to [TextField.textCapitalization].
   final TextCapitalization textCapitalization;
+
+  /// Stable semantics identifier for UI automation (maps to
+  /// accessibilityIdentifier on iOS).
+  final String? identifier;
 
   @override
   State<AppTextField> createState() => _AppTextFieldState();
@@ -118,40 +123,47 @@ class _AppTextFieldState extends State<AppTextField> {
         // container and no hard-edged focus shadow (the previous spreadRadius
         // BoxShadow rendered a phantom second border). Border + fill + error
         // caption + suffix icon are all native decoration slots.
-        TextField(
-          controller: widget.controller,
-          focusNode: _focusNode,
-          enabled: widget.enabled,
-          obscureText: widget.obscureText,
-          keyboardType: widget.keyboardType,
-          textInputAction: widget.textInputAction,
-          onChanged: widget.onChanged,
-          onSubmitted: widget.onSubmitted,
-          autocorrect: widget.autocorrect,
-          enableSuggestions: widget.enableSuggestions,
-          textCapitalization: widget.textCapitalization,
-          style: theme.textTheme.bodyLarge?.copyWith(color: AppColors.fgStrong),
-          cursorColor: AppColors.greenDeep,
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: focused ? AppColors.surface : AppColors.bgInput,
-            isDense: true,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: AppSizes.md,
-              vertical: AppSizes.sp12 + 1,
+        Semantics(
+          identifier: widget.identifier,
+          child: TextField(
+            controller: widget.controller,
+            focusNode: _focusNode,
+            enabled: widget.enabled,
+            obscureText: widget.obscureText,
+            keyboardType: widget.keyboardType,
+            textInputAction: widget.textInputAction,
+            onChanged: widget.onChanged,
+            onSubmitted: widget.onSubmitted,
+            autocorrect: widget.autocorrect,
+            enableSuggestions: widget.enableSuggestions,
+            textCapitalization: widget.textCapitalization,
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: AppColors.fgStrong,
             ),
-            hintText: widget.hintText,
-            hintStyle: theme.textTheme.bodyLarge?.copyWith(
-              color: AppColors.greenSoft,
+            cursorColor: AppColors.greenDeep,
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: focused ? AppColors.surface : AppColors.bgInput,
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: AppSizes.md,
+                vertical: AppSizes.sp12 + 1,
+              ),
+              hintText: widget.hintText,
+              hintStyle: theme.textTheme.bodyLarge?.copyWith(
+                color: AppColors.greenSoft,
+              ),
+              suffixIcon: widget.suffixIcon,
+              enabledBorder: borderOf(AppColors.borderSoft, 1),
+              disabledBorder: borderOf(AppColors.borderSoft, 1),
+              focusedBorder: borderOf(AppColors.greenDeep, 2),
+              errorBorder: borderOf(errorColor, 1),
+              focusedErrorBorder: borderOf(errorColor, 2),
+              errorText: widget.errorText,
+              errorStyle: theme.textTheme.bodySmall?.copyWith(
+                color: errorColor,
+              ),
             ),
-            suffixIcon: widget.suffixIcon,
-            enabledBorder: borderOf(AppColors.borderSoft, 1),
-            disabledBorder: borderOf(AppColors.borderSoft, 1),
-            focusedBorder: borderOf(AppColors.greenDeep, 2),
-            errorBorder: borderOf(errorColor, 1),
-            focusedErrorBorder: borderOf(errorColor, 2),
-            errorText: widget.errorText,
-            errorStyle: theme.textTheme.bodySmall?.copyWith(color: errorColor),
           ),
         ),
       ],
