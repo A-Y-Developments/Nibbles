@@ -1,9 +1,10 @@
-audited 2026-06-12 (run 8): meal-plan cycle-2 (Add to shop list cross-feature path verified working; NIB-159 still reproduces) + login flake root-caused
-audited 2026-06-12 (run 7): allergen cycle-2 (tracker See All, NIB-165 instance 9) + recipe-library flow verified (bootstrap done 8/8)
-audited 2026-06-12 (run 6): home (data truthfulness, guidance tips) + shopping-list flow + NIB-161 verification
-audited 2026-06-12 (run 5): profile-edit + NIB-154 verification
+audited 2026-06-12 (run 9): shopping-list cycle-2 — FIRST Figma comparison (NIB-158 map live): structure matches, styling drift filed NIB-173; NIB-157 verified
+audited 2026-06-12 (run 8): meal-plan cycle-2 (Add to shop list verified) + login flake root-caused
+audited 2026-06-12 (run 7): allergen cycle-2 + recipe-library flow (bootstrap 8/8)
+audited 2026-06-12 (run 6): home + shopping-list flow + NIB-161
+audited 2026-06-12 (run 5): profile-edit + NIB-154
 audited 2026-06-12 (run 4): recipe-library + meal-plan flow
 audited 2026-06-12 (run 3): shopping-list + allergen-complete flow
 audited 2026-06-11 (run 2): meal-plan + onboarding flow
 audited 2026-06-11 (run 1): allergen + paywall
-> next: shopping-list (cycle 2)
+> next: recipe-library (cycle 2, with Figma comparison)
