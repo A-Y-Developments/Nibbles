@@ -8,17 +8,24 @@ import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
 /// Per spec 8 — copy is verbatim from the Figma frames. The banner does NOT
 /// render for [AllergenStatus.notStarted] (no logs → no contextual guidance).
 class DetailContextualBanner extends StatelessWidget {
-  const DetailContextualBanner({required this.status, super.key});
+  const DetailContextualBanner({
+    required this.status,
+    required this.allergenName,
+    super.key,
+  });
 
   final AllergenStatus status;
+  final String allergenName;
 
   ({String text, Color bg, Color fg})? _content() {
     switch (status) {
       case AllergenStatus.notStarted:
         return null;
       case AllergenStatus.inProgress:
+        // NIB-156 — per-allergen advancement (NIB-120/126): the next action is
+        // to give the SAME allergen again, not move to the next one.
         return (
-          text: 'Introduce the Next Allergen Tomorrow',
+          text: 'Give $allergenName again tomorrow',
           bg: AppColors.coralSoft,
           fg: AppColors.coralDeep,
         );
@@ -60,9 +67,9 @@ class DetailContextualBanner extends StatelessWidget {
       child: Text(
         c.text,
         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: c.fg,
-              fontWeight: FontWeight.w600,
-            ),
+          color: c.fg,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }

@@ -41,18 +41,16 @@ final _baby = Baby(
   onboardingCompleted: true,
 );
 
-AllergenLog _makeLog({
-  required String id,
-  bool hadReaction = false,
-}) => AllergenLog(
-  id: id,
-  babyId: _babyId,
-  allergenKey: _allergenKey,
-  hadReaction: hadReaction,
-  emojiTaste: EmojiTaste.love,
-  logDate: _now,
-  createdAt: _now,
-);
+AllergenLog _makeLog({required String id, bool hadReaction = false}) =>
+    AllergenLog(
+      id: id,
+      babyId: _babyId,
+      allergenKey: _allergenKey,
+      hadReaction: hadReaction,
+      emojiTaste: EmojiTaste.love,
+      logDate: _now,
+      createdAt: _now,
+    );
 
 class _PushRecorder {
   String? lastName;
@@ -110,10 +108,7 @@ void main() {
 
   void stubLogs(List<AllergenLog> logs, AllergenStatus status) {
     when(
-      () => mockService.getLogs(
-        any(),
-        allergenKey: any(named: 'allergenKey'),
-      ),
+      () => mockService.getLogs(any(), allergenKey: any(named: 'allergenKey')),
     ).thenAnswer((_) async => Result.success(logs));
     when(() => mockService.deriveStatus(any())).thenReturn(status);
   }
@@ -124,14 +119,11 @@ void main() {
       'contextual banner',
       (tester) async {
         // 3 clean logs + status=safe.
-        stubLogs(
-          [
-            _makeLog(id: 'l1'),
-            _makeLog(id: 'l2'),
-            _makeLog(id: 'l3'),
-          ],
-          AllergenStatus.safe,
-        );
+        stubLogs([
+          _makeLog(id: 'l1'),
+          _makeLog(id: 'l2'),
+          _makeLog(id: 'l3'),
+        ], AllergenStatus.safe);
 
         await tester.pumpWidget(buildSubject(_PushRecorder()));
         await tester.pumpAndSettle();
@@ -150,41 +142,35 @@ void main() {
       },
     );
 
-    testWidgets(
-      'status=flagged → "Unsafe" pill + red-soft "consult a medical '
-      'professional" banner',
-      (tester) async {
-        stubLogs(
-          [
-            _makeLog(id: 'l1'),
-            _makeLog(id: 'l2', hadReaction: true),
-          ],
-          AllergenStatus.flagged,
-        );
+    testWidgets('status=flagged → "Unsafe" pill + red-soft "consult a medical '
+        'professional" banner', (tester) async {
+      stubLogs([
+        _makeLog(id: 'l1'),
+        _makeLog(id: 'l2', hadReaction: true),
+      ], AllergenStatus.flagged);
 
-        await tester.pumpWidget(buildSubject(_PushRecorder()));
-        await tester.pumpAndSettle();
+      await tester.pumpWidget(buildSubject(_PushRecorder()));
+      await tester.pumpAndSettle();
 
-        expect(find.text('Unsafe'), findsWidgets);
-        expect(
-          find.textContaining('consult a medical professional'),
-          findsOneWidget,
-        );
-        // No safe banner.
-        expect(
-          find.textContaining("You've already introduced this allergen!"),
-          findsNothing,
-        );
-      },
-    );
+      expect(find.text('Unsafe'), findsWidgets);
+      expect(
+        find.textContaining('consult a medical professional'),
+        findsOneWidget,
+      );
+      // No safe banner.
+      expect(
+        find.textContaining("You've already introduced this allergen!"),
+        findsNothing,
+      );
+    });
 
     testWidgets(
       'status=inProgress → 3-segment bar filled count == clean log count',
       (tester) async {
-        stubLogs(
-          [_makeLog(id: 'l1'), _makeLog(id: 'l2')],
-          AllergenStatus.inProgress,
-        );
+        stubLogs([
+          _makeLog(id: 'l1'),
+          _makeLog(id: 'l2'),
+        ], AllergenStatus.inProgress);
 
         await tester.pumpWidget(buildSubject(_PushRecorder()));
         await tester.pumpAndSettle();
@@ -196,36 +182,31 @@ void main() {
         // The DetailSegmentBar widget renders; visual fill is derived from
         // clean count internally — assertion verifies the widget mounts.
         expect(find.byType(DetailSegmentBar), findsOneWidget);
-        // Banner copy: the inProgress variant copy.
-        expect(
-          find.text('Introduce the Next Allergen Tomorrow'),
-          findsOneWidget,
-        );
+        // Banner copy: the inProgress variant — give the SAME allergen again
+        // (NIB-156, per-allergen advancement).
+        expect(find.text('Give Peanut again tomorrow'), findsOneWidget);
       },
     );
 
-    testWidgets(
-      'no logs → status=notStarted: contextual banner is hidden + '
-      '"No logs yet" empty hint shown',
-      (tester) async {
-        stubLogs(const [], AllergenStatus.notStarted);
+    testWidgets('no logs → status=notStarted: contextual banner is hidden + '
+        '"No logs yet" empty hint shown', (tester) async {
+      stubLogs(const [], AllergenStatus.notStarted);
 
-        await tester.pumpWidget(buildSubject(_PushRecorder()));
-        await tester.pumpAndSettle();
+      await tester.pumpWidget(buildSubject(_PushRecorder()));
+      await tester.pumpAndSettle();
 
-        // The banner renders SizedBox.shrink when notStarted.
-        expect(find.byType(DetailContextualBanner), findsOneWidget);
-        expect(
-          find.textContaining("You've already introduced this allergen!"),
-          findsNothing,
-        );
-        expect(find.text('Not started'), findsOneWidget);
-        expect(
-          find.text('No logs yet. Tap + to log the first introduction.'),
-          findsOneWidget,
-        );
-      },
-    );
+      // The banner renders SizedBox.shrink when notStarted.
+      expect(find.byType(DetailContextualBanner), findsOneWidget);
+      expect(
+        find.textContaining("You've already introduced this allergen!"),
+        findsNothing,
+      );
+      expect(find.text('Not started'), findsOneWidget);
+      expect(
+        find.text('No logs yet. Tap + to log the first introduction.'),
+        findsOneWidget,
+      );
+    });
 
     testWidgets(
       '+ button tap navigates to allergen-log-create with the allergen key',
