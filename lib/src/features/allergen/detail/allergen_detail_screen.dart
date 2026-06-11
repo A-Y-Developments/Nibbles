@@ -48,9 +48,9 @@ class AllergenDetailScreen extends ConsumerWidget {
                 Text(
                   err is AppException ? err.message : 'Something went wrong.',
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: AppColors.fgMuted,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyLarge?.copyWith(color: AppColors.fgMuted),
                 ),
                 const SizedBox(height: AppSizes.lg),
                 FilledButton(
@@ -129,7 +129,10 @@ class _AllergenDetailView extends ConsumerWidget {
           DetailSegmentBar(cleanCount: _cleanCount, status: state.status),
 
           const SizedBox(height: AppSizes.lg),
-          DetailContextualBanner(status: state.status),
+          DetailContextualBanner(
+            status: state.status,
+            allergenName: state.allergen.name,
+          ),
 
           const SizedBox(height: AppSizes.lg),
           ReactionLogHeader(onAddPressed: () => _onAddPressed(context, ref)),
@@ -171,9 +174,9 @@ class _EmptyLogsHint extends StatelessWidget {
       child: Text(
         'No logs yet. Tap + to log the first introduction.',
         textAlign: TextAlign.center,
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppColors.fgFaint,
-            ),
+        style: Theme.of(
+          context,
+        ).textTheme.bodySmall?.copyWith(color: AppColors.fgFaint),
       ),
     );
   }
