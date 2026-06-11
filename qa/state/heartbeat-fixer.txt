@@ -1,1 +1,1 @@
-2026-06-11T22:08:06Z fixer run: NIB-157 reaction-log Notes hint now follows Any Reaction toggle (ON -> 'Describe the reaction...'). PR #388, sim-verified swap, tests green.
+2026-06-11T22:44:21Z fixer run: NIB-158 filled qa/figma-map.yaml — fileKey ASB9HZLodbzJCo5bjkqjy6 + node ids from .figma-audit (all 11 screens + added allergen_detail/reaction_log/paywall). Frames verified via Figma MCP renders (corrected 2 mislabeled). PR #389. Data-only, no sim.
