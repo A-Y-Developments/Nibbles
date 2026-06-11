@@ -98,8 +98,14 @@ class AppPillButton extends StatelessWidget {
       ],
     );
 
+    // NIB-153 — container + button so the pill stays its own accessibility
+    // element; without it iOS merges the pill into surrounding row text and
+    // identifier-targeted taps resolve to the row center, missing the button.
     return Semantics(
       identifier: identifier,
+      container: true,
+      button: true,
+      enabled: !_disabled,
       child: Material(
         color: _background(variant),
         shape: StadiumBorder(

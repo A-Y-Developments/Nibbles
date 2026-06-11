@@ -72,7 +72,7 @@ class StartIntroduceCard extends StatelessWidget {
           const SizedBox(width: AppSizes.sm),
           AppPillButton(
             label: 'Start Introduce',
-            identifier: 'allergen_start_introduce_button',
+            identifier: 'allergen_start_introduce_button_${allergen.key}',
             onPressed: onStartIntroduce,
             variant: AppPillButtonVariant.ghost,
             size: AppPillButtonSize.small,
