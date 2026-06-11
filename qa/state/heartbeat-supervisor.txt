@@ -1,1 +1,1 @@
-2026-06-11T16:19:09Z supervisor run: all 4 loops healthy; cleaned merged coverage worktree+branch (PR #357); no stale locks; digest already published today
+2026-06-11T17:19:19Z supervisor run: all 4 loops healthy (explorer 17:04Z, fixer 17:15Z, gate 17:09Z, coverage 15:42Z); no stale locks; NIB-150+153 worktrees already clean; NIB-154 PR #375 open; pre-06:00 local, no reseed/digest
