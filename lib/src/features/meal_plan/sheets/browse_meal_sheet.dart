@@ -47,6 +47,10 @@ Future<List<Recipe>?> showBrowseMealSheet(
   return showModalBottomSheet<List<Recipe>>(
     context: context,
     isScrollControlled: true,
+    // NIB-161: default useSafeArea:false wraps the sheet in
+    // MediaQuery.removePadding(removeTop), zeroing padding.top, so the header
+    // rendered under the status bar / Dynamic Island.
+    useSafeArea: true,
     backgroundColor: AppColors.surface,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(
@@ -301,7 +305,6 @@ class _BrowseMealSheetState extends ConsumerState<_BrowseMealSheet> {
           constraints: BoxConstraints(maxHeight: maxHeight),
           child: Padding(
             padding: EdgeInsets.only(
-              top: mediaQuery.padding.top,
               bottom: mediaQuery.viewInsets.bottom,
             ),
             child: Column(
