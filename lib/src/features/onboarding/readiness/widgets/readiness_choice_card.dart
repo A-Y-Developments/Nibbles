@@ -17,8 +17,12 @@ class ReadinessChoiceCard extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
+    required this.identifier,
     super.key,
   });
+
+  /// Stable semantics identifier for UI automation.
+  final String identifier;
 
   /// CTA label.
   final String label;
@@ -37,10 +41,14 @@ class ReadinessChoiceCard extends StatelessWidget {
     final borderWidth = selected ? 2.5 : 2.0;
     final surface = selected ? AppColors.butterSoft : AppColors.cream;
 
+    // NIB-171 — excludeSemantics so the child Text doesn't surface as a second
+    // node (the card was read twice, "Yes! | Yes!"); identifier for automation.
     return Semantics(
+      identifier: identifier,
       button: true,
       selected: selected,
       label: label,
+      excludeSemantics: true,
       child: AspectRatio(
         aspectRatio: 1,
         child: Material(

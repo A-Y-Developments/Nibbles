@@ -140,6 +140,7 @@ class _OnboardingConsentScreenState
                           for (var i = 0; i < _checks.length; i++) ...[
                             _ConsentCheckboxRow(
                               key: Key('onboarding_consent_checkbox_$i'),
+                              identifier: 'onboarding_consent_checkbox_$i',
                               label: _labelFor(i),
                               value: _checks[i],
                               onChanged: (v) => _toggle(i, value: v),
@@ -219,17 +220,20 @@ class _ConsentCheckboxRow extends StatelessWidget {
     required this.label,
     required this.value,
     required this.onChanged,
+    required this.identifier,
     super.key,
   });
 
   final String label;
   final bool value;
   final ValueChanged<bool> onChanged;
+  final String identifier;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     return Semantics(
+      identifier: identifier,
       container: true,
       checked: value,
       onTap: () => onChanged(!value),

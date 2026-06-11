@@ -127,6 +127,7 @@ class _OnboardingNameScreenState extends ConsumerState<OnboardingNameScreen> {
               const SizedBox(height: AppSizes.xl),
               AppTextField(
                 key: const Key('onboarding_first_name_field'),
+                identifier: 'onboarding_first_name_field',
                 label: 'First Name',
                 hintText: "Baby's First Name",
                 controller: _firstNameController,
@@ -139,6 +140,7 @@ class _OnboardingNameScreenState extends ConsumerState<OnboardingNameScreen> {
               const SizedBox(height: AppSizes.md),
               AppTextField(
                 key: const Key('onboarding_last_name_field'),
+                identifier: 'onboarding_last_name_field',
                 label: 'Last Name (Optional)',
                 hintText: "Baby's Last Name",
                 controller: _lastNameController,

@@ -457,41 +457,50 @@ class _DateWheelColumn extends StatelessWidget {
           style: textTheme.labelMedium?.copyWith(color: AppColors.fgFaint),
         ),
         const SizedBox(height: AppSizes.sm),
-        SizedBox(
-          height: height,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Container(
-                width: 70,
-                height: AppSizes.chipHeight,
-                decoration: BoxDecoration(
-                  color: AppColors.lime,
-                  borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+        // NIB-171 — label + identifier + value so VoiceOver announces the
+        // wheel as "<Year/Month/Date>, <value>, adjustable" instead of an
+        // anonymous slider, and golden flows can target it by id.
+        Semantics(
+          identifier: 'onboarding_dob_${header.toLowerCase()}_wheel',
+          label: header,
+          value: itemBuilder(selectedIndex),
+          container: true,
+          child: SizedBox(
+            height: height,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Container(
+                  width: 70,
+                  height: AppSizes.chipHeight,
+                  decoration: BoxDecoration(
+                    color: AppColors.lime,
+                    borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+                  ),
                 ),
-              ),
-              CupertinoPicker(
-                scrollController: controller,
-                itemExtent: itemExtent,
-                squeeze: 1.1,
-                backgroundColor: Colors.transparent,
-                selectionOverlay: const SizedBox.shrink(),
-                onSelectedItemChanged: onSelectedItemChanged,
-                children: List<Widget>.generate(itemCount, (i) {
-                  final isSelected = i == selectedIndex;
-                  return Center(
-                    child: Text(
-                      itemBuilder(i),
-                      style: textTheme.labelMedium?.copyWith(
-                        color: isSelected
-                            ? AppColors.greenDeep
-                            : AppColors.fgFaint,
+                CupertinoPicker(
+                  scrollController: controller,
+                  itemExtent: itemExtent,
+                  squeeze: 1.1,
+                  backgroundColor: Colors.transparent,
+                  selectionOverlay: const SizedBox.shrink(),
+                  onSelectedItemChanged: onSelectedItemChanged,
+                  children: List<Widget>.generate(itemCount, (i) {
+                    final isSelected = i == selectedIndex;
+                    return Center(
+                      child: Text(
+                        itemBuilder(i),
+                        style: textTheme.labelMedium?.copyWith(
+                          color: isSelected
+                              ? AppColors.greenDeep
+                              : AppColors.fgFaint,
+                        ),
                       ),
-                    ),
-                  );
-                }),
-              ),
-            ],
+                    );
+                  }),
+                ),
+              ],
+            ),
           ),
         ),
       ],
