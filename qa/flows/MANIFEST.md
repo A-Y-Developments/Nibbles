@@ -2,6 +2,8 @@
 
 Bootstrap order for the explorer. Status: `verified` (replayable via axe batch) | `unverified` (needs authoring) | `blocked` (waiting on a fix).
 
+**Bootstrap complete 2026-06-12 — all 8 flows verified.** Sweep-wide notes: `axe type` drops characters intermittently (~1 in 3 batches with typing) — after any flow that types, verify the typed field/end state and retry once via select-all (`key-combo --modifiers 227 --key 4`) + retype. AX-tree lookups (`tap --id`) right after a screen transition inside batch hit stale snapshots — prefer coordinates there; ids are reliable on settled screens. `reaction_log_any_reaction_toggle` (NIB-154) and per-allergen `allergen_start_introduce_button_<key>` (NIB-153) ids now exist if flows are ever rewritten id-first.
+
 | Flow | File | Status | Note |
 |---|---|---|---|
 | login | login.steps | verified | identifiers verified 2026-06-10. Since NIB-144 the flow ends on the PAYWALL, not home (tap Try for $0 at 201,732 to proceed — stub entitlement, resets every cold launch). Known flake: axe type drops characters intermittently (email truncated to `test@nib` on 2026-06-11) — verify the email field value after batch and retry once. |
@@ -11,4 +13,4 @@ Bootstrap order for the explorer. Status: `verified` (replayable via axe batch) 
 | meal-plan | meal_plan.steps | verified | replay-verified 2026-06-12 (2x deterministic). Preconditions: reseed.sh, logged-in test account, cold relaunch (starts at paywall, exits via dev-skip coordinate 201,792). Creates a default-range plan, picks the first recommendation card, maps it to the default day, completes mapping. End state shows day names that SHIFT WITH THE DATE and currently reflects the NIB-159 Monday-snap bug — visual diff structurally, not pixel-exact; refresh baseline when NIB-159 merges. End baseline: baselines/meal_plan__end.png. |
 | shopping-list | shopping_list.steps | unverified | |
 | recipe-library | recipe_library.steps | unverified | |
-| profile-edit | profile_edit.steps | unverified | |
+| profile-edit | profile_edit.steps | verified | replay-verified 2026-06-12. Preconditions: logged-in test account, cold relaunch (paywall -> dev-skip 201,792). Idempotent by design: select-all (key-combo works in batch) + retype "Testy" + Save — exercises the server write without drifting the baby name other baselines depend on. Type-flake risk applies; end state must show "Testy" on the profile. End baseline: baselines/profile_edit__end.png. |

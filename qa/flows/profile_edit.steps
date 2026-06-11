@@ -1,0 +1,15 @@
+sleep 8
+tap -x 201 -y 792
+sleep 5
+tap --id home_profile_avatar
+sleep 3
+tap -x 201 -y 390
+sleep 3
+tap -x 201 -y 301
+sleep 1
+key-combo --modifiers 227 --key 4
+sleep 1
+type 'Testy'
+sleep 1
+tap -x 201 -y 583
+sleep 4

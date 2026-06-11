@@ -1,6 +1,7 @@
+audited 2026-06-12 (run 5): profile-edit (PR-01 + PR-02, save path) + NIB-154 verification
 audited 2026-06-12 (run 4): recipe-library (grid, search, detail) + meal-plan flow en route
 audited 2026-06-12 (run 3): shopping-list (add, check-off, bought, delete, more-options) + allergen-complete en route
 audited 2026-06-11 (run 2): meal-plan (empty state, browse sheet, mapping, plan view) + onboarding en route
 audited 2026-06-11 (run 1): allergen (tracker, detail, reaction-log, paywall en route)
-> next: profile-edit
-then: home
+> next: home
+then: cycle restarts (allergen)
