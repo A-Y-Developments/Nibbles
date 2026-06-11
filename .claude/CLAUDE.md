@@ -70,6 +70,10 @@ Canonical sim: **iPhone 17 / iOS 26.0** — the only sim with `com.aydev.nibbles
 
 ---
 
+## QA Pipeline (autonomous loops)
+
+Five loops in separate tabs coordinate via Linear + GitHub — see `qa/README.md` for contracts (kill switch `qa/PAUSED`, heartbeats, WIP cap, sim ownership QA-Explorer/QA-Fixer, ticket state machine). Skills: `/qa-explore`, `/qa-fix`, `/qa-gate`, `/qa-coverage`, `/qa-supervise`. PRs labeled `human-touch` are never auto-merged. The fixer is authorized to use the Workflow tool for large tickets.
+
 ## Agent Roles
 | Agent | Domain |
 |---|---|
@@ -108,6 +112,6 @@ Scope = feature name: `auth` · `allergen` · `meal-plan` · `recipe` · `shoppi
 - Never throw raw exceptions from async ops — always wrap in `Result<T>`
 - Never use `AllergenStatus.completed` — use `AllergenStatus.safe`
 - Never add offline write queueing (out of scope for MVP 1)
-- No CI/CD setup (out of scope for MVP 1)
+- CI exists (`.github/workflows/ci.yml`: analyze + test on every PR) — green CI is required before any merge
 - No staging environment (dev + prod only)
 - Zero linting warnings merged to main

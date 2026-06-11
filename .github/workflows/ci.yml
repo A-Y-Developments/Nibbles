@@ -1,0 +1,27 @@
+name: ci
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.38.8
+          cache: true
+      - run: |
+          touch .env.dev .env.prod
+      - run: flutter pub get
+      - run: flutter analyze --fatal-infos
+      - run: flutter test

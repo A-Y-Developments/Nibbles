@@ -1,0 +1,9 @@
+tap --id login_email_field
+sleep 1
+type '${TEST_ACCOUNT_EMAIL}'
+tap --id login_password_field
+sleep 1
+type '${TEST_ACCOUNT_PASSWORD}'
+sleep 1
+tap --id login_submit_button
+sleep 8
