@@ -1,1 +1,1 @@
-2026-06-11T16:01:40Z fixer run: skipped, WIP cap (2 open auto-qa PRs: #356, #357)
+2026-06-11T16:42:01Z fixer run: NIB-153 fixed (per-allergen ids + pill semantics unmerge), PR #366 open, sim-verified
