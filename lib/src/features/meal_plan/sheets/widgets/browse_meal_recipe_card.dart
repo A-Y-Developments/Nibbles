@@ -31,68 +31,81 @@ class BrowseMealRecipeCard extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final borderColor = selected ? AppColors.primary : AppColors.borderSoft;
 
-    return Opacity(
-      opacity: unsafe ? 0.5 : 1,
-      child: GestureDetector(
-        onTap: unsafe ? null : onTap,
-        child: Container(
-          width: _cardWidth,
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-            border: Border.all(color: borderColor, width: selected ? 2 : 1),
-            boxShadow: AppSizes.shadowCard,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Stack(
-                children: [
-                  ClipRRect(
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(AppSizes.radiusMd),
-                      topRight: Radius.circular(AppSizes.radiusMd),
-                    ),
-                    child: _Thumbnail(url: recipe.thumbnailUrl),
-                  ),
-                  if (unsafe)
-                    Positioned(
-                      top: AppSizes.xs,
-                      right: AppSizes.xs,
-                      child: _UnsafeBadge(),
-                    )
-                  else
-                    Positioned(
-                      top: AppSizes.xs,
-                      right: AppSizes.xs,
-                      child: _SelectIndicator(selected: selected),
-                    ),
-                ],
-              ),
-              Padding(
-                padding: const EdgeInsets.all(AppSizes.sm),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+    // NIB-165 — expose the whole card as a single selectable node so VoiceOver
+    // users can find/pick a recipe and golden flows can target it by id.
+    return Semantics(
+      identifier: 'browse_meal_recipe_card_${recipe.id}',
+      button: true,
+      selected: selected,
+      enabled: !unsafe,
+      label: unsafe
+          ? '${recipe.title}, ${recipe.ageRange}, flagged allergen'
+          : '${recipe.title}, ${recipe.ageRange}',
+      onTap: unsafe ? null : onTap,
+      excludeSemantics: true,
+      child: Opacity(
+        opacity: unsafe ? 0.5 : 1,
+        child: GestureDetector(
+          onTap: unsafe ? null : onTap,
+          child: Container(
+            width: _cardWidth,
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+              border: Border.all(color: borderColor, width: selected ? 2 : 1),
+              boxShadow: AppSizes.shadowCard,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Stack(
                   children: [
-                    Text(
-                      recipe.title,
-                      style: textTheme.labelMedium,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: AppSizes.xs),
-                    Text(
-                      recipe.ageRange,
-                      style: textTheme.bodySmall?.copyWith(
-                        color: AppColors.fgMuted,
+                    ClipRRect(
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(AppSizes.radiusMd),
+                        topRight: Radius.circular(AppSizes.radiusMd),
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      child: _Thumbnail(url: recipe.thumbnailUrl),
                     ),
+                    if (unsafe)
+                      Positioned(
+                        top: AppSizes.xs,
+                        right: AppSizes.xs,
+                        child: _UnsafeBadge(),
+                      )
+                    else
+                      Positioned(
+                        top: AppSizes.xs,
+                        right: AppSizes.xs,
+                        child: _SelectIndicator(selected: selected),
+                      ),
                   ],
                 ),
-              ),
-            ],
+                Padding(
+                  padding: const EdgeInsets.all(AppSizes.sm),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        recipe.title,
+                        style: textTheme.labelMedium,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: AppSizes.xs),
+                      Text(
+                        recipe.ageRange,
+                        style: textTheme.bodySmall?.copyWith(
+                          color: AppColors.fgMuted,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
