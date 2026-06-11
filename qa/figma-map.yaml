@@ -4,28 +4,42 @@
 # Format:
 #   <screen-key>:
 #     route: <app route>
-#     figma_node: <fileKey>:<nodeId>
+#     figma_node: <fileKey>:<nodeId>   # nodeId in dash form (split on first ':')
+#
+# Locked redesign file: ASB9HZLodbzJCo5bjkqjy6 ("Baby's Nutrition App").
+# Node ids sourced from .figma-audit/<section>/screens.json and verified by
+# rendering each frame (NIB-158). For multi-state screens the default/primary
+# frame is mapped; adjust if the explorer wants a specific state.
 login:
   route: /auth/login
-  figma_node: ""
+  figma_node: "ASB9HZLodbzJCo5bjkqjy6:971-10029"
 register:
   route: /auth/register
-  figma_node: ""
+  figma_node: "ASB9HZLodbzJCo5bjkqjy6:1023-6996"
 home:
   route: /home
-  figma_node: ""
+  figma_node: "ASB9HZLodbzJCo5bjkqjy6:1242-10567"
 allergen_tracker:
   route: /home/allergen/tracker
-  figma_node: ""
+  figma_node: "ASB9HZLodbzJCo5bjkqjy6:1116-18287"
+allergen_detail:
+  route: /home/allergen/:allergenKey
+  figma_node: "ASB9HZLodbzJCo5bjkqjy6:1116-19762"
+reaction_log:
+  route: /home/allergen/:allergenKey/log
+  figma_node: "ASB9HZLodbzJCo5bjkqjy6:1525-28322"
 meal_plan:
   route: /home/meal
-  figma_node: ""
+  figma_node: "ASB9HZLodbzJCo5bjkqjy6:971-8175"
 shopping_list:
   route: /home/shopping-list
-  figma_node: ""
+  figma_node: "ASB9HZLodbzJCo5bjkqjy6:971-9851"
 recipe_library:
   route: /home/recipe
-  figma_node: ""
+  figma_node: "ASB9HZLodbzJCo5bjkqjy6:971-8644"
+paywall:
+  route: /subscription/paywall
+  figma_node: "ASB9HZLodbzJCo5bjkqjy6:1216-11727"
 profile:
   route: /home/profile
-  figma_node: ""
+  figma_node: "ASB9HZLodbzJCo5bjkqjy6:1189-10278"
