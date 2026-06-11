@@ -1,1 +1,1 @@
-2026-06-11T15:17:55Z gate run: no open auto-qa PRs, nothing to review
+2026-06-11T15:37:43Z gate run: PR #356 (NIB-150) skipped — GitHub CI in progress; no other auto-qa PRs
