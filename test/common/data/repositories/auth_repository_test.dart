@@ -110,8 +110,7 @@ void main() {
   group('signInWithGoogle', () {
     test('returns Success(true) and calls Supabase on happy path', () async {
       final sut = buildSut(
-        googleAuthenticate: () async =>
-            _FakeGoogleAccount('id-token-x'),
+        googleAuthenticate: () async => _FakeGoogleAccount('id-token-x'),
         googleAuthorize: (_) async => 'access-token-y',
       );
       when(
@@ -121,9 +120,7 @@ void main() {
           accessToken: any(named: 'accessToken'),
           nonce: any(named: 'nonce'),
         ),
-      ).thenAnswer(
-        (_) async => AuthResponse(),
-      );
+      ).thenAnswer((_) async => AuthResponse());
 
       final result = await sut.signInWithGoogle();
 
@@ -192,8 +189,7 @@ void main() {
 
     test('maps Supabase AuthException to Failure(ServerException)', () async {
       final sut = buildSut(
-        googleAuthenticate: () async =>
-            _FakeGoogleAccount('id-token-x'),
+        googleAuthenticate: () async => _FakeGoogleAccount('id-token-x'),
         googleAuthorize: (_) async => 'access-token-y',
       );
       when(
@@ -207,10 +203,7 @@ void main() {
       final result = await sut.signInWithGoogle();
 
       expect(result, isA<Failure<bool>>());
-      expect(
-        (result as Failure<bool>).error.message,
-        'provider not enabled',
-      );
+      expect((result as Failure<bool>).error.message, 'provider not enabled');
     });
   });
 
@@ -280,22 +273,53 @@ void main() {
       );
     });
 
-    test('returns Failure on Apple authorization failure', () async {
-      final sut = buildSut(
-        appleCredential: (_) async =>
-            throw const SignInWithAppleAuthorizationException(
-              code: AuthorizationErrorCode.failed,
-              message: 'authorization failed',
-            ),
-        generateRawNonce: () => 'raw-nonce-fixed',
-      );
+    test(
+      'returns Success(false) on unknown code (closed Apple-ID alert)',
+      () async {
+        // NIB-164 — closing the system "Sign in to your Apple Account" alert on
+        // a device with no Apple ID surfaces as `unknown`; treat as a cancel.
+        final sut = buildSut(
+          appleCredential: (_) async =>
+              throw const SignInWithAppleAuthorizationException(
+                code: AuthorizationErrorCode.unknown,
+                message:
+                    'The operation couldn’t be completed. '
+                    '(com.apple.AuthenticationServices.Authorization'
+                    'Error error 1000.)',
+              ),
+          generateRawNonce: () => 'raw-nonce-fixed',
+        );
 
-      final result = await sut.signInWithApple();
+        final result = await sut.signInWithApple();
 
-      expect(result, isA<Failure<bool>>());
-      expect((result as Failure<bool>).error, isA<ServerException>());
-      expect(result.error.message, 'authorization failed');
-    });
+        expect(result, isA<Success<bool>>());
+        expect((result as Success<bool>).data, isFalse);
+      },
+    );
+
+    test(
+      'returns Failure with friendly copy on Apple authorization failure',
+      () async {
+        // NIB-164 — never surface the raw NSError string.
+        final sut = buildSut(
+          appleCredential: (_) async =>
+              throw const SignInWithAppleAuthorizationException(
+                code: AuthorizationErrorCode.failed,
+                message: 'authorization failed',
+              ),
+          generateRawNonce: () => 'raw-nonce-fixed',
+        );
+
+        final result = await sut.signInWithApple();
+
+        expect(result, isA<Failure<bool>>());
+        expect((result as Failure<bool>).error, isA<ServerException>());
+        expect(
+          result.error.message,
+          "Couldn't sign in with Apple. Please try again.",
+        );
+      },
+    );
 
     test('returns Failure when Apple identityToken is null', () async {
       final sut = buildSut(

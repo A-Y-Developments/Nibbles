@@ -196,10 +196,17 @@ class AuthRepositoryImpl implements AuthRepository {
       try {
         credential = await _appleCredential(hashedNonce);
       } on SignInWithAppleAuthorizationException catch (e) {
-        if (e.code == AuthorizationErrorCode.canceled) {
+        // NIB-164 — `canceled` = user dismissed the native sheet; `unknown` =
+        // the system "Sign in to your Apple Account" alert was closed (no Apple
+        // ID on the device). Both are user cancellations → no error UI.
+        if (e.code == AuthorizationErrorCode.canceled ||
+            e.code == AuthorizationErrorCode.unknown) {
           return const Result.success(false);
         }
-        return Result.failure(ServerException(e.message));
+        // Genuine failure — friendly copy, never the raw NSError string.
+        return const Result.failure(
+          ServerException("Couldn't sign in with Apple. Please try again."),
+        );
       }
 
       final idToken = credential.identityToken;
@@ -306,9 +313,8 @@ String? _readServerClientId() {
 /// The serverClientId is read from `.env.<flavor>` if present; otherwise the
 /// native side (iOS GIDClientID from Info.plist, Android Google Services)
 /// supplies the necessary configuration.
-Future<void> _defaultGoogleInitialize() => GoogleSignIn.instance.initialize(
-  serverClientId: _readServerClientId(),
-);
+Future<void> _defaultGoogleInitialize() =>
+    GoogleSignIn.instance.initialize(serverClientId: _readServerClientId());
 
 Future<GoogleSignInAccount> _defaultGoogleAuthenticate() =>
     GoogleSignIn.instance.authenticate();
@@ -318,9 +324,10 @@ Future<String?> _defaultGoogleAuthorize(GoogleSignInAccount account) async {
   // has no `at_hash` claim, so we use the non-prompting variant: if the user
   // hasn't pre-authorized email/profile scopes, we skip the access token
   // rather than block the sign-in with a second consent prompt.
-  final authz = await account.authorizationClient.authorizationForScopes(
-    const ['email', 'profile'],
-  );
+  final authz = await account.authorizationClient.authorizationForScopes(const [
+    'email',
+    'profile',
+  ]);
   return authz?.accessToken;
 }
 
