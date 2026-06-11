@@ -5,10 +5,23 @@ import 'package:nibbles/src/features/meal_plan/widgets/inline_calendar.dart';
 import 'package:nibbles/src/features/meal_plan/widgets/meal_plan_empty_state.dart';
 import 'package:nibbles/src/features/meal_plan/widgets/meal_plan_header.dart';
 
-String _formatDdMmYyyy(DateTime d) {
-  final dd = d.day.toString().padLeft(2, '0');
-  final mm = d.month.toString().padLeft(2, '0');
-  return '$dd/$mm/${d.year}';
+const _monthAbbr = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
+
+String _formatDisplayDate(DateTime d) {
+  return '${_monthAbbr[d.month - 1]} ${d.day}, ${d.year}';
 }
 
 Future<void> _pump(
@@ -49,7 +62,7 @@ void main() {
       // Form labels + verbatim caption under the flower.
       expect(find.text('Start Date'), findsOneWidget);
       expect(find.text('End Date'), findsOneWidget);
-      expect(find.text("Let's create meal plan for Oliver!"), findsOneWidget);
+      expect(find.text("Let's create a meal plan for Oliver!"), findsOneWidget);
     });
 
     testWidgets(
@@ -72,10 +85,10 @@ void main() {
 
       expect(find.byType(InlineCalendar), findsNothing);
 
-      // The field is tappable via its dd/MM/yyyy value text inside the
+      // The field is tappable via its `MMM d, yyyy` value text inside the
       // GestureDetector. Use today's value to find the Start Date row.
       final today = DateTime.now();
-      final startText = _formatDdMmYyyy(
+      final startText = _formatDisplayDate(
         DateTime(today.year, today.month, today.day),
       );
       await tester.tap(find.text(startText).first);
@@ -92,15 +105,11 @@ void main() {
       'picking a Start Date keeps CTA enabled (form auto-bumps end)',
       (tester) async {
         DateTimeRange? captured;
-        await _pump(
-          tester,
-          babyName: 'Oliver',
-          onCreate: (r) => captured = r,
-        );
+        await _pump(tester, babyName: 'Oliver', onCreate: (r) => captured = r);
 
         final cta = find.widgetWithText(AppPillButton, 'Create meal plan');
         final today = DateTime.now();
-        final startText = _formatDdMmYyyy(
+        final startText = _formatDisplayDate(
           DateTime(today.year, today.month, today.day),
         );
 
@@ -130,11 +139,7 @@ void main() {
       'tapping CTA emits the picked DateTimeRange via onCreateMealPlan',
       (tester) async {
         DateTimeRange? captured;
-        await _pump(
-          tester,
-          babyName: 'Oliver',
-          onCreate: (r) => captured = r,
-        );
+        await _pump(tester, babyName: 'Oliver', onCreate: (r) => captured = r);
 
         final cta = find.widgetWithText(AppPillButton, 'Create meal plan');
         await tester.tap(cta);
