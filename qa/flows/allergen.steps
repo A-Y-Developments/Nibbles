@@ -1,0 +1,29 @@
+sleep 8
+tap -x 201 -y 732
+sleep 5
+tap --id home_allergen_tracker_card
+sleep 3
+tap -x 291 -y 334
+sleep 2
+tap -x 322 -y 707
+sleep 3
+tap -x 201 -y 798
+sleep 8
+tap -x 201 -y 681
+sleep 3
+tap -x 358 -y 435
+sleep 3
+tap -x 201 -y 798
+sleep 4
+tap -x 358 -y 435
+sleep 3
+tap -x 201 -y 798
+sleep 4
+tap -x 28 -y 90
+sleep 3
+tap -x 322 -y 807
+sleep 3
+tap -x 359 -y 238
+sleep 2
+tap -x 201 -y 798
+sleep 4
