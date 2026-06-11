@@ -1,1 +1,1 @@
-2026-06-11T21:19:20Z fixer run: NIB-171 onboarding a11y — name/dob-wheel/consent identifiers + readiness choice-card single-label (excludeSemantics, completes NIB-165 inst3 readiness gap). login signup = no-code (scroll behaviour). PR #386, 737 tests green, sim-verified full onboarding walk.
+2026-06-11T21:38:17Z fixer run: NIB-156 allergen-detail in-progress banner -> 'Give <Allergen> again tomorrow' (was stale 'Introduce the Next Allergen'). PR #387, sim-verified on Egg 1/3, tests green.
