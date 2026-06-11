@@ -1,8 +1,9 @@
+audited 2026-06-12 (run 8): meal-plan cycle-2 (Add to shop list cross-feature path verified working; NIB-159 still reproduces) + login flake root-caused
 audited 2026-06-12 (run 7): allergen cycle-2 (tracker See All, NIB-165 instance 9) + recipe-library flow verified (bootstrap done 8/8)
-audited 2026-06-12 (run 6): home (data truthfulness vs seed+plan, guidance tips, header) + shopping-list flow + NIB-161 verification
-audited 2026-06-12 (run 5): profile-edit (PR-01 + PR-02, save path) + NIB-154 verification
-audited 2026-06-12 (run 4): recipe-library (grid, search, detail) + meal-plan flow en route
-audited 2026-06-12 (run 3): shopping-list (add, check-off, bought, delete, more-options) + allergen-complete en route
-audited 2026-06-11 (run 2): meal-plan (empty state, browse sheet, mapping, plan view) + onboarding en route
-audited 2026-06-11 (run 1): allergen (tracker, detail, reaction-log, paywall en route)
-> next: meal-plan (cycle 2)
+audited 2026-06-12 (run 6): home (data truthfulness, guidance tips) + shopping-list flow + NIB-161 verification
+audited 2026-06-12 (run 5): profile-edit + NIB-154 verification
+audited 2026-06-12 (run 4): recipe-library + meal-plan flow
+audited 2026-06-12 (run 3): shopping-list + allergen-complete flow
+audited 2026-06-11 (run 2): meal-plan + onboarding flow
+audited 2026-06-11 (run 1): allergen + paywall
+> next: shopping-list (cycle 2)
