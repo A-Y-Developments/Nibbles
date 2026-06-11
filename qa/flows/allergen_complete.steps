@@ -1,0 +1,17 @@
+sleep 2
+tap -x 201 -y 792
+sleep 5
+tap --id home_allergen_tracker_card
+sleep 3
+swipe --start-x 201 --start-y 700 --end-x 201 --end-y 300
+sleep 2
+swipe --start-x 201 --start-y 700 --end-x 201 --end-y 400
+sleep 3
+tap -x 201 -y 645
+sleep 3
+tap -x 358 -y 435
+sleep 2
+tap -x 201 -y 798
+sleep 6
+tap -x 201 -y 540
+sleep 3

@@ -1,7 +1,6 @@
+audited 2026-06-12 (run 3): shopping-list (add, check-off, bought, delete, more-options) + allergen-complete en route
 audited 2026-06-11 (run 2): meal-plan (empty state, browse sheet, mapping, plan view) + onboarding en route
 audited 2026-06-11 (run 1): allergen (tracker, detail, reaction-log, paywall en route)
-> next: shopping-list
-then: recipe-library
+> next: recipe-library
 then: profile-edit
 then: home
-then: allergen-complete
