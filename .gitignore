@@ -76,3 +76,4 @@ supabase/.branches/
 .figma-audit/**
 !.figma-audit/AUDIT.md
 qa/state/lock-*
+qa/state/peer_map.txt
