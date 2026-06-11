@@ -1,1 +1,1 @@
-2026-06-11T21:09:49Z gate run: merged #385 (NIB-165 a11y pills + recipe cards, instances 3+6; remainder split to NIB-171); NIB-165 -> Done; advisory on PR: pin identifiers with widget tests in NIB-171 pass
+2026-06-11T21:39:32Z gate run: merged #386 (NIB-171 onboarding a11y identifiers + readiness single-label); NIB-171 -> Done; a11y debt from NIB-165/171 fully cleared
