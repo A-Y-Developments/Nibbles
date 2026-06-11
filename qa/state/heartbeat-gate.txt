@@ -1,1 +1,1 @@
-2026-06-11T16:20:58Z gate run: merged #357 (coverage + green-main repair) and #356 (NIB-150 dev paywall skip, rebased + manifest conflict resolved); NIB-150 -> Done; baseline login__paywall.png refreshed
+2026-06-11T16:37:36Z gate run: no open auto-qa PRs, nothing to review
