@@ -1,1 +1,1 @@
-2026-06-11T21:38:17Z fixer run: NIB-156 allergen-detail in-progress banner -> 'Give <Allergen> again tomorrow' (was stale 'Introduce the Next Allergen'). PR #387, sim-verified on Egg 1/3, tests green.
+2026-06-11T22:08:06Z fixer run: NIB-157 reaction-log Notes hint now follows Any Reaction toggle (ON -> 'Describe the reaction...'). PR #388, sim-verified swap, tests green.
