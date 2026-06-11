@@ -7,9 +7,10 @@ description: One fixer run of the QA pipeline. Picks the oldest highest-severity
 
 ## 0. Preflight
 1. `qa/PAUSED` exists → heartbeat, end.
-2. WIP cap: `gh pr list --label auto-qa --state open` — if >= 2, heartbeat, end.
-3. Pick ticket: Linear (via ToolSearch) open issues, label `Agent-QA`, state `Todo`, order `sev:critical` > `sev:major` > `sev:trivial`, oldest first. None → heartbeat, end.
-4. Move ticket to `In Progress`.
+2. **Rework queue first (exempt from the WIP cap):** `gh pr list --label auto-qa --state open --json number,headRefName,comments` — a PR is *awaiting rework* when its newest "Gate rejection" comment is newer than its head commit. Take the OLDEST such PR instead of picking a new ticket: reuse its existing worktree under `.claude/worktrees/` (recreate from the PR branch if missing), apply exactly what the gate comment asks, re-run analyze + tests, re-verify on the QA-Fixer sim if the gate asked for evidence, push to the same branch, comment on the PR summarizing the rework, ensure the ticket is `In Review`. Then heartbeat, end (one rework = one run).
+3. WIP cap: `gh pr list --label auto-qa --state open` — if >= 2, heartbeat, end.
+4. Pick ticket: Linear (via ToolSearch) open issues, label `Agent-QA`, state `Todo`, order `sev:critical` > `sev:major` > `sev:trivial`, oldest first. None → heartbeat, end.
+5. Move ticket to `In Progress`.
 
 ## 1. Fix
 - `git fetch origin main`. Worktree: `git worktree add .claude/worktrees/<ticket> -b fix/<ticket-id> origin/main`.

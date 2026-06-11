@@ -33,6 +33,7 @@ new-claude-tab "/loop 60m /qa-supervise" ~/Projects/nibbles
 - **Sim locks**: `qa/state/lock-<sim>.pid` while driving; clear stale locks (dead PID) before claiming.
 - **Never auto-merge**: PRs labeled `human-touch` (mirrors the Linear `Human Touch` label).
 - **Ticket states**: Explorer files in `Todo` -> Fixer moves to `In Progress` -> PR opened moves to `In Review` -> Gate merge moves to `Done`. Gate rejection moves back to `In Progress` with a comment. Never move tickets backwards otherwise.
+- **Rework queue**: a rejected PR (newest "Gate rejection" comment newer than its head commit) is reworked by the fixer BEFORE it picks any new ticket, and is exempt from the WIP cap — otherwise two rejected PRs deadlock the pipeline (rejected tickets leave `Todo`, and the open PRs themselves fill the cap).
 
 ## Golden flows (`qa/flows/`)
 

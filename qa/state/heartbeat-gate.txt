@@ -1,1 +1,1 @@
-2026-06-11T18:12:16Z gate run: merged #377 (meal_plan_repository coverage); rejected #376 (NIB-161, 1st — UI diff without verifiable screenshots, evidence channel broken by qa/.gitignore); #375 skipped (unchanged since 1st rejection, awaiting fixer)
+2026-06-11T18:39:17Z gate run: 0 merged; #375 + #376 both unchanged since rejection (awaiting fixer rework). Found+fixed pipeline deadlock: fixer never reworked rejected PRs (tickets leave Todo, WIP cap full of rejected PRs) — added rework-queue clause to qa-fix SKILL.md + README
