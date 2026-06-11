@@ -1,0 +1,15 @@
+sleep 8
+tap -x 201 -y 792
+sleep 5
+tap -x 151 -y 800
+sleep 3
+tap -x 201 -y 374
+sleep 5
+tap -x 89 -y 267
+sleep 2
+tap -x 201 -y 718
+sleep 4
+tap -x 201 -y 449
+sleep 3
+tap -x 201 -y 802
+sleep 4
