@@ -1,1 +1,1 @@
-2026-06-11T22:09:39Z gate run: merged #387 (NIB-156 in-progress banner copy, per-allergen advancement); NIB-156 -> Done; doc-nit advisory left on PR (stale verbatim-Figma claim)
+2026-06-11T22:39:01Z gate run: merged #388 (NIB-157 reaction-log notes hint follows toggle, test-pinned); NIB-157 -> Done
