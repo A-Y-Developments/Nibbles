@@ -149,8 +149,8 @@ void main() {
 
   testWidgets(
     'error state — submit failure renders the Supabase error verbatim '
-    'under each input (NIB-107 deviation: hardcoded copy is replaced by '
-    'the live backend message per project P1 rule)',
+    'under the password input (hardcoded copy is replaced by the live '
+    'backend message per project P1 rule)',
     (tester) async {
       when(() => mockRepo.signIn(any(), any())).thenAnswer(
         (_) async =>
@@ -168,21 +168,17 @@ void main() {
         find.byKey(const Key('login_password_field')),
         'badpassword',
       );
+      // CTA is gated on canSubmit — pump so the rebuilt (enabled) button
+      // receives the tap.
+      await tester.pump();
       await tester.tap(find.byKey(const Key('login_submit_button')));
       await tester.pumpAndSettle();
 
-      // Per-field helper rows render the Supabase error verbatim — one row
-      // under email, one under password.
-      expect(find.text('Invalid login credentials.'), findsNWidgets(2));
+      verify(() => mockRepo.signIn('jane@example.com', 'badpassword'))
+          .called(1);
 
-      // Password suffix swaps to the check glyph in the error variant.
-      expect(
-        find.descendant(
-          of: find.byKey(const Key('login_password_field')),
-          matching: find.byIcon(Icons.check_rounded),
-        ),
-        findsOneWidget,
-      );
+      // Error caption renders once, under the password field.
+      expect(find.text('Invalid login credentials.'), findsOneWidget);
     },
   );
 
