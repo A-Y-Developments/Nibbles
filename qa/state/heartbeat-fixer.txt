@@ -1,1 +1,1 @@
-2026-06-11T23:09:39Z fixer run: NIB-164 Apple sign-in cancel no longer shows raw NSError — canceled+unknown -> silent, other codes -> friendly copy. PR #390, sim-verified (close alert -> no error), 43 auth tests green.
+2026-06-11T23:47:27Z NIB-166 PR#392 (In Review) — meal-plan/onboarding copy nits
