@@ -291,7 +291,7 @@ void main() {
       },
     );
 
-    testWidgets('search field uses verbatim "Search recipe" hint',
+    testWidgets('search field uses verbatim "Search recipes" hint',
         (tester) async {
       await openSheet(
         tester,
@@ -299,7 +299,7 @@ void main() {
         flaggedKeys: const {},
       );
 
-      expect(find.text('Search recipe'), findsOneWidget);
+      expect(find.text('Search recipes'), findsOneWidget);
     });
 
     testWidgets(
