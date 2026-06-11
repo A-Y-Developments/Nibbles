@@ -1,1 +1,1 @@
-2026-06-11T18:39:17Z gate run: 0 merged; #375 + #376 both unchanged since rejection (awaiting fixer rework). Found+fixed pipeline deadlock: fixer never reworked rejected PRs (tickets leave Todo, WIP cap full of rejected PRs) — added rework-queue clause to qa-fix SKILL.md + README
+2026-06-11T19:11:14Z gate run: merged #375 (NIB-154 reaction toggle a11y, reworked after rework-queue fix); NIB-154 -> Done; #376 skipped (rework pending, next fixer run)
