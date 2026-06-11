@@ -26,12 +26,15 @@ import 'package:firebase_core_platform_interface/test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/domain/entities/subscription_offering.dart';
 import 'package:nibbles/src/common/services/subscription_service.dart';
+import 'package:nibbles/src/features/subscription/paywall/dev_paywall_skip.dart';
 import 'package:nibbles/src/features/subscription/paywall/paywall_sheet.dart';
 import 'package:nibbles/src/features/subscription/paywall/widgets/all_plans_sheet.dart';
+import 'package:nibbles/src/routing/route_enums.dart';
 
 // ---------------------------------------------------------------------------
 // Firebase shim — replicates the home/recipe test pattern. The paywall
@@ -99,9 +102,17 @@ const _kOffering = SubscriptionOffering(
   trialDays: 3,
 );
 
-Widget _buildSut({required SubscriptionService Function() factory}) {
+Widget _buildSut({
+  required SubscriptionService Function() factory,
+  // FlavorConfig is never initialized in widget tests, so the dev-skip
+  // flavor probe (NIB-150) must always be overridden; default to prod.
+  bool devSkipEnabled = false,
+}) {
   return ProviderScope(
-    overrides: [subscriptionServiceProvider.overrideWith(factory)],
+    overrides: [
+      subscriptionServiceProvider.overrideWith(factory),
+      devPaywallSkipEnabledProvider.overrideWithValue(devSkipEnabled),
+    ],
     child: const MaterialApp(home: Scaffold(body: PaywallSheet())),
   );
 }
@@ -331,5 +342,79 @@ void main() {
       find.byKey(const Key('paywall_view_all_plans_snackbar')),
       findsNothing,
     );
+  });
+
+  // -------------------------------------------------------------------------
+  // NIB-150 — dev-flavor-only skip past the entitlement gate.
+  // -------------------------------------------------------------------------
+
+  testWidgets('dev skip link is absent outside the dev flavor', (tester) async {
+    await tester.pumpWidget(
+      _buildSut(
+        factory: () => _FakeSubscriptionService(
+          offeringsResult: const Result.success(_kOffering),
+          purchaseResult: const Result.success(null),
+          restoreResult: const Result.failure(
+            NotFoundException('No active subscription found.'),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.byKey(const Key('paywall_dev_skip_button')), findsNothing);
+    expect(find.text('Maybe later (dev)'), findsNothing);
+  });
+
+  testWidgets('dev skip link sets the skip flag and routes home (dev)', (
+    tester,
+  ) async {
+    final container = ProviderContainer(
+      overrides: [
+        subscriptionServiceProvider.overrideWith(
+          () => _FakeSubscriptionService(
+            offeringsResult: const Result.success(_kOffering),
+            purchaseResult: const Result.success(null),
+            restoreResult: const Result.failure(
+              NotFoundException('No active subscription found.'),
+            ),
+          ),
+        ),
+        devPaywallSkipEnabledProvider.overrideWithValue(true),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    final router = GoRouter(
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (_, __) => const Scaffold(body: PaywallSheet()),
+        ),
+        GoRoute(
+          path: AppRoute.home.path,
+          name: AppRoute.home.name,
+          builder: (_, __) => const Scaffold(body: Text('home-stub')),
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.byKey(const Key('paywall_dev_skip_button')), findsOneWidget);
+    expect(find.text('Maybe later (dev)'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('paywall_dev_skip_button')));
+    await tester.pumpAndSettle();
+
+    expect(container.read(devPaywallSkipProvider), isTrue);
+    expect(find.text('home-stub'), findsOneWidget);
   });
 }
