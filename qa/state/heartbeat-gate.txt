@@ -1,1 +1,1 @@
-2026-06-11T19:11:14Z gate run: merged #375 (NIB-154 reaction toggle a11y, reworked after rework-queue fix); NIB-154 -> Done; #376 skipped (rework pending, next fixer run)
+2026-06-11T19:39:28Z gate run: merged #376 (NIB-161 Browse Meal safe area, rework with committed before/after evidence + gitignore re-scope); NIB-161 -> Done; no baseline covers the sheet, none refreshed
