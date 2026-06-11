@@ -22,6 +22,7 @@ void main() {
     bool readiness = false,
     bool onboarding = false,
     bool subscribed = true,
+    bool devSkip = false,
   }) => resolveAppRedirect(
     location: at,
     hasLaunched: launched,
@@ -30,17 +31,14 @@ void main() {
     readinessDone: readiness,
     onboardingDone: onboarding,
     isSubscribed: subscribed,
+    devPaywallSkipped: devSkip,
   );
 
   group('splash + first launch', () {
     test('splash is always a pass-through', () {
       expect(resolve(at: AppRoute.splash.path), isNull);
       expect(
-        resolve(
-          at: AppRoute.splash.path,
-          launched: false,
-          loggedIn: false,
-        ),
+        resolve(at: AppRoute.splash.path, launched: false, loggedIn: false),
         isNull,
       );
     });
@@ -95,27 +93,21 @@ void main() {
 
   group('just signed in bounce', () {
     test('logged-in user on /auth/login bounces to splash to seed flags', () {
-      expect(
-        resolve(at: AppRoute.login.path),
-        AppRoute.splash.path,
-      );
+      expect(resolve(at: AppRoute.login.path), AppRoute.splash.path);
     });
 
     test('logged-in user on /auth/register bounces to splash', () {
-      expect(
-        resolve(at: AppRoute.register.path),
-        AppRoute.splash.path,
-      );
+      expect(resolve(at: AppRoute.register.path), AppRoute.splash.path);
     });
   });
 
   group('phase A — name + DOB (!babySetupDone)', () {
-    test('logged-in user with no baby_setup_done lands on /onboarding/name', () {
-      expect(
-        resolve(at: AppRoute.home.path),
-        AppRoute.onboardingName.path,
-      );
-    });
+    test(
+      'logged-in user with no baby_setup_done lands on /onboarding/name',
+      () {
+        expect(resolve(at: AppRoute.home.path), AppRoute.onboardingName.path);
+      },
+    );
 
     test('both name and dob are allowed inside phase A — no loop on next', () {
       expect(resolve(at: AppRoute.onboardingName.path), isNull);
@@ -128,11 +120,7 @@ void main() {
         AppRoute.onboardingResult.path,
         AppRoute.onboardingConsent.path,
       ]) {
-        expect(
-          resolve(at: later),
-          AppRoute.onboardingName.path,
-          reason: later,
-        );
+        expect(resolve(at: later), AppRoute.onboardingName.path, reason: later);
       }
     });
   });
@@ -162,11 +150,10 @@ void main() {
     });
   });
 
-  group(
-    'phase C — result + consent (readinessDone && !onboardingDone)',
-    () {
-      test('result and consent are both allowed — no loop on result -> consent',
-          () {
+  group('phase C — result + consent (readinessDone && !onboardingDone)', () {
+    test(
+      'result and consent are both allowed — no loop on result -> consent',
+      () {
         expect(
           resolve(
             at: AppRoute.onboardingResult.path,
@@ -183,91 +170,82 @@ void main() {
           ),
           isNull,
         );
-      });
+      },
+    );
 
-      test(
-        'phase C bounces every other path to consent (the landing screen — '
-        'kill/resume must land on the actionable submit step)',
-        () {
-          for (final other in [
-            AppRoute.home.path,
-            AppRoute.onboardingName.path,
-            AppRoute.onboardingDob.path,
-            AppRoute.onboardingReadiness.path,
-          ]) {
-            expect(
-              resolve(at: other, babySetup: true, readiness: true),
-              AppRoute.onboardingConsent.path,
-              reason: other,
-            );
-          }
-        },
-      );
-    },
-  );
-
-  group(
-    'all done — onboarding_done = true (the reinstall seeded path)',
-    () {
-      test('any onboarding/auth path redirects to /home', () {
-        // Post-NIB-144: paywall is intentionally NOT in gatedPaths because
-        // the M2 guard sends unsubscribed onboarded users TO it. Subscribed
-        // onboarded users on paywall fall through to `null` (covered by the
-        // M2 group below).
-        for (final gated in [
-          AppRoute.onboardingIntro.path,
-          AppRoute.onboardingName.path,
-          AppRoute.onboardingDob.path,
-          AppRoute.onboardingReadiness.path,
-          AppRoute.onboardingResult.path,
+    test('phase C bounces every other path to consent (the landing screen — '
+        'kill/resume must land on the actionable submit step)', () {
+      for (final other in [
+        AppRoute.home.path,
+        AppRoute.onboardingName.path,
+        AppRoute.onboardingDob.path,
+        AppRoute.onboardingReadiness.path,
+      ]) {
+        expect(
+          resolve(at: other, babySetup: true, readiness: true),
           AppRoute.onboardingConsent.path,
-          AppRoute.onboardingBabySetup.path,
-          AppRoute.forgotPassword.path,
-        ]) {
-          expect(
-            resolve(
-              at: gated,
-              babySetup: true,
-              readiness: true,
-              onboarding: true,
-            ),
-            AppRoute.home.path,
-            reason: gated,
-          );
-        }
-      });
+          reason: other,
+        );
+      }
+    });
+  });
 
-      test('home + child tabs pass through', () {
-        for (final p in [
+  group('all done — onboarding_done = true (the reinstall seeded path)', () {
+    test('any onboarding/auth path redirects to /home', () {
+      // Post-NIB-144: paywall is intentionally NOT in gatedPaths because
+      // the M2 guard sends unsubscribed onboarded users TO it. Subscribed
+      // onboarded users on paywall fall through to `null` (covered by the
+      // M2 group below).
+      for (final gated in [
+        AppRoute.onboardingIntro.path,
+        AppRoute.onboardingName.path,
+        AppRoute.onboardingDob.path,
+        AppRoute.onboardingReadiness.path,
+        AppRoute.onboardingResult.path,
+        AppRoute.onboardingConsent.path,
+        AppRoute.onboardingBabySetup.path,
+        AppRoute.forgotPassword.path,
+      ]) {
+        expect(
+          resolve(
+            at: gated,
+            babySetup: true,
+            readiness: true,
+            onboarding: true,
+          ),
           AppRoute.home.path,
-          AppRoute.mealPlan.path,
-          AppRoute.shoppingList.path,
-          AppRoute.recipeLibrary.path,
-          AppRoute.profile.path,
-        ]) {
-          expect(
-            resolve(
-              at: p,
-              babySetup: true,
-              readiness: true,
-              onboarding: true,
-            ),
-            isNull,
-            reason: p,
-          );
-        }
-      });
-    },
-  );
+          reason: gated,
+        );
+      }
+    });
+
+    test('home + child tabs pass through', () {
+      for (final p in [
+        AppRoute.home.path,
+        AppRoute.mealPlan.path,
+        AppRoute.shoppingList.path,
+        AppRoute.recipeLibrary.path,
+        AppRoute.profile.path,
+      ]) {
+        expect(
+          resolve(at: p, babySetup: true, readiness: true, onboarding: true),
+          isNull,
+          reason: p,
+        );
+      }
+    });
+  });
 
   group('legacy onboardingBabySetup path is caught by phase A', () {
-    test('!babySetupDone redirects /onboarding/baby-setup to /onboarding/name',
-        () {
-      expect(
-        resolve(at: AppRoute.onboardingBabySetup.path),
-        AppRoute.onboardingName.path,
-      );
-    });
+    test(
+      '!babySetupDone redirects /onboarding/baby-setup to /onboarding/name',
+      () {
+        expect(
+          resolve(at: AppRoute.onboardingBabySetup.path),
+          AppRoute.onboardingName.path,
+        );
+      },
+    );
   });
 
   // ---------------------------------------------------------------------------
@@ -281,10 +259,7 @@ void main() {
   // ---------------------------------------------------------------------------
   group('NIB-105 onboarding redirect contract', () {
     test('!babySetupDone -> /onboarding/name', () {
-      expect(
-        resolve(at: AppRoute.home.path),
-        AppRoute.onboardingName.path,
-      );
+      expect(resolve(at: AppRoute.home.path), AppRoute.onboardingName.path);
     });
 
     test('babySetupDone && !readinessDone -> /onboarding/readiness', () {
@@ -401,11 +376,58 @@ void main() {
       // Phase A — unsubscribed user must still be funneled through onboarding,
       // not bounced to paywall.
       expect(
+        resolve(at: AppRoute.home.path, subscribed: false),
+        AppRoute.onboardingName.path,
+      );
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // NIB-150 — dev-flavor paywall skip. The flag is only ever true in the dev
+  // flavor (composed at the router as `enabled && skipped`); the resolver
+  // itself just honors it so the matrix stays pure.
+  // ---------------------------------------------------------------------------
+  group('NIB-150 dev paywall skip', () {
+    test('skip flag lets an onboarded unsubscribed user reach home + tabs', () {
+      for (final p in [
+        AppRoute.home.path,
+        AppRoute.mealPlan.path,
+        AppRoute.shoppingList.path,
+        AppRoute.recipeLibrary.path,
+        AppRoute.profile.path,
+      ]) {
+        expect(
+          resolve(
+            at: p,
+            babySetup: true,
+            readiness: true,
+            onboarding: true,
+            subscribed: false,
+            devSkip: true,
+          ),
+          isNull,
+          reason: p,
+        );
+      }
+    });
+
+    test('skip flag does not bypass onboarding phases', () {
+      expect(
+        resolve(at: AppRoute.home.path, subscribed: false, devSkip: true),
+        AppRoute.onboardingName.path,
+      );
+    });
+
+    test('skip flag defaults to false — guard intact when omitted', () {
+      expect(
         resolve(
           at: AppRoute.home.path,
+          babySetup: true,
+          readiness: true,
+          onboarding: true,
           subscribed: false,
         ),
-        AppRoute.onboardingName.path,
+        AppRoute.paywall.path,
       );
     });
   });

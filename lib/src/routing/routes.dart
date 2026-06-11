@@ -36,6 +36,7 @@ import 'package:nibbles/src/features/splash/splash_screen.dart';
 import 'package:nibbles/src/features/starting_guide/starting_guide_article_screen.dart';
 import 'package:nibbles/src/features/starting_guide/starting_guide_hub_screen.dart';
 import 'package:nibbles/src/features/subscription/manage/manage_subscription_screen.dart';
+import 'package:nibbles/src/features/subscription/paywall/dev_paywall_skip.dart';
 import 'package:nibbles/src/features/subscription/paywall/paywall_screen.dart';
 import 'package:nibbles/src/features/subscription/success/subscription_success_screen.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
@@ -49,10 +50,10 @@ class _RouterRefreshNotifier extends ChangeNotifier {
       ..listen<bool>(authServiceProvider, (_, __) => notifyListeners())
       // NIB-144 — refresh on entitlement change so the M2 paywall guard
       // re-evaluates as soon as `SubscriptionService.isActive` flips.
-      ..listen<bool>(
-        subscriptionServiceProvider,
-        (_, __) => notifyListeners(),
-      );
+      ..listen<bool>(subscriptionServiceProvider, (_, __) => notifyListeners())
+      // NIB-150 — refresh when the dev-only paywall skip flips so the M2
+      // guard re-evaluates without waiting for the next nav event.
+      ..listen<bool>(devPaywallSkipProvider, (_, __) => notifyListeners());
   }
 }
 
@@ -72,6 +73,7 @@ String? resolveAppRedirect({
   required bool readinessDone,
   required bool onboardingDone,
   required bool isSubscribed,
+  bool devPaywallSkipped = false,
 }) {
   // Allow splash through — it handles its own redirect after init.
   if (location == AppRoute.splash.path) return null;
@@ -148,7 +150,9 @@ String? resolveAppRedirect({
   // 8. M2 paywall guard (NIB-144). Onboarded but unsubscribed users are
   //    redirected to the paywall. Allow the paywall itself and the post-
   //    purchase transition screen through so the purchase flow can complete.
-  if (!isSubscribed) {
+  //    `devPaywallSkipped` (NIB-150) is the dev-flavor-only QA seam past the
+  //    gate — always false in prod (see dev_paywall_skip.dart).
+  if (!isSubscribed && !devPaywallSkipped) {
     const subscriptionAllowedPaths = {
       '/subscription/paywall',
       '/subscription/success',
@@ -179,6 +183,9 @@ GoRouter goRouter(Ref ref) {
         onboardingDone: localFlags.isOnboardingDone(),
         // NIB-144 — watch so router refreshes when entitlement flips.
         isSubscribed: ref.watch(subscriptionServiceProvider),
+        devPaywallSkipped:
+            ref.read(devPaywallSkipEnabledProvider) &&
+            ref.read(devPaywallSkipProvider),
       );
     },
     routes: [
@@ -232,8 +239,7 @@ GoRouter goRouter(Ref ref) {
       GoRoute(
         path: AppRoute.onboardingBabySetupLoading.path,
         name: AppRoute.onboardingBabySetupLoading.name,
-        builder: (context, state) =>
-            const OnboardingBabySetupLoadingScreen(),
+        builder: (context, state) => const OnboardingBabySetupLoadingScreen(),
       ),
       GoRoute(
         path: AppRoute.register.path,
@@ -434,8 +440,7 @@ GoRouter goRouter(Ref ref) {
                         path: ':slug',
                         name: AppRoute.startingGuideArticle.name,
                         parentNavigatorKey: rootNavigatorKey,
-                        builder: (context, state) =>
-                            StartingGuideArticleScreen(
+                        builder: (context, state) => StartingGuideArticleScreen(
                           slug: state.pathParameters['slug'] ?? '',
                         ),
                       ),

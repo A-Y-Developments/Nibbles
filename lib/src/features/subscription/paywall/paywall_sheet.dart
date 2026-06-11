@@ -11,6 +11,7 @@ import 'package:nibbles/src/common/components/brand/brand_logo.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/domain/entities/subscription_offering.dart';
 import 'package:nibbles/src/common/domain/entities/subscription_plan.dart';
+import 'package:nibbles/src/features/subscription/paywall/dev_paywall_skip.dart';
 import 'package:nibbles/src/features/subscription/paywall/paywall_controller.dart';
 import 'package:nibbles/src/features/subscription/paywall/paywall_state.dart';
 import 'package:nibbles/src/features/subscription/paywall/widgets/all_plans_sheet.dart';
@@ -107,6 +108,14 @@ class _PaywallSheetState extends ConsumerState<PaywallSheet> {
     await _onPurchase();
   }
 
+  // NIB-150 — dev-flavor-only escape past the entitlement gate so automated
+  // QA flows can complete onboarding. Never rendered in prod (gated on
+  // devPaywallSkipEnabledProvider) and the redirect double-checks the flavor.
+  void _onDevSkip() {
+    ref.read(devPaywallSkipProvider.notifier).skip();
+    context.goNamed(AppRoute.home.name);
+  }
+
   Future<void> _showErrorDialog({
     required String title,
     required String message,
@@ -155,6 +164,7 @@ class _PaywallSheetState extends ConsumerState<PaywallSheet> {
             ? () =>
                   ref.read(paywallControllerProvider.notifier).reloadOfferings()
             : null,
+        onDevSkip: ref.watch(devPaywallSkipEnabledProvider) ? _onDevSkip : null,
       ),
     );
   }
@@ -169,6 +179,7 @@ class _PaywallBody extends StatelessWidget {
     required this.onPurchase,
     required this.onViewAllPlans,
     required this.onRetry,
+    required this.onDevSkip,
   });
 
   final PaywallState state;
@@ -176,6 +187,7 @@ class _PaywallBody extends StatelessWidget {
   final VoidCallback? onPurchase;
   final VoidCallback? onViewAllPlans;
   final VoidCallback? onRetry;
+  final VoidCallback? onDevSkip;
 
   @override
   Widget build(BuildContext context) {
@@ -197,6 +209,7 @@ class _PaywallBody extends StatelessWidget {
           onPurchase: onPurchase,
           onViewAllPlans: onViewAllPlans,
           purchasing: state.action == PaywallAction.purchasing,
+          onDevSkip: onDevSkip,
         ),
       ],
     );
@@ -430,10 +443,7 @@ class _FeatureRow extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                title,
-                style: AppTypography.headline,
-              ),
+              Text(title, style: AppTypography.headline),
               Text(
                 subtitle,
                 style: AppTypography.textTheme.bodyLarge?.copyWith(
@@ -475,10 +485,7 @@ class _SocialProof extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppSizes.xs),
-        const Text(
-          'Already help 150+ parents',
-          style: AppTypography.headline,
-        ),
+        const Text('Already help 150+ parents', style: AppTypography.headline),
       ],
     );
   }
@@ -619,11 +626,13 @@ class _Footer extends StatelessWidget {
     required this.onPurchase,
     required this.onViewAllPlans,
     required this.purchasing,
+    required this.onDevSkip,
   });
 
   final VoidCallback? onPurchase;
   final VoidCallback? onViewAllPlans;
   final bool purchasing;
+  final VoidCallback? onDevSkip;
 
   @override
   Widget build(BuildContext context) {
@@ -689,6 +698,33 @@ class _Footer extends StatelessWidget {
               ),
             ),
           ),
+          if (onDevSkip != null) ...[
+            const SizedBox(height: AppSizes.xs),
+            SizedBox(
+              height: 48,
+              child: Semantics(
+                identifier: 'paywall_dev_skip',
+                button: true,
+                child: Material(
+                  color: Colors.transparent,
+                  shape: const StadiumBorder(),
+                  child: InkWell(
+                    key: const Key('paywall_dev_skip_button'),
+                    onTap: onDevSkip,
+                    customBorder: const StadiumBorder(),
+                    child: Center(
+                      child: Text(
+                        'Maybe later (dev)',
+                        style: AppTypography.textTheme.bodyLarge?.copyWith(
+                          color: AppColors.text,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
