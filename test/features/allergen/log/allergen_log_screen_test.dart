@@ -73,6 +73,23 @@ void main() {
       expect(find.text('My baby loves it, no reaction'), findsOneWidget);
     });
 
+    testWidgets(
+      'notes hint swaps to reaction prompt when Any Reaction is ON (NIB-157)',
+      (tester) async {
+        await tester.pumpWidget(buildSubject());
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byKey(const Key('log_reaction_switch')));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.text('Describe the reaction (what, when, how long)…'),
+          findsOneWidget,
+        );
+        expect(find.text('My baby loves it, no reaction'), findsNothing);
+      },
+    );
+
     testWidgets('shows Add Picture CTA inside attachment block', (
       tester,
     ) async {

@@ -279,6 +279,11 @@ class _LogScreenBody extends StatelessWidget {
                   _NotesField(
                     controller: notesCtrl,
                     onChanged: controller.setNotes,
+                    // NIB-157 — placeholder must match the logged state: a
+                    // reaction-on log describes a reaction, not a happy meal.
+                    hintText: state.hadReaction
+                        ? 'Describe the reaction (what, when, how long)…'
+                        : 'My baby loves it, no reaction',
                   ),
                   const SizedBox(height: AppSizes.md),
                   const _SectionLabel('Attachment (Optional)'),
@@ -417,10 +422,15 @@ class _DateField extends StatelessWidget {
 }
 
 class _NotesField extends StatelessWidget {
-  const _NotesField({required this.controller, required this.onChanged});
+  const _NotesField({
+    required this.controller,
+    required this.onChanged,
+    required this.hintText,
+  });
 
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
+  final String hintText;
 
   @override
   Widget build(BuildContext context) {
@@ -446,7 +456,7 @@ class _NotesField extends StatelessWidget {
         decoration: InputDecoration(
           isCollapsed: true,
           border: InputBorder.none,
-          hintText: 'My baby loves it, no reaction',
+          hintText: hintText,
           hintStyle: textTheme.bodyLarge?.copyWith(color: AppColors.fgFaint),
         ),
       ),
