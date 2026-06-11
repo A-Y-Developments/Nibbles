@@ -1,8 +1,8 @@
 // Widget tests for the redesigned Add-to-Shoplist sheet (NIB-75 / NIB-68).
 //
 // Drives `showAddToShoppingListSheet(context, ingredients)` and asserts:
-//   * each row renders a leading checkbox and a trailing remove ('Remove')
-//     button
+//   * each row renders a leading checkbox and a trailing remove
+//     ('Remove <name>') button
 //   * 'Select All' picks every visible row → CTA enabled
 //   * 'Unselect All' clears every selection → CTA disabled
 //   * per-row remove drops the ingredient from the visible list and decrements
@@ -70,9 +70,9 @@ void main() {
         for (final ing in _ingredients) {
           expect(find.text(ing.name), findsOneWidget);
         }
-        // 3 rows → 3 checkboxes, 3 'Remove' semantic labels.
+        // 3 rows → 3 checkboxes, 3 per-name 'Remove <name>' semantic labels.
         expect(find.byType(AppCheckbox), findsNWidgets(3));
-        expect(find.bySemanticsLabel('Remove'), findsNWidgets(3));
+        expect(find.bySemanticsLabel(RegExp('^Remove ')), findsNWidgets(3));
         // Pre-selected by default → CTA shows full count.
         expect(find.text('Add (3)'), findsOneWidget);
       },
@@ -130,8 +130,8 @@ void main() {
       expect(find.text('Bread'), findsOneWidget);
       expect(find.text('Add (3)'), findsOneWidget);
 
-      // Tap the second row's Remove button (index 1 == 'Bread').
-      await tester.tap(find.bySemanticsLabel('Remove').at(1));
+      // Tap the second row's Remove button ('Bread').
+      await tester.tap(find.bySemanticsLabel('Remove Bread'));
       await tester.pump();
 
       expect(find.text('Bread'), findsNothing);
