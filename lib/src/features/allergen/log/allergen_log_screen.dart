@@ -464,9 +464,11 @@ class _ReactionToggleRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     return Semantics(
+      identifier: 'reaction_log_any_reaction_toggle',
       label: 'Any Reaction?',
       toggled: hadReaction,
-      button: true,
+      container: true,
+      enabled: true,
       onTap: onToggle,
       excludeSemantics: true,
       child: GestureDetector(

@@ -104,6 +104,36 @@ void main() {
       expect(find.byKey(const Key('log_reaction_switch')), findsOneWidget);
     });
 
+    testWidgets(
+      'Any Reaction toggle is an accessible switch with identifier (NIB-154)',
+      (tester) async {
+        final handle = tester.ensureSemantics();
+        await tester.pumpWidget(buildSubject());
+        await tester.pumpAndSettle();
+
+        // The toggle must be its own discrete, identifier-targetable node
+        // exposing the toggled state (button role removed so assistive tech
+        // announces it as a switch, not a button).
+        expect(
+          tester.getSemantics(
+            find.bySemanticsIdentifier('reaction_log_any_reaction_toggle'),
+          ),
+          containsSemantics(
+            identifier: 'reaction_log_any_reaction_toggle',
+            label: 'Any Reaction?',
+            hasToggledState: true,
+            isToggled: false,
+            hasTapAction: true,
+            isButton: false,
+            hasEnabledState: true,
+            isEnabled: true,
+          ),
+        );
+
+        handle.dispose();
+      },
+    );
+
     testWidgets('shows footer Save button', (tester) async {
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
