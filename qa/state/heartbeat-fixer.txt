@@ -1,1 +1,1 @@
-2026-06-11T19:08:14Z fixer run: REWORK PR #375 (NIB-154) — gate flagged deprecated containsSemantics; swapped to find.bySemanticsIdentifier (isSemantics/hasFlag absent in ci 3.38.8); analyze+tests green, pushed
+2026-06-11T19:34:37Z fixer run: REWORK PR #376 (NIB-161) — gate wanted committed screenshot evidence; re-scoped qa/.gitignore (run-artifacts/* + !NIB-*/), committed before/after PNGs, embedded in PR body (raw URLs 200). Ticket In Review
