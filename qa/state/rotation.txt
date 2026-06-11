@@ -1,8 +1,7 @@
-audited 2026-06-11: allergen (tracker, detail, reaction-log, paywall en route)
-> next: meal-plan
-then: shopping-list
+audited 2026-06-11 (run 2): meal-plan (empty state, browse sheet, mapping, plan view) + onboarding en route
+audited 2026-06-11 (run 1): allergen (tracker, detail, reaction-log, paywall en route)
+> next: shopping-list
 then: recipe-library
 then: profile-edit
 then: home
-then: onboarding (when NIB-150 unblocks)
 then: allergen-complete

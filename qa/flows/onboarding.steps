@@ -1,0 +1,59 @@
+sleep 35
+tap -x 229 -y 790
+sleep 4
+swipe --start-x 201 --start-y 700 --end-x 201 --end-y 600
+sleep 1
+tap --id login_signup_link
+sleep 3
+tap -x 201 -y 408
+sleep 1
+type '${QA_REG_EMAIL}'
+sleep 1
+tap -x 201 -y 498
+sleep 1
+type '${QA_REG_PASSWORD}'
+sleep 1
+tap -x 201 -y 572
+sleep 8
+tap -x 201 -y 268
+sleep 1
+type 'Testy'
+sleep 1
+tap -x 201 -y 790
+sleep 3
+tap -x 227 -y 790
+sleep 3
+tap -x 106 -y 334
+sleep 1
+tap -x 227 -y 790
+sleep 2
+tap -x 106 -y 316
+sleep 1
+tap -x 227 -y 790
+sleep 2
+tap -x 106 -y 316
+sleep 1
+tap -x 227 -y 790
+sleep 2
+tap -x 106 -y 316
+sleep 1
+tap -x 227 -y 790
+sleep 2
+tap -x 106 -y 316
+sleep 1
+tap -x 227 -y 790
+sleep 2
+tap -x 106 -y 316
+sleep 1
+tap -x 227 -y 790
+sleep 3
+tap -x 229 -y 790
+sleep 3
+tap -x 201 -y 420
+sleep 1
+tap -x 201 -y 504
+sleep 1
+tap -x 229 -y 790
+sleep 8
+tap -x 201 -y 792
+sleep 5

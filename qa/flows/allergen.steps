@@ -1,5 +1,5 @@
 sleep 8
-tap -x 201 -y 732
+tap -x 201 -y 792
 sleep 5
 tap --id home_allergen_tracker_card
 sleep 3
