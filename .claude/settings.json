@@ -10,10 +10,16 @@
       "Bash(axe:*)",
       "Bash(xcrun simctl:*)",
       "Bash(applesimutils:*)",
-      "Bash(make gen:*)",
-      "Bash(flutter analyze:*)",
-      "Bash(flutter test:*)",
-      "Bash(dart format:*)"
+      "Bash(make:*)",
+      "Bash(flutter:*)",
+      "Bash(dart:*)",
+      "Bash(git:*)",
+      "Bash(gh:*)",
+      "Bash(curl:*)",
+      "Bash(envsubst:*)",
+      "Bash(qa/scripts/sim_udid.sh:*)",
+      "Bash(qa/scripts/reseed.sh:*)",
+      "Bash(new-claude-tab:*)"
     ]
   }
 }

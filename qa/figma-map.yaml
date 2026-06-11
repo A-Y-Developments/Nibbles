@@ -1,0 +1,31 @@
+# Screen -> Figma node mapping for explorer visual comparison.
+# Explorer files a sev:trivial ticket when it audits a screen missing here;
+# fill node ids from the locked redesign file as they are confirmed.
+# Format:
+#   <screen-key>:
+#     route: <app route>
+#     figma_node: <fileKey>:<nodeId>
+login:
+  route: /auth/login
+  figma_node: ""
+register:
+  route: /auth/register
+  figma_node: ""
+home:
+  route: /home
+  figma_node: ""
+allergen_tracker:
+  route: /home/allergen/tracker
+  figma_node: ""
+meal_plan:
+  route: /home/meal
+  figma_node: ""
+shopping_list:
+  route: /home/shopping-list
+  figma_node: ""
+recipe_library:
+  route: /home/recipe
+  figma_node: ""
+profile:
+  route: /home/profile
+  figma_node: ""

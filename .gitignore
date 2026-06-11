@@ -75,3 +75,4 @@ supabase/.branches/
 # Figma audit artifacts (screenshots, raw context) — keep only AUDIT.md
 .figma-audit/**
 !.figma-audit/AUDIT.md
+qa/state/lock-*
