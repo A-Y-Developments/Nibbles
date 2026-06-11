@@ -1,1 +1,1 @@
-2026-06-11T21:18:28Z supervisor run: all 4 loops healthy (coverage 19:39Z, explorer 20:44Z, fixer 20:45Z, gate 21:09Z); QA-Fixer lock alive (fixer mid-run on NIB-171); NIB-165 worktree/branch already clean (merged #385); no open auto-qa PRs; pre-06:00 local
+2026-06-11T22:18:24Z supervisor run: all 4 loops healthy (coverage 19:39Z ~159m, explorer 21:42Z, fixer 22:08Z, gate 22:09Z); no stale locks; NIB-156+171 already clean; PR #388 (NIB-157) open, awaiting gate; pre-06:00 local
