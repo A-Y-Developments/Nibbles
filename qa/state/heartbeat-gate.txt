@@ -1,1 +1,1 @@
-2026-06-11T20:37:33Z gate run: no open auto-qa PRs, nothing to review
+2026-06-11T21:09:49Z gate run: merged #385 (NIB-165 a11y pills + recipe cards, instances 3+6; remainder split to NIB-171); NIB-165 -> Done; advisory on PR: pin identifiers with widget tests in NIB-171 pass
