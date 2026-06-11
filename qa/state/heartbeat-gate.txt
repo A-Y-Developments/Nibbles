@@ -1,1 +1,1 @@
-2026-06-11T15:37:43Z gate run: PR #356 (NIB-150) skipped — GitHub CI in progress; no other auto-qa PRs
+2026-06-11T16:20:58Z gate run: merged #357 (coverage + green-main repair) and #356 (NIB-150 dev paywall skip, rebased + manifest conflict resolved); NIB-150 -> Done; baseline login__paywall.png refreshed
