@@ -1,1 +1,1 @@
-2026-06-11T17:38:50Z gate run: rejected #375 (NIB-154, 1st) — analyze workflow red, deprecated containsSemantics -> isSemantics one-liner; NIB-154 -> In Progress
+2026-06-11T18:12:16Z gate run: merged #377 (meal_plan_repository coverage); rejected #376 (NIB-161, 1st — UI diff without verifiable screenshots, evidence channel broken by qa/.gitignore); #375 skipped (unchanged since 1st rejection, awaiting fixer)
