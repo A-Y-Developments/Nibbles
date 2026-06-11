@@ -63,22 +63,12 @@ const _allergens = [
   Allergen(key: 'peanut', name: 'Peanut', sequenceOrder: 1, emoji: '🥜'),
   Allergen(key: 'egg', name: 'Egg', sequenceOrder: 2, emoji: '🥚'),
   Allergen(key: 'dairy', name: 'Dairy', sequenceOrder: 3, emoji: '🥛'),
-  Allergen(
-    key: 'tree_nuts',
-    name: 'Tree Nuts',
-    sequenceOrder: 4,
-    emoji: '🌰',
-  ),
+  Allergen(key: 'tree_nuts', name: 'Tree Nuts', sequenceOrder: 4, emoji: '🌰'),
   Allergen(key: 'sesame', name: 'Sesame', sequenceOrder: 5, emoji: '🫘'),
   Allergen(key: 'soy', name: 'Soy', sequenceOrder: 6, emoji: '🫘'),
   Allergen(key: 'wheat', name: 'Wheat', sequenceOrder: 7, emoji: '🌾'),
   Allergen(key: 'fish', name: 'Fish', sequenceOrder: 8, emoji: '🐟'),
-  Allergen(
-    key: 'shellfish',
-    name: 'Shellfish',
-    sequenceOrder: 9,
-    emoji: '🦐',
-  ),
+  Allergen(key: 'shellfish', name: 'Shellfish', sequenceOrder: 9, emoji: '🦐'),
 ];
 
 AllergenLog _makeLog({
@@ -139,10 +129,7 @@ void main() {
     final router = GoRouter(
       initialLocation: '/',
       routes: [
-        GoRoute(
-          path: '/',
-          builder: (_, __) => const AllergenTrackerScreen(),
-        ),
+        GoRoute(path: '/', builder: (_, __) => const AllergenTrackerScreen()),
         GoRoute(
           path: AppRoute.allergenLogCreate.path,
           name: AppRoute.allergenLogCreate.name,
@@ -216,10 +203,7 @@ void main() {
           _makeLog(id: 'd2', allergenKey: 'dairy'),
           _makeLog(id: 'd3', allergenKey: 'dairy'),
         ];
-        stubReads(
-          statuses: statusesEggDairySafePeanutFlagged(),
-          logs: logs,
-        );
+        stubReads(statuses: statusesEggDairySafePeanutFlagged(), logs: logs);
 
         await tester.pumpWidget(buildSubject(_PushRecorder()));
         await tester.pumpAndSettle();
@@ -233,10 +217,7 @@ void main() {
         expect(find.text('Not Tried'), findsNothing);
         // Reaction Log list rendered for the logged entries (may be below
         // the fold depending on test viewport, so allow off-screen).
-        expect(
-          find.text('Reaction Log', skipOffstage: false),
-          findsOneWidget,
-        );
+        expect(find.text('Reaction Log', skipOffstage: false), findsOneWidget);
 
         // Switch to Big 11 tab.
         await tester.tap(find.text('Big 11'));
@@ -252,6 +233,32 @@ void main() {
           find.byType(StartIntroduceCard, skipOffstage: false),
           findsWidgets,
         );
+        // NIB-153 — every Start Introduce CTA carries a per-allergen
+        // identifier so axe --id targeting is unambiguous.
+        final semantics = tester.ensureSemantics();
+        await tester.pump();
+        final startIntroduceIdentifiers = tester
+            .widgetList<StartIntroduceCard>(
+              find.byType(StartIntroduceCard, skipOffstage: false),
+            )
+            .map(
+              (card) =>
+                  'allergen_start_introduce_button_'
+                  '${card.allergen.key}',
+            )
+            .toList();
+        expect(
+          startIntroduceIdentifiers.toSet().length,
+          startIntroduceIdentifiers.length,
+        );
+        for (final id in startIntroduceIdentifiers) {
+          expect(
+            find.bySemanticsIdentifier(id, skipOffstage: false),
+            findsOneWidget,
+            reason: id,
+          );
+        }
+        semantics.dispose();
         // Stat-column labels — Not Safe + Not Tried are unique strings on
         // Big 11.
         expect(find.text('Not Safe'), findsOneWidget);
@@ -277,10 +284,7 @@ void main() {
 
         // Section headers remain visible at zero data (Figma 1089:17373).
         expect(find.text('Allergen Exposure'), findsOneWidget);
-        expect(
-          find.text('Reaction Log', skipOffstage: false),
-          findsOneWidget,
-        );
+        expect(find.text('Reaction Log', skipOffstage: false), findsOneWidget);
         // Per-section placeholders sit inside their sections.
         expect(find.text('No exposures yet'), findsOneWidget);
         expect(
@@ -290,34 +294,31 @@ void main() {
       },
     );
 
-    testWidgets(
-      'Tapping Start Introduce navigates to allergen-log-create '
-      'with the tapped allergen key',
-      (tester) async {
-        stubReads(
-          statuses: {
-            for (final a in _allergens) a.key: AllergenStatus.notStarted,
-          },
-        );
-        final recorder = _PushRecorder();
-        await tester.pumpWidget(buildSubject(recorder));
-        await tester.pumpAndSettle();
+    testWidgets('Tapping Start Introduce navigates to allergen-log-create '
+        'with the tapped allergen key', (tester) async {
+      stubReads(
+        statuses: {
+          for (final a in _allergens) a.key: AllergenStatus.notStarted,
+        },
+      );
+      final recorder = _PushRecorder();
+      await tester.pumpWidget(buildSubject(recorder));
+      await tester.pumpAndSettle();
 
-        // Switch to Big 11 so Start Introduce cards render.
-        await tester.tap(find.text('Big 11'));
-        await tester.pumpAndSettle();
+      // Switch to Big 11 so Start Introduce cards render.
+      await tester.tap(find.text('Big 11'));
+      await tester.pumpAndSettle();
 
-        // Tap the first Start Introduce button.
-        final firstStart = find.text('Start Introduce').first;
-        await tester.ensureVisible(firstStart);
-        await tester.tap(firstStart);
-        await tester.pumpAndSettle();
+      // Tap the first Start Introduce button.
+      final firstStart = find.text('Start Introduce').first;
+      await tester.ensureVisible(firstStart);
+      await tester.tap(firstStart);
+      await tester.pumpAndSettle();
 
-        expect(recorder.lastName, AppRoute.allergenLogCreate.name);
-        // First alphabetically-displayed allergen in sequence order is peanut.
-        expect(recorder.lastPathParams?['allergenKey'], 'peanut');
-      },
-    );
+      expect(recorder.lastName, AppRoute.allergenLogCreate.name);
+      // First alphabetically-displayed allergen in sequence order is peanut.
+      expect(recorder.lastPathParams?['allergenKey'], 'peanut');
+    });
 
     testWidgets(
       'See All link on Ongoing tab switches segment to Big 11 (no nav)',
