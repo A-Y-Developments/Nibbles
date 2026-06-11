@@ -1,1 +1,1 @@
-2026-06-11T23:10:56Z gate run: merged #389 (NIB-158 figma-map node ids; spot-checked allergen_detail + paywall frames via Figma render); NIB-158 -> Done
+2026-06-11T23:39:51Z gate run: merged #390 (NIB-164 Apple sign-in cancel — no raw NSError; unknown-code trade-off documented on PR); NIB-164 -> Done
