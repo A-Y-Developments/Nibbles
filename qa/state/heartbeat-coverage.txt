@@ -1,0 +1,1 @@
+2026-06-11T15:42:51Z coverage run ok — PR #357 (allergen_repository 0%->96.4%, NIB-151)
