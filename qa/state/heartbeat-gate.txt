@@ -1,1 +1,1 @@
-2026-06-11T16:37:36Z gate run: no open auto-qa PRs, nothing to review
+2026-06-11T17:09:34Z gate run: merged #366 (NIB-153 per-allergen identifiers + pill semantics); NIB-153 -> Done; no baseline refresh (semantics-only, no visual change)
