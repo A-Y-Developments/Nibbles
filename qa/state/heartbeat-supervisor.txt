@@ -1,1 +1,1 @@
-2026-06-11T22:18:24Z supervisor run: all 4 loops healthy (coverage 19:39Z ~159m, explorer 21:42Z, fixer 22:08Z, gate 22:09Z); no stale locks; NIB-156+171 already clean; PR #388 (NIB-157) open, awaiting gate; pre-06:00 local
+2026-06-11T23:18:38Z supervisor run: all 4 loops healthy (coverage 19:39Z ~219m WARNING near threshold, explorer 22:47Z, fixer 23:09Z, gate 23:10Z); no stale locks; NIB-157+158 already clean; PR #390 (NIB-164) open; reseeded (baby ab9ac753); pre-07:00 skip digest
