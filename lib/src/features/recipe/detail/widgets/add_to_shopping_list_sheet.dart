@@ -302,15 +302,17 @@ class _IngredientRow extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppSizes.radiusMd),
               border: Border.all(color: AppColors.borderSoft),
             ),
-            child: ExcludeSemantics(
-              child: Row(
-                children: [
-                  AppCheckbox(
+            child: Row(
+              children: [
+                ExcludeSemantics(
+                  child: AppCheckbox(
                     value: selected,
                     onChanged: (_) => onToggle(),
                   ),
-                  const SizedBox(width: AppSizes.sp12),
-                  Expanded(
+                ),
+                const SizedBox(width: AppSizes.sp12),
+                Expanded(
+                  child: ExcludeSemantics(
                     child: Text(
                       name,
                       style: theme.textTheme.bodyLarge?.copyWith(
@@ -318,13 +320,10 @@ class _IngredientRow extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(width: AppSizes.sm),
-                  ExcludeSemantics(
-                    excluding: false,
-                    child: _RemoveButton(name: name, onPressed: onRemove),
-                  ),
-                ],
-              ),
+                ),
+                const SizedBox(width: AppSizes.sm),
+                _RemoveButton(name: name, onPressed: onRemove),
+              ],
             ),
           ),
         ),
