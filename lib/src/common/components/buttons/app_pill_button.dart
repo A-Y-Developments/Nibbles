@@ -101,11 +101,16 @@ class AppPillButton extends StatelessWidget {
     // NIB-153 — container + button so the pill stays its own accessibility
     // element; without it iOS merges the pill into surrounding row text and
     // identifier-targeted taps resolve to the row center, missing the button.
+    // NIB-165 — label + excludeSemantics so the pill is a SINGLE labelled node;
+    // without them the container boundary leaves the child Text as a second
+    // node, so assistive tech reads the label twice ("Edit | Edit").
     return Semantics(
       identifier: identifier,
       container: true,
       button: true,
       enabled: !_disabled,
+      label: label,
+      excludeSemantics: true,
       child: Material(
         color: _background(variant),
         shape: StadiumBorder(
