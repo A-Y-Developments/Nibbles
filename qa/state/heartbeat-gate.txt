@@ -1,1 +1,1 @@
-2026-06-11T19:39:28Z gate run: merged #376 (NIB-161 Browse Meal safe area, rework with committed before/after evidence + gitignore re-scope); NIB-161 -> Done; no baseline covers the sheet, none refreshed
+2026-06-11T20:08:59Z gate run: merged #380 (shopping_list_repository coverage, 19 tests, 0%->94.3%); tests-only, no ticket, no baseline impact
