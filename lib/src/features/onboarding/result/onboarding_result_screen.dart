@@ -10,19 +10,14 @@ import 'package:nibbles/src/features/onboarding/onboarding_controller.dart';
 import 'package:nibbles/src/features/onboarding/onboarding_state.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 
-/// Verbatim sign labels lifted from the Figma audit
-/// (.figma-audit/onboarding/readiness-{ready,not-ready}/report.md).
+/// Sign labels shown on the readiness result screen, one per readiness answer.
 ///
-/// The audit's item 1 string concatenates two distinct signs ("Can sit upright
-/// with minimal support. Good head and neck control (can hold head steady)") —
-/// flagged as a copy-paste defect in both frames. Visual gate confirmed Figma
-/// renders the COMBINED two-sentence string as a single first item, so we
-/// keep it verbatim. The audit-flagged duplicate "Sits upright with minimal
-/// support" remains on row 1 pending PO cleanup.
+/// The Figma frame's first item concatenated two distinct signs ("Can sit
+/// upright with minimal support. Good head and neck control…") and row 2
+/// repeated "Sits upright with minimal support". NIB-166 splits them: row 1 is
+/// the head/neck sign only, row 2 keeps the sit-upright sign — no duplication.
 const List<String> _signLabels = [
-  // ignore: no_adjacent_strings_in_list — verbatim Figma copy spans two phrases
-  'Can sit upright with minimal support. '
-      'Good head and neck control (can hold head steady)',
+  'Good head and neck control (can hold head steady)',
   'Sits upright with minimal support',
   "Loss of the tongue-thrust reflex (doesn't automatically push food out).",
   'Shows interest in food (watching, reaching, opening mouth).',

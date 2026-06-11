@@ -13,9 +13,8 @@ import 'package:nibbles/src/features/meal_plan/widgets/meal_plan_header.dart';
 /// 2. White rounded form card hosting [MealPlanDateRangeForm] with the
 ///    'Create meal plan' CTA.
 /// 3. Brand [Quatrefoil] flower illustration.
-/// 4. Caption "Let's create meal plan for {babyName}!" (verbatim — the
-///    baby name interpolates the runtime value; the lowercase "oliver"
-///    in the Figma string is a designer artifact).
+/// 4. Caption "Let's create a meal plan for {babyName}!" — the baby name
+///    interpolates the runtime value.
 ///
 /// Tapping a date field opens an inline calendar directly below it — never
 /// the OS picker. Hitting the CTA emits a [DateTimeRange] via
@@ -68,7 +67,7 @@ class MealPlanEmptyState extends StatelessWidget {
                 const SizedBox(height: AppSizes.md),
                 Center(
                   child: Text(
-                    "Let's create meal plan for $babyName!",
+                    "Let's create a meal plan for $babyName!",
                     textAlign: TextAlign.center,
                     style: AppTypography.emptyStateTitle,
                   ),

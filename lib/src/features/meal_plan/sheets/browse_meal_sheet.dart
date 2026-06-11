@@ -23,11 +23,9 @@ import 'package:nibbles/src/logging/analytics.dart';
 /// Surfaces:
 ///   * Header — "Browse Meal" title, weekday date range
 ///     ("Mon, 20 - Thu 23 April"), and a top-right close (X) icon.
-///   * "Recomendation for {ongoing allergen}" carousel — only when an
+///   * "Recommendation for {ongoing allergen}" carousel — only when an
 ///     `AllergenStatus.inProgress` allergen exists per
-///     [AllergenService.getAllergenStatuses]. The verbatim Figma copy
-///     intentionally retains the typo "Recomendation" until the PO
-///     clarifies (acceptance criteria).
+///     [AllergenService.getAllergenStatuses].
 ///   * Category-derived carousels — driven by [Recipe.category]; falls
 ///     back to allergen-tag groups when no recipes carry a category.
 ///   * Searchable master list with tappable selected / unselected counter
@@ -380,7 +378,7 @@ class _BrowseMealSheetState extends ConsumerState<_BrowseMealSheet> {
                 const SizedBox(height: AppSizes.md),
                 if (ongoingKey != null && ongoingRecipes.isNotEmpty)
                   RecommendationCarouselSection(
-                    title: 'Recomendation for '
+                    title: 'Recommendation for '
                         '${AllergenEmoji.get(ongoingKey)} '
                         '${_displayName(ongoingKey)}',
                     recipes: ongoingRecipes,

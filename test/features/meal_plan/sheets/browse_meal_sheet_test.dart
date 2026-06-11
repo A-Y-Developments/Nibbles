@@ -49,16 +49,16 @@ const _flagged = Recipe(
 );
 
 Map<String, AllergenStatus> _allSafeStatuses() => const {
-      'peanut': AllergenStatus.safe,
-      'egg': AllergenStatus.safe,
-      'dairy': AllergenStatus.safe,
-      'tree_nuts': AllergenStatus.safe,
-      'sesame': AllergenStatus.safe,
-      'soy': AllergenStatus.safe,
-      'wheat': AllergenStatus.safe,
-      'fish': AllergenStatus.safe,
-      'shellfish': AllergenStatus.safe,
-    };
+  'peanut': AllergenStatus.safe,
+  'egg': AllergenStatus.safe,
+  'dairy': AllergenStatus.safe,
+  'tree_nuts': AllergenStatus.safe,
+  'sesame': AllergenStatus.safe,
+  'soy': AllergenStatus.safe,
+  'wheat': AllergenStatus.safe,
+  'fish': AllergenStatus.safe,
+  'shellfish': AllergenStatus.safe,
+};
 
 void main() {
   late _MockRecipeService mockRecipeService;
@@ -209,8 +209,9 @@ void main() {
       expect(find.textContaining('No results for "zzz"'), findsOneWidget);
     });
 
-    testWidgets('"Add (N)" returns picked recipes on Navigator.pop',
-        (tester) async {
+    testWidgets('"Add (N)" returns picked recipes on Navigator.pop', (
+      tester,
+    ) async {
       await openSheet(
         tester,
         recipes: const [_safeA, _safeB],
@@ -243,20 +244,14 @@ void main() {
           // All statuses safe → no ongoing allergen → no carousel header.
         );
 
-        // Verbatim Figma copy intentionally preserves the typo
-        // "Recomendation" — see NIB-87 acceptance criteria.
-        expect(find.textContaining('Recomendation for'), findsNothing);
+        expect(find.textContaining('Recommendation for'), findsNothing);
       },
     );
 
     testWidgets(
       'header renders verbatim "Browse Meal" title and weekday range',
       (tester) async {
-        await openSheet(
-          tester,
-          recipes: const [_safeA],
-          flaggedKeys: const {},
-        );
+        await openSheet(tester, recipes: const [_safeA], flaggedKeys: const {});
 
         expect(find.text('Browse Meal'), findsOneWidget);
         // openSheet uses DateTime(2026, 5, 30) → DateTime(2026, 6, 5).
@@ -291,8 +286,9 @@ void main() {
       },
     );
 
-    testWidgets('search field uses verbatim "Search recipes" hint',
-        (tester) async {
+    testWidgets('search field uses verbatim "Search recipes" hint', (
+      tester,
+    ) async {
       await openSheet(
         tester,
         recipes: const [_safeA, _safeB],
@@ -302,24 +298,23 @@ void main() {
       expect(find.text('Search recipes'), findsOneWidget);
     });
 
-    testWidgets(
-      'close (X) icon dismisses the sheet with a null result',
-      (tester) async {
-        await openSheet(
-          tester,
-          recipes: const [_safeA, _safeB],
-          flaggedKeys: const {},
-        );
+    testWidgets('close (X) icon dismisses the sheet with a null result', (
+      tester,
+    ) async {
+      await openSheet(
+        tester,
+        recipes: const [_safeA, _safeB],
+        flaggedKeys: const {},
+      );
 
-        // The header close icon — Icons.close is unique to the sheet header.
-        await tester.tap(find.byIcon(Icons.close));
-        // Drive the sheet dismissal animation.
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 400));
+      // The header close icon — Icons.close is unique to the sheet header.
+      await tester.tap(find.byIcon(Icons.close));
+      // Drive the sheet dismissal animation.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
 
-        final result = await pendingResult;
-        expect(result, isNull);
-      },
-    );
+      final result = await pendingResult;
+      expect(result, isNull);
+    });
   });
 }

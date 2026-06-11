@@ -14,7 +14,8 @@ import 'package:nibbles/src/features/meal_plan/widgets/inline_calendar.dart';
 /// sage/butter, not iOS blue).
 ///
 /// Defaults to today + (today + 6 days) so the CTA is enabled on first
-/// paint, matching the Figma frame's pre-filled `17/04/2026` placeholders.
+/// paint. Dates render as `MMM d, yyyy` (e.g. `Apr 17, 2026`) to avoid
+/// day/month ambiguity (NIB-166).
 class MealPlanDateRangeForm extends StatefulWidget {
   const MealPlanDateRangeForm({
     required this.ctaLabel,
@@ -196,8 +197,8 @@ class _CalendarReveal extends StatelessWidget {
 }
 
 /// Single labelled date field. `value` is the currently chosen date —
-/// rendered as `dd/MM/yyyy` to match Figma's verbatim placeholder
-/// (`17/04/2026`). Border is forestdarkn (green-deep) at rest per Figma; the
+/// rendered as `MMM d, yyyy` (e.g. `Apr 17, 2026`) so the day and month
+/// are unambiguous. Border is forestdarkn (green-deep) at rest per Figma; the
 /// open state thickens it to 2px and switches the fill to white.
 class _DateField extends StatelessWidget {
   const _DateField({
@@ -262,9 +263,22 @@ class _DateField extends StatelessWidget {
     );
   }
 
+  static const _monthAbbr = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+
   static String _formatDate(DateTime d) {
-    final dd = d.day.toString().padLeft(2, '0');
-    final mm = d.month.toString().padLeft(2, '0');
-    return '$dd/$mm/${d.year}';
+    return '${_monthAbbr[d.month - 1]} ${d.day}, ${d.year}';
   }
 }

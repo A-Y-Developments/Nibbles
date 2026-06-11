@@ -34,8 +34,9 @@ Future<DateTimeRange?> _open(WidgetTester tester) async {
 
 void main() {
   group('SelectPeriodDateSheet', () {
-    testWidgets('renders Figma verbatim title + Custom meal plan CTA',
-        (tester) async {
+    testWidgets('renders Figma verbatim title + Custom meal plan CTA', (
+      tester,
+    ) async {
       await _open(tester);
 
       expect(find.text('Select Period Date'), findsOneWidget);
@@ -52,16 +53,31 @@ void main() {
 
       expect(find.byType(InlineCalendar), findsNothing);
       final today = DateTime.now();
-      final dd = today.day.toString().padLeft(2, '0');
-      final mm = today.month.toString().padLeft(2, '0');
-      final startText = '$dd/$mm/${today.year}';
+      const monthAbbr = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+      ];
+      final startText =
+          '${monthAbbr[today.month - 1]} ${today.day}, '
+          '${today.year}';
       await tester.tap(find.text(startText).first);
       await tester.pumpAndSettle();
       expect(find.byType(InlineCalendar), findsOneWidget);
     });
 
-    testWidgets('tapping CTA pops the sheet with a DateTimeRange',
-        (tester) async {
+    testWidgets('tapping CTA pops the sheet with a DateTimeRange', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(1080, 2800);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
@@ -87,9 +103,7 @@ void main() {
       await tester.tap(find.text('Open Sheet'));
       await tester.pumpAndSettle();
 
-      await tester.tap(
-        find.widgetWithText(AppPillButton, 'Custom meal plan'),
-      );
+      await tester.tap(find.widgetWithText(AppPillButton, 'Custom meal plan'));
       await tester.pumpAndSettle();
 
       expect(captured, isNotNull);
