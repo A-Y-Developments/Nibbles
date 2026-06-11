@@ -1,0 +1,21 @@
+sleep 8
+tap -x 201 -y 792
+sleep 5
+tap -x 251 -y 800
+sleep 3
+tap -x 318 -y 90
+sleep 2
+tap -x 201 -y 718
+sleep 1
+type 'Bananas'
+sleep 1
+tap -x 340 -y 661
+sleep 2
+tap -x 201 -y 286
+sleep 2
+tap -x 53 -y 206
+sleep 3
+tap -x 293 -y 143
+sleep 2
+tap -x 349 -y 206
+sleep 3
