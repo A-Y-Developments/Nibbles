@@ -1,1 +1,1 @@
-2026-06-12T16:18:08Z supervisor run: all 4 loops healthy (coverage 15:28Z, explorer 15:41Z, fixer 16:01Z, gate 16:07Z); no locks; pipeline stalled on #395+#396 human-touch (15h+)
+2026-06-12T17:18:26Z supervisor run: explorer 16:40Z, fixer 17:01Z, gate 17:07Z healthy; coverage alive (wip-cap) but heartbeat timestamp anomaly (+24h offset bug); no locks; pipeline stalled on #395+#396 human-touch (16h+); pre-06:00 local
