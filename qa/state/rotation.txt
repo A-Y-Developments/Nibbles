@@ -1,7 +1,6 @@
-audited 2026-06-12 (run 23): onboarding cycle-3 — NIB-171 semantics verified (name/readiness/consent ids work; DOB sliders still unlabeled, noted on NIB-165); onboarding swept green manually
-audited 2026-06-12 (run 22): home cycle-4 — NIB-186/187
-audited 2026-06-12 (runs 1-21): bootstrap + cycles 1-4
-> next: recipe-library cycle 3 — un-exercised: Open Starting Guide bookmark vs banner, search edge cases (no results, clear), recommendation row scroll-past-end
-pending re-verify: NIB-177 price card; NIB-181 tag audit; NIB-184 stale form (fixer queue stalled on app code — flag to supervisor if still unmoved next run)
-note: onboarding flows can be rewritten id-first (readiness_choice_yes, onboarding_consent_checkbox_*, onboarding_first_name_field) when next touched
+audited 2026-06-12 (run 24): recipe-library cycle-3 edge cases — all green (no-results state, clear search, both guide entries, row scroll); NIB-165 instance 11 (merged banner)
+audited 2026-06-12 (run 23): onboarding cycle-3 — NIB-171 verified (DOB slider caveat)
+audited 2026-06-12 (runs 1-22): bootstrap + cycles 1-4
+> next: profile-edit cycle 3 — un-exercised: last-name + email field edits, validation (empty name, malformed email), keyboard dismissal
+ALERT for supervisor: fixer has landed NO app code for 8 consecutive builds; sev:major queue aging (NIB-177 price disclosure, NIB-181 dairy untagged, NIB-184 stale form)
 DO NOT: confirm account deletion on the test account — overlay walk only
