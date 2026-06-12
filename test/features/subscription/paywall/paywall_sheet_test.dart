@@ -145,15 +145,15 @@ void main() {
     // Settle the async offerings load.
     await tester.pump();
 
-    // Verbatim copy from the Figma spec (kept exactly — including singular
-    // "recipe" and the placeholder "Clear guidance for the big 9" ×3 per AC).
     expect(find.text('Restore purchase'), findsOneWidget);
     expect(find.text('Everything you need for safe feeding'), findsOneWidget);
     expect(find.text('Introduce allergens safely'), findsOneWidget);
-    expect(find.text('Get 300+ recipe'), findsOneWidget);
+    expect(find.text('Get 300+ recipes'), findsOneWidget);
     expect(find.text('Meal Planning'), findsOneWidget);
-    expect(find.text('Clear guidance for the big 9'), findsNWidgets(3));
-    expect(find.text('Already help 150+ parents'), findsOneWidget);
+    expect(find.text('Clear, guided steps through the Big 11'), findsOneWidget);
+    expect(find.text('Baby-led meals for every stage'), findsOneWidget);
+    expect(find.text('Plan the whole week in a few taps'), findsOneWidget);
+    expect(find.text('Already helping 150+ parents'), findsOneWidget);
     expect(find.text(r'Try for $0'), findsOneWidget);
     expect(find.text('View all plans'), findsOneWidget);
 
