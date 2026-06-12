@@ -376,14 +376,14 @@ class _FeatureRows extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Per ticket: "All three feature rows currently share the sub-title …
-    // likely a copy placeholder per the audit. Wait for PO confirmation
-    // before substituting." — keep verbatim.
-    const subtitle = 'Clear guidance for the big 9';
     const rows = [
-      ('Introduce allergens safely', subtitle, true),
-      ('Get 300+ recipe', subtitle, false),
-      ('Meal Planning', subtitle, false),
+      (
+        'Introduce allergens safely',
+        'Clear, guided steps through the Big 11',
+        true,
+      ),
+      ('Get 300+ recipes', 'Baby-led meals for every stage', false),
+      ('Meal Planning', 'Plan the whole week in a few taps', false),
     ];
     return Column(
       children: [
@@ -485,7 +485,10 @@ class _SocialProof extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppSizes.xs),
-        const Text('Already help 150+ parents', style: AppTypography.headline),
+        const Text(
+          'Already helping 150+ parents',
+          style: AppTypography.headline,
+        ),
       ],
     );
   }
