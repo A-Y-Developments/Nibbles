@@ -1,1 +1,1 @@
-2026-06-12T06:18:25Z supervisor run: all 4 loops healthy (coverage 05:28Z, explorer 05:43Z, fixer 06:01Z, gate 06:07Z); no locks; pipeline stalled on #395+#396 human-touch; clean state
+2026-06-12T07:18:09Z supervisor run: all 4 loops healthy (coverage 07:17Z, explorer 06:41Z, fixer 07:01Z, gate 07:07Z); no locks; pipeline stalled on #395+#396 human-touch (6h+)
