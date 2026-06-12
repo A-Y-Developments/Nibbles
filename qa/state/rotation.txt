@@ -1,7 +1,7 @@
-audited 2026-06-12 (run 19): allergen cycle-4 log actions — edit/delete/attachment all work, derived status correct on delete; NIB-184 stale form state filed (sev:major)
-audited 2026-06-12 (run 18): recipe-detail — NIB-181 dairy untagged, NIB-182 missing sections, NIB-183
-audited 2026-06-12 (runs 1-17): bootstrap + cycles 1-3 + satellites
-> next: meal-plan cycle 4 — un-exercised: edit existing plan (plan-view More menu "Clear current week", + Add Date), multi-meal days
+audited 2026-06-12 (run 20): meal-plan cycle-4 plan management — multi-meal days OK, +Add Date extends snapped window (NIB-159 comment), Clear current week wipes whole plan (works; generic confirm copy NIB-185)
+audited 2026-06-12 (run 19): allergen cycle-4 log actions — NIB-184 stale form state
+audited 2026-06-12 (runs 1-18): bootstrap + cycles 1-3 + satellites + recipe-detail
+> next: shopping-list cycle 4 — un-exercised: Copy to Clipboard, Clear All, recipe-source items (add from recipe detail), bought-tab restore (uncheck)
 pending: verify NIB-171 onboarding Semantics ids next throwaway registration
-pending re-verify: NIB-177 price card; NIB-181 seed-wide tag audit
+pending re-verify: NIB-177 price card; NIB-181 seed-wide tag audit; NIB-184 when fixed
 DO NOT: confirm account deletion on the test account — overlay walk only
