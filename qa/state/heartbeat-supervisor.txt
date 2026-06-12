@@ -1,1 +1,1 @@
-2026-06-12T00:20:29Z supervisor run: COVERAGE DEAD (279m, respawn failed kitty); explorer/fixer/gate healthy; daily digest published; reseeded ok; worktrees clean; 6 HumanTouch majors in backlog
+2026-06-12T01:18:33Z supervisor run: COVERAGE DEAD run 2 (339m, respawn failed kitty); explorer 00:42Z, fixer 01:15Z, gate 01:07Z healthy; NIB-168+170 already clean; PR #395 (NIB-162 human-touch) open; digest already published today
