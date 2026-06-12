@@ -63,7 +63,7 @@ class ParagraphBlock extends GuideBlock {
   final String text;
 }
 
-/// Single salmon-ghost label chip (e.g. "Perfect time to growth", "6+ Months").
+/// Single salmon-ghost label chip (e.g. "Perfect time to grow", "6+ Months").
 class LabelChipBlock extends GuideBlock {
   const LabelChipBlock(this.label);
 
@@ -289,7 +289,7 @@ const List<GuideArticle> kStartingGuideArticles = [
             'development',
       ),
       SectionHeadingBlock('The 6 Month Milestone'),
-      LabelChipBlock('Perfect time to growth'),
+      LabelChipBlock('Perfect time to grow'),
       ParagraphBlock(
         'Babies begin transitioning from an exclusively milk-based diet to a '
         'combination of breast milk or formula and complementary foods.',
