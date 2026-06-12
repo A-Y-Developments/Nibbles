@@ -7,7 +7,8 @@ import 'package:nibbles/src/common/components/components.dart';
 /// Destructive confirm popup mirroring Figma frame 1525:31338.
 ///
 /// Displays a Quatrefoil illustration above the question
-/// "Are you sure you want to delete?" with a two-button action row
+/// "Delete this log? This may change the allergen's status." with a
+/// two-button action row
 /// (Cancel + Delete). The Delete button is the primary greenDeep pill — the
 /// destructive intent comes from the question copy, not the colour, per the
 /// Figma source.
@@ -82,7 +83,7 @@ class _QuestionText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Text(
-      'Are you sure you want to delete?',
+      "Delete this log? This may change the allergen's status.",
       textAlign: TextAlign.center,
       style: TextStyle(
         fontFamily: FontFamily.parkinsans,
