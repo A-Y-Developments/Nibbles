@@ -1,6 +1,6 @@
-audited 2026-06-13 (run 25): profile-edit cycle-3 validation — ALL GREEN: empty-name disables Save, malformed email shows AX-exposed inline error, last-name roundtrip works, state restored
-audited 2026-06-12 (run 24): recipe-library cycle-3 — all green
-audited 2026-06-12 (runs 1-23): bootstrap + cycles 1-4
-> next: allergen-complete cycle 2 (full preamble re-verify — also re-runs login flow from fresh install) OR first fixer-merge re-verification, whichever the build offers
-ALERT for supervisor (2nd consecutive run): fixer has landed NO app code for 9 builds; aging sev:majors NIB-177, NIB-181, NIB-184
+audited 2026-06-13 (run 26): allergen-complete cycle-2 full-preamble re-verify — PASSED (AL-08 + profile end state; login clean from fresh install, 5th consecutive). All 8 flows now re-swept post-verification.
+audited 2026-06-13 (run 25): profile-edit cycle-3 validation — all green
+audited 2026-06-12 (runs 1-24): bootstrap + cycles 1-4
+> next: cycle 5 — lowest-value-first is exhausted; prioritize (a) fixer-merge re-verification the moment app code lands, (b) meal-plan multi-week plan (create 14-day range — exercises NIB-159 boundary), (c) recipe detail Add to Meal Plan path
+ALERT for supervisor (3rd consecutive run): fixer has landed NO app code for 10 builds; aging sev:majors NIB-177, NIB-181, NIB-184
 DO NOT: confirm account deletion on the test account — overlay walk only
