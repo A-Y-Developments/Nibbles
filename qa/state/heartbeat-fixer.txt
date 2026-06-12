@@ -1,1 +1,1 @@
-2026-06-12T01:28:37Z WIP cap (2 open: #395 NIB-162, #396 NIB-172, both human-touch awaiting human review) — heartbeat, end
+2026-06-12T01:31:57Z WIP cap (2 open: #395 NIB-162, #396 NIB-172, human-touch awaiting review) — heartbeat, end
