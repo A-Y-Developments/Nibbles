@@ -1,1 +1,1 @@
-2026-06-12T20:17:48Z fixer: NIB-152 paywall copy fixed -> PR #410 (auto-qa, human-touch). Verified on QA-Fixer sim. Ticket In Review.
+2026-06-12T20:50:21Z fixer: NIB-177 paywall price card pinned above CTA -> PR #411 (auto-qa, gate-mergeable). Verified on QA-Fixer sim. Skipped NIB-155/NIB-159 (need product call). Ticket In Review.
