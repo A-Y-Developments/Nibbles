@@ -25,7 +25,7 @@ import 'package:nibbles/src/features/shopping_list/widgets/swipe_reveal_row.dart
 /// with two actions:
 ///   * "Copy to Clipboard" — copies the active List items as a bulleted
 ///     string via the controller; surfaces a P2 toast on success/failure.
-///   * "Clear All Shopping List" — opens the Clear-All confirmation sheet
+///   * "Clear shopping list" — opens the Clear-All confirmation sheet
 ///     (971:9958). Confirm calls the controller's `clearAll` and drops back
 ///     to the empty state; cancel dismisses the sheet.
 ///
@@ -609,7 +609,7 @@ class _EmptyState extends StatelessWidget {
           // Figma 971:9989 empty-state gap-[10px] (no 10px spacing token).
           const SizedBox(height: 10),
           Text(
-            "You don't have any list yet",
+            'No items in your list yet',
             textAlign: TextAlign.center,
             style: AppTypography.textTheme.bodyLarge,
           ),

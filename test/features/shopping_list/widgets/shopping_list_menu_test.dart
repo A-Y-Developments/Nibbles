@@ -33,9 +33,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.bySemanticsLabel('Copy to Clipboard'), findsOneWidget);
-    expect(find.bySemanticsLabel('Clear All Shopping List'), findsOneWidget);
+    expect(find.bySemanticsLabel('Clear shopping list'), findsOneWidget);
 
-    await tester.tap(find.bySemanticsLabel('Clear All Shopping List'));
+    await tester.tap(find.bySemanticsLabel('Clear shopping list'));
     await tester.pumpAndSettle();
     expect(selected, ShoppingListMenuAction.clear);
 

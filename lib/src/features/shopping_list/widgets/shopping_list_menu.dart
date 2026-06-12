@@ -132,7 +132,7 @@ class _MenuCard extends StatelessWidget {
             const SizedBox(height: AppSizes.xs),
             _MenuRow(
               icon: Icons.delete_outline,
-              label: 'Clear All Shopping List',
+              label: 'Clear shopping list',
               onTap: () => onSelected(ShoppingListMenuAction.clear),
             ),
           ],

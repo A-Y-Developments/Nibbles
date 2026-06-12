@@ -90,7 +90,7 @@ void main() {
       await tester.pumpWidget(_buildSut(mockService));
       await tester.pumpAndSettle();
 
-      expect(find.text("You don't have any list yet"), findsOneWidget);
+      expect(find.text('No items in your list yet'), findsOneWidget);
       // No browse-recipes CTA in this frame.
       expect(find.text('Browse recipes to get started'), findsNothing);
     });
@@ -214,33 +214,29 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
-  // Clear All Shopping List menu — Figma 971:9936 / 971:9958
+  // Clear shopping list menu — Figma 971:9936 / 971:9958
   // ---------------------------------------------------------------------------
 
   group('ShoppingListScreen - clear all', () {
-    testWidgets(
-      'Clear All Shopping List opens the verbatim confirmation sheet',
-      (tester) async {
-        await tester.pumpWidget(_buildSut(mockService));
-        await tester.pumpAndSettle();
+    testWidgets('Clear shopping list opens the verbatim confirmation sheet', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_buildSut(mockService));
+      await tester.pumpAndSettle();
 
-        // Open overflow menu via the green-deep more_horiz chip.
-        await tester.tap(find.byIcon(Icons.more_horiz));
-        await tester.pumpAndSettle();
+      // Open overflow menu via the green-deep more_horiz chip.
+      await tester.tap(find.byIcon(Icons.more_horiz));
+      await tester.pumpAndSettle();
 
-        await tester.tap(find.text('Clear All Shopping List'));
-        await tester.pumpAndSettle();
+      await tester.tap(find.text('Clear shopping list'));
+      await tester.pumpAndSettle();
 
-        expect(
-          find.text('Are you sure you want to delete?'),
-          findsOneWidget,
-        );
-        expect(find.text('Cancel'), findsOneWidget);
-        expect(find.text('Delete'), findsOneWidget);
-        // Legacy AlertDialog must not surface.
-        expect(find.byType(AlertDialog), findsNothing);
-      },
-    );
+      expect(find.text('Are you sure you want to delete?'), findsOneWidget);
+      expect(find.text('Cancel'), findsOneWidget);
+      expect(find.text('Delete'), findsOneWidget);
+      // Legacy AlertDialog must not surface.
+      expect(find.byType(AlertDialog), findsNothing);
+    });
 
     testWidgets('tapping Delete calls clearAll and empties the list', (
       tester,
@@ -257,7 +253,7 @@ void main() {
 
       await tester.tap(find.byIcon(Icons.more_horiz));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Clear All Shopping List'));
+      await tester.tap(find.text('Clear shopping list'));
       await tester.pumpAndSettle();
 
       // Disambiguate from the SwipeRevealRow's hidden "Delete" pill — the
@@ -266,7 +262,7 @@ void main() {
       await tester.pumpAndSettle();
 
       verify(() => mockService.clearAll(_babyId)).called(1);
-      expect(find.text("You don't have any list yet"), findsOneWidget);
+      expect(find.text('No items in your list yet'), findsOneWidget);
     });
 
     testWidgets('tapping Cancel dismisses the sheet without clearing', (
@@ -281,7 +277,7 @@ void main() {
 
       await tester.tap(find.byIcon(Icons.more_horiz));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Clear All Shopping List'));
+      await tester.tap(find.text('Clear shopping list'));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Cancel'));
