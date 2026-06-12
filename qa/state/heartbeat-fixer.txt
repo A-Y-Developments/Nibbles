@@ -1,1 +1,1 @@
-2026-06-12T23:19:52Z fixer: NIB-185 scope-specific destructive-confirm copy -> PR #419 (auto-qa). Verified allergen dialog on sim; meal-plan dialog via widget test. Ticket In Review.
+2026-06-12T23:45:19Z fixer: NIB-187 starting-guide copy nit -> PR #422 (auto-qa). Verified on sim. Clean non-HT trivials nearly exhausted; remaining queue mostly decision-blocked. Ticket In Review.
