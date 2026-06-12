@@ -1,1 +1,1 @@
-2026-06-12T23:04:36Z gate run: merged #418 (NIB-180 profile/subscription color fidelity). 0 rejected, 0 skipped. No open auto-qa PRs remain.
+2026-06-12T23:34:26Z gate run: merged #419 (NIB-185 scope-specific destructive confirmation copy). 0 rejected, 0 skipped. No open auto-qa PRs remain.
