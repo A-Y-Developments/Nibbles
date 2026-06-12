@@ -69,8 +69,7 @@ class _ManageSubscriptionScreenState
         message: err is AppException
             ? err.message
             : 'Couldn’t load your subscription. Please try again.',
-        onRetry: () =>
-            ref.invalidate(manageSubscriptionControllerProvider),
+        onRetry: () => ref.invalidate(manageSubscriptionControllerProvider),
       ),
       data: (state) => _ManageSubscriptionBody(state: state),
     );
@@ -153,10 +152,8 @@ class _ManageSubscriptionBody extends StatelessWidget {
                 : AppPillButton(
                     key: const Key('manage_subscription_go_premium_cta'),
                     label: 'Go Premium',
-                    variant: AppPillButtonVariant.ghost,
                     size: AppPillButtonSize.small,
-                    onPressed: () =>
-                        context.pushNamed(AppRoute.paywall.name),
+                    onPressed: () => context.pushNamed(AppRoute.paywall.name),
                   ),
           ),
         ],
@@ -223,9 +220,7 @@ class _NotSubscribedSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final body = theme.textTheme.bodyLarge?.copyWith(
-      color: AppColors.text,
-    );
+    final body = theme.textTheme.bodyLarge?.copyWith(color: AppColors.text);
 
     return _BrandCard(
       key: const Key('manage_subscription_not_subscribed_card'),
@@ -258,9 +253,7 @@ class _SubscribedSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final body = theme.textTheme.bodyLarge?.copyWith(
-      color: AppColors.text,
-    );
+    final body = theme.textTheme.bodyLarge?.copyWith(color: AppColors.text);
     final planLabel = info.planLabel ?? 'Premium';
 
     return Column(
@@ -286,10 +279,7 @@ class _SubscribedSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppSizes.md),
-        _Timeline(
-          startedAt: info.startedAt,
-          renewsAt: info.renewsAt,
-        ),
+        _Timeline(startedAt: info.startedAt, renewsAt: info.renewsAt),
         const SizedBox(height: AppSizes.md),
         Text(
           'You can cancel your subscription plan. If you cancel, you can '
@@ -478,9 +468,7 @@ class _TimelineDot extends StatelessWidget {
       height: _size,
       decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
       child: Icon(
-        completed
-            ? Icons.check_rounded
-            : Icons.radio_button_unchecked_rounded,
+        completed ? Icons.check_rounded : Icons.radio_button_unchecked_rounded,
         size: 18,
         color: fg,
       ),
