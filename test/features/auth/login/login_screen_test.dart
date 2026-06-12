@@ -85,8 +85,8 @@ void main() {
       expect(find.text('Password'), findsWidgets);
       expect(find.text('Login'), findsOneWidget);
       expect(find.text('Or login with'), findsOneWidget);
-      expect(find.text('Login with Google'), findsOneWidget);
-      expect(find.text('Login with Apple Account'), findsOneWidget);
+      expect(find.text('Sign in with Google'), findsOneWidget);
+      expect(find.text('Sign in with Apple'), findsOneWidget);
       expect(find.text('Don’t have an account?'), findsOneWidget);
       expect(find.text('Sign Up'), findsOneWidget);
 

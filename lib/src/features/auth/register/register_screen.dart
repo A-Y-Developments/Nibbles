@@ -137,7 +137,7 @@ class RegisterScreen extends ConsumerWidget {
                   key: const Key('register_google_button'),
                   identifier: 'register_google_button',
                   provider: SocialAuthProvider.google,
-                  label: 'Sign Up with Google',
+                  label: 'Sign up with Google',
                   isLoading: state.isLoading,
                   onPressed: () async {
                     final ok = await controller.signInWithGoogle();
@@ -151,7 +151,7 @@ class RegisterScreen extends ConsumerWidget {
                   key: const Key('register_apple_button'),
                   identifier: 'register_apple_button',
                   provider: SocialAuthProvider.apple,
-                  label: 'Sign Up with Apple Account',
+                  label: 'Sign up with Apple',
                   isLoading: state.isLoading,
                   onPressed: () async {
                     final ok = await controller.signInWithApple();

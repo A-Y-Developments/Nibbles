@@ -264,8 +264,8 @@ void main() {
       expect(find.text('Email address'), findsWidgets);
       expect(find.text('Password'), findsWidgets);
       expect(find.text('Or sign up with'), findsOneWidget);
-      expect(find.text('Sign Up with Google'), findsOneWidget);
-      expect(find.text('Sign Up with Apple Account'), findsOneWidget);
+      expect(find.text('Sign up with Google'), findsOneWidget);
+      expect(find.text('Sign up with Apple'), findsOneWidget);
       expect(find.text('Already have an account?'), findsOneWidget);
       expect(find.text('Login'), findsOneWidget);
     },
