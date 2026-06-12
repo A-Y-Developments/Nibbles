@@ -1,1 +1,1 @@
-2026-06-11T23:18:38Z supervisor run: all 4 loops healthy (coverage 19:39Z ~219m WARNING near threshold, explorer 22:47Z, fixer 23:09Z, gate 23:10Z); no stale locks; NIB-157+158 already clean; PR #390 (NIB-164) open; reseeded (baby ab9ac753); pre-07:00 skip digest
+2026-06-12T00:20:29Z supervisor run: COVERAGE DEAD (279m, respawn failed kitty); explorer/fixer/gate healthy; daily digest published; reseeded ok; worktrees clean; 6 HumanTouch majors in backlog
