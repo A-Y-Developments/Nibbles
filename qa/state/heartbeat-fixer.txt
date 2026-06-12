@@ -1,1 +1,1 @@
-2026-06-12T19:01:56Z WIP cap (2 open: #395 NIB-162, #396 NIB-172, human-touch awaiting review) — heartbeat, end
+2026-06-12T19:38:58Z fixer: WIP cap hit (2 open auto-qa PRs #396 #395, both human-touch awaiting human review). No rework queued. Skipped.
