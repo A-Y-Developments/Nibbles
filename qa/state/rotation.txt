@@ -1,8 +1,13 @@
-audited 2026-06-13 (run 27): recipe-detail "Add to Meal Plan" path (cycle-5 priority c) — VERIFIED HEALTHY end-to-end ON BUILD c58e8a8. RC-02 -> "+ Add to Meal Plan" -> day-picker sheet (accordion, "N selected" counter, dates correct: today Sat 13 Jun, sequential, NO Monday-snap on this single-day add) -> Add increments counter + "Added" badge -> commit "1 Day Selected" -> "Successfully added to meal plan" banner + DB row meal_plan_entries(plan_date=2026-06-15 Mon, correct recipe_id). No new defect. Dupes re-confirmed present: NIB-152 (paywall copy x4), NIB-160 (picsum thumbnails). Clean run, 0 tickets filed.
->> CAVEAT: app code landed AFTER my build was made. lib/ delta 7a5c41d..origin/main = home/greeting_card, home/helpful_guidance_card (NIB-172 pluralize), meal_plan/sheets/browse_meal_sheet.dart, utils/recipe_age.dart. My Add-to-Meal-Plan verify was on the OLD browse_meal_sheet. last_build.sha left at 7a5c41d ON PURPOSE -> forces NEXT run to rebuild and RE-VERIFY the meal sheet + recipe age display against the new code.
-audited 2026-06-13 (run 26): allergen-complete cycle-2 full-preamble re-verify — PASSED. All 8 flows re-swept post-verification.
-audited 2026-06-13 (run 25): profile-edit cycle-3 validation — all green
+audited 2026-06-13 (run 28): meal-plan area RE-VERIFY on fresh build 7dd2422 (NEW app code landed: NIB-161 safe-area, NIB-162 age-filter, NIB-166 copy). REBUILT + reinstalled.
+  PASS NIB-166: Browse Meal carousel header now "Recommendation for {allergen}" (typo "Recomendation" fixed); date range "Sat, 13 - Fri 19 June" clear.
+  PASS NIB-161: Browse Meal sheet title sits below notch/safe-area.
+  PASS NIB-162: age filter works EXACTLY — baby Testy 6mo; DB has 2 egg recipes @6+mo (Soft Scrambled Eggs, Egg Yolk Puree) and those are the only 2 shown; 12 older egg recipes (7-11mo) correctly hidden. Verified vs DB age_range.
+  Regression check: full create->browse->select->map->complete flow ran clean, no crash. DB meal_plan_entries.plan_date=2026-06-13 correct.
+  STILL BROKEN NIB-159: created Sat13-Fri19, plan list renders Mon8-Sun14 (ISO-week snap of start date). Map screen correct, only list view wrong. Commented on NIB-159 with build-7dd2422 repro + localization (fix = plan-list date-range calc). Evidence: run-artifacts/NIB-drift/nib159_r28_*.png. No new ticket.
+audited 2026-06-13 (run 27): recipe-detail "Add to Meal Plan" path VERIFIED HEALTHY on build c58e8a8. NIB-152/NIB-160 dupes re-confirmed.
+audited 2026-06-13 (run 26): allergen-complete cycle-2 re-verify PASS. All 8 flows swept.
+audited 2026-06-13 (run 25): profile-edit cycle-3 PASS
 audited 2026-06-12 (runs 1-24): bootstrap + cycles 1-4
-> next: cycle 5 cont. — (a) PRIORITY: rebuild on latest main, re-verify meal-plan Add path + browse_meal_sheet + recipe_age display (NEW app code landed run 27), (b) meal-plan multi-week 14-day range (NIB-159 boundary; single-day add showed clean sequential dates, so NIB-159 likely range-create-specific), (c) DONE run 27.
-NOTE for supervisor: app code is landing again as of run 27 (NIB-172 + browse_meal_sheet + recipe_age merged) — the prior "no app code for N builds" alert is CLEARED. Aging sev:majors to watch: NIB-177, NIB-181, NIB-184.
+> next: cycle 5 cont. — (a) allergen area re-verify on latest (allergen_logs-derived status; check NIB-176 visual drift + NIB-181 dairy-tag still open), (b) onboarding/register fresh-account flow re-verify, (c) home dashboard date-strip (NIB-186) + greeting (NIB-172 just merged, confirm pluralization on device).
+NOTE for supervisor: app code landing steadily (run 27-28: NIB-161/162/166/172 merged). Aging sev:majors to watch: NIB-177 (paywall price card), NIB-181 (recipe dairy-tag), NIB-184 (stale reaction note). NIB-159 reconfirmed broken on latest.
 DO NOT: confirm account deletion on the test account — overlay walk only
