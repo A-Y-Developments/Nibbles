@@ -1,1 +1,1 @@
-2026-06-12T21:24:28Z fixer: NIB-184 stale add-log notes fixed -> PR #413 (auto-qa, gate-mergeable). Verified on sim (zero DB writes). Triaged+deferred NIB-159/NIB-181 (need product/backend handling). Ticket In Review.
+2026-06-12T21:47:15Z fixer: NIB-168 shopping-list copy nits -> PR #414 (auto-qa, human-touch). Verified on sim. All clean non-HT sev:major exhausted; remaining majors blocked on product/content/data calls. Ticket In Review.
