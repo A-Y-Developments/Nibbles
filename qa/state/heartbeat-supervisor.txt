@@ -1,1 +1,1 @@
-2026-06-12T02:18:23Z supervisor run: all 4 loops healthy — coverage BACK (last 02:15Z, wip-cap on #395/#396 human-touch); explorer 01:39Z, fixer 02:01Z, gate 02:07Z; 2 human-touch PRs awaiting review; digest already published today
+2026-06-12T04:18:43Z supervisor run: EXPLORER DEAD (159m, respawn failed kitty); dead explorer sim lock cleaned; coverage 02:15Z OK; fixer 04:02Z OK; gate 04:07Z OK; 2 human-touch PRs blocking pipeline (#395 #396); digest published today
