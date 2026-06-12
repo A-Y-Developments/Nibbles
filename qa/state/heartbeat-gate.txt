@@ -1,1 +1,1 @@
-2026-06-12T21:04:57Z gate run: merged #411 (NIB-177 paywall price card pinned above CTA). Verified #410 copy survived rebase. Refreshed login__paywall baseline. 0 rejected, 0 skipped. No open auto-qa PRs remain.
+2026-06-12T21:34:30Z gate run: merged #413 (NIB-184 reaction-log stale notes fix). 0 rejected, 0 skipped. No open auto-qa PRs remain.
