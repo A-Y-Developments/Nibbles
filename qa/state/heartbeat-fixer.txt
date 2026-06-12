@@ -1,1 +1,1 @@
-2026-06-12T00:12:04Z NIB-170 PR#393 (In Review) — profile age plural; NIB-152 documented blocked (locked-design copy)
+2026-06-12T00:20:32Z no deliverable — NIB-168 design-locked (Figma 971-9989/971-9936), documented + Human Touch; sev:major queue all human-blocked
