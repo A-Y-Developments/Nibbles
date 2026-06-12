@@ -38,7 +38,10 @@ void main() {
     expect(find.text('Dinner is a good chance for ...'), findsOneWidget);
 
     expect(find.text('Offer water with each meal'), findsOneWidget);
-    expect(find.text('Small sips in an open cup from 6 month'), findsOneWidget);
+    expect(
+      find.text('Small sips in an open cup from 6 months'),
+      findsOneWidget,
+    );
 
     expect(find.text('Milk feeds still the priority'), findsOneWidget);
     expect(
