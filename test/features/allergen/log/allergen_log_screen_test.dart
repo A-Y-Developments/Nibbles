@@ -20,6 +20,19 @@ class _MockAllergenLogController extends AllergenLogController {
       AllergenLogState(hydrated: true, logDate: DateTime(2025, 6));
 }
 
+/// Builds with notes left over from a prior session — stands in for the
+/// keepAlive controller carrying stale state into a fresh CREATE form
+/// (NIB-184). `reset()` is the real implementation, so the screen's initState
+/// must invoke it to clear this before the first build.
+class _StaleNotesAllergenLogController extends AllergenLogController {
+  @override
+  AllergenLogState build() => AllergenLogState(
+    hydrated: true,
+    notes: 'edited by QA',
+    logDate: DateTime(2025, 6),
+  );
+}
+
 void main() {
   late MockBabyProfileService mockBabyService;
 
@@ -151,5 +164,35 @@ void main() {
       expect(find.byKey(const Key('log_save_button')), findsOneWidget);
       expect(find.text('Save'), findsOneWidget);
     });
+
+    // NIB-184 — the controller is keepAlive, so it can carry notes left over
+    // from a previous edit/create session. Opening the CREATE form must reset
+    // it before the first build so the notes field starts empty (the bug let a
+    // post-frame reset run after the field had already synced the stale value).
+    testWidgets(
+      'CREATE form clears notes retained by the keepAlive controller',
+      (tester) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              babyProfileServiceProvider.overrideWithValue(mockBabyService),
+              allergenLogControllerProvider.overrideWith(
+                _StaleNotesAllergenLogController.new,
+              ),
+            ],
+            child: const MaterialApp(
+              home: AllergenLogScreen(allergenKey: 'peanut'),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final notesField = tester.widget<TextField>(
+          find.byKey(const Key('log_notes_field')),
+        );
+        expect(notesField.controller?.text ?? '', isEmpty);
+        expect(find.text('edited by QA'), findsNothing);
+      },
+    );
   });
 }

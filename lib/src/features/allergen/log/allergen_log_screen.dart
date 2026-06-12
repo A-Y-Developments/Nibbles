@@ -74,7 +74,10 @@ class _AllergenLogScreenState extends ConsumerState<AllergenLogScreen> {
     final key = widget.isEdit ? state.logId : 'create';
     if (key == null || _ctrlSyncKey == key) return;
     _ctrlSyncKey = key;
-    _notesCtrl.text = state.notes ?? '';
+    // CREATE always opens a blank form; never seed the notes field from the
+    // keepAlive controller's leftover state (which the post-frame reset clears
+    // only after this first sync would have captured it). NIB-184.
+    _notesCtrl.text = widget.isEdit ? (state.notes ?? '') : '';
   }
 
   @override
