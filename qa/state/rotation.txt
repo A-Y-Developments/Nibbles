@@ -1,4 +1,5 @@
-audited 2026-06-12 (run 9): shopping-list cycle-2 — FIRST Figma comparison (NIB-158 map live): structure matches, styling drift filed NIB-173; NIB-157 verified
+audited 2026-06-12 (run 10): recipe-library cycle-2 with Figma — structural drift filed NIB-174; NIB-164/166 verified
+audited 2026-06-12 (run 9): shopping-list cycle-2 — first Figma comparison, NIB-173 filed; NIB-157 verified
 audited 2026-06-12 (run 8): meal-plan cycle-2 (Add to shop list verified) + login flake root-caused
 audited 2026-06-12 (run 7): allergen cycle-2 + recipe-library flow (bootstrap 8/8)
 audited 2026-06-12 (run 6): home + shopping-list flow + NIB-161
@@ -7,4 +8,5 @@ audited 2026-06-12 (run 4): recipe-library + meal-plan flow
 audited 2026-06-12 (run 3): shopping-list + allergen-complete flow
 audited 2026-06-11 (run 2): meal-plan + onboarding flow
 audited 2026-06-11 (run 1): allergen + paywall
-> next: recipe-library (cycle 2, with Figma comparison)
+> next: profile (cycle 2, with Figma node 1189-10278)
+pending re-verify: NIB-166 item 4 (readiness sign dup) on next onboarding sweep
