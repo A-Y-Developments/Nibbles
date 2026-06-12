@@ -3,9 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
+import 'package:nibbles/src/common/domain/entities/baby.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
 import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
+import 'package:nibbles/src/common/domain/enums/gender.dart';
 import 'package:nibbles/src/common/services/allergen_service.dart';
+import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/common/services/recipe_service.dart';
 import 'package:nibbles/src/features/meal_plan/sheets/browse_meal_sheet.dart';
 import 'package:nibbles/src/logging/analytics.dart';
@@ -16,7 +19,21 @@ class _MockRecipeService extends Mock implements RecipeService {}
 
 class _MockAllergenService extends Mock implements AllergenService {}
 
+class _MockBabyProfileService extends Mock implements BabyProfileService {}
+
 const _babyId = 'baby-001';
+
+Baby _babyAged(int months) {
+  final now = DateTime.now();
+  return Baby(
+    id: _babyId,
+    userId: 'user-001',
+    name: 'Testy',
+    dateOfBirth: DateTime(now.year, now.month - months),
+    gender: Gender.preferNotToSay,
+    onboardingCompleted: true,
+  );
+}
 
 const _safeA = Recipe(
   id: 'safe-a',
@@ -63,11 +80,13 @@ Map<String, AllergenStatus> _allSafeStatuses() => const {
 void main() {
   late _MockRecipeService mockRecipeService;
   late _MockAllergenService mockAllergenService;
+  late _MockBabyProfileService mockBabyProfileService;
   late FakeAnalytics fakeAnalytics;
 
   setUp(() {
     mockRecipeService = _MockRecipeService();
     mockAllergenService = _MockAllergenService();
+    mockBabyProfileService = _MockBabyProfileService();
     fakeAnalytics = FakeAnalytics();
   });
 
@@ -83,6 +102,7 @@ void main() {
     required List<Recipe> recipes,
     required Set<String> flaggedKeys,
     Map<String, AllergenStatus>? statuses,
+    Baby? baby,
   }) async {
     when(
       () => mockRecipeService.getAllRecipes(any()),
@@ -93,6 +113,7 @@ void main() {
     when(
       () => mockAllergenService.getAllergenStatuses(any()),
     ).thenAnswer((_) async => Result.success(statuses ?? _allSafeStatuses()));
+    when(() => mockBabyProfileService.getBaby()).thenAnswer((_) async => baby);
 
     // Larger viewport so the sheet, CTA and rows are all on-screen.
     tester.view.physicalSize = const Size(1080, 2400);
@@ -105,6 +126,7 @@ void main() {
         overrides: [
           recipeServiceProvider.overrideWithValue(mockRecipeService),
           allergenServiceProvider.overrideWithValue(mockAllergenService),
+          babyProfileServiceProvider.overrideWithValue(mockBabyProfileService),
           analyticsProvider.overrideWithValue(fakeAnalytics),
         ],
         child: MaterialApp(
@@ -247,6 +269,57 @@ void main() {
         expect(find.textContaining('Recommendation for'), findsNothing);
       },
     );
+
+    testWidgets('NIB-162: recommendation hides recipes above the baby age', (
+      tester,
+    ) async {
+      const egg10mo = Recipe(
+        id: 'egg-10',
+        title: 'Veggie Egg Frittata',
+        ageRange: '10+ months',
+        allergenTags: ['egg'],
+        ingredients: [],
+        steps: [],
+        howToServe: 'Serve.',
+      );
+      await openSheet(
+        tester,
+        recipes: const [egg10mo],
+        flaggedKeys: const {},
+        statuses: {..._allSafeStatuses(), 'egg': AllergenStatus.inProgress},
+        baby: _babyAged(6),
+      );
+
+      // 10-month recipe is too old for a 6-month-old → recommendation
+      // carousel suppressed, but the recipe still lives in the unfiltered
+      // master list (filtering is scoped to recommendations only).
+      expect(find.textContaining('Recommendation for'), findsNothing);
+      expect(find.text('Veggie Egg Frittata'), findsOneWidget);
+    });
+
+    testWidgets('NIB-162: recommendation keeps age-appropriate recipes', (
+      tester,
+    ) async {
+      const egg10mo = Recipe(
+        id: 'egg-10',
+        title: 'Veggie Egg Frittata',
+        ageRange: '10+ months',
+        allergenTags: ['egg'],
+        ingredients: [],
+        steps: [],
+        howToServe: 'Serve.',
+      );
+      await openSheet(
+        tester,
+        recipes: const [egg10mo],
+        flaggedKeys: const {},
+        statuses: {..._allSafeStatuses(), 'egg': AllergenStatus.inProgress},
+        baby: _babyAged(12),
+      );
+
+      // 12-month-old → 10-month recipe is appropriate → carousel shows.
+      expect(find.textContaining('Recommendation for'), findsOneWidget);
+    });
 
     testWidgets(
       'header renders verbatim "Browse Meal" title and weekday range',
