@@ -1,1 +1,1 @@
-2026-06-12T19:07:34Z gate run: #395 + #396 still human-touch, awaiting human review; nothing actionable
+2026-06-12T19:42:26Z gate run: merged #395 (NIB-162 age-filter) + #396 (NIB-172 home copy/emoji); both human-touch, awaiting post-merge review. 0 rejected, 0 skipped. No open auto-qa PRs remain.
