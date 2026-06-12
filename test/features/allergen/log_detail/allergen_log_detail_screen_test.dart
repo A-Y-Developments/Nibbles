@@ -85,17 +85,12 @@ void main() {
     ).thenAnswer((_) async => const Result.success('https://photo.test/p.jpg'));
     // Default: AL-08 already shown → the post-delete gate short-circuits and
     // the screen just pops (the behaviour the non-completion tests expect).
-    when(
-      () => mockFlags.isProgramCompletionShown(any()),
-    ).thenReturn(true);
+    when(() => mockFlags.isProgramCompletionShown(any())).thenReturn(true);
   });
 
   void stubLogs(List<AllergenLog> logs) {
     when(
-      () => mockService.getLogs(
-        any(),
-        allergenKey: any(named: 'allergenKey'),
-      ),
+      () => mockService.getLogs(any(), allergenKey: any(named: 'allergenKey')),
     ).thenAnswer((_) async => Result.success(logs));
   }
 
@@ -254,8 +249,11 @@ void main() {
         await tester.tap(find.byKey(const Key('log_actions_menu_delete')));
         await tester.pumpAndSettle();
 
-        // Verbatim Figma copy (1525:31338).
-        expect(find.text('Are you sure you want to delete?'), findsOneWidget);
+        // Scope-specific destructive copy (NIB-185).
+        expect(
+          find.text("Delete this log? This may change the allergen's status."),
+          findsOneWidget,
+        );
         expect(
           find.byKey(const Key('delete_log_cancel_button')),
           findsOneWidget,
@@ -327,9 +325,7 @@ void main() {
             photoPath: any(named: 'photoPath'),
           ),
         ).thenAnswer((_) async => const Result.success(null));
-        when(
-          () => mockFlags.isProgramCompletionShown(any()),
-        ).thenReturn(false);
+        when(() => mockFlags.isProgramCompletionShown(any())).thenReturn(false);
         when(
           () => mockFlags.markProgramCompletionShown(any()),
         ).thenAnswer((_) async {});
@@ -352,9 +348,7 @@ void main() {
         // Routed to AL-08 instead of popping back to the detail's parent.
         expect(find.text('AL08_STUB'), findsOneWidget);
         expect(find.text('ROOT_STUB'), findsNothing);
-        verify(
-          () => mockFlags.markProgramCompletionShown(_babyId),
-        ).called(1);
+        verify(() => mockFlags.markProgramCompletionShown(_babyId)).called(1);
       },
     );
   });

@@ -42,8 +42,9 @@ class _ClearConfirmSheet extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Are you sure you want to delete?',
-              style: Theme.of(context).textTheme.titleMedium ??
+              "Clear all meals for this week? This can't be undone.",
+              style:
+                  Theme.of(context).textTheme.titleMedium ??
                   AppTypography.sectionTitle,
               textAlign: TextAlign.center,
             ),
@@ -62,7 +63,7 @@ class _ClearConfirmSheet extends StatelessWidget {
                 const SizedBox(width: AppSizes.sm),
                 Expanded(
                   child: AppPillButton(
-                    label: 'Delete',
+                    label: 'Clear',
                     onPressed: () => Navigator.pop(context, true),
                   ),
                 ),

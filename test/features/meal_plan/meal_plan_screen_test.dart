@@ -80,28 +80,28 @@ AllergenProgramState _makeProgramState({
 }
 
 MealPlanEntry _entry(DateTime planDate, {String id = 'mp-1'}) => MealPlanEntry(
-      id: id,
-      babyId: _babyId,
-      recipeId: 'recipe-001',
-      planDate: planDate,
-    );
+  id: id,
+  babyId: _babyId,
+  recipeId: 'recipe-001',
+  planDate: planDate,
+);
 
 GoRouter _testRouter() => GoRouter(
-      initialLocation: '/',
-      routes: [
-        GoRoute(path: '/', builder: (_, __) => const MealPlanScreen()),
-        GoRoute(
-          path: AppRoute.mealPlanMap.path,
-          name: AppRoute.mealPlanMap.name,
-          builder: (_, __) => const Scaffold(body: Text('Map Stub')),
-        ),
-        GoRoute(
-          path: AppRoute.recipeDetail.path,
-          name: AppRoute.recipeDetail.name,
-          builder: (_, __) => const Scaffold(body: Text('Recipe Detail Stub')),
-        ),
-      ],
-    );
+  initialLocation: '/',
+  routes: [
+    GoRoute(path: '/', builder: (_, __) => const MealPlanScreen()),
+    GoRoute(
+      path: AppRoute.mealPlanMap.path,
+      name: AppRoute.mealPlanMap.name,
+      builder: (_, __) => const Scaffold(body: Text('Map Stub')),
+    ),
+    GoRoute(
+      path: AppRoute.recipeDetail.path,
+      name: AppRoute.recipeDetail.name,
+      builder: (_, __) => const Scaffold(body: Text('Recipe Detail Stub')),
+    ),
+  ],
+);
 
 void main() {
   late _MockBabyProfileService mockBabyService;
@@ -128,22 +128,15 @@ void main() {
   }) {
     when(() => mockBabyService.getBaby()).thenAnswer((_) async => _fakeBaby);
     when(
-      () => mockMealPlanService.getRolling7(
-        any(),
-        today: any(named: 'today'),
-      ),
+      () => mockMealPlanService.getRolling7(any(), today: any(named: 'today')),
     ).thenAnswer((_) async => Result.success(entries));
     when(
       () => mockRecipeService.getFlaggedAllergenKeys(any()),
     ).thenAnswer((_) async => const Result.success(<String>{}));
-    when(
-      () => mockAllergenService.getProgramState(any()),
-    ).thenAnswer(
+    when(() => mockAllergenService.getProgramState(any())).thenAnswer(
       (_) async => Result.success(programState ?? _makeProgramState()),
     );
-    when(
-      () => mockAllergenService.getAllergenBoardSummary(any()),
-    ).thenAnswer(
+    when(() => mockAllergenService.getAllergenBoardSummary(any())).thenAnswer(
       (_) async => const Result.success(<AllergenBoardItem>[
         AllergenBoardItem(
           allergen: _peanutAllergen,
@@ -180,43 +173,44 @@ void main() {
 
   group('MealPlanScreen empty branch', () {
     testWidgets(
-        'renders MealPlanEmptyState + header (no day-count line) and no '
-        'DayAccordionCards when entries is empty',
-        (tester) async {
-      stubBoot();
-      await pumpScreen(tester);
-
-      expect(find.byType(MealPlanEmptyState), findsOneWidget);
-      expect(find.byType(DayAccordionCard), findsNothing);
-      // Per Figma 971:8199 the empty state still shows the header (title +
-      // age subtitle + overflow button) — only the populated view renders
-      // the "Meal plan for X days" line.
-      expect(find.byType(MealPlanHeader), findsOneWidget);
-      expect(find.textContaining('Meal plan for'), findsNothing);
-    });
-  });
-
-  group('MealPlanScreen populated branch', () {
-    testWidgets(
-      'renders MealPlanHeader + 7 DayAccordionCards + AddDatePill',
+      'renders MealPlanEmptyState + header (no day-count line) and no '
+      'DayAccordionCards when entries is empty',
       (tester) async {
-        final start = DateTime.now();
-        final today = DateTime(start.year, start.month, start.day);
-        stubBoot(entries: [_entry(today)]);
+        stubBoot();
         await pumpScreen(tester);
 
+        expect(find.byType(MealPlanEmptyState), findsOneWidget);
+        expect(find.byType(DayAccordionCard), findsNothing);
+        // Per Figma 971:8199 the empty state still shows the header (title +
+        // age subtitle + overflow button) — only the populated view renders
+        // the "Meal plan for X days" line.
         expect(find.byType(MealPlanHeader), findsOneWidget);
-        // Rolling-7 window.
-        expect(find.byType(DayAccordionCard), findsNWidgets(7));
-        expect(find.byType(AddDatePill), findsOneWidget);
-        expect(find.byType(MealPlanEmptyState), findsNothing);
+        expect(find.textContaining('Meal plan for'), findsNothing);
       },
     );
   });
 
+  group('MealPlanScreen populated branch', () {
+    testWidgets('renders MealPlanHeader + 7 DayAccordionCards + AddDatePill', (
+      tester,
+    ) async {
+      final start = DateTime.now();
+      final today = DateTime(start.year, start.month, start.day);
+      stubBoot(entries: [_entry(today)]);
+      await pumpScreen(tester);
+
+      expect(find.byType(MealPlanHeader), findsOneWidget);
+      // Rolling-7 window.
+      expect(find.byType(DayAccordionCard), findsNWidgets(7));
+      expect(find.byType(AddDatePill), findsOneWidget);
+      expect(find.byType(MealPlanEmptyState), findsNothing);
+    });
+  });
+
   group('MealPlanScreen overflow menu', () {
-    testWidgets('shows exactly 3 items in the screen-level menu',
-        (tester) async {
+    testWidgets('shows exactly 3 items in the screen-level menu', (
+      tester,
+    ) async {
       final start = DateTime.now();
       final today = DateTime(start.year, start.month, start.day);
       stubBoot(entries: [_entry(today)]);
@@ -235,33 +229,27 @@ void main() {
       );
     });
 
-    testWidgets(
-      'empty-state overflow → Create new meal prep opens '
-      'SelectPeriodDateSheet',
-      (tester) async {
-        // Force the empty branch so we land on MealPlanEmptyState with the
-        // single-item overflow menu.
-        stubBoot();
-        await pumpScreen(tester);
+    testWidgets('empty-state overflow → Create new meal prep opens '
+        'SelectPeriodDateSheet', (tester) async {
+      // Force the empty branch so we land on MealPlanEmptyState with the
+      // single-item overflow menu.
+      stubBoot();
+      await pumpScreen(tester);
 
-        // Tap the header overflow button on the empty state.
-        await tester.tap(find.byType(MealPlanOverflowButton));
-        await tester.pumpAndSettle();
+      // Tap the header overflow button on the empty state.
+      await tester.tap(find.byType(MealPlanOverflowButton));
+      await tester.pumpAndSettle();
 
-        // The empty-state menu carries only 'Create new meal prep'.
-        expect(find.text('Create new meal prep'), findsOneWidget);
-        expect(
-          find.byWidgetPredicate((w) => w is PopupMenuItem),
-          findsOneWidget,
-        );
+      // The empty-state menu carries only 'Create new meal prep'.
+      expect(find.text('Create new meal prep'), findsOneWidget);
+      expect(find.byWidgetPredicate((w) => w is PopupMenuItem), findsOneWidget);
 
-        // Picking it opens the Select Period Date sheet.
-        await tester.tap(find.text('Create new meal prep'));
-        await tester.pumpAndSettle();
-        expect(find.byType(SelectPeriodDateSheet), findsOneWidget);
-        expect(find.text('Select Period Date'), findsOneWidget);
-      },
-    );
+      // Picking it opens the Select Period Date sheet.
+      await tester.tap(find.text('Create new meal prep'));
+      await tester.pumpAndSettle();
+      expect(find.byType(SelectPeriodDateSheet), findsOneWidget);
+      expect(find.text('Select Period Date'), findsOneWidget);
+    });
 
     testWidgets('per-card overflow menu shows exactly 2 items', (tester) async {
       final start = DateTime.now();
@@ -312,9 +300,7 @@ void main() {
         when(
           () => mockRecipeService.getAllRecipes(any()),
         ).thenAnswer((_) async => const Result.success([sheetRecipe]));
-        when(
-          () => mockAllergenService.getAllergenStatuses(any()),
-        ).thenAnswer(
+        when(() => mockAllergenService.getAllergenStatuses(any())).thenAnswer(
           (_) async => const Result.success({
             'peanut': AllergenStatus.safe,
             'egg': AllergenStatus.safe,
@@ -415,10 +401,13 @@ void main() {
         await tester.tap(find.text('Clear current week'));
         await tester.pumpAndSettle();
 
-        // Real confirm dialog rendered.
-        expect(find.text('Are you sure you want to delete?'), findsOneWidget);
+        // Real confirm dialog rendered with scope-specific copy (NIB-185).
+        expect(
+          find.text("Clear all meals for this week? This can't be undone."),
+          findsOneWidget,
+        );
 
-        await tester.tap(find.text('Delete'));
+        await tester.tap(find.text('Clear'));
         // clearRange triggers ref.invalidateSelf → re-fetches getRolling7.
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 100));
@@ -446,9 +435,7 @@ void main() {
         await tester.tap(find.text('Cancel'));
         await tester.pumpAndSettle();
 
-        verifyNever(
-          () => mockMealPlanService.clearRange(any(), any(), any()),
-        );
+        verifyNever(() => mockMealPlanService.clearRange(any(), any(), any()));
       },
     );
   });
