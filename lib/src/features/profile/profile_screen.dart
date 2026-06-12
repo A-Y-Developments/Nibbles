@@ -191,16 +191,17 @@ class _ProfileContent extends ConsumerWidget {
   }
 
   String _ageLabel(DateTime dob) {
-    // Figma audit (1189:12442): "month" singular, "days" plural. Reuse the
-    // shared ageInMonths helper (day-of-month adjusted) + days since the most
-    // recent month anniversary so months/days stay consistent with Home (was
-    // total-age-in-days, e.g. "9 month 246 days").
+    // Months + days since the most recent month anniversary, mirroring
+    // ageInMonths so the breakdown stays consistent with Home. Pluralized
+    // with singular handling at exactly 1 (NIB-170; was always "month").
     final now = DateTime.now();
     final months = ageInMonths(dob, now: now);
     final anniversary = DateTime(dob.year, dob.month + months, dob.day);
     final days = now.difference(anniversary).inDays;
     final clampedDays = days < 0 ? 0 : days;
-    return '$months month $clampedDays days';
+    final monthLabel = months == 1 ? 'month' : 'months';
+    final dayLabel = clampedDays == 1 ? 'day' : 'days';
+    return '$months $monthLabel $clampedDays $dayLabel';
   }
 
   Future<void> _confirmSignOut(BuildContext context, WidgetRef ref) async {
