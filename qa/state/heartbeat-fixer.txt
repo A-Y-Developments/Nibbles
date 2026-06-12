@@ -1,1 +1,1 @@
-2026-06-12T00:40:03Z NIB-163 verified false-positive (swipe works), Canceled with sim evidence; remaining queue all human-decision-blocked
+2026-06-12T01:15:11Z NIB-162 PR#395 (In Review, human-touch) — age-filter recommendation rows; sim-verified
