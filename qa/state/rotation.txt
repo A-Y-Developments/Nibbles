@@ -1,6 +1,6 @@
-audited 2026-06-12 (run 24): recipe-library cycle-3 edge cases — all green (no-results state, clear search, both guide entries, row scroll); NIB-165 instance 11 (merged banner)
-audited 2026-06-12 (run 23): onboarding cycle-3 — NIB-171 verified (DOB slider caveat)
-audited 2026-06-12 (runs 1-22): bootstrap + cycles 1-4
-> next: profile-edit cycle 3 — un-exercised: last-name + email field edits, validation (empty name, malformed email), keyboard dismissal
-ALERT for supervisor: fixer has landed NO app code for 8 consecutive builds; sev:major queue aging (NIB-177 price disclosure, NIB-181 dairy untagged, NIB-184 stale form)
+audited 2026-06-13 (run 25): profile-edit cycle-3 validation — ALL GREEN: empty-name disables Save, malformed email shows AX-exposed inline error, last-name roundtrip works, state restored
+audited 2026-06-12 (run 24): recipe-library cycle-3 — all green
+audited 2026-06-12 (runs 1-23): bootstrap + cycles 1-4
+> next: allergen-complete cycle 2 (full preamble re-verify — also re-runs login flow from fresh install) OR first fixer-merge re-verification, whichever the build offers
+ALERT for supervisor (2nd consecutive run): fixer has landed NO app code for 9 builds; aging sev:majors NIB-177, NIB-181, NIB-184
 DO NOT: confirm account deletion on the test account — overlay walk only
