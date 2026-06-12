@@ -1,8 +1,8 @@
-audited 2026-06-12 (run 14): allergen cycle-3 with Figma (tracker/detail/reaction-log) — NIB-176 drift filed; design self-contradicts on ring /9 vs /11 (NIB-152); design holds retired banner copy (NIB-156 note)
-audited 2026-06-12 (run 13): onboarding cycle-2 — NIB-175; NIB-166 fully verified
-audited 2026-06-12 (run 12): home cycle-2 — ring /9 vs /11
-audited 2026-06-12 (run 11): profile cycle-2 — clean
-audited 2026-06-12 (runs 1-10): bootstrap + cycles 1-2
-> next: meal-plan (cycle 3) — recheck NIB-159 status first; if fixed, refresh meal_plan baseline
+audited 2026-06-12 (run 15): paywall Figma audit — NIB-177 price-card REGRESSION + NIB-178 hard-vs-soft paywall filed; NIB-152 copy is design-inherited; meal-plan sweep green (NIB-159 still Todo, bounced to Human Touch)
+audited 2026-06-12 (run 14): allergen cycle-3 Figma — NIB-176; design self-contradicts on ring
+audited 2026-06-12 (run 13): onboarding cycle-2 — NIB-175; NIB-166 done
+audited 2026-06-12 (runs 1-12): bootstrap + cycles 1-2
+> next: allergen-complete area (AL-08 Figma node missing from map — check .figma-audit; else file mapping gap) then cycle 3 continues
 pending: verify NIB-171 onboarding Semantics ids next throwaway registration
+pending re-verify: NIB-177 — when fixed, also refresh meal_plan/allergen flow paywall coordinates if layout shifts again
 DO NOT: tap "Delete account" on the test account
