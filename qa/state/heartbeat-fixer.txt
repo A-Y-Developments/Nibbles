@@ -1,1 +1,1 @@
-2026-06-12T01:15:11Z NIB-162 PR#395 (In Review, human-touch) — age-filter recommendation rows; sim-verified
+2026-06-12T01:27:17Z NIB-172 PR#396 (In Review, human-touch) — guidance plural + greeting emoji; item2 deferred (content). NIB-174 documented blocked.
