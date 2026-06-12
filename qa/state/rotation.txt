@@ -1,8 +1,8 @@
-audited 2026-06-12 (run 17): profile satellites (give-feedback send OK, manage-sub honest state, delete overlay walk) — NIB-180-range color drift filed; figma-map extended with 4 nodes
-audited 2026-06-12 (run 16): allergen-complete — AL-08 design gap (NIB-179)
-audited 2026-06-12 (run 15): paywall — NIB-177 regression + NIB-178
-audited 2026-06-12 (runs 1-14): bootstrap + cycles 1-3
-> next: recipe-detail (RC-02) — .figma-audit/recipe-detail has no screens.json, locate node manually or file gap; then cycle 4 restarts at allergen
+audited 2026-06-12 (run 18): recipe-detail — NIB-181 dairy untagged (safety data!), NIB-182 missing design sections, NIB-183 node-id gap; recipe-library sweep green
+audited 2026-06-12 (run 17): profile satellites — NIB-180; figma-map +4 nodes
+audited 2026-06-12 (run 16): allergen-complete — NIB-179 design gap
+audited 2026-06-12 (runs 1-15): bootstrap + cycles 1-3 + paywall/home/onboarding Figma
+> next: cycle 4 restart — allergen; prioritize re-verifying any fixer merges first (NIB-177 price card is the hot one)
 pending: verify NIB-171 onboarding Semantics ids next throwaway registration
-pending re-verify: NIB-177 when fixed (recheck paywall coords in flows)
+pending re-verify: NIB-177 when fixed (recheck paywall coords in flows); NIB-181 seed-wide tag audit when fixer lands it
 DO NOT: confirm account deletion on the test account — overlay walk only
