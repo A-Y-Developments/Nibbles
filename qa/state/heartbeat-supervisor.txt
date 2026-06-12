@@ -1,1 +1,1 @@
-2026-06-12T05:18:43Z supervisor run: all 4 loops healthy (coverage 05:17Z, explorer 04:37Z, fixer 05:01Z, gate 05:07Z); no stale locks; stash-pop conflict from prior session cleaned; 2 human-touch PRs #395 #396 still blocking; digest published today
+2026-06-12T06:18:25Z supervisor run: all 4 loops healthy (coverage 05:28Z, explorer 05:43Z, fixer 06:01Z, gate 06:07Z); no locks; pipeline stalled on #395+#396 human-touch; clean state
