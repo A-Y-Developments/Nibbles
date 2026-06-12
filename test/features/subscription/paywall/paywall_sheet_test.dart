@@ -417,4 +417,51 @@ void main() {
     expect(container.read(devPaywallSkipProvider), isTrue);
     expect(find.text('home-stub'), findsOneWidget);
   });
+
+  // -------------------------------------------------------------------------
+  // NIB-177 regression — the price/trial-terms card must stay laid out and
+  // on-screen above the purchase CTA, even on a short viewport with the extra
+  // dev-skip button taking footer space. It previously scrolled off the fold
+  // (0x0 frame) because it lived at the bottom of the scroll content.
+  // -------------------------------------------------------------------------
+
+  testWidgets('price card stays visible above the CTA under space pressure', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(375 * 3, 600 * 3);
+    tester.view.devicePixelRatio = 3.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      _buildSut(
+        factory: () => _FakeSubscriptionService(
+          offeringsResult: const Result.success(_kOffering),
+          purchaseResult: const Result.success(null),
+          restoreResult: const Result.failure(
+            NotFoundException('No active subscription found.'),
+          ),
+        ),
+        devSkipEnabled: true,
+      ),
+    );
+    await tester.pump();
+
+    final cardRect = tester.getRect(
+      find.byKey(const Key('paywall_trial_card')),
+    );
+    final ctaRect = tester.getRect(
+      find.byKey(const Key('paywall_try_for_zero_button')),
+    );
+    final screenHeight =
+        tester.view.physicalSize.height / tester.view.devicePixelRatio;
+
+    // Laid out with real size (the regression rendered it as a 0x0 frame).
+    expect(cardRect.height, greaterThan(0));
+    // Fully within the viewport — not scrolled off the top or bottom fold.
+    expect(cardRect.top, greaterThanOrEqualTo(0));
+    expect(cardRect.bottom, lessThanOrEqualTo(screenHeight));
+    // Price disclosure sits above the purchase CTA (App Review 3.1.2).
+    expect(cardRect.bottom, lessThanOrEqualTo(ctaRect.top));
+  });
 }
