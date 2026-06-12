@@ -26,7 +26,7 @@ class HelpfulGuidanceCard extends StatelessWidget {
     _TipContent(
       emoji: '💧',
       title: 'Offer water with each meal',
-      body: 'Small sips in an open cup from 6 month',
+      body: 'Small sips in an open cup from 6 months',
     ),
     _TipContent(
       emoji: '🍼',

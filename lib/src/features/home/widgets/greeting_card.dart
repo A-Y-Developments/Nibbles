@@ -40,7 +40,9 @@ class GreetingCard extends StatelessWidget {
             text: accent,
             style: base.copyWith(color: AppColors.greenDeep),
           ),
-          const TextSpan(text: 'today!🎉'),
+          // Word joiner (U+2060) glues the emoji to "today!" so it never
+          // wraps onto its own line (NIB-172).
+          const TextSpan(text: 'today!\u{2060}🎉'),
         ],
       ),
     );
