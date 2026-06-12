@@ -1,1 +1,1 @@
-2026-06-11T23:39:51Z gate run: merged #390 (NIB-164 Apple sign-in cancel — no raw NSError; unknown-code trade-off documented on PR); NIB-164 -> Done
+2026-06-12T00:10:42Z gate run: merged #392 (NIB-166 copy nits; readiness sign mapping verified in source; evidence URLs SHA-pinned); NIB-166 -> Done; Figma frames now stale on 3 copy points (designer follow-up)
