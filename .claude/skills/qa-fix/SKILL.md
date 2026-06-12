@@ -24,6 +24,8 @@ Resolve `qa/scripts/sim_udid.sh QA-Fixer`, boot if needed. Build the worktree (`
 
 ## 3. PR
 - Commit (`fix(<scope>): <ticket-id> <symptom>`), push, `gh pr create` with: ticket link, what changed, screenshot evidence embedded, label `auto-qa` (create label on first use). If the ticket carries `Human Touch`, also add the `human-touch` PR label.
+- Embed evidence image URLs pinned to the COMMIT SHA (`raw.githubusercontent.com/<org>/<repo>/<sha>/qa/run-artifacts/...`), never the branch ref — the branch is deleted on merge and branch-ref links die.
+- Pin every new automation/UI contract with a test: semantics identifiers golden flows will target (`find.bySemanticsIdentifier` resolves to one node) and any copy produced by conditional logic. Pure static copy swaps need only the existing suite green.
 - Ticket → `In Review` with PR link comment.
 
 ## 4. Teardown
