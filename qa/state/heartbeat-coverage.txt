@@ -1,1 +1,1 @@
-2026-06-11T19:39:00Z run=3 target=shopping_list_repository coverage=0%->94.3% pr=380 ticket=NIB-169
+2026-06-12T02:15:36Z wip-cap prs=#395,#396
