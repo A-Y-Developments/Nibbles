@@ -1,1 +1,1 @@
-2026-06-12T22:05:23Z gate run: merged #414 (NIB-168 shopping-list copy, human-touch) + #415 (qa coverage baby_profile_repository). 0 rejected, 0 skipped. No open auto-qa PRs remain.
+2026-06-12T22:34:23Z gate run: merged #417 (NIB-175 social sign-in button labels, human-touch). 0 rejected, 0 skipped. No open auto-qa PRs remain.
