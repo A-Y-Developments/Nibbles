@@ -1,8 +1,8 @@
-audited 2026-06-12 (run 15): paywall Figma audit — NIB-177 price-card REGRESSION + NIB-178 hard-vs-soft paywall filed; NIB-152 copy is design-inherited; meal-plan sweep green (NIB-159 still Todo, bounced to Human Touch)
-audited 2026-06-12 (run 14): allergen cycle-3 Figma — NIB-176; design self-contradicts on ring
-audited 2026-06-12 (run 13): onboarding cycle-2 — NIB-175; NIB-166 done
-audited 2026-06-12 (runs 1-12): bootstrap + cycles 1-2
-> next: allergen-complete area (AL-08 Figma node missing from map — check .figma-audit; else file mapping gap) then cycle 3 continues
+audited 2026-06-12 (run 16): allergen-complete — AL-08 has NO design frame (NIB-179); shopping-list + recipe-library sweeps green with positive assertions
+audited 2026-06-12 (run 15): paywall Figma — NIB-177 regression + NIB-178 hard-vs-soft
+audited 2026-06-12 (run 14): allergen cycle-3 Figma — NIB-176
+audited 2026-06-12 (runs 1-13): bootstrap + cycles 1-2 + onboarding/home/profile Figma
+> next: uncovered design frames discovered in .figma-audit — profile-give-feedback, subscription-cancel, subscription-no-plan, profile-delete-account (read-only walk; DO NOT complete account deletion), recipe-detail
 pending: verify NIB-171 onboarding Semantics ids next throwaway registration
-pending re-verify: NIB-177 — when fixed, also refresh meal_plan/allergen flow paywall coordinates if layout shifts again
-DO NOT: tap "Delete account" on the test account
+pending re-verify: NIB-177 when fixed (also recheck paywall coordinates in flows)
+DO NOT: tap "Delete account" CONFIRMATION on the test account — opening the screen for audit is OK, never confirm
