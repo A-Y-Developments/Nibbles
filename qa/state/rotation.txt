@@ -1,11 +1,13 @@
-audited 2026-06-13 (run 29): paywall fixes RE-VERIFY (build 40c449f) + allergen-area audit.
-  PASS NIB-152: paywall copy all 4 fixed on-device — "Clear, guided steps through the Big 11" / "Get 300+ recipes" + "Baby-led meals for every stage" / "Plan the whole week in a few taps" / "Already helping 150+ parents". Subtitles now distinct.
-  PASS NIB-177: price card "3 Days Free / Then billed at $29.99 yearly" back + pinned above CTA (was missing run 27).
-  Allergen tracker/detail HEALTHY: Peanut detail truthful (First Jun 5 / Last Jun 9 = DB logs; 3/3 bars; 3 reaction logs; "Safe"). "Completed" subtitle matches design mock. Per-log "Safe" badges = per-feeding no-reaction (correct).
-  NEW TICKET NIB-188 (sev:trivial + Human Touch): home allergen ring "1/9" (safe count) vs tracker ring "2/9" (introduced count) — same baby, identical /9 visuals, tracker ring unlabeled. Both individually correct; design must reconcile or label. Evidence r29_home/tracker_ring*.png. Design ring is a distinct metric per mock 1116-18287 (ring 1/8 vs Safe 6) so NOT a tracker bug.
-audited 2026-06-13 (run 28): meal-plan re-verify (7dd2422): NIB-161/162/166 PASS; NIB-159 still broken (commented).
-audited 2026-06-13 (run 27): recipe-detail Add-to-Meal-Plan path HEALTHY. NIB-152/160 dupes (NIB-152 now FIXED run 29).
-audited 2026-06-13 (run 26): allergen-complete re-verify PASS. runs 1-25: bootstrap + cycles 1-4.
-> next: cycle 5 cont. — (a) onboarding/register fresh-account golden flow re-verify (unique QA_REG_EMAIL), (b) home date-strip NIB-186 re-check + greeting NIB-172 (greeting emoji inline confirmed run 29), (c) shopping-list NIB-168 copy + NIB-173 visual if not yet fixed.
-NOTE for supervisor: app code landing steadily (run 29: NIB-152/177 paywall merged). FIXED+verified this run: NIB-152, NIB-177. Aging still-open sev:majors: NIB-181 (recipe dairy-tag), NIB-184 (stale reaction note), NIB-159 (meal-plan week snap), NIB-178 (paywall close affordance).
+audited 2026-06-13 (run 30): fixer-merge re-verify on build bed63cb (NIB-168 + NIB-184 landed).
+  PASS NIB-168: shopping-list empty state now "No items in your list yet" (was "You don't have any list yet"); ... menu item now "Clear shopping list" (was "Clear All Shopping List"). Evidence r30_nib168_empty_state.png.
+  PASS NIB-184: edited Peanut Log1 notes -> "QA184 stale check" -> Save; reopened + Add reaction-log form => Notes EMPTY (placeholder only), not stale text. Verified via edit->add AND after edit+delete activity. Stale controller leak fixed. Evidence r30_nib184_addform_empty.png.
+  Bonus confirmation: deleting a clean peanut log dropped peanut 3/3 Safe -> 2/3 Ongoing (status correctly derived from allergen_logs, per NIB-120/126).
+  Re-observed (already filed, no action): NIB-185 delete confirmation still generic "Are you sure you want to delete?".
+  NIB-155 NOT re-tested this run (reaction severity/symptoms still unimplemented; not in changed files).
+audited 2026-06-13 (run 29): paywall NIB-152/177 verified FIXED; filed NIB-188 (home vs tracker ring 1/9 vs 2/9, sev:trivial+HT).
+audited 2026-06-13 (run 28): meal-plan NIB-161/162/166 PASS; NIB-159 still broken (commented).
+audited 2026-06-13 (run 27): recipe-detail Add-to-Meal-Plan HEALTHY.
+runs 1-26: bootstrap + cycles 1-4 + allergen-complete/profile re-verify.
+> next: cycle 5 cont. — (a) onboarding/register fresh-account golden flow re-verify (unique QA_REG_EMAIL) — STILL PENDING, deferred 2 runs for fix re-verify priority, (b) recipe-library NIB-174 structural drift / NIB-182 missing sections re-check, (c) shopping-list NIB-173 visual drift re-check.
+NOTE for supervisor: fix velocity strong (runs 27-30 merged+verified: NIB-152,177,168,184; earlier 161,162,166,172). Still-open sev:majors: NIB-181 (recipe dairy-tag), NIB-159 (meal-plan week snap), NIB-178 (paywall close), NIB-174/182 (recipe drift). NIB-155 (reaction severity unimplemented) still open.
 DO NOT: confirm account deletion on the test account — overlay walk only
