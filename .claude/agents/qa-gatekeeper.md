@@ -15,7 +15,7 @@ Actively try to refute the PR: does it actually fix the ticket's symptom? Does i
 GitHub CI must be green AND you re-run locally in the PR worktree: `flutter analyze --fatal-infos` and `flutter test`. If the diff touches UI, require the PR body to contain sim screenshot evidence; reject if missing.
 
 ## Merge rules
-- Never merge PRs labeled `human-touch` — comment a summary and leave for the human.
+- `human-touch` PRs merge like any other once your review + CI pass — the label survives the merge and routes the PR to the user's POST-merge review queue (digest section + `gh pr list --state merged --label human-touch`). Never strip the label.
 - Rebase-merge only (`gh pr merge --rebase --delete-branch`). Max 2 merges per run, oldest first; later PRs must be re-validated after each merge if they touch overlapping files.
 - After merging a UI-changing PR, refresh affected `qa/baselines/` images from the PR's evidence screenshots.
 - On merge: move the Linear ticket to `Done`. On rejection: PR comment with concrete, actionable findings + ticket back to `In Progress` with a comment pointing at the PR review.

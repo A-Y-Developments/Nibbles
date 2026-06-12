@@ -31,7 +31,7 @@ new-claude-tab "/loop 60m /qa-supervise" ~/Projects/nibbles
 - **WIP cap**: fixer + coverage skip their run when >= 2 open PRs carry the `auto-qa` GitHub label.
 - **Sim ownership**: explorer uses the sim named `QA-Explorer`, fixer uses `QA-Fixer` (resolve UDID by name via `qa/scripts/sim_udid.sh`). Never use each other's sim. The user's iPhone 17 sim stays untouched by loops.
 - **Sim locks**: `qa/state/lock-<sim>.pid` while driving; clear stale locks (dead PID) before claiming.
-- **Never auto-merge**: PRs labeled `human-touch` (mirrors the Linear `Human Touch` label).
+- **Human-touch = post-merge review, not a merge block**: PRs labeled `human-touch` merge through the gate like any other; the label survives the merge and forms the user's review queue (`gh pr list --state merged --label human-touch` + the digest's "awaiting post-merge review" section).
 - **Ticket states**: Explorer files in `Todo` -> Fixer moves to `In Progress` -> PR opened moves to `In Review` -> Gate merge moves to `Done`. Gate rejection moves back to `In Progress` with a comment. Never move tickets backwards otherwise.
 - **Rework queue**: a rejected PR (newest "Gate rejection" comment newer than its head commit) is reworked by the fixer BEFORE it picks any new ticket, and is exempt from the WIP cap — otherwise two rejected PRs deadlock the pipeline (rejected tickets leave `Todo`, and the open PRs themselves fill the cap).
 
