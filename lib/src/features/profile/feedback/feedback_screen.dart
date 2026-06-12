@@ -15,8 +15,8 @@ import 'package:nibbles/src/logging/analytics.dart';
 /// Give Feedback — single multi-line free-text entry + bottom-anchored CTA.
 ///
 /// Mirrors the Figma spec (frames 1207:15273 + 1216:11913):
-/// - Butter-soft header with a left chevron and left-aligned "Give Feedback"
-///   title.
+/// - Cream header (matches the screen background) with a left chevron and
+///   left-aligned "Give Feedback" title.
 /// - Textarea with placeholder "Your feedback..." and the helper line
 ///   "Thank you. We read every message." rendered BELOW the field.
 /// - Bottom-pinned butter pill "Send Feedback" CTA.
@@ -280,9 +280,10 @@ class _BrandLoaderMarkState extends State<_BrandLoaderMark>
   }
 }
 
-/// Butter-soft header for the Give Feedback screen. Left chevron + left-
-/// aligned "Give Feedback" title (Figma 1207:15273 header instance — title is
-/// flush-left next to the back button, not centred).
+/// Cream header for the Give Feedback screen (matches the scaffold background;
+/// no coloured band). Left chevron + left-aligned "Give Feedback" title
+/// (Figma 1207:15273 header instance — title is flush-left next to the back
+/// button, not centred).
 class _FeedbackHeader extends StatelessWidget {
   const _FeedbackHeader({required this.onBack});
 
@@ -292,7 +293,7 @@ class _FeedbackHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Container(
-      color: AppColors.butterSoft,
+      color: AppColors.background,
       padding: const EdgeInsets.fromLTRB(
         AppSizes.md + 2,
         AppSizes.sm - 2,
