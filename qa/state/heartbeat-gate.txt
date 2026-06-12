@@ -1,1 +1,1 @@
-2026-06-12T01:38:08Z gate run: #395 (NIB-162) + #396 (NIB-172) both human-touch -> skipped with status comments; CI green on both; awaiting human review
+2026-06-12T02:07:38Z gate run: #395 + #396 still human-touch, status comments already posted, awaiting human review; nothing actionable
