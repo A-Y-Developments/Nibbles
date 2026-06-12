@@ -1,1 +1,1 @@
-2026-06-12T22:34:23Z gate run: merged #417 (NIB-175 social sign-in button labels, human-touch). 0 rejected, 0 skipped. No open auto-qa PRs remain.
+2026-06-12T23:04:36Z gate run: merged #418 (NIB-180 profile/subscription color fidelity). 0 rejected, 0 skipped. No open auto-qa PRs remain.
