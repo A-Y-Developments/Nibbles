@@ -1,6 +1,7 @@
-audited 2026-06-12 (run 22): home cycle-4 interactions — ring tap + Create First Meal CTA route correctly, Starting Guide renders; NIB-186 date-strip intent question, NIB-187 guide copy, NIB-165 instance 10
-audited 2026-06-12 (run 21): shopping-list cycle-4 — all source paths green
-audited 2026-06-12 (runs 1-20): bootstrap + cycles 1-4 (allergen, meal-plan)
-> next: onboarding cycle 3 — includes the pending NIB-171 Semantics-id verification (throwaway registration; describe-ui name/DOB/readiness/consent)
-pending re-verify: NIB-177 price card; NIB-181 tag audit; NIB-184 stale form
+audited 2026-06-12 (run 23): onboarding cycle-3 — NIB-171 semantics verified (name/readiness/consent ids work; DOB sliders still unlabeled, noted on NIB-165); onboarding swept green manually
+audited 2026-06-12 (run 22): home cycle-4 — NIB-186/187
+audited 2026-06-12 (runs 1-21): bootstrap + cycles 1-4
+> next: recipe-library cycle 3 — un-exercised: Open Starting Guide bookmark vs banner, search edge cases (no results, clear), recommendation row scroll-past-end
+pending re-verify: NIB-177 price card; NIB-181 tag audit; NIB-184 stale form (fixer queue stalled on app code — flag to supervisor if still unmoved next run)
+note: onboarding flows can be rewritten id-first (readiness_choice_yes, onboarding_consent_checkbox_*, onboarding_first_name_field) when next touched
 DO NOT: confirm account deletion on the test account — overlay walk only
