@@ -1,8 +1,8 @@
-audited 2026-06-12 (run 16): allergen-complete — AL-08 has NO design frame (NIB-179); shopping-list + recipe-library sweeps green with positive assertions
-audited 2026-06-12 (run 15): paywall Figma — NIB-177 regression + NIB-178 hard-vs-soft
-audited 2026-06-12 (run 14): allergen cycle-3 Figma — NIB-176
-audited 2026-06-12 (runs 1-13): bootstrap + cycles 1-2 + onboarding/home/profile Figma
-> next: uncovered design frames discovered in .figma-audit — profile-give-feedback, subscription-cancel, subscription-no-plan, profile-delete-account (read-only walk; DO NOT complete account deletion), recipe-detail
+audited 2026-06-12 (run 17): profile satellites (give-feedback send OK, manage-sub honest state, delete overlay walk) — NIB-180-range color drift filed; figma-map extended with 4 nodes
+audited 2026-06-12 (run 16): allergen-complete — AL-08 design gap (NIB-179)
+audited 2026-06-12 (run 15): paywall — NIB-177 regression + NIB-178
+audited 2026-06-12 (runs 1-14): bootstrap + cycles 1-3
+> next: recipe-detail (RC-02) — .figma-audit/recipe-detail has no screens.json, locate node manually or file gap; then cycle 4 restarts at allergen
 pending: verify NIB-171 onboarding Semantics ids next throwaway registration
-pending re-verify: NIB-177 when fixed (also recheck paywall coordinates in flows)
-DO NOT: tap "Delete account" CONFIRMATION on the test account — opening the screen for audit is OK, never confirm
+pending re-verify: NIB-177 when fixed (recheck paywall coords in flows)
+DO NOT: confirm account deletion on the test account — overlay walk only

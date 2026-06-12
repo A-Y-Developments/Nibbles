@@ -43,3 +43,15 @@ paywall:
 profile:
   route: /home/profile
   figma_node: "ASB9HZLodbzJCo5bjkqjy6:1189-10278"
+give_feedback:
+  route: /home/profile/feedback
+  figma_node: "ASB9HZLodbzJCo5bjkqjy6:1207-15273"
+subscription_manage_no_plan:
+  route: /subscription/manage
+  figma_node: "ASB9HZLodbzJCo5bjkqjy6:1207-11462"
+subscription_manage_subscribed:
+  route: /subscription/manage
+  figma_node: "ASB9HZLodbzJCo5bjkqjy6:1207-11737"
+delete_account_overlay:
+  route: /home/profile (overlay)
+  figma_node: "ASB9HZLodbzJCo5bjkqjy6:1216-11954"
