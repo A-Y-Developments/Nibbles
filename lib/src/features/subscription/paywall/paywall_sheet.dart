@@ -198,16 +198,14 @@ class _PaywallBody extends StatelessWidget {
           onRestore: onRestore,
           restoreSpinning: state.action == PaywallAction.restoring,
         ),
-        Expanded(
-          child: SingleChildScrollView(
-            child: _ScrollContent(state: state, onRetry: onRetry),
-          ),
-        ),
+        const Expanded(child: SingleChildScrollView(child: _ScrollContent())),
         // Footer column gap to scroll content == 24 (Figma column gap).
         const SizedBox(height: AppSizes.lg),
         _Footer(
+          state: state,
           onPurchase: onPurchase,
           onViewAllPlans: onViewAllPlans,
+          onRetry: onRetry,
           purchasing: state.action == PaywallAction.purchasing,
           onDevSkip: onDevSkip,
         ),
@@ -265,44 +263,24 @@ class _SheetHeader extends StatelessWidget {
 }
 
 class _ScrollContent extends StatelessWidget {
-  const _ScrollContent({required this.state, required this.onRetry});
-
-  final PaywallState state;
-  final VoidCallback? onRetry;
+  const _ScrollContent();
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    // Price disclosure (_TrialCard) lives in the always-visible footer above
+    // the CTA (NIB-177), not here — so it can never scroll off-screen.
+    return const Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // Column gap from header to logo == 24 per spec.
-        const SizedBox(height: AppSizes.lg),
-        const _BrandRow(),
-        const SizedBox(height: AppSizes.lg),
-        const _Heading(),
-        const SizedBox(height: AppSizes.lg),
-        const _FeatureRows(),
-        const SizedBox(height: AppSizes.lg),
-        const _SocialProof(),
-        const SizedBox(height: AppSizes.lg),
-        switch (state.phase) {
-          PaywallPhase.loading => const _TrialCardLoading(),
-          PaywallPhase.error => _TrialCardError(
-            message: state.errorMessage ?? 'Could not load offering.',
-            onRetry: onRetry,
-          ),
-          PaywallPhase.ready => _TrialCard(
-            offering:
-                state.offering ??
-                // Defensive — phase=ready always carries an offering.
-                const SubscriptionOffering(
-                  productId: '',
-                  priceString: '',
-                  periodLabel: '',
-                  trialDays: 0,
-                ),
-          ),
-        },
+        SizedBox(height: AppSizes.lg),
+        _BrandRow(),
+        SizedBox(height: AppSizes.lg),
+        _Heading(),
+        SizedBox(height: AppSizes.lg),
+        _FeatureRows(),
+        SizedBox(height: AppSizes.lg),
+        _SocialProof(),
       ],
     );
   }
@@ -626,14 +604,18 @@ class _TrialCardError extends StatelessWidget {
 
 class _Footer extends StatelessWidget {
   const _Footer({
+    required this.state,
     required this.onPurchase,
     required this.onViewAllPlans,
+    required this.onRetry,
     required this.purchasing,
     required this.onDevSkip,
   });
 
+  final PaywallState state;
   final VoidCallback? onPurchase;
   final VoidCallback? onViewAllPlans;
+  final VoidCallback? onRetry;
   final bool purchasing;
   final VoidCallback? onDevSkip;
 
@@ -644,6 +626,27 @@ class _Footer extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // Price/trial-terms disclosure — pinned above the CTA so it is always
+          // visible before purchase (NIB-177; App Review 3.1.2).
+          switch (state.phase) {
+            PaywallPhase.loading => const _TrialCardLoading(),
+            PaywallPhase.error => _TrialCardError(
+              message: state.errorMessage ?? 'Could not load offering.',
+              onRetry: onRetry,
+            ),
+            PaywallPhase.ready => _TrialCard(
+              offering:
+                  state.offering ??
+                  // Defensive — phase=ready always carries an offering.
+                  const SubscriptionOffering(
+                    productId: '',
+                    priceString: '',
+                    periodLabel: '',
+                    trialDays: 0,
+                  ),
+            ),
+          },
+          const SizedBox(height: AppSizes.lg),
           // Primary CTA — h48 / radius 24 / Forest-dark fill.
           SizedBox(
             height: 48,
