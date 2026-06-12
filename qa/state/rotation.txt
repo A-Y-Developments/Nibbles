@@ -1,13 +1,11 @@
-audited 2026-06-13 (run 28): meal-plan area RE-VERIFY on fresh build 7dd2422 (NEW app code landed: NIB-161 safe-area, NIB-162 age-filter, NIB-166 copy). REBUILT + reinstalled.
-  PASS NIB-166: Browse Meal carousel header now "Recommendation for {allergen}" (typo "Recomendation" fixed); date range "Sat, 13 - Fri 19 June" clear.
-  PASS NIB-161: Browse Meal sheet title sits below notch/safe-area.
-  PASS NIB-162: age filter works EXACTLY — baby Testy 6mo; DB has 2 egg recipes @6+mo (Soft Scrambled Eggs, Egg Yolk Puree) and those are the only 2 shown; 12 older egg recipes (7-11mo) correctly hidden. Verified vs DB age_range.
-  Regression check: full create->browse->select->map->complete flow ran clean, no crash. DB meal_plan_entries.plan_date=2026-06-13 correct.
-  STILL BROKEN NIB-159: created Sat13-Fri19, plan list renders Mon8-Sun14 (ISO-week snap of start date). Map screen correct, only list view wrong. Commented on NIB-159 with build-7dd2422 repro + localization (fix = plan-list date-range calc). Evidence: run-artifacts/NIB-drift/nib159_r28_*.png. No new ticket.
-audited 2026-06-13 (run 27): recipe-detail "Add to Meal Plan" path VERIFIED HEALTHY on build c58e8a8. NIB-152/NIB-160 dupes re-confirmed.
-audited 2026-06-13 (run 26): allergen-complete cycle-2 re-verify PASS. All 8 flows swept.
-audited 2026-06-13 (run 25): profile-edit cycle-3 PASS
-audited 2026-06-12 (runs 1-24): bootstrap + cycles 1-4
-> next: cycle 5 cont. — (a) allergen area re-verify on latest (allergen_logs-derived status; check NIB-176 visual drift + NIB-181 dairy-tag still open), (b) onboarding/register fresh-account flow re-verify, (c) home dashboard date-strip (NIB-186) + greeting (NIB-172 just merged, confirm pluralization on device).
-NOTE for supervisor: app code landing steadily (run 27-28: NIB-161/162/166/172 merged). Aging sev:majors to watch: NIB-177 (paywall price card), NIB-181 (recipe dairy-tag), NIB-184 (stale reaction note). NIB-159 reconfirmed broken on latest.
+audited 2026-06-13 (run 29): paywall fixes RE-VERIFY (build 40c449f) + allergen-area audit.
+  PASS NIB-152: paywall copy all 4 fixed on-device — "Clear, guided steps through the Big 11" / "Get 300+ recipes" + "Baby-led meals for every stage" / "Plan the whole week in a few taps" / "Already helping 150+ parents". Subtitles now distinct.
+  PASS NIB-177: price card "3 Days Free / Then billed at $29.99 yearly" back + pinned above CTA (was missing run 27).
+  Allergen tracker/detail HEALTHY: Peanut detail truthful (First Jun 5 / Last Jun 9 = DB logs; 3/3 bars; 3 reaction logs; "Safe"). "Completed" subtitle matches design mock. Per-log "Safe" badges = per-feeding no-reaction (correct).
+  NEW TICKET NIB-188 (sev:trivial + Human Touch): home allergen ring "1/9" (safe count) vs tracker ring "2/9" (introduced count) — same baby, identical /9 visuals, tracker ring unlabeled. Both individually correct; design must reconcile or label. Evidence r29_home/tracker_ring*.png. Design ring is a distinct metric per mock 1116-18287 (ring 1/8 vs Safe 6) so NOT a tracker bug.
+audited 2026-06-13 (run 28): meal-plan re-verify (7dd2422): NIB-161/162/166 PASS; NIB-159 still broken (commented).
+audited 2026-06-13 (run 27): recipe-detail Add-to-Meal-Plan path HEALTHY. NIB-152/160 dupes (NIB-152 now FIXED run 29).
+audited 2026-06-13 (run 26): allergen-complete re-verify PASS. runs 1-25: bootstrap + cycles 1-4.
+> next: cycle 5 cont. — (a) onboarding/register fresh-account golden flow re-verify (unique QA_REG_EMAIL), (b) home date-strip NIB-186 re-check + greeting NIB-172 (greeting emoji inline confirmed run 29), (c) shopping-list NIB-168 copy + NIB-173 visual if not yet fixed.
+NOTE for supervisor: app code landing steadily (run 29: NIB-152/177 paywall merged). FIXED+verified this run: NIB-152, NIB-177. Aging still-open sev:majors: NIB-181 (recipe dairy-tag), NIB-184 (stale reaction note), NIB-159 (meal-plan week snap), NIB-178 (paywall close affordance).
 DO NOT: confirm account deletion on the test account — overlay walk only
