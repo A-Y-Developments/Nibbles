@@ -1,1 +1,1 @@
-2026-06-12T20:03:23Z gate run: no open auto-qa PRs; nothing to merge.
+2026-06-12T20:35:59Z gate run: merged #410 (NIB-152 paywall copy); human-touch, awaiting post-merge review. Refreshed login__paywall baseline. 0 rejected, 0 skipped. No open auto-qa PRs remain.
