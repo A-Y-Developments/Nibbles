@@ -10,11 +10,14 @@ import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
 import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
 import 'package:nibbles/src/common/services/allergen_service.dart';
+import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/common/services/helpers/derive_allergen_status.dart';
 import 'package:nibbles/src/common/services/recipe_service.dart';
 import 'package:nibbles/src/features/meal_plan/sheets/widgets/browse_meal_recipe_card.dart';
 import 'package:nibbles/src/features/meal_plan/sheets/widgets/recommendation_carousel_section.dart';
 import 'package:nibbles/src/logging/analytics.dart';
+import 'package:nibbles/src/utils/age_in_months.dart';
+import 'package:nibbles/src/utils/recipe_age.dart';
 
 /// Bottom sheet shown via [showModalBottomSheet]. Returns the picked recipes
 /// or null on cancel. Multi-select Browse Meal sheet for the meal-plan
@@ -86,6 +89,7 @@ class _BrowseMealSheetState extends ConsumerState<_BrowseMealSheet> {
   List<Recipe>? _recipes;
   Set<String> _flaggedKeys = {};
   String? _ongoingAllergenKey;
+  int? _babyAgeMonths;
   String _query = '';
   bool _loading = true;
   String? _error;
@@ -111,6 +115,7 @@ class _BrowseMealSheetState extends ConsumerState<_BrowseMealSheet> {
 
     final recipeService = ref.read(recipeServiceProvider);
     final allergenService = ref.read(allergenServiceProvider);
+    final babyProfileService = ref.read(babyProfileServiceProvider);
 
     final recipesResult = await recipeService.getAllRecipes(widget.babyId);
     final flaggedResult = await recipeService.getFlaggedAllergenKeys(
@@ -119,6 +124,7 @@ class _BrowseMealSheetState extends ConsumerState<_BrowseMealSheet> {
     final statusesResult = await allergenService.getAllergenStatuses(
       widget.babyId,
     );
+    final baby = await babyProfileService.getBaby();
 
     if (!mounted) return;
 
@@ -146,8 +152,20 @@ class _BrowseMealSheetState extends ConsumerState<_BrowseMealSheet> {
       _recipes = recipesResult.dataOrNull;
       _flaggedKeys = flaggedResult.dataOrNull ?? {};
       _ongoingAllergenKey = ongoing;
+      _babyAgeMonths = baby == null ? null : ageInMonths(baby.dateOfBirth);
       _loading = false;
     });
+  }
+
+  /// Whether [r] suits the baby's current age. Recommendations honour the
+  /// onboarding "right foods at the right time" promise (NIB-162) by hiding
+  /// recipes whose minimum age exceeds the baby's. Unknown age (no baby
+  /// loaded) or an unparseable label leaves the recipe eligible.
+  bool _isAgeAppropriate(Recipe r) {
+    final age = _babyAgeMonths;
+    if (age == null) return true;
+    final min = minAgeMonths(r.ageRange);
+    return min == null || min <= age;
   }
 
   bool _isUnsafe(Recipe r) => r.allergenTags.any(_flaggedKeys.contains);
@@ -219,6 +237,7 @@ class _BrowseMealSheetState extends ConsumerState<_BrowseMealSheet> {
     final all = _recipes ?? const <Recipe>[];
     return all
         .where((r) => r.allergenTags.contains(allergenKey))
+        .where(_isAgeAppropriate)
         .toList(growable: false);
   }
 
@@ -236,6 +255,7 @@ class _BrowseMealSheetState extends ConsumerState<_BrowseMealSheet> {
     final byCategory = <String, List<Recipe>>{};
     for (final r in all) {
       if (_isUnsafe(r)) continue;
+      if (!_isAgeAppropriate(r)) continue;
       final cat = r.category;
       if (cat == null || cat.isEmpty) continue;
       byCategory.putIfAbsent(cat, () => <Recipe>[]).add(r);
@@ -250,6 +270,7 @@ class _BrowseMealSheetState extends ConsumerState<_BrowseMealSheet> {
       if (_flaggedKeys.contains(key)) continue;
       final list = all
           .where((r) => r.allergenTags.contains(key))
+          .where(_isAgeAppropriate)
           .toList(growable: false);
       if (list.isEmpty) continue;
       groups[key] = list;
