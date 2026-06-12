@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:nibbles/src/app/config/flavor_config.dart';
 import 'package:nibbles/src/common/data/repositories/auth_repository.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
@@ -72,6 +73,21 @@ void main() {
   setUpAll(() {
     registerFallbackValue(_FakeUserAttributes());
     registerFallbackValue(OAuthProvider.google);
+    FlavorConfig.init(
+      flavor: Flavor.dev,
+      supabaseUrl: 'https://test.supabase.co',
+      supabaseAnonKey: 'anon-key',
+      revenueCatAppleKey: 'rc-apple',
+      revenueCatGoogleKey: 'rc-google',
+      firebaseAndroidApiKey: 'firebase-android-key',
+      firebaseAndroidAppId: '1:000:android:000',
+      firebaseIosApiKey: 'firebase-ios-key',
+      firebaseIosAppId: '1:000:ios:000',
+      firebaseMessagingSenderId: '000000000',
+      firebaseProjectId: 'nibbles-test',
+      firebaseStorageBucket: 'nibbles-test.appspot.com',
+      firebaseIosBundleId: 'com.aydev.nibbles.dev',
+    );
   });
 
   setUp(() {
@@ -355,6 +371,322 @@ void main() {
   });
 
   // -------------------------------------------------------------------------
+  // signUp
+  // -------------------------------------------------------------------------
+
+  group('signUp', () {
+    test('returns Success when session is not null', () async {
+      final sut = buildSut();
+      when(
+        () => mockAuth.signUp(
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+        ),
+      ).thenAnswer((_) async => AuthResponse(session: _FakeSession()));
+
+      final result = await sut.signUp('test@example.com', 'password123');
+
+      expect(result, isA<Success<void>>());
+    });
+
+    test('returns Failure(ServerException) when session is null', () async {
+      final sut = buildSut();
+      when(
+        () => mockAuth.signUp(
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+        ),
+      ).thenAnswer((_) async => AuthResponse());
+
+      final result = await sut.signUp('test@example.com', 'password123');
+
+      expect(result, isA<Failure<void>>());
+      expect((result as Failure<void>).error, isA<ServerException>());
+      expect(result.error.message, contains('confirm your email'));
+    });
+
+    test('maps AuthException to Failure(ServerException)', () async {
+      final sut = buildSut();
+      when(
+        () => mockAuth.signUp(
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+        ),
+      ).thenThrow(const AuthException('email already registered'));
+
+      final result = await sut.signUp('test@example.com', 'password123');
+
+      expect(result, isA<Failure<void>>());
+      expect(
+        (result as Failure<void>).error.message,
+        'email already registered',
+      );
+    });
+
+    test('returns Failure(UnknownException) on unexpected error', () async {
+      final sut = buildSut();
+      when(
+        () => mockAuth.signUp(
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+        ),
+      ).thenThrow(Exception('network error'));
+
+      final result = await sut.signUp('test@example.com', 'password123');
+
+      expect(result, isA<Failure<void>>());
+      expect((result as Failure<void>).error, isA<UnknownException>());
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // signIn
+  // -------------------------------------------------------------------------
+
+  group('signIn', () {
+    test('returns Success on valid credentials', () async {
+      final sut = buildSut();
+      when(
+        () => mockAuth.signInWithPassword(
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+        ),
+      ).thenAnswer((_) async => AuthResponse(session: _FakeSession()));
+
+      final result = await sut.signIn('test@example.com', 'password123');
+
+      expect(result, isA<Success<void>>());
+    });
+
+    test('maps AuthException to Failure(ServerException)', () async {
+      final sut = buildSut();
+      when(
+        () => mockAuth.signInWithPassword(
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+        ),
+      ).thenThrow(const AuthException('invalid credentials'));
+
+      final result = await sut.signIn('test@example.com', 'wrong');
+
+      expect(result, isA<Failure<void>>());
+      expect((result as Failure<void>).error.message, 'invalid credentials');
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // signOut
+  // -------------------------------------------------------------------------
+
+  group('signOut', () {
+    test('returns Success', () async {
+      final sut = buildSut();
+      when(() => mockAuth.signOut()).thenAnswer((_) async {});
+
+      final result = await sut.signOut();
+
+      expect(result, isA<Success<void>>());
+    });
+
+    test('maps AuthException to Failure(ServerException)', () async {
+      final sut = buildSut();
+      when(() => mockAuth.signOut())
+          .thenThrow(const AuthException('session expired'));
+
+      final result = await sut.signOut();
+
+      expect(result, isA<Failure<void>>());
+      expect((result as Failure<void>).error.message, 'session expired');
+    });
+
+    test('returns Failure(UnknownException) on unexpected error', () async {
+      final sut = buildSut();
+      when(() => mockAuth.signOut()).thenThrow(Exception('network error'));
+
+      final result = await sut.signOut();
+
+      expect(result, isA<Failure<void>>());
+      expect((result as Failure<void>).error, isA<UnknownException>());
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // resetPassword
+  // -------------------------------------------------------------------------
+
+  group('resetPassword', () {
+    test('returns Success and passes redirectTo', () async {
+      final sut = buildSut();
+      when(
+        () => mockAuth.resetPasswordForEmail(
+          any(),
+          redirectTo: any(named: 'redirectTo'),
+        ),
+      ).thenAnswer((_) async {});
+
+      final result = await sut.resetPassword('test@example.com');
+
+      expect(result, isA<Success<void>>());
+      final captured = verify(
+        () => mockAuth.resetPasswordForEmail(
+          'test@example.com',
+          redirectTo: captureAny(named: 'redirectTo'),
+        ),
+      ).captured;
+      expect(captured.first as String, contains('://auth/reset-password'));
+    });
+
+    test('maps AuthException to Failure(ServerException)', () async {
+      final sut = buildSut();
+      when(
+        () => mockAuth.resetPasswordForEmail(
+          any(),
+          redirectTo: any(named: 'redirectTo'),
+        ),
+      ).thenThrow(const AuthException('email not found'));
+
+      final result = await sut.resetPassword('test@example.com');
+
+      expect(result, isA<Failure<void>>());
+      expect((result as Failure<void>).error.message, 'email not found');
+    });
+
+    test('returns Failure(UnknownException) on unexpected error', () async {
+      final sut = buildSut();
+      when(
+        () => mockAuth.resetPasswordForEmail(
+          any(),
+          redirectTo: any(named: 'redirectTo'),
+        ),
+      ).thenThrow(Exception('network error'));
+
+      final result = await sut.resetPassword('test@example.com');
+
+      expect(result, isA<Failure<void>>());
+      expect((result as Failure<void>).error, isA<UnknownException>());
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // updatePassword
+  // -------------------------------------------------------------------------
+
+  group('updatePassword', () {
+    test('returns Success', () async {
+      final sut = buildSut();
+      when(() => mockAuth.updateUser(any()))
+          .thenAnswer((_) async => _FakeUserResponse());
+
+      final result = await sut.updatePassword('newpassword123');
+
+      expect(result, isA<Success<void>>());
+    });
+
+    test('maps AuthException to Failure(ServerException)', () async {
+      final sut = buildSut();
+      when(() => mockAuth.updateUser(any()))
+          .thenThrow(const AuthException('weak password'));
+
+      final result = await sut.updatePassword('weak');
+
+      expect(result, isA<Failure<void>>());
+      expect((result as Failure<void>).error.message, 'weak password');
+    });
+
+    test('returns Failure(UnknownException) on unexpected error', () async {
+      final sut = buildSut();
+      when(() => mockAuth.updateUser(any()))
+          .thenThrow(Exception('network error'));
+
+      final result = await sut.updatePassword('newpassword123');
+
+      expect(result, isA<Failure<void>>());
+      expect((result as Failure<void>).error, isA<UnknownException>());
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // updateEmail
+  // -------------------------------------------------------------------------
+
+  group('updateEmail', () {
+    test('returns Success', () async {
+      final sut = buildSut();
+      when(() => mockAuth.updateUser(any()))
+          .thenAnswer((_) async => _FakeUserResponse());
+
+      final result = await sut.updateEmail('new@example.com');
+
+      expect(result, isA<Success<void>>());
+    });
+
+    test('maps AuthException to Failure(ServerException)', () async {
+      final sut = buildSut();
+      when(() => mockAuth.updateUser(any()))
+          .thenThrow(const AuthException('email already taken'));
+
+      final result = await sut.updateEmail('new@example.com');
+
+      expect(result, isA<Failure<void>>());
+      expect((result as Failure<void>).error.message, 'email already taken');
+    });
+
+    test('returns Failure(UnknownException) on unexpected error', () async {
+      final sut = buildSut();
+      when(() => mockAuth.updateUser(any()))
+          .thenThrow(Exception('network error'));
+
+      final result = await sut.updateEmail('new@example.com');
+
+      expect(result, isA<Failure<void>>());
+      expect((result as Failure<void>).error, isA<UnknownException>());
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Computed properties
+  // -------------------------------------------------------------------------
+
+  group('computed properties', () {
+    test('isLoggedIn returns true when session exists', () {
+      final sut = buildSut();
+      when(() => mockAuth.currentSession).thenReturn(_FakeSession());
+
+      expect(sut.isLoggedIn, isTrue);
+    });
+
+    test('isLoggedIn returns false when no session', () {
+      final sut = buildSut();
+      when(() => mockAuth.currentSession).thenReturn(null);
+
+      expect(sut.isLoggedIn, isFalse);
+    });
+
+    test('currentUserEmail returns email from current user', () {
+      final sut = buildSut();
+      when(() => mockAuth.currentUser)
+          .thenReturn(_FakeUserWithEmail('user@example.com'));
+
+      expect(sut.currentUserEmail, 'user@example.com');
+    });
+
+    test('currentUserEmail returns null when no user', () {
+      final sut = buildSut();
+      when(() => mockAuth.currentUser).thenReturn(null);
+
+      expect(sut.currentUserEmail, isNull);
+    });
+
+    test('authStateStream delegates to Supabase auth state stream', () {
+      final sut = buildSut();
+      const stream = Stream<AuthState>.empty();
+      when(() => mockAuth.onAuthStateChange).thenAnswer((_) => stream);
+
+      expect(sut.authStateStream, same(stream));
+    });
+  });
+
+  // -------------------------------------------------------------------------
   // Crashlytics non-fatal on UnknownException path
   // -------------------------------------------------------------------------
 
@@ -408,4 +740,22 @@ class _FakeGoogleAccountNullToken extends _FakeGoogleAccount {
   @override
   GoogleSignInAuthentication get authentication =>
       const GoogleSignInAuthentication(idToken: null);
+}
+
+class _FakeAuthUser extends Fake implements User {}
+
+class _FakeSession extends Fake implements Session {
+  @override
+  User get user => _FakeAuthUser();
+}
+
+class _FakeUserResponse extends Fake implements UserResponse {}
+
+class _FakeUserWithEmail extends Fake implements User {
+  _FakeUserWithEmail(this._email);
+
+  final String _email;
+
+  @override
+  String? get email => _email;
 }
