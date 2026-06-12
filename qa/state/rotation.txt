@@ -1,11 +1,9 @@
-audited 2026-06-12 (run 11): profile cycle-2 with Figma — most design-faithful screen; NIB-170 verified; accepted-deviation candidate: Delete account coral (vs black in design, destructive convention)
-audited 2026-06-12 (run 10): recipe-library cycle-2 with Figma — NIB-174 filed; NIB-164/166 verified
-audited 2026-06-12 (run 9): shopping-list cycle-2 — first Figma comparison, NIB-173; NIB-157 verified
+audited 2026-06-12 (run 12): home cycle-2 with Figma — ring /9 vs design /11 (NIB-152 comment), NIB-172 copy is design-inherited; structure matches
+audited 2026-06-12 (run 11): profile cycle-2 with Figma — clean; NIB-170 verified
+audited 2026-06-12 (run 10): recipe-library cycle-2 with Figma — NIB-174; NIB-164/166 verified
+audited 2026-06-12 (run 9): shopping-list cycle-2 — NIB-173; NIB-157 verified
 audited 2026-06-12 (run 8): meal-plan cycle-2 + login flake root-caused
-audited 2026-06-12 (run 7): allergen cycle-2 + recipe-library flow (bootstrap 8/8)
-audited 2026-06-12 (run 6): home + shopping-list flow + NIB-161
-audited 2026-06-12 (run 5): profile-edit + NIB-154
-audited 2026-06-12 (runs 1-4): allergen, meal-plan, shopping-list, recipe-library first passes
-> next: home (cycle 2, with Figma node 1242-10567)
-pending re-verify: NIB-166 item 4 (readiness sign dup) on next onboarding sweep
+audited 2026-06-12 (run 7): allergen cycle-2 + bootstrap 8/8
+audited 2026-06-12 (runs 1-6): first passes + flow bootstrap
+> next: onboarding (cycle 2, re-verify NIB-166 item 4 readiness sign dup en route)
 DO NOT: tap "Delete account" on the test account — it would break reseed and every flow
