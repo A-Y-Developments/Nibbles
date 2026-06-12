@@ -1,1 +1,1 @@
-2026-06-12T04:18:43Z supervisor run: EXPLORER DEAD (159m, respawn failed kitty); dead explorer sim lock cleaned; coverage 02:15Z OK; fixer 04:02Z OK; gate 04:07Z OK; 2 human-touch PRs blocking pipeline (#395 #396); digest published today
+2026-06-12T05:18:43Z supervisor run: all 4 loops healthy (coverage 05:17Z, explorer 04:37Z, fixer 05:01Z, gate 05:07Z); no stale locks; stash-pop conflict from prior session cleaned; 2 human-touch PRs #395 #396 still blocking; digest published today
