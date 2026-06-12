@@ -1,1 +1,1 @@
-2026-06-12T21:47:15Z fixer: NIB-168 shopping-list copy nits -> PR #414 (auto-qa, human-touch). Verified on sim. All clean non-HT sev:major exhausted; remaining majors blocked on product/content/data calls. Ticket In Review.
+2026-06-12T22:18:37Z fixer: NIB-175 social sign-in button labels -> PR #417 (auto-qa, human-touch). Verified login+register on sim; restored test-account session. Skipped NIB-173 (design sign-off). Ticket In Review.
