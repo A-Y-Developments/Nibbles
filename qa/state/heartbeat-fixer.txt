@@ -1,1 +1,1 @@
-2026-06-12T00:20:32Z no deliverable — NIB-168 design-locked (Figma 971-9989/971-9936), documented + Human Touch; sev:major queue all human-blocked
+2026-06-12T00:40:03Z NIB-163 verified false-positive (swipe works), Canceled with sim evidence; remaining queue all human-decision-blocked
