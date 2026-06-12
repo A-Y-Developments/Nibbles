@@ -1,1 +1,1 @@
-2026-06-12T20:50:21Z fixer: NIB-177 paywall price card pinned above CTA -> PR #411 (auto-qa, gate-mergeable). Verified on QA-Fixer sim. Skipped NIB-155/NIB-159 (need product call). Ticket In Review.
+2026-06-12T21:24:28Z fixer: NIB-184 stale add-log notes fixed -> PR #413 (auto-qa, gate-mergeable). Verified on sim (zero DB writes). Triaged+deferred NIB-159/NIB-181 (need product/backend handling). Ticket In Review.
