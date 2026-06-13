@@ -1,1 +1,1 @@
-2026-06-13T11:51:08Z fixer: NIB-200 forgot-password email validation caption -> PR #442 (auto-qa, gate-mergeable). Verified empty-email case on sim; restored test-account session. Ticket In Review.
+2026-06-13T12:11:24Z fixer: idle — NIB-200 shipped previous cycle; no new actionable tickets, WIP clear, no rework. Queue human-blocked.
