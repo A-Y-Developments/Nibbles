@@ -1,1 +1,1 @@
-2026-06-12T23:45:19Z fixer: NIB-187 starting-guide copy nit -> PR #422 (auto-qa). Verified on sim. Clean non-HT trivials nearly exhausted; remaining queue mostly decision-blocked. Ticket In Review.
+2026-06-13T00:12:09Z fixer: no fixer-actionable ticket this cycle. WIP clear, no rework. All open Todo tickets are decision-blocked (product/design), content/asset-blocked, backend-seed (NIB-181), or tooling-only (triage notes left on the substantive ones). Idle.
