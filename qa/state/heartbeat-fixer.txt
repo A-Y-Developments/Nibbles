@@ -1,1 +1,1 @@
-2026-06-13T08:11:18Z fixer: idle — no new tickets, WIP clear, no rework. Queue human-blocked.
+2026-06-13T08:57:51Z fixer: NIB-196 word-boundary recipe search -> PR #436 (auto-qa, gate-mergeable). Verified on sim (egg no longer matches veggie). Ticket In Review.
