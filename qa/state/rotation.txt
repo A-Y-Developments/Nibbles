@@ -1,9 +1,8 @@
-audited 2026-06-13 (run 40): recipe-library search/filter depth audit (RC-01) (build 3d1921c, no lib delta -> no rebuild).
-  NEW TICKET NIB-196 (sev:major): search "egg" returns egg-FREE recipes — "Tofu Veggie Stir-Fry Puree" (tags soy) + "Pasta with Tomato and Veggies" (tags wheat) match because "egg" is a substring of "vEGGie". Verified vs DB: neither has egg ingredient/tag. Naive substring title match; misleading on a safety-relevant allergen query. Fix = token/word-boundary match. Evidence r40_search_egg_veggie_falsepos.png.
-  PASS no-match empty state: search "zzqqx" -> "We couldn't find any recipes" + illustration + clear X. Well-handled. Evidence r40_search_empty_state_ok.png.
-  (No dedicated filter chips observed on RC-01 in this build — only search + recommendation/Other sections; NIB-174 covers the structural/curation drift.)
-audited 2026-06-13 (run 39): home dashboard deep audit, Figma match (/9 ring intentional). NIB-186 reconfirmed.
-audited 2026-06-13 (run 38): generate-from-meal-plan WORKS. run 37: SL manual flow PASS. run 36: NIB-191 FIXED. run 35: filed NIB-191. run 34: NIB-185 closed. run 33: onboarding re-verified. runs 27-32: 8 fixes verified. runs 1-26: bootstrap+cycles.
-> next: cycle 5 cont. — (a) profile-edit golden flow re-verify (server write), (b) re-verify NIB-196 when fixer lands a search fix, (c) recipe-library NIB-174/182 drift (if recipe code lands).
-NOTE for supervisor: filed NIB-196 (search relevance, sev:major). Open UNFIXED sev:majors: NIB-196, NIB-181, NIB-159, NIB-178, NIB-174/182, NIB-155. 10 tickets verified-fixed runs 27-36. Prune orphan qa+*@nibbles.dev accounts.
+audited 2026-06-13 (run 41): NIB-196 search fix re-verify on build 832fe33 (fixer merged b3db2a3 "word-boundary recipe search").
+  PASS NIB-196 (on-device): search "egg" no longer returns egg-free recipes — "Tofu Veggie Stir-Fry Puree" + "Pasta with Tomato and Veggies" GONE. True egg recipes remain: Egg Yolk Puree, Egg Fried Rice, Mini Egg Muffins, Soft Scrambled Eggs (plural OK), Soft-Boiled Egg Soldiers, Egg and Avocado Mash, Veggie Egg Frittata (kept correctly — has standalone "Egg" word). Pattern: RegExp(r'\b'+escape(q)) leading word-boundary — kills "vEGGie" mid-word match but keeps "Eggs" prefix. Evidence r41_nib196_search_fixed.png. Filed run 40, fixed+verified run 41 — loop closed.
+  No new bugs. 0 new tickets.
+audited 2026-06-13 (run 40): filed NIB-196 (search substring false-pos); empty-search state PASS.
+audited 2026-06-13 (run 39): home dashboard deep audit, Figma match. run 38: generate-from-meal-plan WORKS. run 37: SL manual PASS. run 36: NIB-191 FIXED. run 35: filed NIB-191. run 34: NIB-185 closed. run 33: onboarding re-verified. runs 27-32: 8 fixes verified. runs 1-26: bootstrap+cycles.
+> next: cycle 5 cont. — (a) profile-edit golden flow re-verify (server write — last run 25), (b) recipe-library NIB-174/182 drift (if recipe code lands), (c) allergen-complete AL-08 re-verify (last run 26).
+NOTE for supervisor: NIB-196 verified-fixed (11th distinct ticket verified runs 27-41). Open UNFIXED sev:majors: NIB-181, NIB-159, NIB-178, NIB-174/182, NIB-155. Open trivials: NIB-186, NIB-188, NIB-176, NIB-179, NIB-183, NIB-173, NIB-160. Prune orphan qa+*@nibbles.dev accounts.
 DO NOT: confirm account deletion on the test account — overlay walk only
