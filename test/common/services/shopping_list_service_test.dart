@@ -185,6 +185,91 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
+  // getItems
+  // ---------------------------------------------------------------------------
+
+  group('ShoppingListService.getItems', () {
+    test('delegates to repo.getItems and returns items', () async {
+      final items = [_makeItem(), _makeItem(id: 'item-2', name: 'Bread')];
+      when(
+        () => mockRepo.getItems(_babyId),
+      ).thenAnswer((_) async => Result.success(items));
+
+      final result = await sut.getItems(_babyId);
+
+      expect(result.isSuccess, isTrue);
+      expect(result.dataOrNull, items);
+      verify(() => mockRepo.getItems(_babyId)).called(1);
+    });
+
+    test('repo failure propagates', () async {
+      when(() => mockRepo.getItems(any())).thenAnswer(
+        (_) async => const Result.failure(ServerException('DB error')),
+      );
+
+      final result = await sut.getItems(_babyId);
+
+      expect(result.isFailure, isTrue);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // uncheckItem
+  // ---------------------------------------------------------------------------
+
+  group('ShoppingListService.uncheckItem', () {
+    test('calls setChecked with isChecked=false', () async {
+      when(
+        () => mockRepo.setChecked(any(), isChecked: any(named: 'isChecked')),
+      ).thenAnswer((_) async => const Result.success(null));
+
+      final result = await sut.uncheckItem('item-1');
+
+      expect(result.isSuccess, isTrue);
+      verify(() => mockRepo.setChecked('item-1', isChecked: false)).called(1);
+    });
+
+    test('repo failure propagates', () async {
+      when(
+        () => mockRepo.setChecked(any(), isChecked: any(named: 'isChecked')),
+      ).thenAnswer(
+        (_) async => const Result.failure(ServerException('DB error')),
+      );
+
+      final result = await sut.uncheckItem('item-1');
+
+      expect(result.isFailure, isTrue);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // deleteItem
+  // ---------------------------------------------------------------------------
+
+  group('ShoppingListService.deleteItem', () {
+    test('delegates to repo.deleteItem', () async {
+      when(
+        () => mockRepo.deleteItem(any()),
+      ).thenAnswer((_) async => const Result.success(null));
+
+      final result = await sut.deleteItem('item-1');
+
+      expect(result.isSuccess, isTrue);
+      verify(() => mockRepo.deleteItem('item-1')).called(1);
+    });
+
+    test('repo failure propagates', () async {
+      when(() => mockRepo.deleteItem(any())).thenAnswer(
+        (_) async => const Result.failure(ServerException('DB error')),
+      );
+
+      final result = await sut.deleteItem('item-1');
+
+      expect(result.isFailure, isTrue);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
   // clearAll
   // ---------------------------------------------------------------------------
 
