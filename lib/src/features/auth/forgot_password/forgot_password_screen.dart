@@ -32,9 +32,8 @@ class ForgotPasswordScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(forgotPasswordControllerProvider);
 
-    void goBack() => context.canPop()
-        ? context.pop()
-        : context.goNamed(AppRoute.login.name);
+    void goBack() =>
+        context.canPop() ? context.pop() : context.goNamed(AppRoute.login.name);
 
     return Scaffold(
       // Grad-1 — butterSoft→cream diagonal. Scaffold transparent so the
@@ -107,11 +106,13 @@ class _InputView extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    final inlineError = state.errorMessage != null
-        ? _genericErrorMessage
-        : (state.email.isNotValid && state.email.value.isNotEmpty
-            ? 'Please enter a valid email.'
-            : null);
+    // NIB-200: an invalid email (empty or malformed, once the field is dirty)
+    // shows the specific validation caption; the generic anti-enumeration
+    // caption is reserved for a real backend failure (`errorMessage`). A pure
+    // (untouched) field shows nothing until Confirm marks it dirty.
+    final inlineError = !state.email.isPure && state.email.isNotValid
+        ? 'Please enter a valid email address.'
+        : (state.errorMessage != null ? _genericErrorMessage : null);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
