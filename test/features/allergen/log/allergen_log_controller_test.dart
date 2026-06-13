@@ -457,4 +457,300 @@ void main() {
       }),
     );
   });
+
+  // ---------------------------------------------------------------------------
+  // Setter coverage
+  // ---------------------------------------------------------------------------
+
+  group('AllergenLogController setters', () {
+    test('setAttachmentDescription sets and clears description', () {
+      final controller = readController()
+        ..setAttachmentDescription('desc text');
+      expect(readState().attachmentDescription, 'desc text');
+      controller.setAttachmentDescription('');
+      expect(readState().attachmentDescription, isNull);
+    });
+
+    test('setLogDate updates logDate in state', () {
+      final date = DateTime(2026, 5, 10);
+      readController().setLogDate(date);
+      expect(readState().logDate, date);
+    });
+
+    test('reset clears state to CREATE-mode defaults', () {
+      readController()
+        ..setTaste(EmojiTaste.love)
+        ..setNotes('old notes')
+        ..reset();
+      final state = readState();
+      expect(state.taste, isNull);
+      expect(state.notes, isNull);
+      expect(state.hydrated, isTrue);
+      expect(state.logId, isNull);
+    });
+
+    test('setAttachmentPhoto sets path and clears on null', () {
+      final controller = readController()
+        ..setAttachmentPhoto('/tmp/photo.jpg');
+      expect(readState().photoPath, '/tmp/photo.jpg');
+      controller.setAttachmentPhoto(null);
+      expect(readState().photoPath, isNull);
+    });
+
+    test('removePhoto clears photoPath', () {
+      final controller = readController()
+        ..setAttachmentPhoto('/tmp/snap.jpg');
+      expect(readState().photoPath, isNotNull);
+      controller.removePhoto();
+      expect(readState().photoPath, isNull);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // hydrateForEdit — log not in result
+  // ---------------------------------------------------------------------------
+
+  group('AllergenLogController hydrateForEdit — log not found', () {
+    test(
+      'surfaces errorMessage when logId absent from getLogs result',
+      () async {
+        when(
+          () => mockService.getLogs(
+            any(),
+            allergenKey: any(named: 'allergenKey'),
+          ),
+        ).thenAnswer((_) async => const Result.success(<AllergenLog>[]));
+
+        await readController().hydrateForEdit(
+          babyId: _babyId,
+          allergenKey: _allergenKey,
+          logId: 'non-existent-log',
+        );
+
+        final state = readState();
+        expect(
+          state.errorMessage,
+          "Couldn't load this log. Please try again.",
+        );
+        expect(state.isLoading, isFalse);
+        expect(state.logId, isNull);
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
+  // EDIT submit failure
+  // ---------------------------------------------------------------------------
+
+  group('AllergenLogController EDIT submit failure', () {
+    test(
+      'sets errorMessage when updateAllergenLog returns failure',
+      () async {
+        final existing = _makeLog(id: 'log-edit', notes: 'note');
+        when(
+          () => mockService.getLogs(
+            any(),
+            allergenKey: any(named: 'allergenKey'),
+          ),
+        ).thenAnswer((_) async => Result.success([existing]));
+        when(
+          () => mockService.updateAllergenLog(
+            log: any(named: 'log'),
+            newPhotoLocalPath: any(named: 'newPhotoLocalPath'),
+            oldPhotoPath: any(named: 'oldPhotoPath'),
+          ),
+        ).thenAnswer(
+          (_) async =>
+              const Result.failure(ServerException('db error')),
+        );
+
+        final controller = readController();
+        await controller.hydrateForEdit(
+          babyId: _babyId,
+          allergenKey: _allergenKey,
+          logId: 'log-edit',
+        );
+        await controller.submit(
+          babyId: _babyId,
+          allergenKey: _allergenKey,
+        );
+
+        final state = readState();
+        expect(state.isSaved, isFalse);
+        expect(state.isLoading, isFalse);
+        expect(
+          state.errorMessage,
+          "Couldn't save your log. Please try again.",
+        );
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
+  // CREATE auto-advance to next allergen
+  // ---------------------------------------------------------------------------
+
+  group('AllergenLogController CREATE auto-advance', () {
+    test(
+      'calls advanceToNextAllergen when allergen reaches safe',
+      () => runWithAnalyticsGuard(() async {
+        final savedLog = _makeLog();
+        when(
+          () => mockService.saveAllergenLog(
+            babyId: any(named: 'babyId'),
+            allergenKey: any(named: 'allergenKey'),
+            hadReaction: any(named: 'hadReaction'),
+            emojiTaste: any(named: 'emojiTaste'),
+            notes: any(named: 'notes'),
+            attachmentTitle: any(named: 'attachmentTitle'),
+            attachmentDescription: any(named: 'attachmentDescription'),
+            logDate: any(named: 'logDate'),
+            photo: any(named: 'photo'),
+          ),
+        ).thenAnswer((_) async => Result.success(savedLog));
+        when(
+          () => mockService.getLogs(
+            any(),
+            allergenKey: any(named: 'allergenKey'),
+          ),
+        ).thenAnswer(
+          (_) async =>
+              Result.success([savedLog, savedLog, savedLog]),
+        );
+        when(
+          () => mockService.deriveStatus(any()),
+        ).thenAnswer((_) => AllergenStatus.safe);
+        when(
+          () => mockService.advanceToNextAllergen(any()),
+        ).thenAnswer((_) async => const Result.success(null));
+
+        await readController().submit(
+          babyId: _babyId,
+          allergenKey: _allergenKey,
+        );
+
+        verify(
+          () => mockService.advanceToNextAllergen(_babyId),
+        ).called(1);
+        expect(readState().isSaved, isTrue);
+      }),
+    );
+  });
+
+  // ---------------------------------------------------------------------------
+  // _hasAttachment branch coverage
+  // ---------------------------------------------------------------------------
+
+  group('AllergenLogController _hasAttachment branches', () {
+    test(
+      'photoPath set covers the photo branch returning true',
+      () => runWithAnalyticsGuard(() async {
+        final saved = _makeLog(photoUrl: 'storage/p.jpg');
+        when(
+          () => mockService.saveAllergenLog(
+            babyId: any(named: 'babyId'),
+            allergenKey: any(named: 'allergenKey'),
+            hadReaction: any(named: 'hadReaction'),
+            emojiTaste: any(named: 'emojiTaste'),
+            notes: any(named: 'notes'),
+            attachmentTitle: any(named: 'attachmentTitle'),
+            attachmentDescription: any(named: 'attachmentDescription'),
+            logDate: any(named: 'logDate'),
+            photo: any(named: 'photo'),
+          ),
+        ).thenAnswer((_) async => Result.success(saved));
+        when(
+          () => mockService.getLogs(
+            any(),
+            allergenKey: any(named: 'allergenKey'),
+          ),
+        ).thenAnswer((_) async => Result.success([saved]));
+        when(
+          () => mockService.deriveStatus(any()),
+        ).thenAnswer((_) => AllergenStatus.inProgress);
+
+        final controller = readController()
+          ..setAttachmentPhoto('/tmp/photo.jpg');
+        await controller.submit(
+          babyId: _babyId,
+          allergenKey: _allergenKey,
+        );
+        expect(readState().isSaved, isTrue);
+      }),
+    );
+
+    test(
+      'only attachmentTitle set covers the title branch returning true',
+      () => runWithAnalyticsGuard(() async {
+        final saved = _makeLog();
+        when(
+          () => mockService.saveAllergenLog(
+            babyId: any(named: 'babyId'),
+            allergenKey: any(named: 'allergenKey'),
+            hadReaction: any(named: 'hadReaction'),
+            emojiTaste: any(named: 'emojiTaste'),
+            notes: any(named: 'notes'),
+            attachmentTitle: any(named: 'attachmentTitle'),
+            attachmentDescription: any(named: 'attachmentDescription'),
+            logDate: any(named: 'logDate'),
+            photo: any(named: 'photo'),
+          ),
+        ).thenAnswer((_) async => Result.success(saved));
+        when(
+          () => mockService.getLogs(
+            any(),
+            allergenKey: any(named: 'allergenKey'),
+          ),
+        ).thenAnswer((_) async => Result.success([saved]));
+        when(
+          () => mockService.deriveStatus(any()),
+        ).thenAnswer((_) => AllergenStatus.inProgress);
+
+        final controller = readController()
+          ..setAttachmentTitle('title');
+        await controller.submit(
+          babyId: _babyId,
+          allergenKey: _allergenKey,
+        );
+        expect(readState().isSaved, isTrue);
+      }),
+    );
+
+    test(
+      'only description set covers the description branch returning true',
+      () => runWithAnalyticsGuard(() async {
+        final saved = _makeLog();
+        when(
+          () => mockService.saveAllergenLog(
+            babyId: any(named: 'babyId'),
+            allergenKey: any(named: 'allergenKey'),
+            hadReaction: any(named: 'hadReaction'),
+            emojiTaste: any(named: 'emojiTaste'),
+            notes: any(named: 'notes'),
+            attachmentTitle: any(named: 'attachmentTitle'),
+            attachmentDescription: any(named: 'attachmentDescription'),
+            logDate: any(named: 'logDate'),
+            photo: any(named: 'photo'),
+          ),
+        ).thenAnswer((_) async => Result.success(saved));
+        when(
+          () => mockService.getLogs(
+            any(),
+            allergenKey: any(named: 'allergenKey'),
+          ),
+        ).thenAnswer((_) async => Result.success([saved]));
+        when(
+          () => mockService.deriveStatus(any()),
+        ).thenAnswer((_) => AllergenStatus.inProgress);
+
+        final controller = readController()
+          ..setAttachmentDescription('desc');
+        await controller.submit(
+          babyId: _babyId,
+          allergenKey: _allergenKey,
+        );
+        expect(readState().isSaved, isTrue);
+      }),
+    );
+  });
 }
