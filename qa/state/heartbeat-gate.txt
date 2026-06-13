@@ -1,1 +1,1 @@
-2026-06-13T19:04:14Z gate run: merged #457 (qa coverage recipe_service). 0 rejected, 0 skipped. No open auto-qa PRs remain.
+2026-06-13T19:35:05Z gate run: merged #459 (qa coverage local_flag_service). Skipped #461 (CI pending). 0 rejected, 1 skipped.
