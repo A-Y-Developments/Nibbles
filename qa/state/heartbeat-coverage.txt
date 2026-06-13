@@ -10,3 +10,4 @@ run-12 | 2026-06-13 | subscription_success_controller | 56% -> 96% | PR #445 | N
 run-13 | 2026-06-13 | allergen_service | 67.8% -> 93.0% | PR #447 | NIB-203
 2026-06-13T21:57:00 | skipped — WIP cap (2 open auto-qa PRs: #445, #447)
 2026-06-13T22:59:00 | skipped — WIP cap (2 open auto-qa PRs: #445, #447)
+run-14 | 2026-06-13 | meal_plan_service | 75.9% -> 94.9% | PR #449 | NIB-204
