@@ -192,7 +192,7 @@ void main() {
 
     testWidgets(
       'Ongoing tab lists in-progress allergens; switching to Big 11 reveals '
-      '9 sections AND Not Tried=6, Safe=2, Not Safe=1 stat columns',
+      '9 sections AND Not Tried=6, Safe=2, Unsafe=1 stat columns',
       (tester) async {
         final logs = [
           _makeLog(id: 'p1', allergenKey: 'peanut', hadReaction: true),
@@ -259,9 +259,9 @@ void main() {
           );
         }
         semantics.dispose();
-        // Stat-column labels — Not Safe + Not Tried are unique strings on
-        // Big 11.
-        expect(find.text('Not Safe'), findsOneWidget);
+        // Stat-column + flagged-card badge now share the canonical "Unsafe"
+        // term (NIB-191), so it appears on the stat and any flagged card.
+        expect(find.text('Unsafe'), findsWidgets);
         // Stat-column numeric values: 6 not-tried, 1 flagged, 2 safe.
         expect(find.text('6'), findsWidgets);
         expect(find.text('1'), findsWidgets);

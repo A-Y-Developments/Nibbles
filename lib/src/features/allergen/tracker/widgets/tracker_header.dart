@@ -10,7 +10,7 @@ import 'package:nibbles/src/common/components/components.dart';
 ///  - Horizontal row of stat columns (big black number + grey label)
 ///
 /// Visible columns:
-///  - Ongoing tab → "Safe foods" + "Not Safe"
+///  - Ongoing tab → "Safe foods" + "Unsafe"
 ///  - Big 11 tab → adds "Not Tried"
 class TrackerHeader extends StatelessWidget {
   const TrackerHeader({
@@ -74,7 +74,7 @@ class _StatRow extends StatelessWidget {
           child: _StatColumn(value: safeCount, label: 'Safe foods'),
         ),
         Expanded(
-          child: _StatColumn(value: flaggedCount, label: 'Not Safe'),
+          child: _StatColumn(value: flaggedCount, label: 'Unsafe'),
         ),
         if (showNotTried)
           Expanded(

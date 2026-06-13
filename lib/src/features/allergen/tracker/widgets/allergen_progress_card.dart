@@ -50,7 +50,7 @@ class AllergenProgressCard extends StatelessWidget {
       case AllergenStatus.safe:
         return const AppChip(label: 'Safe', tone: AppChipTone.safe);
       case AllergenStatus.flagged:
-        return const AppChip(label: 'Flagged', tone: AppChipTone.flag);
+        return const AppChip(label: 'Unsafe', tone: AppChipTone.flag);
       case AllergenStatus.inProgress:
         // Salmon-ghost pill: AppChipTone.neutral is the salmon-ghost token.
         return const AppChip(label: 'Ongoing');
