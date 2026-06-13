@@ -1,1 +1,1 @@
-2026-06-13T14:03:26Z gate run: no open auto-qa PRs; nothing to merge.
+2026-06-13T14:35:42Z gate run: merged #443 (qa coverage meal_plan_controller). Pruned orphaned coverage worktree run-11. 0 rejected, 0 skipped.
