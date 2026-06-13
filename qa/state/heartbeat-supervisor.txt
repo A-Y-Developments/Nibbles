@@ -1,1 +1,1 @@
-2026-06-13T17:26:28Z supervisor: all loops healthy (coverage runs 17+18 overnight); no hygiene actions
+2026-06-13T18:26:09Z supervisor: fixer DEAD (74m) — respawned successfully; coverage WIP-capped on #453/#455; explorer/gate healthy; no hygiene actions
