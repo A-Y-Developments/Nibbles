@@ -1,10 +1,10 @@
-audited 2026-06-13 (run 37): shopping-list area (build c262828, no lib delta -> no rebuild).
-  PASS shopping-list manual flow (regression check post NIB-168): Add ingredient "Bananas" -> appears in List -> check off -> moves to Bought (List empty) -> delete from Bought -> empty. All works. NIB-168 copy fixes still present ("No items in your list yet" + "Clear shopping list" menu).
-  OPEN QUESTION (investigate next run, NOT filed — unconfirmed): README lists "generate from meal plan" as a shopping-list capability, but: (1) no generate affordance in SL screen (only Add ingredient + Clear), (2) recipe detail has only "Add to Meal Plan", no "add to shopping list", (3) with 1 meal_plan_entry present, shopping_list_items stayed 0 (no auto-populate). Either the recipe/mealPlan->shopping-list source is unwired OR triggered by a path I didn't find. NAV NOTE: recipe detail is a full-screen push with NO bottom nav — tapping tab-bar coords there hits the "Add to Meal Plan" button instead (caused a nav tangle this run). Next run: from a CLEAN home/tab state, create meal plan via Meals tab, then check SL.
-  No new tickets (NIB-173 visual drift still open, not re-audited deeply).
-audited 2026-06-13 (run 36): NIB-191 verified FIXED (Unsafe term unified).
-audited 2026-06-13 (run 35): reaction->Flagged PASS; filed NIB-191; NIB-155 reconfirmed.
-audited 2026-06-13 (runs 27-34): 9 fixes verified + onboarding flow re-verified + NIB-185 closed. runs 1-26: bootstrap+cycles.
-> next: cycle 5 cont. — (a) INVESTIGATE generate-from-meal-plan -> shopping-list path from clean state (see open question above; file sev:major if genuinely unwired since it's a core value prop), (b) home dashboard NIB-186 date-strip re-check, (c) recipe-library NIB-174/182 drift (if recipe code lands).
-NOTE for supervisor: 10 tickets verified-fixed runs 27-36. Open sev:majors UNFIXED: NIB-181, NIB-159, NIB-178, NIB-174/182, NIB-155. Possible NEW gap under investigation: shopping-list generate-from-meal-plan. Prune orphan qa+*@nibbles.dev accounts.
+audited 2026-06-13 (run 38): RESOLVED run-37 open question — generate-from-meal-plan -> shopping-list (build ed144f2, no lib delta -> no rebuild).
+  NOT A BUG / feature WORKS: path is Meal Plan tab -> create plan + map recipe -> header "..." menu -> "Add to shop list" -> confirmation sheet lists recipe ingredients (egg, breast milk or formula, unsalted butter) pre-checked -> "Add (3)" -> 3 shopping_list_items created with source="mealPlan", is_checked=false. UI + DB match. Evidence r38_add_to_shoplist_sheet.png, r38_sl_populated_from_mealplan.png. Run-37 "unwired gap" hypothesis DISPROVEN — affordance lives in meal-plan header menu (NOT shopping-list screen or recipe detail). Investigated before filing -> avoided false sev:major.
+  Observed (already filed): NIB-159 week-snap — Add to Shoplist sheet header reads "Mon, 8 - Sun 14 June" for a Sat-13-start plan.
+  QA-COVERAGE GAP (not an app bug): shopping_list.steps golden flow covers manual add/check/delete only, NOT the generate-from-meal-plan path. Coverage loop or future explorer could extend it.
+  No new tickets.
+audited 2026-06-13 (run 37): shopping-list manual flow PASS (add/check/delete); flagged generate gap (resolved run 38).
+audited 2026-06-13 (run 36): NIB-191 verified FIXED. run 35: filed NIB-191. run 34: NIB-185 closed. run 33: onboarding flow re-verified. runs 27-32: 8 fixes verified. runs 1-26: bootstrap+cycles.
+> next: cycle 5 cont. — (a) home dashboard NIB-186 date-strip re-check (do day chips respond now?), (b) recipe-library NIB-174/182 drift (if recipe code lands), (c) profile-edit golden flow re-verify.
+NOTE for supervisor: 10 tickets verified-fixed runs 27-36; shopping-list area fully audited (manual + generate paths both work). Open sev:majors UNFIXED: NIB-181, NIB-159, NIB-178, NIB-174/182, NIB-155. Prune orphan qa+*@nibbles.dev accounts.
 DO NOT: confirm account deletion on the test account — overlay walk only
