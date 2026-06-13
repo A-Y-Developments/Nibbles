@@ -1,1 +1,1 @@
-2026-06-13T08:25:48Z supervisor: all loops healthy (coverage run-7 done: recipe_library_controller 0%→85.7%); no hygiene actions
+2026-06-13T09:25:40Z supervisor: all loops healthy (coverage run-8 done; WIP cap; gate merged #434+#436); no hygiene actions
