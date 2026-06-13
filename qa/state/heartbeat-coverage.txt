@@ -1,1 +1,2 @@
 run-5 complete: home_controller.dart 0% → 100% | PR #427 | NIB-193 | 2026-06-13T06:03:29Z
+run-6 | 2026-06-13 | recipe_detail_controller | 25.5% -> 84.3% | PR #429 | NIB-194
