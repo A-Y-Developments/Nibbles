@@ -1,11 +1,11 @@
-audited 2026-06-13 (run 32): destructive-confirm + guide-copy fixer re-verify on build 94c29d1 (NIB-185 + NIB-187).
-  PASS NIB-185 (delete-log, on-device): dialog now "Delete this log? This may change the allergen's status." (was generic "Are you sure you want to delete?"). Evidence r32_nib185_delete_log_copy.png. Clear-meal-plan half ("Clear all meals for this week? This can't be undone.") confirmed in source clear_confirm_dialog.dart — NOT on-device (needs a created plan; deferred).
-  PASS NIB-187 (on-device): Starting Guide > Introductions > "The 6 Month Milestone" subtitle now "Perfect time to grow" (was "Perfect time to growth"). Evidence r32_nib187_perfect_time_to_grow.png.
-  No new bugs. 0 tickets filed.
-audited 2026-06-13 (run 31): NIB-175 + NIB-180 verified FIXED; login flow PASS; paywall baseline refreshed.
-audited 2026-06-13 (run 30): NIB-168 + NIB-184 verified FIXED.
-audited 2026-06-13 (run 29): NIB-152/177 FIXED; filed NIB-188 (ring 1/9 vs 2/9).
-audited 2026-06-13 (run 28): NIB-161/162/166 PASS; NIB-159 still broken. run 27: recipe-detail Add-to-Meal-Plan HEALTHY. runs 1-26: bootstrap + cycles.
-> next: cycle 5 cont. — (a) FULL onboarding golden flow (fresh install + register NEW account, unique QA_REG_EMAIL) — deferred 5 runs for fix-verify priority; login sub-flow done run 31, (b) on-device verify NIB-185 clear-meal-plan dialog (create plan -> menu -> Clear), (c) recipe-library NIB-174/182 drift re-check.
-NOTE for supervisor: exceptional fix velocity — verified-fixed runs 27-32: NIB-152,177,168,184,175,180,185,187 (+earlier 161,162,166,172). Remaining open sev:majors: NIB-181 (recipe dairy-tag), NIB-159 (meal-plan week snap), NIB-178 (paywall close), NIB-174/182 (recipe drift). Open sev:trivial/other: NIB-155,186,188,176,179,183,173,160. Backlog shrinking fast.
+audited 2026-06-13 (run 33): FULL onboarding golden flow re-verify (build 2161c8f, no lib delta -> no rebuild). PASS.
+  Fresh uninstall+reinstall -> intro (35s auto-advance) -> Let's Go -> register NEW account (qa+1781313203@nibbles.dev) -> baby "Testy" -> readiness Qs -> consent -> baby setup -> paywall dev-skip -> HOME. 59/59 batch steps. End state matches baselines/onboarding__end.png (only date differs Jun11->Jun13, expected). NIB-172 "Getting Started Tips ... every 3-5 days" copy renders clean. No drift, no new bugs.
+  Auth register path confirmed working post NIB-175 (run 31 verified login; this confirms register/signup end-to-end).
+  Session hygiene: signed out of throwaway account + re-ran login.steps -> test account restored (Testy 6mo29d, peanut safe 1/9, Egg ongoing). Sim left logged into test@nibbles.dev as canonical.
+  CLEANUP FOR SUPERVISOR: orphan reg account created this run -> qa+1781313203@nibbles.dev (onboarding flow creates one per run; supervisor should prune qa+*@nibbles.dev accounts).
+audited 2026-06-13 (run 32): NIB-185 delete-log + NIB-187 verified FIXED.
+audited 2026-06-13 (run 31): NIB-175 + NIB-180 FIXED; login flow PASS; paywall baseline refreshed.
+audited 2026-06-13 (run 30): NIB-168 + NIB-184 FIXED. run 29: NIB-152/177 FIXED + filed NIB-188. run 28: NIB-161/162/166 PASS, NIB-159 still broken. run 27: recipe-detail Add-to-Meal-Plan HEALTHY. runs 1-26: bootstrap + cycles.
+> next: cycle 5 cont. — (a) on-device verify NIB-185 clear-meal-plan dialog (create plan -> ... menu -> Clear -> read "Clear all meals for this week? This can't be undone."), (b) recipe-library NIB-174/182 drift re-check, (c) shopping-list NIB-173 visual drift re-check.
+NOTE for supervisor: 8 tickets verified-fixed runs 27-32 (NIB-152,177,168,184,175,180,185,187) + onboarding flow re-verified run 33. Remaining open sev:majors: NIB-181, NIB-159, NIB-178, NIB-174/182. Plus prune orphan qa+*@nibbles.dev accounts.
 DO NOT: confirm account deletion on the test account — overlay walk only
