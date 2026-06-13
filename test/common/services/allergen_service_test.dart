@@ -619,6 +619,373 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
+  // getCurrentAllergen
+  // ---------------------------------------------------------------------------
+
+  group('AllergenService.getCurrentAllergen', () {
+    test('returns Failure when getProgramState fails', () async {
+      when(() => mockRepo.getProgramState(any())).thenAnswer(
+        (_) async =>
+            const Result.failure(ServerException('state fetch failed')),
+      );
+
+      final result = await sut.getCurrentAllergen(_babyId);
+
+      expect(result.isFailure, isTrue);
+      verifyNever(() => mockRepo.getAllergens());
+    });
+
+    test('returns Failure when getAllergens fails', () async {
+      when(
+        () => mockRepo.getProgramState(any()),
+      ).thenAnswer((_) async => Result.success(_makeProgramState()));
+      when(() => mockRepo.getAllergens()).thenAnswer(
+        (_) async =>
+            const Result.failure(ServerException('allergens fetch failed')),
+      );
+
+      final result = await sut.getCurrentAllergen(_babyId);
+
+      expect(result.isFailure, isTrue);
+    });
+
+    test('returns allergen matching currentAllergenKey', () async {
+      when(
+        () => mockRepo.getProgramState(any()),
+      ).thenAnswer(
+        (_) async => Result.success(
+          _makeProgramState(currentAllergenKey: 'egg', currentSequenceOrder: 2),
+        ),
+      );
+      when(
+        () => mockRepo.getAllergens(),
+      ).thenAnswer((_) async => Result.success(_allergens));
+
+      final result = await sut.getCurrentAllergen(_babyId);
+
+      expect(result.isSuccess, isTrue);
+      expect(result.dataOrNull?.key, 'egg');
+    });
+
+    test('falls back to first allergen when key not found', () async {
+      when(() => mockRepo.getProgramState(any())).thenAnswer(
+        (_) async => Result.success(
+          _makeProgramState(currentAllergenKey: 'unknown_key'),
+        ),
+      );
+      when(
+        () => mockRepo.getAllergens(),
+      ).thenAnswer((_) async => Result.success(_allergens));
+
+      final result = await sut.getCurrentAllergen(_babyId);
+
+      expect(result.isSuccess, isTrue);
+      expect(result.dataOrNull?.key, _allergens.first.key);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // getAllergenBoardSummary — getLogs failure path
+  // ---------------------------------------------------------------------------
+
+  group('AllergenService.getAllergenBoardSummary — getLogs failure', () {
+    test('returns Failure when getLogs fails', () async {
+      when(
+        () => mockRepo.getAllergens(),
+      ).thenAnswer((_) async => Result.success(_allergens));
+      when(() => mockRepo.getLogs(any())).thenAnswer(
+        (_) async =>
+            const Result.failure(ServerException('logs fetch failed')),
+      );
+
+      final result = await sut.getAllergenBoardSummary(_babyId);
+
+      expect(result.isFailure, isTrue);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // saveAllergenLog — photo paths and failure paths
+  // ---------------------------------------------------------------------------
+
+  group('AllergenService.saveAllergenLog — photo and failure paths', () {
+    test(
+      'photo upload success: log is saved with non-null photoUrl',
+      () async {
+        const uploadedPath = 'baby-001/123_peanut.jpg';
+        final saved = _makeLog(id: 'log-with-photo')
+            .copyWith(photoUrl: uploadedPath);
+        when(
+          () => mockStorage.uploadFile(any(), any(), any()),
+        ).thenAnswer((_) async => const Result.success(uploadedPath));
+        when(
+          () => mockRepo.saveLog(any()),
+        ).thenAnswer((_) async => Result.success(saved));
+
+        final result = await sut.saveAllergenLog(
+          babyId: _babyId,
+          allergenKey: _peanutKey,
+          hadReaction: false,
+          photo: File('/tmp/photo.jpg'),
+        );
+
+        expect(result.isSuccess, isTrue);
+        final captured =
+            verify(() => mockRepo.saveLog(captureAny())).captured.single
+                as AllergenLog;
+        expect(captured.photoUrl, isNotNull);
+      },
+    );
+
+    test(
+      'photo upload failure: log is still saved with null photoUrl',
+      () async {
+        final saved = _makeLog(id: 'log-no-photo');
+        when(() => mockStorage.uploadFile(any(), any(), any())).thenAnswer(
+          (_) async => const Result.failure(ServerException('upload failed')),
+        );
+        when(
+          () => mockRepo.saveLog(any()),
+        ).thenAnswer((_) async => Result.success(saved));
+
+        final result = await sut.saveAllergenLog(
+          babyId: _babyId,
+          allergenKey: _peanutKey,
+          hadReaction: false,
+          photo: File('/tmp/photo.jpg'),
+        );
+
+        expect(result.isSuccess, isTrue);
+        final captured =
+            verify(() => mockRepo.saveLog(captureAny())).captured.single
+                as AllergenLog;
+        expect(captured.photoUrl, isNull);
+      },
+    );
+
+    test('repo saveLog failure propagates', () async {
+      when(() => mockRepo.saveLog(any())).thenAnswer(
+        (_) async => const Result.failure(ServerException('insert failed')),
+      );
+
+      final result = await sut.saveAllergenLog(
+        babyId: _babyId,
+        allergenKey: _peanutKey,
+        hadReaction: false,
+      );
+
+      expect(result.isFailure, isTrue);
+      verifyNever(() => mockRepo.saveReactionDetail(any()));
+    });
+
+    test(
+      'reactionDetail save failure propagates after log is saved',
+      () async {
+        final savedLog = _makeLog(id: 'log-react', hadReaction: true);
+        final detail = ReactionDetail(
+          id: '',
+          logId: '',
+          severity: ReactionSeverity.mild,
+          symptoms: const ['Hives'],
+          createdAt: _now,
+        );
+        when(
+          () => mockRepo.saveLog(any()),
+        ).thenAnswer((_) async => Result.success(savedLog));
+        when(() => mockRepo.saveReactionDetail(any())).thenAnswer(
+          (_) async =>
+              const Result.failure(ServerException('detail insert failed')),
+        );
+
+        final result = await sut.saveAllergenLog(
+          babyId: _babyId,
+          allergenKey: _peanutKey,
+          hadReaction: true,
+          reactionDetail: detail,
+        );
+
+        expect(result.isFailure, isTrue);
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
+  // Delegation methods
+  // ---------------------------------------------------------------------------
+
+  group('AllergenService.getProgramState', () {
+    test('delegates to repo and returns success', () async {
+      final state = _makeProgramState();
+      when(
+        () => mockRepo.getProgramState(any()),
+      ).thenAnswer((_) async => Result.success(state));
+
+      final result = await sut.getProgramState(_babyId);
+
+      expect(result.isSuccess, isTrue);
+      expect(result.dataOrNull, state);
+      verify(() => mockRepo.getProgramState(_babyId)).called(1);
+    });
+
+    test('propagates repo failure', () async {
+      when(() => mockRepo.getProgramState(any())).thenAnswer(
+        (_) async => const Result.failure(ServerException('DB error')),
+      );
+
+      final result = await sut.getProgramState(_babyId);
+
+      expect(result.isFailure, isTrue);
+    });
+  });
+
+  group('AllergenService.getReactionDetail', () {
+    const logId = 'log-1';
+
+    test('delegates to repo and returns success', () async {
+      final detail = ReactionDetail(
+        id: 'det-1',
+        logId: logId,
+        severity: ReactionSeverity.mild,
+        symptoms: const [],
+        createdAt: _now,
+      );
+      when(
+        () => mockRepo.getReactionDetail(any()),
+      ).thenAnswer((_) async => Result.success(detail));
+
+      final result = await sut.getReactionDetail(logId);
+
+      expect(result.isSuccess, isTrue);
+      expect(result.dataOrNull, detail);
+      verify(() => mockRepo.getReactionDetail(logId)).called(1);
+    });
+
+    test('returns null when no detail exists', () async {
+      when(
+        () => mockRepo.getReactionDetail(any()),
+      ).thenAnswer((_) async => const Result.success(null));
+
+      final result = await sut.getReactionDetail(logId);
+
+      expect(result.isSuccess, isTrue);
+      expect(result.dataOrNull, isNull);
+    });
+
+    test('propagates repo failure', () async {
+      when(() => mockRepo.getReactionDetail(any())).thenAnswer(
+        (_) async => const Result.failure(ServerException('DB error')),
+      );
+
+      final result = await sut.getReactionDetail(logId);
+
+      expect(result.isFailure, isTrue);
+    });
+  });
+
+  group('AllergenService.getSignedPhotoUrl', () {
+    const photoPath = 'baby-001/photo.jpg';
+    const signedUrl = 'https://cdn.example.com/signed';
+
+    test('delegates to storage and returns signed URL', () async {
+      when(
+        () => mockStorage.getSignedUrl(any(), any()),
+      ).thenAnswer((_) async => const Result.success(signedUrl));
+
+      final result = await sut.getSignedPhotoUrl(photoPath);
+
+      expect(result.isSuccess, isTrue);
+      expect(result.dataOrNull, signedUrl);
+      verify(
+        () => mockStorage.getSignedUrl('allergen-photos', photoPath),
+      ).called(1);
+    });
+
+    test('propagates storage failure', () async {
+      when(() => mockStorage.getSignedUrl(any(), any())).thenAnswer(
+        (_) async => const Result.failure(ServerException('storage error')),
+      );
+
+      final result = await sut.getSignedPhotoUrl(photoPath);
+
+      expect(result.isFailure, isTrue);
+    });
+  });
+
+  group('AllergenService.getAllergens', () {
+    test('delegates to repo (default refresh=false)', () async {
+      when(
+        () => mockRepo.getAllergens(),
+      ).thenAnswer((_) async => Result.success(_allergens));
+
+      final result = await sut.getAllergens();
+
+      expect(result.isSuccess, isTrue);
+      expect(result.dataOrNull, _allergens);
+      verify(() => mockRepo.getAllergens()).called(1);
+    });
+
+    test('passes refresh=true to repo', () async {
+      when(
+        () => mockRepo.getAllergens(refresh: true),
+      ).thenAnswer((_) async => Result.success(_allergens));
+
+      final result = await sut.getAllergens(refresh: true);
+
+      expect(result.isSuccess, isTrue);
+      verify(() => mockRepo.getAllergens(refresh: true)).called(1);
+    });
+
+    test('propagates repo failure', () async {
+      when(() => mockRepo.getAllergens()).thenAnswer(
+        (_) async => const Result.failure(ServerException('DB error')),
+      );
+
+      final result = await sut.getAllergens();
+
+      expect(result.isFailure, isTrue);
+    });
+  });
+
+  group('AllergenService.getLogs', () {
+    test('fetches all logs for baby when no allergenKey filter', () async {
+      final logs = [_makeLog(), _makeLog(id: 'log-2', allergenKey: 'egg')];
+      when(
+        () => mockRepo.getLogs(any()),
+      ).thenAnswer((_) async => Result.success(logs));
+
+      final result = await sut.getLogs(_babyId);
+
+      expect(result.isSuccess, isTrue);
+      expect(result.dataOrNull, logs);
+      verify(() => mockRepo.getLogs(_babyId)).called(1);
+    });
+
+    test('passes allergenKey filter to repo', () async {
+      final peanutLogs = [_makeLog()];
+      when(
+        () => mockRepo.getLogs(any(), allergenKey: any(named: 'allergenKey')),
+      ).thenAnswer((_) async => Result.success(peanutLogs));
+
+      final result = await sut.getLogs(_babyId, allergenKey: _peanutKey);
+
+      expect(result.isSuccess, isTrue);
+      verify(
+        () => mockRepo.getLogs(_babyId, allergenKey: _peanutKey),
+      ).called(1);
+    });
+
+    test('propagates repo failure', () async {
+      when(() => mockRepo.getLogs(any())).thenAnswer(
+        (_) async => const Result.failure(ServerException('DB error')),
+      );
+
+      final result = await sut.getLogs(_babyId);
+
+      expect(result.isFailure, isTrue);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
   // Post-edit / post-delete recompute regression (NIB-110)
   //
   // Proves the per-allergen status is RE-DERIVED from the current set of logs
