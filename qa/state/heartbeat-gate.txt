@@ -1,1 +1,1 @@
-2026-06-13T17:03:27Z gate run: no open auto-qa PRs; nothing to merge.
+2026-06-13T17:35:01Z gate run: merged #453 (qa coverage allergen_log_controller) + #455 (qa coverage recipe_repository bg-refresh). Pruned merged coverage worktrees. 0 rejected, 0 skipped.
