@@ -1,1 +1,1 @@
-2026-06-13T19:29:39Z supervisor: all loops healthy (explorer 10m, fixer 46m, gate 23m, coverage ok); cleaned 10 merged worktrees (qa/coverage-run-21 + 9 superset nib-26/27/28/30/32/33/34/35 + nib-23); no hygiene actions
+2026-06-13T20:26:09Z supervisor: all loops healthy (explorer 8m, fixer 43m, gate 21m, coverage running); no hygiene actions; 6 worktrees with open PRs retained
