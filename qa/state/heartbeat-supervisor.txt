@@ -1,1 +1,1 @@
-2026-06-13T13:26:08Z supervisor: coverage STALE (263m since last timestamp, respawn failed — kitty not installed); explorer/fixer/gate healthy; no hygiene actions
+2026-06-13T14:28:38Z supervisor: all loops healthy (coverage back — run-11 meal_plan_controller 79.5%→100%); no hygiene actions
