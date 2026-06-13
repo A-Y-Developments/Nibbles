@@ -21,10 +21,11 @@ class ForgotPasswordController extends _$ForgotPasswordController {
     if (state.isLoading) return;
     final email = EmailInput.dirty(state.email.value);
     if (email.isNotValid) {
-      state = state.copyWith(
-        email: email,
-        errorMessage: 'Please enter a valid email address.',
-      );
+      // NIB-200: surface the invalid email via the formz state, not
+      // `errorMessage` — the screen reserves `errorMessage` for the generic
+      // anti-enumeration backend-failure caption and would otherwise mask the
+      // real validation message behind "Couldn't send the reset link…".
+      state = state.copyWith(email: email, errorMessage: null);
       return;
     }
 
@@ -37,9 +38,7 @@ class ForgotPasswordController extends _$ForgotPasswordController {
     result.when(
       success: (_) {
         state = state.copyWith(isLoading: false, sent: true);
-        _fireAndForget(
-          ref.read(analyticsProvider).logPasswordResetRequested(),
-        );
+        _fireAndForget(ref.read(analyticsProvider).logPasswordResetRequested());
       },
       failure: (error) =>
           state = state.copyWith(isLoading: false, errorMessage: error.message),

@@ -110,70 +110,109 @@ void main() {
     expect(find.text('Login stub'), findsOneWidget);
   });
 
-  testWidgets(
-    'submit failure renders GENERIC enumeration-safe caption '
-    '(never "email not found")',
-    (tester) async {
-      when(() => mockRepo.resetPassword(any())).thenAnswer(
-        // Whatever the backend returns — even a leaky "User not found" —
-        // the screen must collapse it into the generic message.
-        (_) async => const Result.failure(ServerException('User not found.')),
-      );
+  testWidgets('submit failure renders GENERIC enumeration-safe caption '
+      '(never "email not found")', (tester) async {
+    when(() => mockRepo.resetPassword(any())).thenAnswer(
+      // Whatever the backend returns — even a leaky "User not found" —
+      // the screen must collapse it into the generic message.
+      (_) async => const Result.failure(ServerException('User not found.')),
+    );
 
+    await tester.pumpWidget(
+      _wrap(const ForgotPasswordScreen(), buildOverrides()),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.byKey(const Key('forgot_email_field')),
+      'jane@example.com',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('forgot_submit_button')));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text("Couldn't send the reset link. Please try again."),
+      findsOneWidget,
+    );
+    // Enumeration safety: must NOT leak whether the email exists.
+    expect(find.textContaining('not found'), findsNothing);
+    expect(find.textContaining("doesn't exist"), findsNothing);
+  });
+
+  // NIB-200 — client-side validation: empty/malformed input shows the specific
+  // validation caption, NOT the generic backend-failure caption, and never
+  // reaches the backend.
+  testWidgets(
+    'empty email + Confirm shows the validation caption (not generic)',
+    (tester) async {
       await tester.pumpWidget(
         _wrap(const ForgotPasswordScreen(), buildOverrides()),
       );
       await tester.pumpAndSettle();
 
-      await tester.enterText(
-        find.byKey(const Key('forgot_email_field')),
-        'jane@example.com',
-      );
-      await tester.pump();
+      // Submit with the field left empty.
       await tester.tap(find.byKey(const Key('forgot_submit_button')));
       await tester.pumpAndSettle();
 
+      expect(find.text('Please enter a valid email address.'), findsOneWidget);
       expect(
         find.text("Couldn't send the reset link. Please try again."),
-        findsOneWidget,
+        findsNothing,
       );
-      // Enumeration safety: must NOT leak whether the email exists.
-      expect(find.textContaining('not found'), findsNothing);
-      expect(find.textContaining("doesn't exist"), findsNothing);
+      verifyNever(() => mockRepo.resetPassword(any()));
     },
   );
 
-  testWidgets(
-    'success transitions to the confirmation sub-view '
-    '(check-your-email + back-to-login)',
-    (tester) async {
-      when(
-        () => mockRepo.resetPassword(any()),
-      ).thenAnswer((_) async => const Result.success(null));
+  testWidgets('malformed email + Confirm shows the validation caption', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrap(const ForgotPasswordScreen(), buildOverrides()),
+    );
+    await tester.pumpAndSettle();
 
-      await tester.pumpWidget(
-        _wrap(const ForgotPasswordScreen(), buildOverrides()),
-      );
-      await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('forgot_email_field')),
+      'notanemail',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('forgot_submit_button')));
+    await tester.pumpAndSettle();
 
-      await tester.enterText(
-        find.byKey(const Key('forgot_email_field')),
-        'jane@example.com',
-      );
-      await tester.pump();
-      await tester.tap(find.byKey(const Key('forgot_submit_button')));
-      await tester.pumpAndSettle();
+    expect(find.text('Please enter a valid email address.'), findsOneWidget);
+    expect(
+      find.text("Couldn't send the reset link. Please try again."),
+      findsNothing,
+    );
+    verifyNever(() => mockRepo.resetPassword(any()));
+  });
 
-      expect(find.text('Check your email'), findsOneWidget);
-      expect(
-        find.byKey(const Key('forgot_back_to_login')),
-        findsOneWidget,
-      );
-      // Input view is gone.
-      expect(find.byKey(const Key('forgot_email_field')), findsNothing);
-      expect(find.byKey(const Key('forgot_submit_button')), findsNothing);
-    },
-  );
+  testWidgets('success transitions to the confirmation sub-view '
+      '(check-your-email + back-to-login)', (tester) async {
+    when(
+      () => mockRepo.resetPassword(any()),
+    ).thenAnswer((_) async => const Result.success(null));
+
+    await tester.pumpWidget(
+      _wrap(const ForgotPasswordScreen(), buildOverrides()),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.byKey(const Key('forgot_email_field')),
+      'jane@example.com',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('forgot_submit_button')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Check your email'), findsOneWidget);
+    expect(find.byKey(const Key('forgot_back_to_login')), findsOneWidget);
+    // Input view is gone.
+    expect(find.byKey(const Key('forgot_email_field')), findsNothing);
+    expect(find.byKey(const Key('forgot_submit_button')), findsNothing);
+  });
 
   testWidgets('email field disables autocorrect + suggestions', (tester) async {
     await tester.pumpWidget(
