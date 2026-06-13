@@ -1,1 +1,1 @@
-2026-06-12T23:43:59Z
+run-4 complete: recipe_repository.dart 34.2% → 84.9% | PR #425 | NIB-192 | 2026-06-13T05:52:20Z
