@@ -1,1 +1,1 @@
-2026-06-13T06:25:31Z supervisor: all loops healthy (coverage resurrected — run-5 done); no hygiene actions
+2026-06-13T07:25:41Z supervisor: all loops healthy (coverage run-6 done: recipe_detail_controller 25.5%→84.3%); no hygiene actions
