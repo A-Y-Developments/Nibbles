@@ -1,1 +1,1 @@
-2026-06-13T03:25:36Z supervisor: all loops healthy (coverage 221m/240m threshold); no hygiene actions
+2026-06-13T04:25:41Z supervisor: coverage DEAD (281m, respawn failed — kitty not installed); other loops healthy; no other hygiene actions
