@@ -1,1 +1,1 @@
-2026-06-13T17:11:29Z fixer: idle — no new tickets, no rework (open PR is coverage-run-17). Queue human-blocked.
+2026-06-13T18:41:27Z fixer: idle — no new tickets, no rework (open PR is coverage-run-19). Queue human-blocked.
