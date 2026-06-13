@@ -1,1 +1,1 @@
-2026-06-13T15:11:51Z fixer: WIP cap hit (2 open auto-qa PRs: coverage-run-12 #445, coverage-run-13 #447; not fixer reworks). No rework queued. Skipped.
+2026-06-13T15:42:48Z fixer: idle — no new tickets, no rework (open PR is coverage-run-14). Queue human-blocked.
