@@ -62,4 +62,49 @@ void main() {
       expect(sut.isAccountDeleted(), isTrue);
     });
   });
+
+  group('LocalFlagService.resetOnboardingProgress', () {
+    test('clears all three onboarding flags', () {
+      sut
+        ..setOnboardingReadinessDone()
+        ..setOnboardingBabySetupDone()
+        ..setOnboardingDone();
+      expect(sut.isOnboardingReadinessDone(), isTrue);
+      expect(sut.isOnboardingBabySetupDone(), isTrue);
+      expect(sut.isOnboardingDone(), isTrue);
+
+      sut.resetOnboardingProgress();
+
+      expect(sut.isOnboardingReadinessDone(), isFalse);
+      expect(sut.isOnboardingBabySetupDone(), isFalse);
+      expect(sut.isOnboardingDone(), isFalse);
+    });
+
+    test('does not affect unrelated flags', () {
+      sut
+        ..setHasLaunched()
+        ..setOnboardingReadinessDone()
+        ..resetOnboardingProgress();
+
+      expect(sut.hasLaunched(), isTrue);
+    });
+  });
+
+  group('LocalFlagService.markProgramCompletionShown', () {
+    test('awaitable variant flips the per-baby flag durably', () async {
+      const babyId = 'baby-abc';
+      expect(sut.isProgramCompletionShown(babyId), isFalse);
+
+      await sut.markProgramCompletionShown(babyId);
+
+      expect(sut.isProgramCompletionShown(babyId), isTrue);
+    });
+
+    test('scoped to babyId — other babies remain unaffected', () async {
+      await sut.markProgramCompletionShown('baby-1');
+
+      expect(sut.isProgramCompletionShown('baby-1'), isTrue);
+      expect(sut.isProgramCompletionShown('baby-2'), isFalse);
+    });
+  });
 }
