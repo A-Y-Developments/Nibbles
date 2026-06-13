@@ -1,1 +1,1 @@
-2026-06-13T05:25:34Z supervisor: coverage still DEAD (341m, alerted prev cycle); explorer/fixer/gate healthy; no hygiene actions
+2026-06-13T06:25:31Z supervisor: all loops healthy (coverage resurrected — run-5 done); no hygiene actions
