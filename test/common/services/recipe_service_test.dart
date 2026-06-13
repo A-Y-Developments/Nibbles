@@ -220,6 +220,67 @@ void main() {
 
       expect(result.isFailure, isTrue);
     });
+
+    test('recipeRepo failure → propagates', () async {
+      when(
+        () => mockAllergenRepo.getLogs(_babyId),
+      ).thenAnswer((_) async => const Result.success([]));
+      when(() => mockRecipeRepo.getRecipesByAllergen(any())).thenAnswer(
+        (_) async => const Result.failure(ServerException('DB error')),
+      );
+
+      final result = await sut.getRecommendationsForAllergen('egg', _babyId);
+
+      expect(result.isFailure, isTrue);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // getGeneralRecommendations
+  // ---------------------------------------------------------------------------
+
+  group('RecipeService.getGeneralRecommendations', () {
+    test('returns first 10 recipes from getAllRecipes', () async {
+      when(
+        () => mockAllergenRepo.getLogs(_babyId),
+      ).thenAnswer((_) async => const Result.success([]));
+      when(() => mockRecipeRepo.getAllRecipes()).thenAnswer(
+        (_) async => Result.success(
+          List.generate(15, (i) => _makeRecipe(id: 'r$i')),
+        ),
+      );
+
+      final result = await sut.getGeneralRecommendations(_babyId);
+
+      expect(result.isSuccess, isTrue);
+      expect(result.dataOrNull, hasLength(10));
+    });
+
+    test('fewer than 10 recipes → returns all', () async {
+      when(
+        () => mockAllergenRepo.getLogs(_babyId),
+      ).thenAnswer((_) async => const Result.success([]));
+      when(() => mockRecipeRepo.getAllRecipes()).thenAnswer(
+        (_) async => Result.success(
+          List.generate(3, (i) => _makeRecipe(id: 'r$i')),
+        ),
+      );
+
+      final result = await sut.getGeneralRecommendations(_babyId);
+
+      expect(result.isSuccess, isTrue);
+      expect(result.dataOrNull, hasLength(3));
+    });
+
+    test('getAllRecipes failure → propagates', () async {
+      when(() => mockAllergenRepo.getLogs(_babyId)).thenAnswer(
+        (_) async => const Result.failure(ServerException('DB error')),
+      );
+
+      final result = await sut.getGeneralRecommendations(_babyId);
+
+      expect(result.isFailure, isTrue);
+    });
   });
 
   // ---------------------------------------------------------------------------
