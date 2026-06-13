@@ -3,3 +3,4 @@ run-6 | 2026-06-13 | recipe_detail_controller | 25.5% -> 84.3% | PR #429 | NIB-1
 run-7 | 2026-06-13 | recipe_library_controller | 0% -> 85.7% | PR #431 | NIB-195
 run-8 | 2026-06-13 | baby_setup_controller | 0% -> 100% | PR #434 | NIB-197
 2026-06-13T16:02:03 | skipped — WIP cap (2 open auto-qa PRs)
+run-9 | 2026-06-13 | allergen_complete_controller | 0% -> 57.9% | PR #437 | NIB-198
