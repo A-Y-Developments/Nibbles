@@ -1,1 +1,1 @@
-2026-06-13T15:14:38Z gate run: merged #445 (qa coverage subscription_success_controller) + #447 (qa coverage allergen_service). Pruned orphaned coverage worktrees run-12/-13. 0 rejected, 0 skipped.
+2026-06-13T15:34:25Z gate run: no open auto-qa PRs; nothing to merge.
