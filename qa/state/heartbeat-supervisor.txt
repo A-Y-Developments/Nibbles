@@ -1,1 +1,1 @@
-2026-06-13T23:08:01Z supervisor: all loops healthy (explorer 54m, fixer 26m, gate 4m, coverage alive); daily reseed ran (baby=ab9ac753); no hygiene actions
+2026-06-13T23:25:39Z supervisor: all loops healthy (explorer 11m, fixer 43m/watching, gate 21m, coverage alive); reseed ran at 06:07 WIB; digest pending 07:00 WIB
