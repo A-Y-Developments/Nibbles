@@ -1,1 +1,1 @@
-2026-06-13T11:25:48Z supervisor: all loops healthy (coverage idle ~143m post run-10); no hygiene actions
+2026-06-13T12:25:53Z supervisor: all loops healthy (coverage ~203m idle, threshold 240m); gate merged #442 NIB-200; no hygiene actions
