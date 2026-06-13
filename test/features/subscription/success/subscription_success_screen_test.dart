@@ -27,6 +27,12 @@ class _ActiveSubscriptionService extends SubscriptionService {
   bool build() => true;
 }
 
+/// Starts inactive; call [setActive] on the notifier to simulate provisioning.
+class _InactiveSubscriptionService extends SubscriptionService {
+  @override
+  bool build() => false;
+}
+
 GoRouter _routerFor(Widget screen) => GoRouter(
   initialLocation: AppRoute.subscriptionSuccess.path,
   routes: [
@@ -44,9 +50,16 @@ GoRouter _routerFor(Widget screen) => GoRouter(
   ],
 );
 
-Widget _buildSut({required GoRouter router}) => ProviderScope(
+Widget _buildSut({
+  required GoRouter router,
+  bool startActive = true,
+}) => ProviderScope(
   overrides: [
-    subscriptionServiceProvider.overrideWith(_ActiveSubscriptionService.new),
+    subscriptionServiceProvider.overrideWith(
+      startActive
+          ? _ActiveSubscriptionService.new
+          : _InactiveSubscriptionService.new,
+    ),
   ],
   child: MaterialApp.router(routerConfig: router),
 );
@@ -143,6 +156,37 @@ void main() {
       expect(
         router.routerDelegate.currentConfiguration.uri.path,
         AppRoute.home.path,
+      );
+    },
+  );
+
+  testWidgets(
+    'slow path: flips to success after loadingTimeout + min-dwell',
+    (tester) async {
+      final router = _routerFor(const SubscriptionSuccessScreen());
+      await tester.pumpWidget(_buildSut(router: router, startActive: false));
+      await tester.pump();
+
+      expect(
+        _opacityOf(
+          tester,
+          const Key('subscription_success_done_label'),
+        ),
+        0.0,
+      );
+
+      // Timeout fires _flipAfter; since DateTime.now() is not faked,
+      // remaining≈loadingMinDwell and a second timer is scheduled.
+      await tester.pump(SubscriptionSuccessController.loadingTimeout);
+      await tester.pump(SubscriptionSuccessController.loadingMinDwell);
+      await tester.pump();
+
+      expect(
+        _opacityOf(
+          tester,
+          const Key('subscription_success_done_label'),
+        ),
+        1.0,
       );
     },
   );
