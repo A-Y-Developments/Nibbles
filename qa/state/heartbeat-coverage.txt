@@ -14,3 +14,4 @@ run-14 | 2026-06-13 | meal_plan_service | 75.9% -> 94.9% | PR #449 | NIB-204
 run-15 | 2026-06-13 | subscription_service | 36.4% -> 86.4% | PR #451 | NIB-205
 2026-06-13T23:49:00 | skipped — WIP cap (2 open auto-qa PRs: #449, #451)
 run-17 | 2026-06-14 | allergen_log_controller | 84.2% -> 96.8% | PR #453 | NIB-206
+run-18 | 2026-06-14 | recipe_repository | 84.9% -> 91.8% | PR #455 | NIB-207
