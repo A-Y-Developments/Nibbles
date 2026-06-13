@@ -1,1 +1,1 @@
-2026-06-12T23:25:45Z supervisor: all loops healthy; daily reseed done; no other hygiene actions
+2026-06-13T00:27:55Z supervisor: all loops healthy; daily digest published; no hygiene actions
