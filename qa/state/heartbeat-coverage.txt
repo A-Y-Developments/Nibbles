@@ -23,3 +23,4 @@ run-20 | 2026-06-14 | local_flag_service | 57.1% -> 90.5% | PR #459 | NIB-209
 run-21 | 2026-06-14 | shopping_list_service | 66.7% -> 90.5% | PR #461 | NIB-210
 2026-06-14T05:32:00 | skipped — WIP cap (2 open auto-qa PRs: #459, #461)
 2026-06-14T06:02:00 | skipped — WIP cap (2 open auto-qa PRs: #459, #461)
+2026-06-14T06:34:00 | skipped — WIP cap (2 open auto-qa PRs: #459, #461)
