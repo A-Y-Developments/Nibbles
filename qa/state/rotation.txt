@@ -1,11 +1,10 @@
-audited 2026-06-13 (run 36): NIB-191 fix re-verify on build d2d62a0 (fixer merged c823e28 "standardize flagged display term to Unsafe").
-  PASS NIB-191 (on-device, full): flagged an allergen (Egg reaction) -> ALL surfaces now read "Unsafe": tracker stat (was "Not Safe"), Egg exposure card badge (was "Flagged"), reaction-log rows, detail badge+banner. Terminology unified. Evidence r36_nib191_unsafe_unified.png. NIB-191 filed run 35, fixed+verified run 36 — loop closed.
-  Still present (separate open ticket, no action): NIB-188 tracker ring still "2/9" (introduced) vs home "1/9" (safe) — NIB-191 fix didn't touch ring counts.
-  No new bugs. 0 new tickets.
-audited 2026-06-13 (run 35): reaction->Flagged path PASS; filed NIB-191; NIB-155 reconfirmed.
-audited 2026-06-13 (run 34): NIB-185 clear-meal-plan verified on-device (NIB-185 closed).
-audited 2026-06-13 (run 33): full onboarding golden flow re-verified PASS.
-audited 2026-06-13 (runs 27-32): 8 fixes verified (NIB-152,177,168,184,175,180,185,187), NIB-161/162/166 PASS, recipe-detail Add-to-Meal-Plan HEALTHY. runs 1-26: bootstrap+cycles.
-> next: cycle 5 cont. — (a) shopping-list golden flow sweep + NIB-173 visual drift (PENDING — deferred several runs for fix-verify priority), (b) home dashboard NIB-186 date-strip re-check, (c) recipe-library NIB-174/182 drift (only if recipe code lands).
-NOTE for supervisor: NIB-191 verified-fixed (10th distinct ticket verified runs 27-36). Open sev:majors UNFIXED: NIB-181, NIB-159, NIB-178, NIB-174/182, NIB-155. Open trivials: NIB-186, NIB-188, NIB-176, NIB-179, NIB-183, NIB-173, NIB-160, NIB-185(fixed), NIB-187(fixed). Prune orphan qa+*@nibbles.dev accounts.
+audited 2026-06-13 (run 37): shopping-list area (build c262828, no lib delta -> no rebuild).
+  PASS shopping-list manual flow (regression check post NIB-168): Add ingredient "Bananas" -> appears in List -> check off -> moves to Bought (List empty) -> delete from Bought -> empty. All works. NIB-168 copy fixes still present ("No items in your list yet" + "Clear shopping list" menu).
+  OPEN QUESTION (investigate next run, NOT filed — unconfirmed): README lists "generate from meal plan" as a shopping-list capability, but: (1) no generate affordance in SL screen (only Add ingredient + Clear), (2) recipe detail has only "Add to Meal Plan", no "add to shopping list", (3) with 1 meal_plan_entry present, shopping_list_items stayed 0 (no auto-populate). Either the recipe/mealPlan->shopping-list source is unwired OR triggered by a path I didn't find. NAV NOTE: recipe detail is a full-screen push with NO bottom nav — tapping tab-bar coords there hits the "Add to Meal Plan" button instead (caused a nav tangle this run). Next run: from a CLEAN home/tab state, create meal plan via Meals tab, then check SL.
+  No new tickets (NIB-173 visual drift still open, not re-audited deeply).
+audited 2026-06-13 (run 36): NIB-191 verified FIXED (Unsafe term unified).
+audited 2026-06-13 (run 35): reaction->Flagged PASS; filed NIB-191; NIB-155 reconfirmed.
+audited 2026-06-13 (runs 27-34): 9 fixes verified + onboarding flow re-verified + NIB-185 closed. runs 1-26: bootstrap+cycles.
+> next: cycle 5 cont. — (a) INVESTIGATE generate-from-meal-plan -> shopping-list path from clean state (see open question above; file sev:major if genuinely unwired since it's a core value prop), (b) home dashboard NIB-186 date-strip re-check, (c) recipe-library NIB-174/182 drift (if recipe code lands).
+NOTE for supervisor: 10 tickets verified-fixed runs 27-36. Open sev:majors UNFIXED: NIB-181, NIB-159, NIB-178, NIB-174/182, NIB-155. Possible NEW gap under investigation: shopping-list generate-from-meal-plan. Prune orphan qa+*@nibbles.dev accounts.
 DO NOT: confirm account deletion on the test account — overlay walk only
