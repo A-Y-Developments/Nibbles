@@ -40,17 +40,21 @@ class RecipeLibraryState with _$RecipeLibraryState {
   List<Recipe> get _allRecipes =>
       recipesByCategory.values.expand((rs) => rs).toSet().toList();
 
-  /// Recipes matching [searchQuery] (case-insensitive contains) against
-  /// the recipe title or any `nutritionTags` entry. Returns an empty list
-  /// when [searchQuery] is empty.
+  /// Recipes matching [searchQuery] against the recipe title or any
+  /// `nutritionTags` entry. Returns an empty list when [searchQuery] is empty.
+  ///
+  /// NIB-196: matches on a word boundary (`\b`) rather than a raw substring, so
+  /// "egg" matches "Egg Yolk Puree" / "Scrambled Eggs" but not the "egg" inside
+  /// "Veggie" — a false positive that mattered on a safety-relevant query.
   List<Recipe> get filteredRecipes {
-    final q = searchQuery.toLowerCase();
+    final q = searchQuery.trim().toLowerCase();
     if (q.isEmpty) return const [];
+    final pattern = RegExp(r'\b' + RegExp.escape(q));
     return _allRecipes
         .where(
           (r) =>
-              r.title.toLowerCase().contains(q) ||
-              r.nutritionTags.any((t) => t.toLowerCase().contains(q)),
+              pattern.hasMatch(r.title.toLowerCase()) ||
+              r.nutritionTags.any((t) => pattern.hasMatch(t.toLowerCase())),
         )
         .toList();
   }
