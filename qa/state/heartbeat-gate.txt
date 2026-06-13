@@ -1,1 +1,1 @@
-2026-06-13T04:04:34Z gate run: merged #424 (NIB-191 allergen status terminology → "Unsafe", human-touch). 0 rejected, 0 skipped. No open auto-qa PRs remain.
+2026-06-13T04:33:26Z gate run: no open auto-qa PRs; nothing to merge.
