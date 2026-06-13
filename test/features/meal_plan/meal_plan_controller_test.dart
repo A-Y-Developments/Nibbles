@@ -404,4 +404,154 @@ void main() {
       ).called(1);
     });
   });
+
+  group('MealPlanController.assignRecipe', () {
+    test('returns true on success and invalidates self', () async {
+      stubHappy();
+      when(
+        () => mockMealPlanService.assignRecipe(any(), any(), any()),
+      ).thenAnswer((_) async => Result.success(_makeEntry()));
+
+      final container = buildContainer();
+      await container.read(mealPlanControllerProvider(_babyId).future);
+
+      final ok = await container
+          .read(mealPlanControllerProvider(_babyId).notifier)
+          .assignRecipe(DateTime(2026, 5, 30), 'recipe-001');
+      await container.read(mealPlanControllerProvider(_babyId).future);
+
+      expect(ok, isTrue);
+      verify(
+        () => mockMealPlanService.getRolling7(
+          any(),
+          today: any(named: 'today'),
+        ),
+      ).called(2);
+    });
+
+    test('returns false on failure, does NOT invalidate self', () async {
+      stubHappy();
+      when(
+        () => mockMealPlanService.assignRecipe(any(), any(), any()),
+      ).thenAnswer(
+        (_) async =>
+            const Result.failure(ServerException('assign failed')),
+      );
+
+      final container = buildContainer();
+      await container.read(mealPlanControllerProvider(_babyId).future);
+
+      final ok = await container
+          .read(mealPlanControllerProvider(_babyId).notifier)
+          .assignRecipe(DateTime(2026, 5, 30), 'recipe-001');
+
+      expect(ok, isFalse);
+      verify(
+        () => mockMealPlanService.getRolling7(
+          any(),
+          today: any(named: 'today'),
+        ),
+      ).called(1);
+    });
+  });
+
+  group('MealPlanController.removeEntry', () {
+    test('returns true on success and invalidates self', () async {
+      stubHappy();
+      when(
+        () => mockMealPlanService.removeEntry(any()),
+      ).thenAnswer((_) async => const Result<void>.success(null));
+
+      final container = buildContainer();
+      await container.read(mealPlanControllerProvider(_babyId).future);
+
+      final ok = await container
+          .read(mealPlanControllerProvider(_babyId).notifier)
+          .removeEntry('mp-1');
+      await container.read(mealPlanControllerProvider(_babyId).future);
+
+      expect(ok, isTrue);
+      verify(
+        () => mockMealPlanService.getRolling7(
+          any(),
+          today: any(named: 'today'),
+        ),
+      ).called(2);
+    });
+
+    test('returns false on failure, does NOT invalidate self', () async {
+      stubHappy();
+      when(
+        () => mockMealPlanService.removeEntry(any()),
+      ).thenAnswer(
+        (_) async =>
+            const Result<void>.failure(ServerException('delete failed')),
+      );
+
+      final container = buildContainer();
+      await container.read(mealPlanControllerProvider(_babyId).future);
+
+      final ok = await container
+          .read(mealPlanControllerProvider(_babyId).notifier)
+          .removeEntry('mp-1');
+
+      expect(ok, isFalse);
+      verify(
+        () => mockMealPlanService.getRolling7(
+          any(),
+          today: any(named: 'today'),
+        ),
+      ).called(1);
+    });
+  });
+
+  group('MealPlanController.clearDay', () {
+    test('returns true on success and invalidates self', () async {
+      stubHappy();
+      when(
+        () => mockMealPlanService.clearDay(any(), any()),
+      ).thenAnswer((_) async => const Result<void>.success(null));
+
+      final container = buildContainer();
+      await container.read(mealPlanControllerProvider(_babyId).future);
+
+      final ok = await container
+          .read(mealPlanControllerProvider(_babyId).notifier)
+          .clearDay(DateTime(2026, 5, 30));
+      await container.read(mealPlanControllerProvider(_babyId).future);
+
+      expect(ok, isTrue);
+      verify(
+        () => mockMealPlanService.getRolling7(
+          any(),
+          today: any(named: 'today'),
+        ),
+      ).called(2);
+    });
+
+    test('returns false on failure, does NOT invalidate self', () async {
+      stubHappy();
+      when(
+        () => mockMealPlanService.clearDay(any(), any()),
+      ).thenAnswer(
+        (_) async =>
+            const Result<void>.failure(ServerException('clear failed')),
+      );
+
+      final container = buildContainer();
+      await container.read(mealPlanControllerProvider(_babyId).future);
+
+      final ok = await container
+          .read(mealPlanControllerProvider(_babyId).notifier)
+          .clearDay(DateTime(2026, 5, 30));
+
+      expect(ok, isFalse);
+      verify(
+        () => mockMealPlanService.getRolling7(
+          any(),
+          today: any(named: 'today'),
+        ),
+      ).called(1);
+    });
+  });
 }
