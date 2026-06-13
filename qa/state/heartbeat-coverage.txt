@@ -8,3 +8,4 @@ run-10 | 2026-06-13 | shopping_list_controller | 52.9% -> 97.1% | PR #439 | NIB-
 run-11 | 2026-06-13 | meal_plan_controller | 79.5% -> 100% | PR #443 | NIB-201
 run-12 | 2026-06-13 | subscription_success_controller | 56% -> 96% | PR #445 | NIB-202
 run-13 | 2026-06-13 | allergen_service | 67.8% -> 93.0% | PR #447 | NIB-203
+2026-06-13T21:57:00 | skipped — WIP cap (2 open auto-qa PRs: #445, #447)
