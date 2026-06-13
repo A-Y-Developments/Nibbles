@@ -1,1 +1,1 @@
-run-4 complete: recipe_repository.dart 34.2% → 84.9% | PR #425 | NIB-192 | 2026-06-13T05:52:20Z
+run-5 complete: home_controller.dart 0% → 100% | PR #427 | NIB-193 | 2026-06-13T06:03:29Z
