@@ -1,1 +1,1 @@
-2026-06-13T06:34:51Z gate run: merged #427 (qa coverage home_controller). 0 rejected, 0 skipped. No open auto-qa PRs remain.
+2026-06-13T07:03:36Z gate run: no open auto-qa PRs; nothing to merge.
