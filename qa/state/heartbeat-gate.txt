@@ -1,1 +1,1 @@
-2026-06-13T16:06:26Z gate run: merged #449 (qa coverage meal_plan_service) + #451 (qa coverage subscription_service). Pruned coverage worktrees run-14/-15. 0 rejected, 0 skipped.
+2026-06-13T16:33:36Z gate run: no open auto-qa PRs; nothing to merge.
