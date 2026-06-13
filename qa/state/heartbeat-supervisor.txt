@@ -1,1 +1,1 @@
-2026-06-13T22:25:55Z supervisor: fixer DEAD (73m) — respawned; explorer/gate/coverage healthy; no other hygiene actions
+2026-06-13T23:08:01Z supervisor: all loops healthy (explorer 54m, fixer 26m, gate 4m, coverage alive); daily reseed ran (baby=ab9ac753); no hygiene actions
