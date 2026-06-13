@@ -496,4 +496,204 @@ void main() {
       ).called(1);
     });
   });
+
+  // ---------------------------------------------------------------------------
+  // getWeekMeals
+  // ---------------------------------------------------------------------------
+
+  group('MealPlanService.getWeekMeals', () {
+    test('passes weekStart and weekStart+6days to repo', () async {
+      final entries = [_makeEntry()];
+      when(
+        () => mockMealPlanRepo.getWeekMeals(any(), any(), any()),
+      ).thenAnswer((_) async => Result.success(entries));
+
+      final result = await sut.getWeekMeals(_babyId, _weekStart);
+
+      expect(result.isSuccess, isTrue);
+      expect(result.dataOrNull, entries);
+      verify(
+        () => mockMealPlanRepo.getWeekMeals(_babyId, _weekStart, _weekEnd),
+      ).called(1);
+    });
+
+    test('propagates repo failure', () async {
+      when(() => mockMealPlanRepo.getWeekMeals(any(), any(), any())).thenAnswer(
+        (_) async => const Result.failure(ServerException('DB error')),
+      );
+
+      final result = await sut.getWeekMeals(_babyId, _weekStart);
+
+      expect(result.isFailure, isTrue);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // getDayIngredientNames
+  // ---------------------------------------------------------------------------
+
+  group('MealPlanService.getDayIngredientNames', () {
+    final day = DateTime(2026, 4, 15);
+
+    test('returns ingredient names for a single day', () async {
+      when(
+        () => mockMealPlanRepo.getWeekMeals(any(), any(), any()),
+      ).thenAnswer((_) async => Result.success([_makeEntry()]));
+      when(() => mockRecipeRepo.getRecipeById('r1')).thenAnswer(
+        (_) async => Result.success(
+          _makeRecipe(
+            ingredients: [
+              const Ingredient(name: 'Carrot', quantity: '1'),
+              const Ingredient(name: 'Peas', quantity: '50g'),
+            ],
+          ),
+        ),
+      );
+
+      final result = await sut.getDayIngredientNames(_babyId, day);
+
+      expect(result.isSuccess, isTrue);
+      expect(result.dataOrNull, containsAll(['Carrot', 'Peas']));
+      verify(
+        () => mockMealPlanRepo.getWeekMeals(_babyId, day, day),
+      ).called(1);
+    });
+
+    test('deduplicates across multiple meals on the same day', () async {
+      when(
+        () => mockMealPlanRepo.getWeekMeals(any(), any(), any()),
+      ).thenAnswer(
+        (_) async => Result.success([
+          _makeEntry(),
+          _makeEntry(id: 'e2', recipeId: 'r2'),
+        ]),
+      );
+      when(() => mockRecipeRepo.getRecipeById('r1')).thenAnswer(
+        (_) async => Result.success(
+          _makeRecipe(
+            ingredients: [const Ingredient(name: 'Rice', quantity: '1 cup')],
+          ),
+        ),
+      );
+      when(() => mockRecipeRepo.getRecipeById('r2')).thenAnswer(
+        (_) async => Result.success(
+          _makeRecipe(
+            id: 'r2',
+            ingredients: [const Ingredient(name: 'Rice', quantity: '2 cups')],
+          ),
+        ),
+      );
+
+      final result = await sut.getDayIngredientNames(_babyId, day);
+
+      expect(result.isSuccess, isTrue);
+      expect(result.dataOrNull!.where((n) => n == 'Rice'), hasLength(1));
+    });
+
+    test('skips failed recipe fetch (best-effort)', () async {
+      when(
+        () => mockMealPlanRepo.getWeekMeals(any(), any(), any()),
+      ).thenAnswer(
+        (_) async => Result.success([
+          _makeEntry(),
+          _makeEntry(id: 'e2', recipeId: 'r2'),
+        ]),
+      );
+      when(() => mockRecipeRepo.getRecipeById('r1')).thenAnswer(
+        (_) async => const Result.failure(ServerException('not found')),
+      );
+      when(() => mockRecipeRepo.getRecipeById('r2')).thenAnswer(
+        (_) async => Result.success(
+          _makeRecipe(
+            id: 'r2',
+            ingredients: [const Ingredient(name: 'Bread', quantity: '1')],
+          ),
+        ),
+      );
+
+      final result = await sut.getDayIngredientNames(_babyId, day);
+
+      expect(result.isSuccess, isTrue);
+      expect(result.dataOrNull, equals(['Bread']));
+    });
+
+    test('getWeekMeals failure propagates without recipe fetches', () async {
+      when(
+        () => mockMealPlanRepo.getWeekMeals(any(), any(), any()),
+      ).thenAnswer(
+        (_) async => const Result.failure(ServerException('DB error')),
+      );
+
+      final result = await sut.getDayIngredientNames(_babyId, day);
+
+      expect(result.isFailure, isTrue);
+      verifyNever(() => mockRecipeRepo.getRecipeById(any()));
+    });
+
+    test('empty day returns empty list', () async {
+      when(
+        () => mockMealPlanRepo.getWeekMeals(any(), any(), any()),
+      ).thenAnswer((_) async => const Result.success([]));
+
+      final result = await sut.getDayIngredientNames(_babyId, day);
+
+      expect(result.isSuccess, isTrue);
+      expect(result.dataOrNull, isEmpty);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // removeEntry
+  // ---------------------------------------------------------------------------
+
+  group('MealPlanService.removeEntry', () {
+    test('delegates to repo.removeEntry', () async {
+      when(
+        () => mockMealPlanRepo.removeEntry(any()),
+      ).thenAnswer((_) async => const Result.success(null));
+
+      final result = await sut.removeEntry('entry-123');
+
+      expect(result.isSuccess, isTrue);
+      verify(() => mockMealPlanRepo.removeEntry('entry-123')).called(1);
+    });
+
+    test('propagates repo failure', () async {
+      when(() => mockMealPlanRepo.removeEntry(any())).thenAnswer(
+        (_) async => const Result.failure(ServerException('not found')),
+      );
+
+      final result = await sut.removeEntry('entry-123');
+
+      expect(result.isFailure, isTrue);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // clearDay
+  // ---------------------------------------------------------------------------
+
+  group('MealPlanService.clearDay', () {
+    test('delegates to repo.clearDay', () async {
+      final date = DateTime(2026, 4, 15);
+      when(
+        () => mockMealPlanRepo.clearDay(any(), any()),
+      ).thenAnswer((_) async => const Result.success(null));
+
+      final result = await sut.clearDay(_babyId, date);
+
+      expect(result.isSuccess, isTrue);
+      verify(() => mockMealPlanRepo.clearDay(_babyId, date)).called(1);
+    });
+
+    test('propagates repo failure', () async {
+      when(() => mockMealPlanRepo.clearDay(any(), any())).thenAnswer(
+        (_) async => const Result.failure(ServerException('DB error')),
+      );
+
+      final result = await sut.clearDay(_babyId, DateTime(2026, 4, 15));
+
+      expect(result.isFailure, isTrue);
+    });
+  });
 }
