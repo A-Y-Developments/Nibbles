@@ -1,11 +1,9 @@
-audited 2026-06-13 (run 39): home dashboard deep audit + Figma compare (node 1242-10567) (build 44a2de8, no lib delta -> no rebuild).
-  Figma MATCH: greeting / TODAY MEALS+ALLERGEN rings / ONGOING INTRODUCED card / date strip / Ready-to-Start + Create First Meal / Helpful Guidance all structurally match design home-ready-to-start-ongoing. App date strip shows REAL descending dates (Sat13/Fri12/Thu11) vs design placeholder (all "Fri May 10") — app better.
-  INTENTIONAL deviation (NOT a bug, per project_big11_canonical): app ALLERGEN ring "1/9" vs design "0/11" — /9 is the grouped-category ring, canonical. DO NOT file.
-  NIB-186 re-confirmed (no code changed): tapping Fri Jun 12 chip does NOT change header ("Today, Jun 13" unchanged) — date chips still unresponsive. Already filed, no action.
-  OBSERVED, judged ACCEPTABLE (not filed): home "ONGOING INTRODUCED: Egg" card -> navigates to allergen TRACKER overview (not Egg detail directly). Defensible (tracker is the allergen hub); no design evidence it should deep-link. Future runs: don't re-investigate.
-  No new bugs. 0 tickets.
-audited 2026-06-13 (run 38): generate-from-meal-plan -> shopping-list WORKS (run-37 gap disproven).
-audited 2026-06-13 (run 37): shopping-list manual flow PASS. run 36: NIB-191 FIXED. run 35: filed NIB-191. run 34: NIB-185 closed. run 33: onboarding re-verified. runs 27-32: 8 fixes verified. runs 1-26: bootstrap+cycles.
-> next: cycle 5 cont. — (a) profile-edit golden flow re-verify (server write), (b) recipe-library search/filter depth audit (RC-01 — search 'egg', filters, empty-search state), (c) recipe-library NIB-174/182 drift (if recipe code lands).
-NOTE for supervisor: pipeline in maintenance mode — 10 tickets verified-fixed, all golden-flow areas audited (home/allergen/meal-plan/shopping-list/recipe-detail/auth/onboarding/paywall/profile-satellites). Open UNFIXED sev:majors awaiting fixer: NIB-181, NIB-159, NIB-178, NIB-174/182, NIB-155. Open trivials: NIB-186, NIB-188, NIB-176, NIB-179, NIB-183, NIB-173, NIB-160. Prune orphan qa+*@nibbles.dev accounts.
+audited 2026-06-13 (run 40): recipe-library search/filter depth audit (RC-01) (build 3d1921c, no lib delta -> no rebuild).
+  NEW TICKET NIB-196 (sev:major): search "egg" returns egg-FREE recipes — "Tofu Veggie Stir-Fry Puree" (tags soy) + "Pasta with Tomato and Veggies" (tags wheat) match because "egg" is a substring of "vEGGie". Verified vs DB: neither has egg ingredient/tag. Naive substring title match; misleading on a safety-relevant allergen query. Fix = token/word-boundary match. Evidence r40_search_egg_veggie_falsepos.png.
+  PASS no-match empty state: search "zzqqx" -> "We couldn't find any recipes" + illustration + clear X. Well-handled. Evidence r40_search_empty_state_ok.png.
+  (No dedicated filter chips observed on RC-01 in this build — only search + recommendation/Other sections; NIB-174 covers the structural/curation drift.)
+audited 2026-06-13 (run 39): home dashboard deep audit, Figma match (/9 ring intentional). NIB-186 reconfirmed.
+audited 2026-06-13 (run 38): generate-from-meal-plan WORKS. run 37: SL manual flow PASS. run 36: NIB-191 FIXED. run 35: filed NIB-191. run 34: NIB-185 closed. run 33: onboarding re-verified. runs 27-32: 8 fixes verified. runs 1-26: bootstrap+cycles.
+> next: cycle 5 cont. — (a) profile-edit golden flow re-verify (server write), (b) re-verify NIB-196 when fixer lands a search fix, (c) recipe-library NIB-174/182 drift (if recipe code lands).
+NOTE for supervisor: filed NIB-196 (search relevance, sev:major). Open UNFIXED sev:majors: NIB-196, NIB-181, NIB-159, NIB-178, NIB-174/182, NIB-155. 10 tickets verified-fixed runs 27-36. Prune orphan qa+*@nibbles.dev accounts.
 DO NOT: confirm account deletion on the test account — overlay walk only
