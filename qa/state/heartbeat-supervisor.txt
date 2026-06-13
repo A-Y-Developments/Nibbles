@@ -1,1 +1,1 @@
-2026-06-13T10:25:42Z supervisor: all loops healthy (coverage runs 9+10 done; gate merged #437+#439); no hygiene actions
+2026-06-13T11:25:48Z supervisor: all loops healthy (coverage idle ~143m post run-10); no hygiene actions
