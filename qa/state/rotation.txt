@@ -1,10 +1,11 @@
-audited 2026-06-13 (run 35): allergen reaction->Flagged path (build 9ff1f51, no lib delta -> no rebuild). Manually driven (allergen.steps coords predate NIB-176 UI changes; drove + verified each step instead).
-  PASS core safety derivation: Egg detail -> add reaction log, "Any Reaction?" ON -> Save -> Egg flips Ongoing -> flagged. DB persisted had_reaction=true (2026-06-13). Tracker stat "Not Safe" went 0->1.
-  RE-CONFIRMED open NIB-155: reaction ON only swaps the Notes placeholder ("Describe the reaction...") — still NO severity selector, NO symptom picker. Evidence r35_nib155_no_severity.png. (already filed sev:major+HT, no new ticket)
-  NEW TICKET NIB-191 (sev:trivial+HT): flagged state shown as 3 different words — "Flagged" (tracker card) / "Not Safe" (tracker stat) / "Unsafe" (detail badge+banner+log rows). All 3 visible on tracker at once. Safety-status copy inconsistency; product picks canonical term. Evidence r35_status_terms_*.png. Related NIB-188.
-audited 2026-06-13 (run 34): NIB-185 clear-meal-plan dialog verified on-device (NIB-185 fully closed). NIB-159 still reproduces.
+audited 2026-06-13 (run 36): NIB-191 fix re-verify on build d2d62a0 (fixer merged c823e28 "standardize flagged display term to Unsafe").
+  PASS NIB-191 (on-device, full): flagged an allergen (Egg reaction) -> ALL surfaces now read "Unsafe": tracker stat (was "Not Safe"), Egg exposure card badge (was "Flagged"), reaction-log rows, detail badge+banner. Terminology unified. Evidence r36_nib191_unsafe_unified.png. NIB-191 filed run 35, fixed+verified run 36 — loop closed.
+  Still present (separate open ticket, no action): NIB-188 tracker ring still "2/9" (introduced) vs home "1/9" (safe) — NIB-191 fix didn't touch ring counts.
+  No new bugs. 0 new tickets.
+audited 2026-06-13 (run 35): reaction->Flagged path PASS; filed NIB-191; NIB-155 reconfirmed.
+audited 2026-06-13 (run 34): NIB-185 clear-meal-plan verified on-device (NIB-185 closed).
 audited 2026-06-13 (run 33): full onboarding golden flow re-verified PASS.
-audited 2026-06-13 (run 32): NIB-185 delete-log + NIB-187 FIXED. run 31: NIB-175+180 FIXED. run 30: NIB-168+184 FIXED. run 29: NIB-152/177 FIXED + NIB-188. run 28: NIB-161/162/166 PASS. run 27: Add-to-Meal-Plan HEALTHY. runs 1-26: bootstrap+cycles.
-> next: cycle 5 cont. — (a) shopping-list golden flow sweep + NIB-173 visual drift, (b) recipe-library NIB-174/182 drift (only if recipe code lands), (c) home dashboard NIB-186 date-strip re-check.
-NOTE for supervisor: filed NIB-191 (allergen status terminology). Open sev:majors UNFIXED: NIB-181 (recipe dairy-tag), NIB-159 (meal-plan week snap), NIB-178 (paywall close), NIB-174/182 (recipe drift), NIB-155 (reaction severity unimplemented). Prune orphan qa+*@nibbles.dev accounts (onboarding flow run 33).
+audited 2026-06-13 (runs 27-32): 8 fixes verified (NIB-152,177,168,184,175,180,185,187), NIB-161/162/166 PASS, recipe-detail Add-to-Meal-Plan HEALTHY. runs 1-26: bootstrap+cycles.
+> next: cycle 5 cont. — (a) shopping-list golden flow sweep + NIB-173 visual drift (PENDING — deferred several runs for fix-verify priority), (b) home dashboard NIB-186 date-strip re-check, (c) recipe-library NIB-174/182 drift (only if recipe code lands).
+NOTE for supervisor: NIB-191 verified-fixed (10th distinct ticket verified runs 27-36). Open sev:majors UNFIXED: NIB-181, NIB-159, NIB-178, NIB-174/182, NIB-155. Open trivials: NIB-186, NIB-188, NIB-176, NIB-179, NIB-183, NIB-173, NIB-160, NIB-185(fixed), NIB-187(fixed). Prune orphan qa+*@nibbles.dev accounts.
 DO NOT: confirm account deletion on the test account — overlay walk only
