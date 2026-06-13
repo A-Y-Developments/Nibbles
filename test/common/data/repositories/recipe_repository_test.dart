@@ -268,6 +268,55 @@ void main() {
         'r1',
       );
     });
+
+    test(
+      'cache hit triggers unawaited background refresh',
+      () async {
+        final mockSupabase = _MockSupabaseClient();
+        final mockHive = _MockHiveService();
+        final mockRecipesBox = _MockRecipesBox();
+        final mockQb = _MockQueryBuilder();
+
+        const r = Recipe(
+          id: 'r1',
+          title: 'Pea Puree',
+          ageRange: '6m+',
+          allergenTags: [],
+          ingredients: [],
+          steps: [],
+          howToServe: 'Serve.',
+        );
+        final cachedJson = jsonEncode([r.toJson()]);
+
+        when(() => mockHive.recipesBox).thenReturn(mockRecipesBox);
+        when(() => mockRecipesBox.get(any<dynamic>()))
+            .thenReturn(cachedJson);
+        when(() => mockSupabase.from('recipes'))
+            .thenAnswer((_) => mockQb);
+        when(mockQb.select).thenAnswer(
+          (_) => _FakeChain<PostgrestList>(payload: [_row(id: 'r2')]),
+        );
+        when(
+          () => mockRecipesBox.put(
+            any<dynamic>(),
+            any<String>(),
+          ),
+        ).thenAnswer((_) async {});
+
+        final sut = RecipeRepositoryImpl(
+          supabaseClient: mockSupabase,
+          hiveService: mockHive,
+        );
+        await sut.getAllRecipes();
+
+        await Future<void>.delayed(Duration.zero);
+        await Future<void>.delayed(Duration.zero);
+
+        verify(
+          () => mockRecipesBox.put(any<dynamic>(), any<String>()),
+        ).called(1);
+      },
+    );
   });
 
   // ---------------------------------------------------------------------------
