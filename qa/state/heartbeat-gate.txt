@@ -1,1 +1,1 @@
-2026-06-13T09:33:40Z gate run: no open auto-qa PRs; nothing to merge.
+2026-06-13T10:06:12Z gate run: merged #437 (qa coverage allergen_complete_controller) + #439 (qa coverage shopping_list_controller). 0 rejected, 0 skipped. No open auto-qa PRs remain.
