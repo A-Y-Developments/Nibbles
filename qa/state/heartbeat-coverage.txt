@@ -19,3 +19,4 @@ run-18 | 2026-06-14 | recipe_repository | 84.9% -> 91.8% | PR #455 | NIB-207
 2026-06-14T01:45:00 | skipped — WIP cap (2 open auto-qa PRs: #453, #455)
 2026-06-14T02:15:00 | skipped — WIP cap (2 open auto-qa PRs: #453, #455)
 run-19 | 2026-06-14 | recipe_service | 79.6% -> 91.8% | PR #457 | NIB-208
+run-20 | 2026-06-14 | local_flag_service | 57.1% -> 90.5% | PR #459 | NIB-209
