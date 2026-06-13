@@ -1,12 +1,11 @@
-audited 2026-06-13 (run 31): auth + profile-satellite fixer re-verify on build 74ef438 (NIB-175 + NIB-180 landed) + login golden flow.
-  PASS NIB-175: login screen "Sign in with Google" / "Sign in with Apple" (was "Login with Apple Account"); register "Sign up with Google" / "Sign up with Apple" (was "Sign Up with Apple Account") — confirmed on-device (login) + code (register). Apple HIG compliant. Evidence r31_nib175_login_labels.png.
-  PASS NIB-180: Give Feedback header now cream (butter band gone); Manage Subscription "Go Premium" CTA now forest-green (was butter). Evidence r31_nib180_feedback_cream.png, r31_nib180_gopremium_green.png.
-  PASS login golden flow: cold launch -> login.steps (id taps) -> 10/10 batch -> paywall. Auth path intact post NIB-175.
-  BASELINE REFRESH: login__paywall.png updated — paywall content changed intentionally (NIB-152/177 merged: Big 11 copy, distinct subtitles, recipes plural, price card pinned). Old baseline would have false-flagged drift.
+audited 2026-06-13 (run 32): destructive-confirm + guide-copy fixer re-verify on build 94c29d1 (NIB-185 + NIB-187).
+  PASS NIB-185 (delete-log, on-device): dialog now "Delete this log? This may change the allergen's status." (was generic "Are you sure you want to delete?"). Evidence r32_nib185_delete_log_copy.png. Clear-meal-plan half ("Clear all meals for this week? This can't be undone.") confirmed in source clear_confirm_dialog.dart — NOT on-device (needs a created plan; deferred).
+  PASS NIB-187 (on-device): Starting Guide > Introductions > "The 6 Month Milestone" subtitle now "Perfect time to grow" (was "Perfect time to growth"). Evidence r32_nib187_perfect_time_to_grow.png.
+  No new bugs. 0 tickets filed.
+audited 2026-06-13 (run 31): NIB-175 + NIB-180 verified FIXED; login flow PASS; paywall baseline refreshed.
 audited 2026-06-13 (run 30): NIB-168 + NIB-184 verified FIXED.
-audited 2026-06-13 (run 29): NIB-152/177 verified FIXED; filed NIB-188 (ring 1/9 vs 2/9).
-audited 2026-06-13 (run 28): NIB-161/162/166 PASS; NIB-159 still broken.
-audited 2026-06-13 (run 27): recipe-detail Add-to-Meal-Plan HEALTHY. runs 1-26: bootstrap + cycles 1-4 + re-verifies.
-> next: cycle 5 cont. — (a) FULL onboarding golden flow (fresh install + register NEW account via unique QA_REG_EMAIL) — login sub-flow verified run 31, full register/readiness/baby-setup still pending, (b) recipe-library NIB-174/182 drift re-check, (c) shopping-list NIB-173 visual drift re-check.
-NOTE for supervisor: fix velocity strong (runs 27-31 verified-fixed: NIB-152,177,168,184,175,180 + earlier 161,162,166,172). Still-open sev:majors: NIB-181 (recipe dairy-tag), NIB-159 (meal-plan week snap), NIB-178 (paywall close), NIB-174/182 (recipe drift). Open: NIB-155 (reaction severity), NIB-185 (delete confirm copy), NIB-186 (date chips), NIB-188 (ring), NIB-187 (guide copy).
+audited 2026-06-13 (run 29): NIB-152/177 FIXED; filed NIB-188 (ring 1/9 vs 2/9).
+audited 2026-06-13 (run 28): NIB-161/162/166 PASS; NIB-159 still broken. run 27: recipe-detail Add-to-Meal-Plan HEALTHY. runs 1-26: bootstrap + cycles.
+> next: cycle 5 cont. — (a) FULL onboarding golden flow (fresh install + register NEW account, unique QA_REG_EMAIL) — deferred 5 runs for fix-verify priority; login sub-flow done run 31, (b) on-device verify NIB-185 clear-meal-plan dialog (create plan -> menu -> Clear), (c) recipe-library NIB-174/182 drift re-check.
+NOTE for supervisor: exceptional fix velocity — verified-fixed runs 27-32: NIB-152,177,168,184,175,180,185,187 (+earlier 161,162,166,172). Remaining open sev:majors: NIB-181 (recipe dairy-tag), NIB-159 (meal-plan week snap), NIB-178 (paywall close), NIB-174/182 (recipe drift). Open sev:trivial/other: NIB-155,186,188,176,179,183,173,160. Backlog shrinking fast.
 DO NOT: confirm account deletion on the test account — overlay walk only
