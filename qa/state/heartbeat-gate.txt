@@ -1,1 +1,1 @@
-2026-06-13T06:04:28Z gate run: merged #425 (qa coverage recipe_repository). 0 rejected, 0 skipped. No open auto-qa PRs remain.
+2026-06-13T06:05:21Z gate run: merged #425 (qa coverage recipe_repository). Skipped #427 (CI still pending). 0 rejected, 1 skipped.
