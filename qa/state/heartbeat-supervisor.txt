@@ -1,1 +1,1 @@
-2026-06-14T20:25:19Z supervisor: coverage RECOVERED — PRs #478/#480/#482 merged, 0 open auto-qa PRs, loop running freely; explorer 12m fixer 13m gate 20m healthy; peers MCP offline this run
+2026-06-14T21:25:19Z supervisor: all healthy — coverage runs 32+33 done (auth_service/allergen_repo), PRs #484/#486 pending gate; explorer 12m fixer 13m gate 22m; reseed due 23:00Z
