@@ -132,7 +132,7 @@ INSERT INTO recipes (id, title, age_range, allergen_tags, ingredients, steps, se
   'a0000001-0000-0000-0000-000000000009',
   'Peanut Noodles',
   '10+ months',
-  ARRAY['peanut','wheat'],
+  ARRAY['peanut','wheat','soy'],
   '[{"name":"soft-cooked spaghetti","quantity":"30 g"},{"name":"smooth peanut butter","quantity":"1 tbsp"},{"name":"warm water","quantity":"2 tbsp"},{"name":"splash of low-sodium soy sauce","quantity":"½ tsp"}]',
   ARRAY[
     'Cook spaghetti until very soft. Cut into short pieces.',
@@ -164,7 +164,7 @@ INSERT INTO recipes (id, title, age_range, allergen_tags, ingredients, steps, se
   'a0000002-0000-0000-0000-000000000001',
   'Soft Scrambled Eggs',
   '6+ months',
-  ARRAY['egg'],
+  ARRAY['egg','dairy'],
   '[{"name":"egg","quantity":"1"},{"name":"breast milk or formula","quantity":"1 tbsp"},{"name":"unsalted butter","quantity":"a small knob"}]',
   ARRAY[
     'Whisk egg with breast milk or formula.',
@@ -192,7 +192,7 @@ INSERT INTO recipes (id, title, age_range, allergen_tags, ingredients, steps, se
   'a0000002-0000-0000-0000-000000000003',
   'French Omelette Fingers',
   '7+ months',
-  ARRAY['egg'],
+  ARRAY['egg','dairy'],
   '[{"name":"eggs","quantity":"2"},{"name":"water","quantity":"1 tbsp"},{"name":"unsalted butter","quantity":"a small knob"}]',
   ARRAY[
     'Whisk eggs with water.',
@@ -250,7 +250,7 @@ INSERT INTO recipes (id, title, age_range, allergen_tags, ingredients, steps, se
   'a0000002-0000-0000-0000-000000000007',
   'Egg Fried Rice',
   '10+ months',
-  ARRAY['egg'],
+  ARRAY['egg','sesame'],
   '[{"name":"cooked white rice","quantity":"½ cup"},{"name":"egg","quantity":"1"},{"name":"frozen peas","quantity":"2 tbsp"},{"name":"sesame oil","quantity":"½ tsp"}]',
   ARRAY[
     'Heat oil in a wok or pan over medium heat.',
@@ -580,7 +580,7 @@ INSERT INTO recipes (id, title, age_range, allergen_tags, ingredients, steps, se
   'a0000006-0000-0000-0000-000000000003',
   'Tofu Veggie Stir-Fry Puree',
   '8+ months',
-  ARRAY['soy'],
+  ARRAY['soy','sesame'],
   '[{"name":"firm tofu","quantity":"60 g"},{"name":"carrot","quantity":"½, diced"},{"name":"zucchini","quantity":"½, diced"},{"name":"sesame oil","quantity":"½ tsp"}]',
   ARRAY[
     'Steam carrot and zucchini until very soft, about 12 minutes.',
@@ -624,7 +624,7 @@ INSERT INTO recipes (id, title, age_range, allergen_tags, ingredients, steps, se
   'a0000007-0000-0000-0000-000000000001',
   'Soft Bread Fingers',
   '6+ months',
-  ARRAY['wheat'],
+  ARRAY['wheat','dairy'],
   '[{"name":"soft white bread (thick slice)","quantity":"1"},{"name":"unsalted butter","quantity":"a thin scrape"}]',
   ARRAY[
     'Remove crusts.',
@@ -638,7 +638,7 @@ INSERT INTO recipes (id, title, age_range, allergen_tags, ingredients, steps, se
   'a0000007-0000-0000-0000-000000000002',
   'Whole Wheat Banana Pancakes',
   '7+ months',
-  ARRAY['wheat','egg'],
+  ARRAY['wheat','egg','dairy'],
   '[{"name":"whole wheat flour","quantity":"¼ cup"},{"name":"egg","quantity":"1"},{"name":"mashed banana","quantity":"½"},{"name":"milk","quantity":"3 tbsp"}]',
   ARRAY[
     'Whisk all ingredients together.',
@@ -652,7 +652,7 @@ INSERT INTO recipes (id, title, age_range, allergen_tags, ingredients, steps, se
   'a0000007-0000-0000-0000-000000000003',
   'Buttery Soft Pasta',
   '7+ months',
-  ARRAY['wheat'],
+  ARRAY['wheat','dairy'],
   '[{"name":"small pasta (stelline or orzo)","quantity":"30 g"},{"name":"unsalted butter","quantity":"1 tsp"}]',
   ARRAY[
     'Cook pasta until very soft.',
@@ -711,7 +711,7 @@ INSERT INTO recipes (id, title, age_range, allergen_tags, ingredients, steps, se
   'a0000008-0000-0000-0000-000000000002',
   'Tuna Pasta',
   '9+ months',
-  ARRAY['fish','wheat'],
+  ARRAY['fish','wheat','dairy'],
   '[{"name":"small pasta","quantity":"30 g"},{"name":"canned tuna in water (no salt)","quantity":"30 g, drained"},{"name":"cream cheese","quantity":"1 tbsp"},{"name":"frozen peas","quantity":"2 tbsp"}]',
   ARRAY[
     'Cook pasta until very soft with peas in the last 2 minutes.',
@@ -812,7 +812,7 @@ INSERT INTO recipes (id, title, age_range, allergen_tags, ingredients, steps, se
   'a0000009-0000-0000-0000-000000000004',
   'Soft Shrimp Noodles',
   '10+ months',
-  ARRAY['shellfish','wheat'],
+  ARRAY['shellfish','wheat','dairy'],
   '[{"name":"soft-cooked spaghetti","quantity":"30 g"},{"name":"cooked shrimp (chopped small)","quantity":"40 g"},{"name":"butter","quantity":"½ tsp"},{"name":"garlic powder","quantity":"a pinch"}]',
   ARRAY[
     'Cook spaghetti until very soft, then cut into short pieces.',
