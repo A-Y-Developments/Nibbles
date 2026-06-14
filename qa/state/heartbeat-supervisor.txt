@@ -1,1 +1,1 @@
-2026-06-14T15:25:23Z supervisor: coverage ESCALATED — peer cp06qsjf stuck 2h+ same summary, 3 nudges sent, user notified; explorer 12m fixer 13m gate 22m healthy; awaiting user action on coverage PID 5068
+2026-06-14T16:25:17Z supervisor: coverage STILL STUCK 3h+ (PID 5068 ttys019, peer cp06qsjf alive, same summary); 4th notification sent; user action required; explorer 12m fixer 13m gate 22m healthy
