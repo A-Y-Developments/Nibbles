@@ -1,1 +1,1 @@
-2026-06-14T01:35:56Z gate run: merged #463 (qa coverage starting_guide_controller). Closed #465 as redundant (content already on main, byte-identical). 0 rejected, 0 skipped.
+2026-06-14T02:04:28Z gate run: merged #467 (qa coverage manage_subscription_controller). Skipped #469 (CI pending). 0 rejected, 1 skipped.
