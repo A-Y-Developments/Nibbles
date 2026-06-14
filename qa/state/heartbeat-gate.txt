@@ -1,1 +1,1 @@
-2026-06-14T03:03:30Z gate run: no open auto-qa PRs; nothing to merge.
+2026-06-14T03:35:19Z gate run: merged #471 (reset_password_controller) + #473 (onboarding_controller). Cleared 2 redundant coverage-loop WIP dupes (identical to merged). 0 rejected, 0 skipped.
