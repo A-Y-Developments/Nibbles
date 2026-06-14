@@ -1,1 +1,1 @@
-2026-06-14T11:12:37Z supervisor: coverage silent 47m since 2nd respawn (watching — threshold at 12:25Z); explorer 59m (near threshold); fixer/gate healthy; no hygiene actions
+2026-06-14T11:14:46Z supervisor: all loops healthy (explorer 1m, fixer 2m, gate 11m); coverage watching — 2nd respawn 49m ago, threshold 12:25Z; no hygiene actions
