@@ -571,6 +571,17 @@ void main() {
       },
     );
 
+    test('PostgrestException maps to ServerException', () async {
+      final _ = stubTable(
+        'allergen_logs',
+        error: const PostgrestException(message: 'rls denied'),
+      );
+
+      final result = await buildSut().updateLog(_sampleLog);
+
+      expect(result.errorOrNull, _failsWith<ServerException>('rls denied'));
+    });
+
     test('unexpected error maps to UnknownException', () async {
       final _ = stubTable('allergen_logs', error: StateError('boom'));
 
@@ -708,6 +719,17 @@ void main() {
       expect(result.isSuccess, isTrue);
       expect(builder.updated, <String, dynamic>{'status': 'completed'});
       expect(builder.filters, [('baby_id', 'baby-1')]);
+    });
+
+    test('PostgrestException maps to ServerException', () async {
+      final _ = stubTable(
+        'allergen_program_state',
+        error: const PostgrestException(message: 'rls denied'),
+      );
+
+      final result = await buildSut().completeProgramState('baby-1');
+
+      expect(result.errorOrNull, _failsWith<ServerException>('rls denied'));
     });
 
     test('unexpected error maps to UnknownException', () async {
