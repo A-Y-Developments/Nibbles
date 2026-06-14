@@ -1,1 +1,1 @@
-2026-06-14T16:25:17Z supervisor: coverage STILL STUCK 3h+ (PID 5068 ttys019, peer cp06qsjf alive, same summary); 4th notification sent; user action required; explorer 12m fixer 13m gate 22m healthy
+2026-06-14T17:25:25Z supervisor: coverage peer cp06qsjf alive 4h+ same summary (user asleep, not re-notifying until 06:00 WIB); explorer 12m fixer 13m gate 22m healthy; no hygiene actions
