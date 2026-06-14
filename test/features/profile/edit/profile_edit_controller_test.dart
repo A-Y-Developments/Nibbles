@@ -299,5 +299,23 @@ void main() {
         );
       },
     );
+
+    test(
+      'getBaby returns null during save: sets Baby-not-found errorMessage',
+      () async {
+        final ctrl = await readController();
+        when(
+          () => mockBabyService.getBaby(),
+        ).thenAnswer((_) async => null);
+
+        final result = await ctrl.save();
+
+        expect(result.success, isFalse);
+        final state =
+            container.read(profileEditControllerProvider(_babyId)).requireValue;
+        expect(state.errorMessage, 'Baby profile not found.');
+        expect(state.isLoading, isFalse);
+      },
+    );
   });
 }
