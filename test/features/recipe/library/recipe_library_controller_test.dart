@@ -1,3 +1,10 @@
+// firebase_analytics_platform_interface and firebase_core_platform_interface
+// are transitive deps; their public barrels don't re-export the test helpers.
+// ignore_for_file: depend_on_referenced_packages
+
+import 'package:firebase_analytics_platform_interface/firebase_analytics_platform_interface.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_core_platform_interface/test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -9,6 +16,23 @@ import 'package:nibbles/src/common/services/allergen_service.dart';
 import 'package:nibbles/src/common/services/local_flag_service.dart';
 import 'package:nibbles/src/common/services/recipe_service.dart';
 import 'package:nibbles/src/features/recipe/library/recipe_library_controller.dart';
+
+class _NoopAnalyticsPlatform extends FirebaseAnalyticsPlatform {
+  _NoopAnalyticsPlatform() : super();
+
+  @override
+  FirebaseAnalyticsPlatform delegateFor({
+    required FirebaseApp app,
+    Map<String, dynamic>? webOptions,
+  }) => this;
+
+  @override
+  Future<void> logEvent({
+    required String name,
+    Map<String, Object?>? parameters,
+    AnalyticsCallOptions? callOptions,
+  }) async {}
+}
 
 class _MockRecipeService extends Mock implements RecipeService {}
 
@@ -47,6 +71,13 @@ void main() {
   late _MockRecipeService recipeSvc;
   late _MockAllergenService allergenSvc;
   late _MockLocalFlagService localFlags;
+
+  setUpAll(() async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    setupFirebaseCoreMocks();
+    await Firebase.initializeApp();
+    FirebaseAnalyticsPlatform.instance = _NoopAnalyticsPlatform();
+  });
 
   setUp(() {
     recipeSvc = _MockRecipeService();
@@ -286,5 +317,23 @@ void main() {
         returnsNormally,
       );
     });
+
+    test(
+      'updates searchQuery and fires analytics when transitioning from empty '
+      'to non-empty (trims whitespace)',
+      () async {
+        stubHappyBuild();
+        final c = container();
+        await c.read(recipeLibraryControllerProvider(_babyId).future);
+
+        c
+            .read(recipeLibraryControllerProvider(_babyId).notifier)
+            .setSearchQuery('  carrot  ');
+
+        final state =
+            c.read(recipeLibraryControllerProvider(_babyId)).valueOrNull;
+        expect(state?.searchQuery, 'carrot');
+      },
+    );
   });
 }
