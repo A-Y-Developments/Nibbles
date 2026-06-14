@@ -1,1 +1,1 @@
-2026-06-14T06:25:44Z supervisor: all loops healthy (explorer 12m, fixer 12m, gate 21m, coverage ~2h since run-28/run-29 pending); no hygiene actions
+2026-06-14T07:25:47Z supervisor: all loops healthy (explorer 12m, fixer 12m, gate 21m, coverage ~3h since run-28 — watching, threshold 240m); no hygiene actions
