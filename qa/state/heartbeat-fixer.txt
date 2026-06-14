@@ -1,1 +1,1 @@
-2026-06-14T20:12:50Z fixer: idle — Todo queue unchanged, all product/design-blocked; coverage loop active (218/219/220 done/in-review, not Todo). WIP 0, no rework.
+2026-06-14T20:41:10Z fixer: idle — not paused, 0 auto-qa PRs (WIP clear, no rework). No new tickets in 24h; queue human-blocked.
