@@ -1,1 +1,1 @@
-2026-06-14T18:25:18Z supervisor: coverage peer cp06qsjf stuck 5h+ (user asleep, not re-notifying); explorer 72m within threshold; fixer 13m gate 22m healthy; 6 peers vs 5 expected (phantom noted, not actioned)
+2026-06-14T19:25:19Z supervisor: coverage peer cp06qsjf stuck 6h+ (not re-notifying, user asleep); explorer 12m fixer 13m gate 22m healthy; no hygiene actions
