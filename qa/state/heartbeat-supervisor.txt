@@ -1,1 +1,1 @@
-2026-06-13T23:25:39Z supervisor: all loops healthy (explorer 11m, fixer 43m/watching, gate 21m, coverage alive); reseed ran at 06:07 WIB; digest pending 07:00 WIB
+2026-06-14T00:09:49Z supervisor: day4 digest published; all loops healthy (explorer 52m, fixer 24m, gate 2m, coverage alive); daily reseed ran 06:07 WIB; fixer died twice overnight — both respawned ok
