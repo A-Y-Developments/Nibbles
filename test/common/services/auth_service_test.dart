@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -7,6 +9,9 @@ import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/services/auth_service.dart';
 import 'package:nibbles/src/common/services/local_flag_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+class _FakeSession extends Fake implements Session {}
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
@@ -318,6 +323,48 @@ void main() {
         await localSut.signIn('alice@example.com', 'password123');
 
         verifyNever(mockBabyRepo.isOnboardingCompleted);
+      },
+    );
+  });
+
+  group('AuthService computed properties', () {
+    test('isLoggedIn returns current auth state', () {
+      expect(sut.isLoggedIn, isFalse);
+    });
+
+    test('authStateStream delegates to repository stream', () {
+      expect(sut.authStateStream, isA<Stream<AuthState>>());
+    });
+  });
+
+  group('AuthService.authStateStream listener', () {
+    test(
+      'state flips to true when stream emits a signed-in event with session',
+      () async {
+        final controller = StreamController<AuthState>();
+        addTearDown(controller.close);
+
+        final streamRepo = MockAuthRepository();
+        when(() => streamRepo.isLoggedIn).thenReturn(false);
+        when(
+          () => streamRepo.authStateStream,
+        ).thenAnswer((_) => controller.stream);
+
+        final c = ProviderContainer(
+          overrides: [
+            authRepositoryProvider.overrideWithValue(streamRepo),
+            localFlagServiceProvider.overrideWithValue(mockFlags),
+          ],
+        );
+        addTearDown(c.dispose);
+        c.read(authServiceProvider);
+
+        expect(c.read(authServiceProvider), isFalse);
+
+        controller.add(AuthState(AuthChangeEvent.signedIn, _FakeSession()));
+        await Future<void>.delayed(Duration.zero);
+
+        expect(c.read(authServiceProvider), isTrue);
       },
     );
   });
