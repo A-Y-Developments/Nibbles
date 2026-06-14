@@ -1,1 +1,1 @@
-2026-06-14T03:11:30Z fixer: idle — no new tickets, WIP clear, no rework. Queue human-blocked.
+2026-06-14T03:46:02Z fixer: shipped NIB-181 (PR #477) — tagged derived-ingredient allergens (dairy/sesame/soy) on 10 seed recipes; migration applied to nibbles-dev, catalog-wide guard test red->green, on-sim dairy+soy chips verified.
