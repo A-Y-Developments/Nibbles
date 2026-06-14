@@ -1,1 +1,1 @@
-2026-06-14T02:57:35Z supervisor: all loops healthy (explorer 44m, fixer 25m/alive after 4th respawn, gate 22m, coverage WIP-clear); gate merged #469; no hygiene actions
+2026-06-14T03:25:37Z supervisor: all loops healthy (explorer 12m, fixer 13m, gate 21m, coverage run-26 done); cleaned merged qa/coverage-run-27 worktree
