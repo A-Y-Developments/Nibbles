@@ -1,1 +1,1 @@
-2026-06-14T02:04:28Z gate run: merged #467 (qa coverage manage_subscription_controller). Skipped #469 (CI pending). 0 rejected, 1 skipped.
+2026-06-14T02:34:24Z gate run: merged #469 (qa coverage paywall_controller). Removed redundant untracked WIP duplicate. 0 rejected, 0 skipped. No open auto-qa PRs remain.
