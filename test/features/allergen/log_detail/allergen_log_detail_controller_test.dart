@@ -182,5 +182,68 @@ void main() {
         await expectLater(notifier.future, throwsA(isA<StateError>()));
       },
     );
+
+    test('throws StateError when getBaby returns null', () async {
+      when(
+        () => mockBabyService.getBaby(),
+      ).thenAnswer((_) async => null);
+
+      await expectLater(
+        container.read(
+          allergenLogDetailControllerProvider(_allergenKey, 'log-1')
+              .future,
+        ),
+        throwsA(isA<StateError>()),
+      );
+    });
+
+    test(
+      'throws StateError when allergenKey not found in allergen list',
+      () async {
+        when(
+          () => mockService.getAllergens(),
+        ).thenAnswer((_) async => const Result.success(<Allergen>[]));
+
+        await expectLater(
+          container.read(
+            allergenLogDetailControllerProvider(_allergenKey, 'log-1')
+                .future,
+          ),
+          throwsA(isA<StateError>()),
+        );
+      },
+    );
+  });
+
+  group('AllergenLogDetailController.refresh', () {
+    test('invalidates and rebuilds state successfully', () async {
+      final log = _makeLog();
+      when(
+        () => mockService.getAllergens(),
+      ).thenAnswer((_) async => const Result.success([_peanut]));
+      when(
+        () => mockService.getLogs(
+          any(),
+          allergenKey: any(named: 'allergenKey'),
+        ),
+      ).thenAnswer((_) async => Result.success([log]));
+
+      await container.read(
+        allergenLogDetailControllerProvider(_allergenKey, 'log-1').future,
+      );
+
+      await container
+          .read(
+            allergenLogDetailControllerProvider(_allergenKey, 'log-1')
+                .notifier,
+          )
+          .refresh();
+
+      final state = container.read(
+        allergenLogDetailControllerProvider(_allergenKey, 'log-1'),
+      );
+      expect(state.hasValue, isTrue);
+      expect(state.requireValue.log.id, 'log-1');
+    });
   });
 }
