@@ -41,3 +41,4 @@ run-27 | 2026-06-14 | onboarding_controller | 87.8% -> 93.9% | PR #473 | NIB-216
 2026-06-14T03:30:21 | skipped — WIP cap (2 open auto-qa PRs: #471, #473)
 2026-06-14T03:30:41 | skipped — WIP cap (2 open auto-qa PRs: #471, #473)
 2026-06-14T03:30:59 | skipped — WIP cap (2 open auto-qa PRs: #471, #473)
+run-28 | 2026-06-14 | allergen_detail_controller | 87.5% -> 100% | PR #475 | NIB-217
