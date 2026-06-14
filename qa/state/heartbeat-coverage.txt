@@ -57,3 +57,4 @@ run-33 | 2026-06-15 | allergen_repository | 96.4% -> 97.8% | PR #486 | NIB-222
 2026-06-14T21:27:35 | skipped — WIP cap (2 open auto-qa PRs: #484, #486)
 2026-06-14T21:30:09 | skipped — WIP cap (2 open auto-qa PRs: #484, #486)
 2026-06-14T21:30:37 | skipped — WIP cap (2 open auto-qa PRs: #484, #486)
+2026-06-14T21:31:04 | skipped — WIP cap (2 open auto-qa PRs: #484, #486)
