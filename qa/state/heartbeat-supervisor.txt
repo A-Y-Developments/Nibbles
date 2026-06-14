@@ -1,1 +1,1 @@
-2026-06-14T01:25:48Z supervisor: fixer DEAD (74m, 3rd death) — respawned; explorer 12m/gate 21m/coverage alive (run-22/#463 + run-23/#465 merged, WIP cap active); no other hygiene actions
+2026-06-14T02:25:52Z supervisor: fixer DEAD (133m, 4th death — respawn loop not sticking) — respawned again; explorer 12m/gate 20m/coverage run-24+25 active; #469 CI-pending at gate
