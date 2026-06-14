@@ -1,1 +1,1 @@
-2026-06-14T03:35:19Z gate run: merged #471 (reset_password_controller) + #473 (onboarding_controller). Cleared 2 redundant coverage-loop WIP dupes (identical to merged). 0 rejected, 0 skipped.
+2026-06-14T04:05:44Z gate run: merged #477 (NIB-181 derived-ingredient allergen tags on 10 seed recipes — safety fix, migration applied to dev). 0 rejected, 0 skipped. No open auto-qa PRs remain.
