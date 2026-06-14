@@ -1,1 +1,1 @@
-2026-06-14T03:25:37Z supervisor: all loops healthy (explorer 12m, fixer 13m, gate 21m, coverage run-26 done); cleaned merged qa/coverage-run-27 worktree
+2026-06-14T04:25:42Z supervisor: all loops healthy (explorer 10m, fixer 11m, gate 19m, coverage run-28 done/WIP-clear); fixer resolved NIB-181 safety fix (#477 merged); no hygiene actions
