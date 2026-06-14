@@ -37,3 +37,4 @@ run-25 | 2026-06-14 | paywall_controller | 77.5% -> 100% | PR #469 | NIB-214
 run-26 | 2026-06-14 | reset_password_controller | 80.0% -> 100% | PR #471 | NIB-215
 run-27 | 2026-06-14 | onboarding_controller | 87.8% -> 93.9% | PR #473 | NIB-216
 2026-06-14T03:29:02 | skipped — WIP cap (2 open auto-qa PRs: #471, #473)
+2026-06-14T03:29:22 | skipped — WIP cap (2 open auto-qa PRs: #471, #473)
