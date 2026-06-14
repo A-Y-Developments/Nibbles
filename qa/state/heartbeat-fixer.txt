@@ -1,1 +1,1 @@
-2026-06-14T19:11:19Z fixer: idle — not paused, 0 auto-qa PRs (WIP clear, no rework). Queue unchanged & human-blocked. No fixer-actionable ticket.
+2026-06-14T19:12:23Z fixer: idle — no new/changed tickets; queue human/design-blocked. WIP 0, no rework.
