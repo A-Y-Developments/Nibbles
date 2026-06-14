@@ -1,1 +1,1 @@
-2026-06-14T13:25:19Z supervisor: coverage STALLED not dead — peer cp06qsjf alive mid-run (run 19); nudge sent; explorer 12m fixer 13m gate 22m healthy; no hygiene actions
+2026-06-14T14:25:17Z supervisor: coverage STALLED — peer cp06qsjf alive but stuck 60min on 'creating worktree'; 2nd nudge sent; PushNotification sent; explorer 12m fixer 13m gate 22m healthy; no hygiene actions
