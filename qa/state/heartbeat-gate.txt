@@ -1,1 +1,1 @@
-2026-06-14T21:03:28Z gate run: no open auto-qa PRs; nothing to merge.
+2026-06-14T21:35:03Z gate run: merged #484 (NIB-221 auth_service) + #486 (allergen_repository). 0 rejected, 0 skipped.
