@@ -1,1 +1,1 @@
-2026-06-14T10:26:12Z supervisor: coverage DEAD again (2nd respawn — 120m since first respawn, still at run-28 6h+); git pull fixed (rebase conflict, force-synced); explorer/fixer/gate healthy
+2026-06-14T11:12:37Z supervisor: coverage silent 47m since 2nd respawn (watching — threshold at 12:25Z); explorer 59m (near threshold); fixer/gate healthy; no hygiene actions
