@@ -1,1 +1,1 @@
-2026-06-14T14:25:17Z supervisor: coverage STALLED — peer cp06qsjf alive but stuck 60min on 'creating worktree'; 2nd nudge sent; PushNotification sent; explorer 12m fixer 13m gate 22m healthy; no hygiene actions
+2026-06-14T15:25:23Z supervisor: coverage ESCALATED — peer cp06qsjf stuck 2h+ same summary, 3 nudges sent, user notified; explorer 12m fixer 13m gate 22m healthy; awaiting user action on coverage PID 5068
