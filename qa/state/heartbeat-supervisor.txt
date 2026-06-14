@@ -1,1 +1,1 @@
-2026-06-14T00:09:49Z supervisor: day4 digest published; all loops healthy (explorer 52m, fixer 24m, gate 2m, coverage alive); daily reseed ran 06:07 WIB; fixer died twice overnight — both respawned ok
+2026-06-14T00:25:41Z supervisor: all loops healthy (explorer 12m, fixer 13m, gate 21m, coverage WIP-clear/53m); day4 digest done; no hygiene actions
