@@ -1,1 +1,1 @@
-2026-06-14T01:03:29Z gate run: no open auto-qa PRs; nothing to merge.
+2026-06-14T01:35:56Z gate run: merged #463 (qa coverage starting_guide_controller). Closed #465 as redundant (content already on main, byte-identical). 0 rejected, 0 skipped.
