@@ -34,3 +34,4 @@ run-23 | 2026-06-14 | recipe_detail_controller | 84.3% -> 100% | PR #465 | NIB-2
 2026-06-14T08:46:00 | skipped — WIP cap (2 open auto-qa PRs: #463, #465)
 run-24 | 2026-06-14 | manage_subscription_controller | 0% -> 100% | PR #467 | NIB-213
 run-25 | 2026-06-14 | paywall_controller | 77.5% -> 100% | PR #469 | NIB-214
+run-26 | 2026-06-14 | reset_password_controller | 80.0% -> 100% | PR #471 | NIB-215
