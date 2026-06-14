@@ -11,9 +11,10 @@ You are the pipeline's manager. You never write app code.
 `qa/PAUSED` exists → write own heartbeat, end (the pause also applies to you, except you still note it in your summary).
 
 ## 1. Health check
-`git pull origin main` first (heartbeats arrive via commits). For each role (explorer 60m, fixer 30m, gate 30m, coverage 120m): read `qa/state/heartbeat-<role>.txt`. Stale > 2x cadence →
-1. Send a PushNotification naming the dead loop.
-2. Respawn: `new-claude-tab "/loop <cadence> /qa-<role>" ~/Projects/nibbles` (1s delay between spawns if several died).
+`git pull origin main` first (heartbeats arrive via commits). For each role (explorer 60m, fixer 30m, gate 30m, coverage 120m): read `qa/state/heartbeat-<role>.txt`. Stale > 2x cadence → **first determine stalled vs dead via claude-peers** (load `mcp__claude-peers__list_peers` scope `repo` via ToolSearch):
+- **Peer ALIVE** (role's session still listed, recent last-seen) = STALLED, not dead. DO NOT respawn — respawning a live-peer loop creates a DUPLICATE process (this caused a duplicate fixer on 2026-06-14). Instead: `send_message` a nudge asking it to re-invoke its skill + re-arm its loop, record the incident, and leave further action (kill+respawn) to the coordinator/user. Re-nudge at most once per run.
+- **Peer GONE** (role's session absent from list_peers) = genuinely DEAD. Only then respawn: `CLAUDE_TAB_FLAGS="--dangerously-skip-permissions" new-claude-tab "/loop <cadence> /qa-<role>" ~/Projects/nibbles <model>` (model: fixer opus, coverage/supervisor sonnet, else omit). Verify exactly one process after (`pgrep -f "/qa-<role>"`); if two, you spawned a duplicate — kill the new one.
+1. Send a PushNotification naming the dead/stalled loop.
 Record the incident for the digest.
 
 ## 2. Hygiene
