@@ -1,1 +1,1 @@
-2026-06-14T12:26:03Z supervisor: coverage DEAD 8h43m (3rd respawn triggered); explorer 13m fixer 14m gate 23m all healthy; no hygiene actions
+2026-06-14T13:25:19Z supervisor: coverage STALLED not dead — peer cp06qsjf alive mid-run (run 19); nudge sent; explorer 12m fixer 13m gate 22m healthy; no hygiene actions
