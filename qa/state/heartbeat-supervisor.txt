@@ -1,1 +1,1 @@
-2026-06-14T21:25:19Z supervisor: all healthy — coverage runs 32+33 done (auth_service/allergen_repo), PRs #484/#486 pending gate; explorer 12m fixer 13m gate 22m; reseed due 23:00Z
+2026-06-14T22:25:24Z supervisor: all healthy — coverage run-34 done (profile_edit_controller), gate merged #488; explorer 12m fixer 13m gate 21m; reseed due in 35m at 23:00Z
