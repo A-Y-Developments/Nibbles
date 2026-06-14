@@ -1,1 +1,1 @@
-2026-06-14T07:25:47Z supervisor: all loops healthy (explorer 12m, fixer 12m, gate 21m, coverage ~3h since run-28 — watching, threshold 240m); no hygiene actions
+2026-06-14T08:26:05Z supervisor: coverage DEAD (~4.5h, threshold 240m) — respawned; explorer 12m/fixer 12m/gate 21m healthy; no other hygiene actions
