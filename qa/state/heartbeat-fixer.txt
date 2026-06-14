@@ -1,1 +1,1 @@
-2026-06-14T21:11:27Z fixer: idle — not paused, 1 auto-qa PR (#484 coverage, awaiting gate, not rework; WIP<2). No new tickets in 24h; ticket queue human-blocked.
+2026-06-14T21:12:42Z fixer: idle — no Todo changes; queue human/design-blocked. WIP 1 (coverage PR #484, no rejection), no rework.
