@@ -9,9 +9,13 @@ import 'package:nibbles/src/common/domain/enums/consent_type.dart';
 import 'package:nibbles/src/common/domain/enums/gender.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/common/services/consent_service.dart';
+import 'package:nibbles/src/common/services/local_flag_service.dart';
 import 'package:nibbles/src/features/onboarding/onboarding_controller.dart';
+import 'package:nibbles/src/features/onboarding/onboarding_state.dart';
 
 class _MockBabyProfileService extends Mock implements BabyProfileService {}
+
+class _MockLocalFlagService extends Mock implements LocalFlagService {}
 
 /// Hand-rolled no-op repo — see consent screen test for the rationale; mixing
 /// a Mock'd ConsentService that uses NAMED matchers with the existing
@@ -52,6 +56,26 @@ ProviderContainer _makeContainer(BabyProfileService service) {
         const ConsentService(_NoopConsentRepository()),
       ),
       onboardingCrashRecorderProvider.overrideWithValue(_noopCrashRecorder),
+    ],
+  );
+  addTearDown(container.dispose);
+  return container;
+}
+
+ProviderContainer _makeContainerWithFlags({
+  required BabyProfileService service,
+  required LocalFlagService flags,
+}) {
+  final container = ProviderContainer(
+    overrides: [
+      babyProfileServiceProvider.overrideWithValue(service),
+      consentServiceProvider.overrideWithValue(
+        const ConsentService(_NoopConsentRepository()),
+      ),
+      onboardingCrashRecorderProvider.overrideWithValue(
+        _noopCrashRecorder,
+      ),
+      localFlagServiceProvider.overrideWithValue(flags),
     ],
   );
   addTearDown(container.dispose);
@@ -167,5 +191,40 @@ void main() {
       },
     );
 
+  });
+
+  group('OnboardingController.completeReadiness', () {
+    test('delegates to localFlagService.setOnboardingReadinessDone', () {
+      final flags = _MockLocalFlagService();
+      final container = _makeContainerWithFlags(
+        service: _MockBabyProfileService(),
+        flags: flags,
+      );
+
+      container
+          .read(onboardingControllerProvider.notifier)
+          .completeReadiness();
+
+      verify(flags.setOnboardingReadinessDone).called(1);
+    });
+  });
+
+  group('OnboardingController.reset', () {
+    test('returns state to initial OnboardingState', () {
+      final container = _makeContainerWithFlags(
+        service: _MockBabyProfileService(),
+        flags: _MockLocalFlagService(),
+      );
+      container.read(onboardingControllerProvider.notifier)
+        ..updateName('Lily')
+        ..updateDob(DateTime(2025, 6));
+
+      container.read(onboardingControllerProvider.notifier).reset();
+
+      expect(
+        container.read(onboardingControllerProvider),
+        const OnboardingState(),
+      );
+    });
   });
 }
