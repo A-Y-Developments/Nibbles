@@ -1,1 +1,1 @@
-2026-06-14T02:25:52Z supervisor: fixer DEAD (133m, 4th death — respawn loop not sticking) — respawned again; explorer 12m/gate 20m/coverage run-24+25 active; #469 CI-pending at gate
+2026-06-14T02:57:35Z supervisor: all loops healthy (explorer 44m, fixer 25m/alive after 4th respawn, gate 22m, coverage WIP-clear); gate merged #469; no hygiene actions
