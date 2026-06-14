@@ -1,1 +1,1 @@
-2026-06-14T20:05:26Z gate run: merged #480 (NIB-219 allergen_service) + #482 (NIB-220 recipe_library_controller). Cleared 2 redundant WIP dupes. 0 rejected, 0 skipped.
+2026-06-14T20:33:32Z gate run: no open auto-qa PRs; nothing to merge.
