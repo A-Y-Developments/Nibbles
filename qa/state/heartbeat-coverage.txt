@@ -27,3 +27,4 @@ run-21 | 2026-06-14 | shopping_list_service | 66.7% -> 90.5% | PR #461 | NIB-210
 run-22 | 2026-06-14 | starting_guide_controller | 0% -> 100% | PR #463 | NIB-211
 run-23 | 2026-06-14 | recipe_detail_controller | 84.3% -> 100% | PR #465 | NIB-212
 2026-06-14T08:22:00 | skipped — WIP cap (2 open auto-qa PRs: #463, #465)
+2026-06-14T08:26:00 | skipped — WIP cap (2 open auto-qa PRs: #463, #465)
