@@ -393,6 +393,35 @@ void main() {
         verifyNever(() => mockRepo.advanceProgramState(any(), any(), any()));
       },
     );
+
+    test('returns failure when getProgramState fails', () async {
+      when(
+        () => mockRepo.getProgramState(any()),
+      ).thenAnswer(
+        (_) async => const Result.failure(NetworkException('offline')),
+      );
+
+      final result = await sut.advanceToNextAllergen(_babyId);
+
+      expect(result.isFailure, isTrue);
+      verifyNever(() => mockRepo.getAllergens());
+    });
+
+    test('returns failure when getAllergens fails', () async {
+      when(
+        () => mockRepo.getProgramState(any()),
+      ).thenAnswer((_) async => Result.success(_makeProgramState()));
+      when(
+        () => mockRepo.getAllergens(),
+      ).thenAnswer(
+        (_) async => const Result.failure(NetworkException('offline')),
+      );
+
+      final result = await sut.advanceToNextAllergen(_babyId);
+
+      expect(result.isFailure, isTrue);
+      verifyNever(() => mockRepo.advanceProgramState(any(), any(), any()));
+    });
   });
 
   // ---------------------------------------------------------------------------
