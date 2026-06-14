@@ -1,3 +1,10 @@
+// firebase_analytics_platform_interface and firebase_core_platform_interface
+// are transitive deps; their public barrels don't re-export the test helpers.
+// ignore_for_file: depend_on_referenced_packages
+
+import 'package:firebase_analytics_platform_interface/firebase_analytics_platform_interface.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_core_platform_interface/test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -5,6 +12,7 @@ import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/domain/entities/allergen_log.dart';
 import 'package:nibbles/src/common/domain/entities/allergen_program_state.dart';
+import 'package:nibbles/src/common/domain/entities/meal_plan_entry.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
 import 'package:nibbles/src/common/domain/enums/allergen_program_status.dart';
 import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
@@ -13,6 +21,23 @@ import 'package:nibbles/src/common/services/meal_plan_service.dart';
 import 'package:nibbles/src/common/services/recipe_service.dart';
 import 'package:nibbles/src/common/services/shopping_list_service.dart';
 import 'package:nibbles/src/features/recipe/detail/recipe_detail_controller.dart';
+
+class _NoopAnalyticsPlatform extends FirebaseAnalyticsPlatform {
+  _NoopAnalyticsPlatform() : super();
+
+  @override
+  FirebaseAnalyticsPlatform delegateFor({
+    required FirebaseApp app,
+    Map<String, dynamic>? webOptions,
+  }) => this;
+
+  @override
+  Future<void> logEvent({
+    required String name,
+    Map<String, Object?>? parameters,
+    AnalyticsCallOptions? callOptions,
+  }) async {}
+}
 
 class _MockRecipeService extends Mock implements RecipeService {}
 
@@ -57,9 +82,13 @@ void main() {
   late _MockMealPlanService mealPlanSvc;
   late _MockShoppingListService shoppingListSvc;
 
-  setUpAll(() {
+  setUpAll(() async {
+    TestWidgetsFlutterBinding.ensureInitialized();
     registerFallbackValue(const <RecipeAssignment>[]);
     registerFallbackValue(const <AllergenLog>[]);
+    setupFirebaseCoreMocks();
+    await Firebase.initializeApp();
+    FirebaseAnalyticsPlatform.instance = _NoopAnalyticsPlatform();
   });
 
   setUp(() {
@@ -212,6 +241,27 @@ void main() {
 
       expect(result.isFailure, true);
     });
+
+    test('success path returns Success and fires analytics', () async {
+      stubHappyBuild();
+      when(
+        () => mealPlanSvc.appendMealsToRange(
+          babyId: any(named: 'babyId'),
+          startDate: any(named: 'startDate'),
+          endDate: any(named: 'endDate'),
+          assignments: any(named: 'assignments'),
+        ),
+      ).thenAnswer((_) async => const Result.success(<MealPlanEntry>[]));
+
+      final c = container();
+      await c.read(recipeDetailControllerProvider(_babyId, 'r1').future);
+
+      final result = await c
+          .read(recipeDetailControllerProvider(_babyId, 'r1').notifier)
+          .assignToMealPlan({DateTime(2025, 6)});
+
+      expect(result.isSuccess, true);
+    });
   });
 
   group('addToShoppingList()', () {
@@ -244,6 +294,22 @@ void main() {
           .addToShoppingList(['peanut butter']);
 
       expect(result.isFailure, true);
+    });
+
+    test('success path returns Success and fires analytics', () async {
+      stubHappyBuild();
+      when(
+        () => shoppingListSvc.addFromRecipe(any(), any(), any()),
+      ).thenAnswer((_) async => const Result.success(null));
+
+      final c = container();
+      await c.read(recipeDetailControllerProvider(_babyId, 'r1').future);
+
+      final result = await c
+          .read(recipeDetailControllerProvider(_babyId, 'r1').notifier)
+          .addToShoppingList(['Avocado', 'Bread']);
+
+      expect(result.isSuccess, true);
     });
   });
 }
