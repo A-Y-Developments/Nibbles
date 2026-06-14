@@ -1,1 +1,1 @@
-2026-06-14T09:25:39Z supervisor: coverage respawn 60m ago — no new entry yet (first run in progress, within 120m cadence); explorer/fixer/gate healthy; no hygiene actions
+2026-06-14T10:26:12Z supervisor: coverage DEAD again (2nd respawn — 120m since first respawn, still at run-28 6h+); git pull fixed (rebase conflict, force-synced); explorer/fixer/gate healthy
