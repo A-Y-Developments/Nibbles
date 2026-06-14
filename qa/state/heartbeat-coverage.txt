@@ -47,3 +47,4 @@ run-30 | 2026-06-15 | allergen_service | 93.0% -> 94.8% | PR #480 | NIB-219
 run-31 | 2026-06-15 | recipe_library_controller | 85.7% -> 100% | PR #482 | NIB-220
 2026-06-15T04:01:00 | skipped — WIP cap (2 open auto-qa PRs: #480, #482)
 2026-06-15T05:01:00 | skipped — WIP cap (2 open auto-qa PRs: #480, #482)
+2026-06-15T06:02:00 | skipped — WIP cap (2 open auto-qa PRs: #480, #482)
