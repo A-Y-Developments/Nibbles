@@ -1,1 +1,1 @@
-2026-06-14T17:11:38Z fixer: idle — no new tickets, WIP clear, no rework. Queue human-blocked.
+2026-06-14T17:12:35Z fixer: idle — no new/changed tickets; queue human/design-blocked. WIP 0, no rework.
