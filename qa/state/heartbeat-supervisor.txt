@@ -1,1 +1,1 @@
-2026-06-15T01:25:19Z supervisor: coverage process alive (pgrep PID 4968) but 223m no heartbeat (threshold 240m in 17m); peers MCP offline; explorer 12m fixer 13m gate 22m healthy; no hygiene actions
+2026-06-15T02:25:22Z supervisor: coverage STALLED 283m (process alive pgrep=1, peers MCP offline, user notified); explorer 13m fixer 13m gate 22m healthy; no hygiene actions
