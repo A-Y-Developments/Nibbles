@@ -1,1 +1,1 @@
-2026-06-15T00:25:23Z supervisor: day 5 digest published; reseed done 23:25Z; all healthy — explorer 12m fixer 13m gate 22m; coverage run-34 last (~145m, within 240m threshold)
+2026-06-15T01:25:19Z supervisor: coverage process alive (pgrep PID 4968) but 223m no heartbeat (threshold 240m in 17m); peers MCP offline; explorer 12m fixer 13m gate 22m healthy; no hygiene actions
