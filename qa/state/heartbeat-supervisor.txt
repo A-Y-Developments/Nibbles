@@ -1,1 +1,1 @@
-2026-06-14T23:25:20Z supervisor: all healthy; reseed done (baby ab9ac753); coverage 90m within cadence (run-34 last, next ~23:55Z); explorer 12m fixer 13m gate 22m; digest pending next run (07:00 WIB)
+2026-06-15T00:25:23Z supervisor: day 5 digest published; reseed done 23:25Z; all healthy — explorer 12m fixer 13m gate 22m; coverage run-34 last (~145m, within 240m threshold)
