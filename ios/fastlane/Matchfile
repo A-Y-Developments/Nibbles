@@ -1,0 +1,6 @@
+git_url(ENV["MATCH_GIT_URL"])
+storage_mode("git")
+type("appstore")
+app_identifier([ENV["APP_IDENTIFIER"] || "com.aydev.nibbles"])
+team_id(ENV["APPLE_TEAM_ID"] || "32T8HNVYGX")
+readonly(ENV["MATCH_READONLY"] == "true")
