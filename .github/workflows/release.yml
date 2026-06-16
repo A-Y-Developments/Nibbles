@@ -1,0 +1,53 @@
+name: release-testflight
+
+# Inactive until the secrets listed in RELEASE.md are configured.
+# Trigger: push a v* tag (e.g. v1.0.0) or run manually.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  testflight:
+    runs-on: macos-15
+    timeout-minutes: 60
+    env:
+      APP_IDENTIFIER: com.aydev.nibbles
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_KEY_CONTENT: ${{ secrets.ASC_KEY_CONTENT }}
+      MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+      MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+      MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+      MATCH_READONLY: "true"
+      SIGNING: manual
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.38.8
+          cache: true
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+          working-directory: ios
+
+      - name: Materialise gitignored prod config
+        run: |
+          echo "${{ secrets.ENV_PROD }}" | base64 --decode > .env.prod
+          touch .env.dev
+          echo "${{ secrets.GOOGLE_SERVICE_PLIST_PROD }}" | base64 --decode > ios/Runner/GoogleService-Info.plist
+
+      - run: flutter pub get
+
+      - name: Build + upload to TestFlight
+        working-directory: ios
+        run: bundle exec fastlane beta

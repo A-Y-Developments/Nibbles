@@ -77,3 +77,10 @@ supabase/.branches/
 !.figma-audit/AUDIT.md
 qa/state/lock-*
 qa/state/peer_map.txt
+
+# Fastlane / iOS release
+ios/fastlane/report.xml
+ios/fastlane/Preview.html
+ios/fastlane/test_output
+ios/fastlane/.env
+ios/ExportOptions.plist
