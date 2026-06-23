@@ -107,57 +107,52 @@ void main() {
     when(
       () => mockAuthRepo.authStateStream,
     ).thenAnswer((_) => const Stream.empty());
-    when(() => mockAuthRepo.signOut())
-        .thenAnswer((_) async => const Result.success(null));
+    when(
+      () => mockAuthRepo.signOut(),
+    ).thenAnswer((_) async => const Result.success(null));
     when(mockFlags.clearAll).thenAnswer((_) async {});
   });
 
   List<Override> overrides() => [
-        accountRepositoryProvider.overrideWithValue(mockAccountRepo),
-        authRepositoryProvider.overrideWithValue(mockAuthRepo),
-        authServiceProvider.overrideWith(() => fakeAuthService),
-        localFlagServiceProvider.overrideWithValue(mockFlags),
-        analyticsProvider.overrideWithValue(fakeAnalytics),
-        deleteAccountCrashRecorderProvider.overrideWithValue(
-          (_, __, {String? reason, List<String>? information}) async {},
-        ),
-      ];
+    accountRepositoryProvider.overrideWithValue(mockAccountRepo),
+    authRepositoryProvider.overrideWithValue(mockAuthRepo),
+    authServiceProvider.overrideWith(() => fakeAuthService),
+    localFlagServiceProvider.overrideWithValue(mockFlags),
+    analyticsProvider.overrideWithValue(fakeAnalytics),
+    deleteAccountCrashRecorderProvider.overrideWithValue(
+      (_, __, {String? reason, List<String>? information}) async {},
+    ),
+  ];
 
-  testWidgets(
-    'Continue is disabled when no reason is selected',
-    (tester) async {
-      await _setTallSurface(tester);
-      await tester.pumpWidget(_wrap(overrides()));
-      await _openSheet(tester);
+  testWidgets('Continue is disabled when no reason is selected', (
+    tester,
+  ) async {
+    await _setTallSurface(tester);
+    await tester.pumpWidget(_wrap(overrides()));
+    await _openSheet(tester);
 
-      // Sheet content rendered.
-      expect(find.text(_headingText), findsOneWidget);
+    // Sheet content rendered.
+    expect(find.text(_headingText), findsOneWidget);
 
-      final continueBtn = tester.widget<AppPillButton>(
-        find.byKey(const Key('delete_account_continue_button')),
-      );
-      expect(continueBtn.onPressed, isNull);
-    },
-    timeout: _testTimeout,
-  );
+    final continueBtn = tester.widget<AppPillButton>(
+      find.byKey(const Key('delete_account_continue_button')),
+    );
+    expect(continueBtn.onPressed, isNull);
+  }, timeout: _testTimeout);
 
-  testWidgets(
-    'tapping a reason row enables Continue',
-    (tester) async {
-      await _setTallSurface(tester);
-      await tester.pumpWidget(_wrap(overrides()));
-      await _openSheet(tester);
+  testWidgets('tapping a reason row enables Continue', (tester) async {
+    await _setTallSurface(tester);
+    await tester.pumpWidget(_wrap(overrides()));
+    await _openSheet(tester);
 
-      await tester.tap(find.byKey(const Key('delete_reason_0')));
-      await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('delete_reason_0')));
+    await tester.pumpAndSettle();
 
-      final continueBtn = tester.widget<AppPillButton>(
-        find.byKey(const Key('delete_account_continue_button')),
-      );
-      expect(continueBtn.onPressed, isNotNull);
-    },
-    timeout: _testTimeout,
-  );
+    final continueBtn = tester.widget<AppPillButton>(
+      find.byKey(const Key('delete_account_continue_button')),
+    );
+    expect(continueBtn.onPressed, isNotNull);
+  }, timeout: _testTimeout);
 
   testWidgets(
     'tapping Continue fires logAccountDeletionStarted(reason) and calls '
@@ -168,8 +163,9 @@ void main() {
       // after that pop is what causes the test to hang. The unit-level
       // success path is already covered by delete_account_controller_test.
       final pending = Completer<Result<void>>();
-      when(() => mockAccountRepo.requestAccountDeletion(any()))
-          .thenAnswer((_) => pending.future);
+      when(
+        () => mockAccountRepo.requestAccountDeletion(any()),
+      ).thenAnswer((_) => pending.future);
 
       await _setTallSurface(tester);
       await tester.pumpWidget(_wrap(overrides()));
@@ -195,12 +191,10 @@ void main() {
 
       // Intent event fires BEFORE the destructive call (controller is verified
       // via the repository mock).
-      expect(
-        fakeAnalytics.eventNames,
-        contains('account_deletion_started'),
+      expect(fakeAnalytics.eventNames, contains('account_deletion_started'));
+      final startedEvt = fakeAnalytics.calls.firstWhere(
+        (c) => c.name == 'account_deletion_started',
       );
-      final startedEvt = fakeAnalytics.calls
-          .firstWhere((c) => c.name == 'account_deletion_started');
       expect(startedEvt.parameters['reason'], _firstReasonLabel);
 
       // submit(reason) -> AccountRepository.requestAccountDeletion(reason).
@@ -211,48 +205,40 @@ void main() {
     timeout: _testTimeout,
   );
 
-  testWidgets(
-    'tapping Cancel pops the sheet',
-    (tester) async {
-      await _setTallSurface(tester);
-      await tester.pumpWidget(_wrap(overrides()));
-      await _openSheet(tester);
+  testWidgets('tapping Cancel pops the sheet', (tester) async {
+    await _setTallSurface(tester);
+    await tester.pumpWidget(_wrap(overrides()));
+    await _openSheet(tester);
 
-      expect(find.text(_headingText), findsOneWidget);
+    expect(find.text(_headingText), findsOneWidget);
 
-      // Cancel sits at the bottom of the sheet's SingleChildScrollView and
-      // can land off-screen on a 800x600 surface.
-      await tester.ensureVisible(
-        find.byKey(const Key('delete_account_cancel_button')),
-      );
-      await tester.pump();
+    // Cancel sits at the bottom of the sheet's SingleChildScrollView and
+    // can land off-screen on a 800x600 surface.
+    await tester.ensureVisible(
+      find.byKey(const Key('delete_account_cancel_button')),
+    );
+    await tester.pump();
 
-      await tester.tap(find.byKey(const Key('delete_account_cancel_button')));
-      await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('delete_account_cancel_button')));
+    await tester.pumpAndSettle();
 
-      expect(find.text(_headingText), findsNothing);
-      // Cancel must NOT have run any destructive plumbing.
-      verifyNever(() => mockAccountRepo.requestAccountDeletion(any()));
-      verifyNever(mockFlags.clearAll);
-      verifyNever(() => mockAuthRepo.signOut());
-    },
-    timeout: _testTimeout,
-  );
+    expect(find.text(_headingText), findsNothing);
+    // Cancel must NOT have run any destructive plumbing.
+    verifyNever(() => mockAccountRepo.requestAccountDeletion(any()));
+    verifyNever(mockFlags.clearAll);
+    verifyNever(() => mockAuthRepo.signOut());
+  }, timeout: _testTimeout);
 
-  testWidgets(
-    'close (X) also pops the sheet',
-    (tester) async {
-      await _setTallSurface(tester);
-      await tester.pumpWidget(_wrap(overrides()));
-      await _openSheet(tester);
+  testWidgets('close (X) also pops the sheet', (tester) async {
+    await _setTallSurface(tester);
+    await tester.pumpWidget(_wrap(overrides()));
+    await _openSheet(tester);
 
-      expect(find.text(_headingText), findsOneWidget);
+    expect(find.text(_headingText), findsOneWidget);
 
-      await tester.tap(find.byKey(const Key('delete_account_close_button')));
-      await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('delete_account_close_button')));
+    await tester.pumpAndSettle();
 
-      expect(find.text(_headingText), findsNothing);
-    },
-    timeout: _testTimeout,
-  );
+    expect(find.text(_headingText), findsNothing);
+  }, timeout: _testTimeout);
 }

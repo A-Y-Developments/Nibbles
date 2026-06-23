@@ -4,14 +4,14 @@ import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 
 /// Visual variant for [AppPillButton] — maps to kit `.pillbtn--*`.
-enum AppPillButtonVariant { primary, secondary, ghost, destructive }
+/// `text` = transparent, no border, forest label (e.g. a Cancel action).
+enum AppPillButtonVariant { primary, secondary, ghost, destructive, text }
 
-/// Sizing for [AppPillButton]. `full` = h52, `small` = h40 (kit.css).
+/// Sizing for [AppPillButton]. `full` = h38, `small` = h40 (Figma).
 enum AppPillButtonSize { full, small }
 
-/// Pill-shaped CTA. Mirrors kit `.pillbtn` (radiusFull, Parkinsans 700).
-///
-/// kit.css wins over the preview on pixels: full=52h, small=40h.
+/// Pill-shaped CTA. Mirrors Figma `Regular-button` (radiusFull, Parkinsans
+/// SemiBold 13). full=38h, small=40h.
 class AppPillButton extends StatelessWidget {
   const AppPillButton({
     required this.label,
@@ -49,6 +49,7 @@ class AppPillButton extends StatelessWidget {
       case AppPillButtonVariant.primary:
         return AppColors.greenDeep;
       case AppPillButtonVariant.secondary:
+      case AppPillButtonVariant.text:
         return Colors.transparent;
       case AppPillButtonVariant.ghost:
         return AppColors.butter;
@@ -65,6 +66,7 @@ class AppPillButton extends StatelessWidget {
         return AppColors.cream;
       case AppPillButtonVariant.secondary:
       case AppPillButtonVariant.ghost:
+      case AppPillButtonVariant.text:
         return AppColors.greenDeep;
     }
   }
@@ -78,7 +80,7 @@ class AppPillButton extends StatelessWidget {
 
     final textStyle = AppTypography.button.copyWith(
       color: fg,
-      fontSize: _isSmall ? 14 : 16,
+      fontSize: _isSmall ? 14 : 13,
     );
 
     final child = Row(

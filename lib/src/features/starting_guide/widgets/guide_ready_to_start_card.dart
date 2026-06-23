@@ -49,10 +49,7 @@ class GuideReadyToStartCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSizes.md),
-          AppPillButton(
-            label: ctaLabel,
-            onPressed: onCta,
-          ),
+          AppPillButton(label: ctaLabel, onPressed: onCta),
         ],
       ),
     );

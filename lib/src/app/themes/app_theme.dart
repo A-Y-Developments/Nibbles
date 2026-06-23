@@ -6,6 +6,7 @@ import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 
 export 'package:nibbles/src/app/themes/app_colors.dart';
+export 'package:nibbles/src/app/themes/app_gradients.dart';
 export 'package:nibbles/src/app/themes/app_sizes.dart';
 export 'package:nibbles/src/app/themes/app_typography.dart';
 
@@ -41,7 +42,7 @@ abstract final class AppTheme {
       colorScheme: colorScheme,
       textTheme: textTheme,
       fontFamily: FontFamily.parkinsans,
-      scaffoldBackgroundColor: AppColors.cream,
+      scaffoldBackgroundColor: const Color(0xFFF5F5F5),
       dividerColor: AppColors.borderSoft,
       dividerTheme: const DividerThemeData(
         color: AppColors.borderSoft,
@@ -64,8 +65,8 @@ abstract final class AppTheme {
           size: AppSizes.iconMd,
         ),
       ),
-      // Canonical nav is the custom AppBottomNav (later ticket); this block is
-      // a fallback only — retuned to the new palette.
+      // Live nav is the Material NavigationBar in HomeShellScreen; this
+      // BottomNavigationBar theme is an unused fallback, kept palette-aligned.
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: AppColors.surface,
         selectedItemColor: AppColors.greenDeep,

@@ -48,11 +48,15 @@ class SplashController extends _$SplashController {
 
       final flags = ref.read(localFlagServiceProvider);
       if (!flags.hasLaunched()) {
-        flags.setHasLaunched();
-        // On reinstall the session may be restored (iOS keychain persists).
-        // Fall through to the Supabase check so flags get backfilled.
+        // Do NOT mark launched here. The intro screen flips the flag only when
+        // the user taps "Let's Go!"; setting it at boot would skip onboarding
+        // if the app is killed while still on the intro screen.
         final isLoggedIn = ref.read(authServiceProvider);
         if (!isLoggedIn) return '/onboarding/intro';
+        // Reinstall with a session restored from the keychain: the user has
+        // already onboarded. Backfill the launch flag and fall through to the
+        // Supabase checks so the remaining onboarding flags get seeded.
+        flags.setHasLaunched();
       }
 
       final isLoggedIn = ref.read(authServiceProvider);

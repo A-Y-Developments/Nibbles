@@ -51,8 +51,7 @@ void main() {
 
   group('build()', () {
     test('initial state has step 0, pure name, null gender', () {
-      final state =
-          container().read(babySetupControllerProvider);
+      final state = container().read(babySetupControllerProvider);
 
       expect(state.step, 0);
       expect(state.babyName.isPure, true);
@@ -62,8 +61,7 @@ void main() {
     });
 
     test('initial dob is roughly 180 days ago', () {
-      final state =
-          container().read(babySetupControllerProvider);
+      final state = container().read(babySetupControllerProvider);
 
       final diff = DateTime.now().difference(state.dob!).inDays;
       expect(diff, inInclusiveRange(179, 181));
@@ -96,9 +94,7 @@ void main() {
   group('updateGender()', () {
     test('sets gender and clears error', () {
       final c = container();
-      c
-          .read(babySetupControllerProvider.notifier)
-          .updateGender(Gender.female);
+      c.read(babySetupControllerProvider.notifier).updateGender(Gender.female);
 
       final state = c.read(babySetupControllerProvider);
       expect(state.gender, Gender.female);
@@ -135,13 +131,9 @@ void main() {
   group('submit()', () {
     test('returns false immediately when dob is null', () async {
       final c = container();
-      c
-          .read(babySetupControllerProvider.notifier)
-          .updateGender(Gender.female);
+      c.read(babySetupControllerProvider.notifier).updateGender(Gender.female);
 
-      c.read(babySetupControllerProvider.notifier).updateDob(
-            DateTime(2000),
-          );
+      c.read(babySetupControllerProvider.notifier).updateDob(DateTime(2000));
       final notifier = c.read(babySetupControllerProvider.notifier);
       notifier.state = notifier.state.copyWith(dob: null);
 
@@ -154,8 +146,9 @@ void main() {
       final c = container();
       c.read(babySetupControllerProvider.notifier).updateDob(_dob);
 
-      final result =
-          await c.read(babySetupControllerProvider.notifier).submit();
+      final result = await c
+          .read(babySetupControllerProvider.notifier)
+          .submit();
       expect(result, false);
       verifyNever(() => babyProfile.createBaby(any(), any(), any()));
     });
@@ -172,8 +165,9 @@ void main() {
         ..updateDob(_dob)
         ..updateGender(Gender.female);
 
-      final result =
-          await c.read(babySetupControllerProvider.notifier).submit();
+      final result = await c
+          .read(babySetupControllerProvider.notifier)
+          .submit();
 
       expect(result, true);
       expect(c.read(babySetupControllerProvider).isLoading, false);
@@ -192,8 +186,9 @@ void main() {
         ..updateDob(_dob)
         ..updateGender(Gender.female);
 
-      final result =
-          await c.read(babySetupControllerProvider.notifier).submit();
+      final result = await c
+          .read(babySetupControllerProvider.notifier)
+          .submit();
 
       expect(result, false);
       expect(

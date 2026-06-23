@@ -45,9 +45,7 @@ Future<void> _pumpSheet(
 }) {
   return tester.pumpWidget(
     MaterialApp(
-      home: Scaffold(
-        body: AllPlansSheet(plans: plans),
-      ),
+      home: Scaffold(body: AllPlansSheet(plans: plans)),
     ),
   );
 }
@@ -70,20 +68,19 @@ Color _borderColorOf(WidgetTester tester, String title) {
 
 void main() {
   group('AllPlansSheet — populated default state', () {
-    testWidgets(
-      'renders both plan titles, both price labels, and the badge',
-      (tester) async {
-        await _setupViewport(tester);
-        await _pumpSheet(tester, plans: const [_annual, _monthly]);
+    testWidgets('renders both plan titles, both price labels, and the badge', (
+      tester,
+    ) async {
+      await _setupViewport(tester);
+      await _pumpSheet(tester, plans: const [_annual, _monthly]);
 
-        expect(find.text('Annual'), findsOneWidget);
-        expect(find.text(r'$29.99 yearly'), findsOneWidget);
-        expect(find.text('Monthly'), findsOneWidget);
-        expect(find.text(r'$4.99 monthly'), findsOneWidget);
-        expect(find.text('Recomended'), findsOneWidget);
-        expect(find.text('Continue'), findsOneWidget);
-      },
-    );
+      expect(find.text('Annual'), findsOneWidget);
+      expect(find.text(r'$29.99 yearly'), findsOneWidget);
+      expect(find.text('Monthly'), findsOneWidget);
+      expect(find.text(r'$4.99 monthly'), findsOneWidget);
+      expect(find.text('Recomended'), findsOneWidget);
+      expect(find.text('Continue'), findsOneWidget);
+    });
 
     testWidgets(
       'recommended plan (Annual) is selected by default — forest border, '
@@ -97,26 +94,17 @@ void main() {
       },
     );
 
-    testWidgets(
-      'each plan card exposes a curated a11y label',
-      (tester) async {
-        await _setupViewport(tester);
-        await _pumpSheet(tester, plans: const [_annual, _monthly]);
+    testWidgets('each plan card exposes a curated a11y label', (tester) async {
+      await _setupViewport(tester);
+      await _pumpSheet(tester, plans: const [_annual, _monthly]);
 
-        // Portable a11y assertion: each plan card exposes its Semantics label.
-        // The isButton/isSelected flag matchers (containsSemantics) are
-        // version-skew-deprecated and fatal on CI; selection state is covered
-        // by the border-color inversion test below.
-        expect(
-          find.bySemanticsLabel(r'Annual, $29.99 yearly'),
-          findsOneWidget,
-        );
-        expect(
-          find.bySemanticsLabel(r'Monthly, $4.99 monthly'),
-          findsOneWidget,
-        );
-      },
-    );
+      // Portable a11y assertion: each plan card exposes its Semantics label.
+      // The isButton/isSelected flag matchers (containsSemantics) are
+      // version-skew-deprecated and fatal on CI; selection state is covered
+      // by the border-color inversion test below.
+      expect(find.bySemanticsLabel(r'Annual, $29.99 yearly'), findsOneWidget);
+      expect(find.bySemanticsLabel(r'Monthly, $4.99 monthly'), findsOneWidget);
+    });
   });
 
   group('AllPlansSheet — selection inversion', () {
@@ -138,95 +126,90 @@ void main() {
   });
 
   group('AllPlansSheet — Continue / Close flow', () {
-    testWidgets(
-      'Continue pops the sheet with the selected plan',
-      (tester) async {
-        await _setupViewport(tester);
-        SubscriptionPlan? picked;
-        await tester.pumpWidget(
-          MaterialApp(
-            home: Builder(
-              builder: (context) => Scaffold(
-                body: Center(
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      picked = await showAllPlansSheet(
-                        context,
-                        plans: const [_annual, _monthly],
-                      );
-                    },
-                    child: const Text('Open'),
-                  ),
+    testWidgets('Continue pops the sheet with the selected plan', (
+      tester,
+    ) async {
+      await _setupViewport(tester);
+      SubscriptionPlan? picked;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: Center(
+                child: ElevatedButton(
+                  onPressed: () async {
+                    picked = await showAllPlansSheet(
+                      context,
+                      plans: const [_annual, _monthly],
+                    );
+                  },
+                  child: const Text('Open'),
                 ),
               ),
             ),
           ),
-        );
-        await tester.tap(find.text('Open'));
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 350));
+        ),
+      );
+      await tester.tap(find.text('Open'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
 
-        await tester.tap(find.text('Continue'));
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 350));
+      await tester.tap(find.text('Continue'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
 
-        expect(picked, isNotNull);
-        expect(picked!.id, _annual.id);
-      },
-    );
+      expect(picked, isNotNull);
+      expect(picked!.id, _annual.id);
+    });
 
-    testWidgets(
-      'close X pops with null',
-      (tester) async {
-        await _setupViewport(tester);
-        SubscriptionPlan? picked = _annual; // sentinel — must become null
-        await tester.pumpWidget(
-          MaterialApp(
-            home: Builder(
-              builder: (context) => Scaffold(
-                body: Center(
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      picked = await showAllPlansSheet(
-                        context,
-                        plans: const [_annual, _monthly],
-                      );
-                    },
-                    child: const Text('Open'),
-                  ),
+    testWidgets('close X pops with null', (tester) async {
+      await _setupViewport(tester);
+      SubscriptionPlan? picked = _annual; // sentinel — must become null
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: Center(
+                child: ElevatedButton(
+                  onPressed: () async {
+                    picked = await showAllPlansSheet(
+                      context,
+                      plans: const [_annual, _monthly],
+                    );
+                  },
+                  child: const Text('Open'),
                 ),
               ),
             ),
           ),
-        );
-        await tester.tap(find.text('Open'));
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 350));
+        ),
+      );
+      await tester.tap(find.text('Open'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
 
-        await tester.tap(find.byIcon(Icons.close));
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 350));
+      await tester.tap(find.byIcon(Icons.close));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
 
-        expect(picked, isNull);
-      },
-    );
+      expect(picked, isNull);
+    });
   });
 
   group('AllPlansSheet — single-plan edge case', () {
-    testWidgets(
-      'single plan hides the badge and still allows Continue',
-      (tester) async {
-        await _setupViewport(tester);
-        await _pumpSheet(tester, plans: const [_annual]);
+    testWidgets('single plan hides the badge and still allows Continue', (
+      tester,
+    ) async {
+      await _setupViewport(tester);
+      await _pumpSheet(tester, plans: const [_annual]);
 
-        expect(find.text('Annual'), findsOneWidget);
-        expect(find.text(r'$29.99 yearly'), findsOneWidget);
-        // No selection chrome → badge is hidden even though the plan is
-        // marked recommended.
-        expect(find.text('Recomended'), findsNothing);
-        expect(find.text('Monthly'), findsNothing);
-        expect(find.text('Continue'), findsOneWidget);
-      },
-    );
+      expect(find.text('Annual'), findsOneWidget);
+      expect(find.text(r'$29.99 yearly'), findsOneWidget);
+      // No selection chrome → badge is hidden even though the plan is
+      // marked recommended.
+      expect(find.text('Recomended'), findsNothing);
+      expect(find.text('Monthly'), findsNothing);
+      expect(find.text('Continue'), findsOneWidget);
+    });
   });
 }

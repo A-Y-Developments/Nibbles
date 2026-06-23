@@ -5,9 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
-import 'package:nibbles/src/common/components/brand/quatrefoil.dart';
-import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
-import 'package:nibbles/src/common/components/buttons/app_round_button.dart';
+import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/features/profile/feedback/feedback_controller.dart';
 import 'package:nibbles/src/features/profile/feedback/feedback_state.dart';
 import 'package:nibbles/src/logging/analytics.dart';
@@ -19,10 +17,12 @@ import 'package:nibbles/src/logging/analytics.dart';
 ///   left-aligned "Give Feedback" title.
 /// - Textarea with placeholder "Your feedback..." and the helper line
 ///   "Thank you. We read every message." rendered BELOW the field.
-/// - Bottom-pinned butter pill "Send Feedback" CTA.
-/// - On submit: full-screen Nibbles brand mark over butter-soft cream with
-///   "Loading" caption that resolves to "Feedback sent!" before the screen
-///   auto-dismisses back to Profile.
+/// - Bottom-pinned primary green "Send Feedback" CTA (DS Regular-button).
+/// - On submit: full-screen rotating-flower brand loader (shared with the
+///   post-onboarding "babysit" setup screen) over butter-soft cream. "Sending"
+///   animates trailing dots for the real submit (min-dwell floor so it can't
+///   flash), then swaps to "Feedback sent" before the screen auto-dismisses
+///   back to Profile.
 ///
 /// Failure stays P2 — a SnackBar prompts a retry on the entry screen and the
 /// controller logs a non-fatal Crashlytics breadcrumb.
@@ -34,10 +34,21 @@ class FeedbackScreen extends ConsumerStatefulWidget {
 }
 
 class _FeedbackScreenState extends ConsumerState<FeedbackScreen> {
-  /// Window the user sees the "Feedback sent!" success state for before the
-  /// screen auto-pops back to Profile. No dismiss CTA in Figma, so the screen
-  /// auto-dismisses.
-  static const Duration _successHoldDuration = Duration(milliseconds: 1400);
+  /// Floor on how long the spinning loader stays up so a fast Supabase insert
+  /// doesn't flash the transition by. Measured from the moment submit starts.
+  static const Duration _minLoaderDwell = Duration(milliseconds: 800);
+
+  /// Window the user sees the "Feedback sent" caption for before the screen
+  /// auto-pops back to Profile. No dismiss CTA in Figma, so it auto-dismisses.
+  static const Duration _successHoldDuration = Duration(milliseconds: 1200);
+
+  /// Times the real submit so we can enforce [_minLoaderDwell] before revealing
+  /// the success caption.
+  final Stopwatch _loaderStopwatch = Stopwatch();
+
+  /// Gates the "Feedback sent" caption — true only once the insert succeeded
+  /// AND the min-dwell floor has elapsed.
+  bool _showSent = false;
 
   Timer? _dismissTimer;
 
@@ -79,22 +90,10 @@ class _FeedbackScreenState extends ConsumerState<FeedbackScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(feedbackControllerProvider);
 
-    // Schedule the auto-dismiss when we land on the success phase so all
-    // listed states (idle / submitting / success) are reachable from the UI
-    // before the screen pops back to Profile.
-    ref.listen<FeedbackState>(feedbackControllerProvider, (prev, next) {
-      if (prev?.phase != FeedbackPhase.success &&
-          next.phase == FeedbackPhase.success) {
-        _dismissTimer?.cancel();
-        _dismissTimer = Timer(_successHoldDuration, () {
-          if (!mounted) return;
-          _goBack();
-        });
-      }
-    });
-
+    // submitting + success both render the brand loader; the caption only
+    // fades in once [_showSent] flips (success edge + min-dwell, see _submit).
     if (state.phase != FeedbackPhase.idle) {
-      return _FeedbackTransitionScreen(phase: state.phase);
+      return _FeedbackTransitionScreen(showSent: _showSent);
     }
 
     return _FeedbackEntryScreen(
@@ -108,6 +107,11 @@ class _FeedbackScreenState extends ConsumerState<FeedbackScreen> {
   Future<void> _submit() async {
     final messenger = ScaffoldMessenger.of(context);
     final controller = ref.read(feedbackControllerProvider.notifier);
+
+    _showSent = false;
+    _loaderStopwatch
+      ..reset()
+      ..start();
     final ok = await controller.submit();
     if (!mounted) return;
 
@@ -116,8 +120,22 @@ class _FeedbackScreenState extends ConsumerState<FeedbackScreen> {
       messenger.showSnackBar(
         const SnackBar(content: Text("Couldn't send feedback. Try again.")),
       );
+      return;
     }
-    // Success path is handled via the ref.listen above (auto-dismiss).
+
+    // Hold the spinning loader until the min-dwell floor is met (so a fast
+    // insert doesn't flash), then reveal "Feedback sent" and auto-pop.
+    final remaining = _minLoaderDwell - _loaderStopwatch.elapsed;
+    if (remaining > Duration.zero) {
+      await Future<void>.delayed(remaining);
+      if (!mounted) return;
+    }
+    setState(() => _showSent = true);
+    _dismissTimer?.cancel();
+    _dismissTimer = Timer(_successHoldDuration, () {
+      if (!mounted) return;
+      _goBack();
+    });
   }
 }
 
@@ -140,8 +158,7 @@ class _FeedbackEntryScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final canSubmit = message.trim().isNotEmpty;
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return GradientScaffold(
       // resizeToAvoidBottomInset defaults to true; the inner SafeArea +
       // SingleChildScrollView lets the textarea scroll above the keyboard.
       body: Column(
@@ -160,7 +177,7 @@ class _FeedbackEntryScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _FeedbackField(initialValue: message, onChanged: onChanged),
-                  const SizedBox(height: AppSizes.sp12),
+                  const SizedBox(height: AppSizes.xs),
                   Text(
                     'Thank you. We read every message.',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -185,10 +202,6 @@ class _FeedbackEntryScreen extends StatelessWidget {
               child: AppPillButton(
                 key: const Key('feedback_send_button'),
                 label: 'Send Feedback',
-                variant: AppPillButtonVariant.ghost,
-                // Figma 1207:15287 = h42; small(40) is the closest token and
-                // matches the delete-overlay Continue CTA.
-                size: AppPillButtonSize.small,
                 onPressed: canSubmit ? onSubmit : null,
               ),
             ),
@@ -199,17 +212,22 @@ class _FeedbackEntryScreen extends StatelessWidget {
   }
 }
 
-/// Loader + success artboard (Figma 1216:11913). Same widget for both because
-/// they share layout — only the caption text swaps once the submit resolves.
+/// Loader + success artboard (Figma 1216:11913). Reuses the same rotating
+/// flower loader as the post-onboarding ("babysit") setup screen. While the
+/// submit runs, "Sending" animates trailing dots; on success it swaps to the
+/// static "Feedback sent" caption before the screen auto-dismisses.
 class _FeedbackTransitionScreen extends StatelessWidget {
-  const _FeedbackTransitionScreen({required this.phase});
+  const _FeedbackTransitionScreen({required this.showSent});
 
-  final FeedbackPhase phase;
+  final bool showSent;
 
   @override
   Widget build(BuildContext context) {
-    final isSuccess = phase == FeedbackPhase.success;
-    final caption = isSuccess ? 'Feedback sent!' : 'Loading';
+    final captionStyle = Theme.of(context).textTheme.bodyLarge?.copyWith(
+      color: Colors.black,
+      fontWeight: FontWeight.w600,
+      height: 1.47,
+    );
 
     return Scaffold(
       backgroundColor: AppColors.butterSoft,
@@ -218,25 +236,23 @@ class _FeedbackTransitionScreen extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const _BrandLoaderMark(),
+              const BrandFlowerLoader(blobKey: Key('feedback_loader_blob')),
               const SizedBox(height: AppSizes.lg),
               Semantics(
                 liveRegion: true,
-                label: caption,
-                child: Text(
-                  caption,
-                  key: Key(
-                    isSuccess
-                        ? 'feedback_sent_caption'
-                        : 'feedback_loading_caption',
-                  ),
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Colors.black,
-                    fontWeight: FontWeight.w600,
-                    height: 1.47,
-                  ),
-                ),
+                label: showSent ? 'Feedback sent' : 'Sending',
+                child: showSent
+                    ? Text(
+                        'Feedback sent',
+                        key: const Key('feedback_sent_caption'),
+                        textAlign: TextAlign.center,
+                        style: captionStyle,
+                      )
+                    : AnimatedEllipsisText(
+                        key: const Key('feedback_loading_caption'),
+                        text: 'Sending',
+                        style: captionStyle,
+                      ),
               ),
             ],
           ),
@@ -246,44 +262,8 @@ class _FeedbackTransitionScreen extends StatelessWidget {
   }
 }
 
-/// Slow-pulse Quatrefoil mark — stands in for the procedural logo loader
-/// composition in the Figma artboard (no Lottie/raster asset shipped).
-class _BrandLoaderMark extends StatefulWidget {
-  const _BrandLoaderMark();
-
-  @override
-  State<_BrandLoaderMark> createState() => _BrandLoaderMarkState();
-}
-
-class _BrandLoaderMarkState extends State<_BrandLoaderMark>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl = AnimationController(
-    duration: const Duration(milliseconds: 1200),
-    vsync: this,
-  )..repeat(reverse: true);
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ScaleTransition(
-      scale: Tween<double>(
-        begin: 0.92,
-        end: 1.04,
-      ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut)),
-      child: const Quatrefoil(size: AppSizes.avatarXl + 40),
-    );
-  }
-}
-
-/// Cream header for the Give Feedback screen (matches the scaffold background;
-/// no coloured band). Left chevron + left-aligned "Give Feedback" title
-/// (Figma 1207:15273 header instance — title is flush-left next to the back
-/// button, not centred).
+/// Back chip + "Give Feedback" title over the gradient — no coloured band.
+/// Same pattern as the Profile / Edit Profile screen headers.
 class _FeedbackHeader extends StatelessWidget {
   const _FeedbackHeader({required this.onBack});
 
@@ -292,13 +272,12 @@ class _FeedbackHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      color: AppColors.background,
+    return Padding(
       padding: const EdgeInsets.fromLTRB(
-        AppSizes.md + 2,
-        AppSizes.sm - 2,
-        AppSizes.md + 2,
-        AppSizes.md + 2,
+        AppSizes.sp12,
+        AppSizes.sm,
+        AppSizes.sp12,
+        AppSizes.sm,
       ),
       child: Row(
         children: [
@@ -309,13 +288,15 @@ class _FeedbackHeader extends StatelessWidget {
             size: AppRoundButtonSize.small,
             semanticLabel: 'Back',
           ),
-          const SizedBox(width: AppSizes.sm),
-          Text(
-            'Give Feedback',
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: AppColors.fgStrong,
-              height: 1,
+          const SizedBox(width: AppSizes.sp2),
+          Expanded(
+            child: Text(
+              'Give Feedback',
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: AppColors.fgStrong,
+                height: 1,
+              ),
             ),
           ),
         ],
@@ -324,8 +305,9 @@ class _FeedbackHeader extends StatelessWidget {
   }
 }
 
-/// Multiline textarea matching the kit `.field` fill (bgInput) + radiusMd.
-/// Sized for 5-8 visible lines. Placeholder matches the Figma copy exactly.
+/// Multiline feedback field — a plain [TextField] with the filled-grey
+/// InputDecoration (Figma Input fill, radiusMd, no border). Green cursor is the
+/// only focus affordance, matching the Figma which defines no focus state.
 class _FeedbackField extends StatefulWidget {
   const _FeedbackField({required this.initialValue, required this.onChanged});
 
@@ -338,22 +320,15 @@ class _FeedbackField extends StatefulWidget {
 
 class _FeedbackFieldState extends State<_FeedbackField> {
   late final TextEditingController _controller;
-  late final FocusNode _focusNode;
 
   @override
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.initialValue);
-    _focusNode = FocusNode()..addListener(_onFocusChanged);
   }
-
-  void _onFocusChanged() => setState(() {});
 
   @override
   void dispose() {
-    _focusNode
-      ..removeListener(_onFocusChanged)
-      ..dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -361,49 +336,30 @@ class _FeedbackFieldState extends State<_FeedbackField> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final focused = _focusNode.hasFocus;
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 120),
-      decoration: BoxDecoration(
-        color: focused ? AppColors.surface : AppColors.bgInput,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        border: Border.all(
-          color: focused ? AppColors.greenDeep : AppColors.borderSoft,
-          width: focused ? 2 : 1,
+    return TextField(
+      key: const Key('feedback_message_field'),
+      controller: _controller,
+      onChanged: widget.onChanged,
+      minLines: 8,
+      maxLines: 12,
+      maxLength: 2000,
+      textCapitalization: TextCapitalization.sentences,
+      keyboardType: TextInputType.multiline,
+      cursorColor: AppColors.greenDeep,
+      style: theme.textTheme.bodyLarge?.copyWith(color: AppColors.fgStrong),
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: AppColors.bgInput,
+        counterText: '',
+        hintText: 'Your feedback...',
+        hintStyle: theme.textTheme.bodyLarge?.copyWith(
+          color: AppColors.fgFaint,
         ),
-      ),
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.md - 2,
-        vertical: AppSizes.sp12,
-      ),
-      child: Semantics(
-        label: 'Feedback message',
-        hint: 'Thank you. We read every message.',
-        textField: true,
-        child: TextField(
-          key: const Key('feedback_message_field'),
-          controller: _controller,
-          focusNode: _focusNode,
-          onChanged: widget.onChanged,
-          minLines: 6,
-          maxLines: 10,
-          // Silent 2k cap — there's no counter or helper text in Figma, so we
-          // don't surface it visibly, but we still bound the payload size.
-          maxLength: 2000,
-          textCapitalization: TextCapitalization.sentences,
-          keyboardType: TextInputType.multiline,
-          cursorColor: AppColors.greenDeep,
-          style: theme.textTheme.bodyLarge?.copyWith(color: AppColors.fgStrong),
-          decoration: InputDecoration(
-            isCollapsed: true,
-            border: InputBorder.none,
-            counterText: '',
-            hintText: 'Your feedback...',
-            hintStyle: theme.textTheme.bodyLarge?.copyWith(
-              color: AppColors.fgFaint,
-            ),
-          ),
+        contentPadding: const EdgeInsets.all(AppSizes.sp12),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+          borderSide: BorderSide.none,
         ),
       ),
     );

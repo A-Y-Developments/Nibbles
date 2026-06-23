@@ -17,8 +17,7 @@ void main() {
   });
 
   group('AccountService.deleteAccount', () {
-    test('forwards the reason to the repository and returns success',
-        () async {
+    test('forwards the reason to the repository and returns success', () async {
       when(
         () => mockRepo.requestAccountDeletion(any()),
       ).thenAnswer((_) async => const Result.success(null));

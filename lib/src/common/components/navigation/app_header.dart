@@ -72,10 +72,7 @@ class AppHeader extends StatelessWidget {
             children: [
               SizedBox(
                 width: AppSizes.roundButton,
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: leading,
-                ),
+                child: Align(alignment: Alignment.centerLeft, child: leading),
               ),
               Expanded(
                 child: Text(
@@ -90,10 +87,7 @@ class AppHeader extends StatelessWidget {
               ),
               SizedBox(
                 width: AppSizes.roundButton,
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: trailing,
-                ),
+                child: Align(alignment: Alignment.centerRight, child: trailing),
               ),
             ],
           ),

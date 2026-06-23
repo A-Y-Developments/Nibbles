@@ -120,23 +120,17 @@ void main() {
     bool statusesFail = false,
     bool flaggedFail = false,
   }) {
-    when(
-      () => recipeSvc.getRecipesByCategory(any()),
-    ).thenAnswer(
+    when(() => recipeSvc.getRecipesByCategory(any())).thenAnswer(
       (_) async => categoriesFail
           ? const Result.failure(NetworkException())
           : const Result.success(_categories),
     );
-    when(
-      () => allergenSvc.getAllergenStatuses(any()),
-    ).thenAnswer(
+    when(() => allergenSvc.getAllergenStatuses(any())).thenAnswer(
       (_) async => statusesFail
           ? const Result.failure(NetworkException())
           : const Result.success(_statuses),
     );
-    when(
-      () => recipeSvc.getFlaggedAllergenKeys(any()),
-    ).thenAnswer(
+    when(() => recipeSvc.getFlaggedAllergenKeys(any())).thenAnswer(
       (_) async => flaggedFail
           ? const Result.failure(NetworkException())
           : const Result.success(_flagged),
@@ -160,10 +154,7 @@ void main() {
 
     test('sets ongoingAllergenKey to first inProgress allergen', () async {
       stubHappyBuild(
-        statuses: {
-          ..._statuses,
-          'egg': AllergenStatus.inProgress,
-        },
+        statuses: {..._statuses, 'egg': AllergenStatus.inProgress},
       );
 
       final state = await container().read(
@@ -190,10 +181,7 @@ void main() {
     });
 
     test('propagates flagged allergen keys and guideSeen flag', () async {
-      stubHappyBuild(
-        flagged: {'peanut'},
-        guideSeen: true,
-      );
+      stubHappyBuild(flagged: {'peanut'}, guideSeen: true);
 
       final state = await container().read(
         recipeLibraryControllerProvider(_babyId).future,
@@ -239,9 +227,7 @@ void main() {
       final c = container();
       await c.read(recipeLibraryControllerProvider(_babyId).future);
 
-      await c
-          .read(recipeLibraryControllerProvider(_babyId).notifier)
-          .refresh();
+      await c.read(recipeLibraryControllerProvider(_babyId).notifier).refresh();
 
       final state = c
           .read(recipeLibraryControllerProvider(_babyId))
@@ -253,9 +239,7 @@ void main() {
   group('markStartingGuideSeen()', () {
     test('updates state and calls service when not yet seen', () async {
       stubHappyBuild();
-      when(
-        localFlags.markStartingGuideSeen,
-      ).thenAnswer((_) async {});
+      when(localFlags.markStartingGuideSeen).thenAnswer((_) async {});
 
       final c = container();
       await c.read(recipeLibraryControllerProvider(_babyId).future);
@@ -289,14 +273,16 @@ void main() {
 
       final c = container();
       await c.read(recipeLibraryControllerProvider(_babyId).future);
-      final stateBefore =
-          c.read(recipeLibraryControllerProvider(_babyId)).valueOrNull;
+      final stateBefore = c
+          .read(recipeLibraryControllerProvider(_babyId))
+          .valueOrNull;
 
       c
           .read(recipeLibraryControllerProvider(_babyId).notifier)
           .setSearchQuery('');
-      final stateAfter =
-          c.read(recipeLibraryControllerProvider(_babyId)).valueOrNull;
+      final stateAfter = c
+          .read(recipeLibraryControllerProvider(_babyId))
+          .valueOrNull;
 
       expect(identical(stateBefore, stateAfter), true);
     });
@@ -330,8 +316,9 @@ void main() {
             .read(recipeLibraryControllerProvider(_babyId).notifier)
             .setSearchQuery('  carrot  ');
 
-        final state =
-            c.read(recipeLibraryControllerProvider(_babyId)).valueOrNull;
+        final state = c
+            .read(recipeLibraryControllerProvider(_babyId))
+            .valueOrNull;
         expect(state?.searchQuery, 'carrot');
       },
     );

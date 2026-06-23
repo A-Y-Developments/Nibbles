@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nibbles/gen/assets.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
@@ -54,7 +55,9 @@ class LibraryHeader extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: AppSizes.xs),
               child: Text(
                 'Recipe Library',
-                style: AppTypography.textTheme.titleSmall,
+                style: AppTypography.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
             const SizedBox(height: AppSizes.sp12),
@@ -135,6 +138,7 @@ class _SearchInput extends StatelessWidget {
             IconButton(
               visualDensity: VisualDensity.compact,
               padding: EdgeInsets.zero,
+              alignment: Alignment.centerRight,
               tooltip: 'Clear search',
               constraints: const BoxConstraints(
                 minWidth: AppSizes.iconLg,
@@ -176,10 +180,15 @@ class _FilterChipButton extends StatelessWidget {
           child: SizedBox(
             width: size,
             height: size,
-            child: const Icon(
-              Icons.bookmark_outline,
-              color: AppColors.onGreen,
-              size: AppSizes.iconMd,
+            child: Center(
+              child: Assets.icons.recipeGuide.svg(
+                width: 16,
+                height: 20,
+                colorFilter: const ColorFilter.mode(
+                  AppColors.onGreen,
+                  BlendMode.srcIn,
+                ),
+              ),
             ),
           ),
         ),

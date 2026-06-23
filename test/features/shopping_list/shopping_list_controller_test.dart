@@ -9,8 +9,7 @@ import 'package:nibbles/src/common/domain/enums/shopping_list_source.dart';
 import 'package:nibbles/src/common/services/shopping_list_service.dart';
 import 'package:nibbles/src/features/shopping_list/shopping_list_controller.dart';
 
-class _MockShoppingListService extends Mock
-    implements ShoppingListService {}
+class _MockShoppingListService extends Mock implements ShoppingListService {}
 
 const _babyId = 'baby-001';
 final _t0 = DateTime(2026);
@@ -33,8 +32,7 @@ void main() {
 
   setUpAll(() {
     TestWidgetsFlutterBinding.ensureInitialized();
-    TestDefaultBinaryMessengerBinding
-        .instance.defaultBinaryMessenger
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(SystemChannels.platform, (call) async {
           if (call.method == 'Clipboard.setData') return null;
           if (call.method == 'Clipboard.getData') {
@@ -50,9 +48,7 @@ void main() {
 
   ProviderContainer makeContainer() {
     final c = ProviderContainer(
-      overrides: [
-        shoppingListServiceProvider.overrideWithValue(svc),
-      ],
+      overrides: [shoppingListServiceProvider.overrideWithValue(svc)],
     );
     addTearDown(c.dispose);
     return c;
@@ -68,8 +64,9 @@ void main() {
         () => svc.getItems(any()),
       ).thenAnswer((_) async => Result.success(items));
 
-      final state = await makeContainer()
-          .read(shoppingListControllerProvider(_babyId).future);
+      final state = await makeContainer().read(
+        shoppingListControllerProvider(_babyId).future,
+      );
 
       expect(state.items, items);
     });
@@ -81,15 +78,9 @@ void main() {
       ).thenAnswer((_) async => const Result.failure(error));
 
       final c = makeContainer();
-      await expectLater(
-        notifier(c).future,
-        throwsA(isA<ServerException>()),
-      );
+      await expectLater(notifier(c).future, throwsA(isA<ServerException>()));
 
-      expect(
-        c.read(shoppingListControllerProvider(_babyId)).hasError,
-        isTrue,
-      );
+      expect(c.read(shoppingListControllerProvider(_babyId)).hasError, isTrue);
     });
   });
 
@@ -97,9 +88,7 @@ void main() {
     test('is a no-op for empty string', () async {
       when(
         () => svc.getItems(any()),
-      ).thenAnswer(
-        (_) async => const Result.success([]),
-      );
+      ).thenAnswer((_) async => const Result.success([]));
 
       final c = makeContainer();
       await c.read(shoppingListControllerProvider(_babyId).future);
@@ -112,24 +101,23 @@ void main() {
       final initial = <ShoppingListItem>[];
       final reloaded = [_item(id: 'server-1')];
 
-      when(() => svc.getItems(any()))
-          .thenAnswer((_) async => Result.success(initial));
+      when(
+        () => svc.getItems(any()),
+      ).thenAnswer((_) async => Result.success(initial));
 
       final c = makeContainer();
       await c.read(shoppingListControllerProvider(_babyId).future);
 
-      when(() => svc.getItems(any()))
-          .thenAnswer((_) async => Result.success(reloaded));
+      when(
+        () => svc.getItems(any()),
+      ).thenAnswer((_) async => Result.success(reloaded));
       when(
         () => svc.addManualItem(any(), any()),
-      ).thenAnswer(
-        (_) async => const Result<void>.success(null),
-      );
+      ).thenAnswer((_) async => const Result<void>.success(null));
 
       await notifier(c).addManual('Apples');
 
-      final state =
-          c.read(shoppingListControllerProvider(_babyId)).valueOrNull;
+      final state = c.read(shoppingListControllerProvider(_babyId)).valueOrNull;
       expect(state?.items, reloaded);
     });
 
@@ -138,11 +126,8 @@ void main() {
       when(
         () => svc.getItems(any()),
       ).thenAnswer((_) async => Result.success(initial));
-      when(
-        () => svc.addManualItem(any(), any()),
-      ).thenAnswer(
-        (_) async =>
-            const Result<void>.failure(NetworkException('fail')),
+      when(() => svc.addManualItem(any(), any())).thenAnswer(
+        (_) async => const Result<void>.failure(NetworkException('fail')),
       );
 
       final c = makeContainer();
@@ -153,8 +138,7 @@ void main() {
         throwsA(isA<NetworkException>()),
       );
 
-      final state =
-          c.read(shoppingListControllerProvider(_babyId)).valueOrNull;
+      final state = c.read(shoppingListControllerProvider(_babyId)).valueOrNull;
       expect(state?.items, initial);
     });
   });
@@ -167,16 +151,13 @@ void main() {
       ).thenAnswer((_) async => Result.success([item]));
       when(
         () => svc.checkItem(any()),
-      ).thenAnswer(
-        (_) async => const Result<void>.success(null),
-      );
+      ).thenAnswer((_) async => const Result<void>.success(null));
 
       final c = makeContainer();
       await c.read(shoppingListControllerProvider(_babyId).future);
       await notifier(c).check('item-1');
 
-      final state =
-          c.read(shoppingListControllerProvider(_babyId)).valueOrNull;
+      final state = c.read(shoppingListControllerProvider(_babyId)).valueOrNull;
       expect(state?.items.first.isChecked, isTrue);
     });
 
@@ -185,11 +166,8 @@ void main() {
       when(
         () => svc.getItems(any()),
       ).thenAnswer((_) async => Result.success([item]));
-      when(
-        () => svc.checkItem(any()),
-      ).thenAnswer(
-        (_) async =>
-            const Result<void>.failure(NetworkException('fail')),
+      when(() => svc.checkItem(any())).thenAnswer(
+        (_) async => const Result<void>.failure(NetworkException('fail')),
       );
 
       final c = makeContainer();
@@ -200,8 +178,7 @@ void main() {
         throwsA(isA<NetworkException>()),
       );
 
-      final state =
-          c.read(shoppingListControllerProvider(_babyId)).valueOrNull;
+      final state = c.read(shoppingListControllerProvider(_babyId)).valueOrNull;
       expect(state?.items.first.isChecked, isFalse);
     });
   });
@@ -214,16 +191,13 @@ void main() {
       ).thenAnswer((_) async => Result.success([item]));
       when(
         () => svc.uncheckItem(any()),
-      ).thenAnswer(
-        (_) async => const Result<void>.success(null),
-      );
+      ).thenAnswer((_) async => const Result<void>.success(null));
 
       final c = makeContainer();
       await c.read(shoppingListControllerProvider(_babyId).future);
       await notifier(c).uncheck('item-1');
 
-      final state =
-          c.read(shoppingListControllerProvider(_babyId)).valueOrNull;
+      final state = c.read(shoppingListControllerProvider(_babyId)).valueOrNull;
       expect(state?.items.first.isChecked, isFalse);
     });
 
@@ -232,11 +206,8 @@ void main() {
       when(
         () => svc.getItems(any()),
       ).thenAnswer((_) async => Result.success([item]));
-      when(
-        () => svc.uncheckItem(any()),
-      ).thenAnswer(
-        (_) async =>
-            const Result<void>.failure(NetworkException('fail')),
+      when(() => svc.uncheckItem(any())).thenAnswer(
+        (_) async => const Result<void>.failure(NetworkException('fail')),
       );
 
       final c = makeContainer();
@@ -247,8 +218,7 @@ void main() {
         throwsA(isA<NetworkException>()),
       );
 
-      final state =
-          c.read(shoppingListControllerProvider(_babyId)).valueOrNull;
+      final state = c.read(shoppingListControllerProvider(_babyId)).valueOrNull;
       expect(state?.items.first.isChecked, isTrue);
     });
   });
@@ -261,16 +231,13 @@ void main() {
       ).thenAnswer((_) async => Result.success([item]));
       when(
         () => svc.deleteItem(any()),
-      ).thenAnswer(
-        (_) async => const Result<void>.success(null),
-      );
+      ).thenAnswer((_) async => const Result<void>.success(null));
 
       final c = makeContainer();
       await c.read(shoppingListControllerProvider(_babyId).future);
       await notifier(c).delete('item-1');
 
-      final state =
-          c.read(shoppingListControllerProvider(_babyId)).valueOrNull;
+      final state = c.read(shoppingListControllerProvider(_babyId)).valueOrNull;
       expect(state?.items, isEmpty);
     });
 
@@ -279,11 +246,8 @@ void main() {
       when(
         () => svc.getItems(any()),
       ).thenAnswer((_) async => Result.success([item]));
-      when(
-        () => svc.deleteItem(any()),
-      ).thenAnswer(
-        (_) async =>
-            const Result<void>.failure(NetworkException('fail')),
+      when(() => svc.deleteItem(any())).thenAnswer(
+        (_) async => const Result<void>.failure(NetworkException('fail')),
       );
 
       final c = makeContainer();
@@ -294,8 +258,7 @@ void main() {
         throwsA(isA<NetworkException>()),
       );
 
-      final state =
-          c.read(shoppingListControllerProvider(_babyId)).valueOrNull;
+      final state = c.read(shoppingListControllerProvider(_babyId)).valueOrNull;
       expect(state?.items, [item]);
     });
   });
@@ -307,16 +270,13 @@ void main() {
       ).thenAnswer((_) async => Result.success([_item()]));
       when(
         () => svc.clearAll(any()),
-      ).thenAnswer(
-        (_) async => const Result<void>.success(null),
-      );
+      ).thenAnswer((_) async => const Result<void>.success(null));
 
       final c = makeContainer();
       await c.read(shoppingListControllerProvider(_babyId).future);
       await notifier(c).clearAll();
 
-      final state =
-          c.read(shoppingListControllerProvider(_babyId)).valueOrNull;
+      final state = c.read(shoppingListControllerProvider(_babyId)).valueOrNull;
       expect(state?.items, isEmpty);
     });
 
@@ -324,11 +284,8 @@ void main() {
       when(
         () => svc.getItems(any()),
       ).thenAnswer((_) async => Result.success([_item()]));
-      when(
-        () => svc.clearAll(any()),
-      ).thenAnswer(
-        (_) async =>
-            const Result<void>.failure(NetworkException('fail')),
+      when(() => svc.clearAll(any())).thenAnswer(
+        (_) async => const Result<void>.failure(NetworkException('fail')),
       );
 
       final c = makeContainer();
@@ -346,9 +303,7 @@ void main() {
       when(
         () => svc.getItems(any()),
       ).thenAnswer((_) async => Result.success([_item()]));
-      when(
-        () => svc.copyToClipboard(any()),
-      ).thenReturn('• Apples');
+      when(() => svc.copyToClipboard(any())).thenReturn('• Apples');
 
       final c = makeContainer();
       await c.read(shoppingListControllerProvider(_babyId).future);
@@ -364,10 +319,7 @@ void main() {
       ).thenAnswer((_) async => const Result.failure(error));
 
       final c = makeContainer();
-      await expectLater(
-        notifier(c).future,
-        throwsA(isA<Object>()),
-      );
+      await expectLater(notifier(c).future, throwsA(isA<Object>()));
 
       final result = await notifier(c).copyToClipboard();
       expect(result, isFalse);

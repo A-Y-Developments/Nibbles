@@ -56,9 +56,8 @@ class AuthService extends _$AuthService {
   /// `Success(true)` = authenticated, `Success(false)` = user cancelled
   /// (silent no-op, no state change), `Failure` = surfaced as P1 by the
   /// controller.
-  Future<Result<bool>> signInWithGoogle() => _completeSocial(
-    _repo.signInWithGoogle(),
-  );
+  Future<Result<bool>> signInWithGoogle() =>
+      _completeSocial(_repo.signInWithGoogle());
 
   /// `Success(true)` = authenticated, `Success(false)` = user cancelled
   /// (silent no-op, no state change), `Failure` = surfaced as P1 by the

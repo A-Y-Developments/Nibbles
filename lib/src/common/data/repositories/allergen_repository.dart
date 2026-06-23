@@ -173,8 +173,7 @@ class AllergenRepositoryImpl implements AllergenRepository {
             'allergen_key': log.allergenKey,
             'had_reaction': log.hadReaction,
             'log_date': _formatDate(log.logDate),
-            if (log.emojiTaste != null)
-              'emoji_taste': log.emojiTaste!.toJson(),
+            if (log.emojiTaste != null) 'emoji_taste': log.emojiTaste!.toJson(),
             if (log.notes != null) 'notes': log.notes,
             if (log.attachmentTitle != null)
               'attachment_title': log.attachmentTitle,

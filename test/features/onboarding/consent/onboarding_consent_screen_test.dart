@@ -133,6 +133,11 @@ Future<void> _pumpConsent(
 }
 
 void main() {
+  setUpAll(() {
+    registerFallbackValue(Gender.preferNotToSay);
+    registerFallbackValue(<bool>[]);
+  });
+
   late _MockBabyProfileService babyProfile;
   late _MockLocalFlagService flags;
 
@@ -145,77 +150,68 @@ void main() {
     flags = _MockLocalFlagService();
   });
 
-  testWidgets(
-    '>= 6mo DOB renders the 2-checkbox variant; the 3rd ("full '
-    'responsibility") label is absent',
-    (tester) async {
-      // 18 months ago — comfortably above the 6mo gate.
-      final dob = DateTime.now().subtract(const Duration(days: 30 * 18));
-      final container = _makeContainer(
-        babyProfile: babyProfile,
-        flags: flags,
-        dob: dob,
-      );
-      await _pumpConsent(tester, container: container);
+  testWidgets('>= 6mo DOB renders the 2-checkbox variant; the 3rd ("full '
+      'responsibility") label is absent', (tester) async {
+    // 18 months ago — comfortably above the 6mo gate.
+    final dob = DateTime.now().subtract(const Duration(days: 30 * 18));
+    final container = _makeContainer(
+      babyProfile: babyProfile,
+      flags: flags,
+      dob: dob,
+    );
+    await _pumpConsent(tester, container: container);
 
-      expect(
-        find.byKey(const Key('onboarding_consent_checkbox_0')),
-        findsOneWidget,
-      );
-      expect(
-        find.byKey(const Key('onboarding_consent_checkbox_1')),
-        findsOneWidget,
-      );
-      expect(
-        find.byKey(const Key('onboarding_consent_checkbox_2')),
-        findsNothing,
-      );
+    expect(
+      find.byKey(const Key('onboarding_consent_checkbox_0')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('onboarding_consent_checkbox_1')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('onboarding_consent_checkbox_2')),
+      findsNothing,
+    );
 
-      // The 3rd-box copy (verbatim from `_labelFor`) must not be present.
-      expect(
-        find.textContaining('full responsibility'),
-        findsNothing,
-      );
-    },
-  );
+    // The 3rd-box copy (verbatim from `_labelFor`) must not be present.
+    expect(find.textContaining('full responsibility'), findsNothing);
+  });
 
-  testWidgets(
-    '< 6mo DOB renders the 3-checkbox variant including the "full '
-    'responsibility" acknowledgement',
-    (tester) async {
-      // 2 months ago — clearly below the 6mo gate.
-      final dob = DateTime.now().subtract(const Duration(days: 60));
-      final container = _makeContainer(
-        babyProfile: babyProfile,
-        flags: flags,
-        dob: dob,
-      );
-      await _pumpConsent(tester, container: container);
+  testWidgets('< 6mo DOB renders the 3-checkbox variant including the "full '
+      'responsibility" acknowledgement', (tester) async {
+    // 2 months ago — clearly below the 6mo gate.
+    final dob = DateTime.now().subtract(const Duration(days: 60));
+    final container = _makeContainer(
+      babyProfile: babyProfile,
+      flags: flags,
+      dob: dob,
+    );
+    await _pumpConsent(tester, container: container);
 
-      expect(
-        find.byKey(const Key('onboarding_consent_checkbox_0')),
-        findsOneWidget,
-      );
-      expect(
-        find.byKey(const Key('onboarding_consent_checkbox_1')),
-        findsOneWidget,
-      );
-      expect(
-        find.byKey(const Key('onboarding_consent_checkbox_2')),
-        findsOneWidget,
-      );
+    expect(
+      find.byKey(const Key('onboarding_consent_checkbox_0')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('onboarding_consent_checkbox_1')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('onboarding_consent_checkbox_2')),
+      findsOneWidget,
+    );
 
-      // Verbatim copy from the Figma audit for the 3rd box (no trailing
-      // period — matches baby-setup-lt6mo-1/report.md byte-for-byte).
-      expect(
-        find.text(
-          'I accept full responsibility for my decision to start solids '
-          'before 6 months',
-        ),
-        findsOneWidget,
-      );
-    },
-  );
+    // Verbatim copy from the Figma audit for the 3rd box (no trailing
+    // period — matches baby-setup-lt6mo-1/report.md byte-for-byte).
+    expect(
+      find.text(
+        'I accept full responsibility for my decision to start solids '
+        'before 6 months',
+      ),
+      findsOneWidget,
+    );
+  });
 
   testWidgets(
     'renders the verbatim Figma copy for boxes 0 and 1 (both age variants '
@@ -278,8 +274,8 @@ void main() {
       await _pumpConsent(tester, container: container);
 
       AppPillButton submit() => tester.widget<AppPillButton>(
-            find.byKey(const Key('onboarding_consent_submit')),
-          );
+        find.byKey(const Key('onboarding_consent_submit')),
+      );
 
       expect(submit().onPressed, isNull);
       expect(submit().label, 'Check confirmation');
@@ -295,43 +291,42 @@ void main() {
     },
   );
 
-  testWidgets(
-    'on confirm: calls baby_profile_service.createBaby, flips '
-    'onboarding_done, navigates to the post-consent loading transition',
-    (tester) async {
-      when(
-        () => babyProfile.createBaby(any(), any()),
-      ).thenAnswer((_) async => Result.success(_fakeBaby));
-      when(flags.setOnboardingDone).thenAnswer((_) {});
+  testWidgets('on confirm: calls baby_profile_service.createBaby, flips '
+      'onboarding_done, navigates to the post-consent loading transition', (
+    tester,
+  ) async {
+    when(
+      () => babyProfile.createBaby(any(), any(), any(), any()),
+    ).thenAnswer((_) async => Result.success(_fakeBaby));
+    when(flags.setOnboardingDone).thenAnswer((_) {});
 
-      final dob = DateTime.now().subtract(const Duration(days: 30 * 18));
-      final container = _makeContainer(
-        babyProfile: babyProfile,
-        flags: flags,
-        dob: dob,
-      );
-      await _pumpConsent(tester, container: container);
+    final dob = DateTime.now().subtract(const Duration(days: 30 * 18));
+    final container = _makeContainer(
+      babyProfile: babyProfile,
+      flags: flags,
+      dob: dob,
+    );
+    await _pumpConsent(tester, container: container);
 
-      await tester.tap(find.byKey(const Key('onboarding_consent_checkbox_0')));
-      await tester.tap(find.byKey(const Key('onboarding_consent_checkbox_1')));
-      await tester.pump();
-      await tester.tap(find.byKey(const Key('onboarding_consent_submit')));
-      await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('onboarding_consent_checkbox_0')));
+    await tester.tap(find.byKey(const Key('onboarding_consent_checkbox_1')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('onboarding_consent_submit')));
+    await tester.pumpAndSettle();
 
-      verify(() => babyProfile.createBaby('Lily', dob)).called(1);
-      verify(flags.setOnboardingDone).called(1);
-      // NIB-137 — consent now pushes through the loading transition; that
-      // screen owns the auto-route to /home and is tested in isolation.
-      expect(find.text('LOADING_STUB'), findsOneWidget);
-      expect(find.text('HOME_STUB'), findsNothing);
-    },
-  );
+    verify(() => babyProfile.createBaby('Lily', dob, any(), any())).called(1);
+    verify(flags.setOnboardingDone).called(1);
+    // NIB-137 — consent now pushes through the loading transition; that
+    // screen owns the auto-route to /home and is tested in isolation.
+    expect(find.text('LOADING_STUB'), findsOneWidget);
+    expect(find.text('HOME_STUB'), findsNothing);
+  });
 
   testWidgets(
     'on submit failure: inline P1 error renders verbatim; nav does NOT fire; '
     'onboarding_done is NOT flipped',
     (tester) async {
-      when(() => babyProfile.createBaby(any(), any())).thenAnswer(
+      when(() => babyProfile.createBaby(any(), any(), any(), any())).thenAnswer(
         (_) async => const Result.failure(ServerException('boom from server')),
       );
       when(flags.setOnboardingDone).thenAnswer((_) {});
@@ -357,49 +352,48 @@ void main() {
     },
   );
 
-  testWidgets(
-    'CTA is disabled while the submit is in flight (widget-layer '
-    'double-submit guard — see PR body: no controller-level guard)',
-    (tester) async {
-      final completer = Completer<Result<Baby>>();
-      when(
-        () => babyProfile.createBaby(any(), any()),
-      ).thenAnswer((_) => completer.future);
-      when(flags.setOnboardingDone).thenAnswer((_) {});
+  testWidgets('CTA is disabled while the submit is in flight (widget-layer '
+      'double-submit guard — see PR body: no controller-level guard)', (
+    tester,
+  ) async {
+    final completer = Completer<Result<Baby>>();
+    when(
+      () => babyProfile.createBaby(any(), any(), any(), any()),
+    ).thenAnswer((_) => completer.future);
+    when(flags.setOnboardingDone).thenAnswer((_) {});
 
-      final dob = DateTime.now().subtract(const Duration(days: 30 * 18));
-      final container = _makeContainer(
-        babyProfile: babyProfile,
-        flags: flags,
-        dob: dob,
-      );
-      await _pumpConsent(tester, container: container);
+    final dob = DateTime.now().subtract(const Duration(days: 30 * 18));
+    final container = _makeContainer(
+      babyProfile: babyProfile,
+      flags: flags,
+      dob: dob,
+    );
+    await _pumpConsent(tester, container: container);
 
-      await tester.tap(find.byKey(const Key('onboarding_consent_checkbox_0')));
-      await tester.tap(find.byKey(const Key('onboarding_consent_checkbox_1')));
-      await tester.pump();
-      await tester.tap(find.byKey(const Key('onboarding_consent_submit')));
-      // Pump WITHOUT settling — completer is still pending; isSubmitting=true.
-      await tester.pump();
+    await tester.tap(find.byKey(const Key('onboarding_consent_checkbox_0')));
+    await tester.tap(find.byKey(const Key('onboarding_consent_checkbox_1')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('onboarding_consent_submit')));
+    // Pump WITHOUT settling — completer is still pending; isSubmitting=true.
+    await tester.pump();
 
-      final submit = tester.widget<AppPillButton>(
-        find.byKey(const Key('onboarding_consent_submit')),
-      );
-      expect(submit.onPressed, isNull);
+    final submit = tester.widget<AppPillButton>(
+      find.byKey(const Key('onboarding_consent_submit')),
+    );
+    expect(submit.onPressed, isNull);
 
-      // Attempting a second tap is a no-op (disabled button) — verify the
-      // service was called exactly once.
-      await tester.tap(
-        find.byKey(const Key('onboarding_consent_submit')),
-        warnIfMissed: false,
-      );
-      await tester.pump();
+    // Attempting a second tap is a no-op (disabled button) — verify the
+    // service was called exactly once.
+    await tester.tap(
+      find.byKey(const Key('onboarding_consent_submit')),
+      warnIfMissed: false,
+    );
+    await tester.pump();
 
-      verify(() => babyProfile.createBaby(any(), any())).called(1);
+    verify(() => babyProfile.createBaby(any(), any(), any(), any())).called(1);
 
-      // Release the future so teardown doesn't dangle a pending Completer.
-      completer.complete(Result.success(_fakeBaby));
-      await tester.pumpAndSettle();
-    },
-  );
+    // Release the future so teardown doesn't dangle a pending Completer.
+    completer.complete(Result.success(_fakeBaby));
+    await tester.pumpAndSettle();
+  });
 }

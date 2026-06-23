@@ -353,11 +353,7 @@ class _IngredientRow extends StatelessWidget {
               ),
               const Padding(
                 padding: EdgeInsets.only(left: AppSizes.sm),
-                child: Icon(
-                  Icons.close,
-                  size: 18,
-                  color: AppColors.burgundy,
-                ),
+                child: Icon(Icons.close, size: 18, color: AppColors.burgundy),
               ),
             ],
           ),

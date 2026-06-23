@@ -2,21 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:nibbles/gen/fonts.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
+import 'package:nibbles/src/common/components/avatar/baby_avatar.dart';
 import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
 
 /// Avatar / identity block on Profile (Figma node 1189:12440).
 ///
 /// Layout (column, gap 24):
-///  - 143x143 coral avatar circle (Nibble-primary-Salmon #f8a175).
+///  - 143x143 peach baby-circle avatar (`BabyAvatar`).
 ///  - Name (Title 1/Bold — Parkinsans 700 22 / lh 34) + age subtitle
 ///    (Body/Regular — Figtree 400 15 / lh 22), 4px gap between.
 ///  - 108x48 butter pill "Edit" (radius 24, Parkinsans SemiBold 15,
 ///    forestDarkn label).
-///
-/// Asset note: the Figma file references an external Nibbles peach-circle
-/// PNG (madam-app path) that is not bundled in this repo; the coral circle
-/// + cream baby-face glyph is the agreed code approximation until the
-/// asset ships (see audit `asset_urls.txt`).
 class ProfileAvatarCard extends StatelessWidget {
   const ProfileAvatarCard({
     required this.name,
@@ -28,8 +24,6 @@ class ProfileAvatarCard extends StatelessWidget {
   final String name;
   final String ageLabel;
   final VoidCallback onEdit;
-
-  static const double _avatarDiameter = 143;
 
   @override
   Widget build(BuildContext context) {
@@ -44,23 +38,7 @@ class ProfileAvatarCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          ExcludeSemantics(
-            child: Container(
-              width: _avatarDiameter,
-              height: _avatarDiameter,
-              decoration: const BoxDecoration(
-                color: AppColors.coral,
-                shape: BoxShape.circle,
-              ),
-              child: const Center(
-                child: Icon(
-                  Icons.child_care_rounded,
-                  size: 72,
-                  color: AppColors.cream,
-                ),
-              ),
-            ),
-          ),
+          const BabyAvatar(),
           const SizedBox(height: AppSizes.lg),
           // Title 1/Bold — Parkinsans 700 22 / lh 34.
           Text(
@@ -78,9 +56,7 @@ class ProfileAvatarCard extends StatelessWidget {
           // Body/Regular — Figtree 400 15 / lh 22.
           Text(
             ageLabel,
-            style: theme.textTheme.bodyLarge?.copyWith(
-              color: AppColors.text,
-            ),
+            style: theme.textTheme.bodyLarge?.copyWith(color: AppColors.text),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppSizes.lg),

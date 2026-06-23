@@ -284,52 +284,49 @@ void main() {
   // ---------------------------------------------------------------------------
 
   group('AllergenService.getAllergenStatuses', () {
-    test(
-      'returns every canonical allergen key with the correct derived status '
-      'and defaults absent allergens to notStarted',
-      () async {
-        final eggReaction = _makeLog(
-          id: 'log-e1',
-          allergenKey: 'egg',
-          hadReaction: true,
-        );
-        final dairyClean1 = _makeLog(id: 'log-d1', allergenKey: 'dairy');
-        final dairyClean2 = _makeLog(id: 'log-d2', allergenKey: 'dairy');
-        final dairyClean3 = _makeLog(id: 'log-d3', allergenKey: 'dairy');
-        final peanutClean = _makeLog(id: 'log-p1');
+    test('returns every canonical allergen key with the correct derived status '
+        'and defaults absent allergens to notStarted', () async {
+      final eggReaction = _makeLog(
+        id: 'log-e1',
+        allergenKey: 'egg',
+        hadReaction: true,
+      );
+      final dairyClean1 = _makeLog(id: 'log-d1', allergenKey: 'dairy');
+      final dairyClean2 = _makeLog(id: 'log-d2', allergenKey: 'dairy');
+      final dairyClean3 = _makeLog(id: 'log-d3', allergenKey: 'dairy');
+      final peanutClean = _makeLog(id: 'log-p1');
 
-        when(() => mockRepo.getLogs(any())).thenAnswer(
-          (_) async => Result.success([
-            eggReaction,
-            dairyClean1,
-            dairyClean2,
-            dairyClean3,
-            peanutClean,
-          ]),
-        );
+      when(() => mockRepo.getLogs(any())).thenAnswer(
+        (_) async => Result.success([
+          eggReaction,
+          dairyClean1,
+          dairyClean2,
+          dairyClean3,
+          peanutClean,
+        ]),
+      );
 
-        final result = await sut.getAllergenStatuses(_babyId);
+      final result = await sut.getAllergenStatuses(_babyId);
 
-        expect(result.isSuccess, isTrue);
-        final statuses = result.dataOrNull!;
-        // Every canonical key is present.
-        for (final key in kAllergenKeys) {
-          expect(statuses.containsKey(key), isTrue, reason: 'missing $key');
-        }
-        // 3 clean dairy logs → safe.
-        expect(statuses['dairy'], AllergenStatus.safe);
-        // 1 reaction-flagged egg log → flagged.
-        expect(statuses['egg'], AllergenStatus.flagged);
-        // 1 clean peanut log → inProgress.
-        expect(statuses['peanut'], AllergenStatus.inProgress);
-        // Untouched allergens default to notStarted.
-        expect(statuses['shellfish'], AllergenStatus.notStarted);
-        expect(statuses['fish'], AllergenStatus.notStarted);
-        // Only the bare-minimum repo call is used (no Supabase, no state read).
-        verify(() => mockRepo.getLogs(_babyId)).called(1);
-        verifyNever(() => mockRepo.getProgramState(any()));
-      },
-    );
+      expect(result.isSuccess, isTrue);
+      final statuses = result.dataOrNull!;
+      // Every canonical key is present.
+      for (final key in kAllergenKeys) {
+        expect(statuses.containsKey(key), isTrue, reason: 'missing $key');
+      }
+      // 3 clean dairy logs → safe.
+      expect(statuses['dairy'], AllergenStatus.safe);
+      // 1 reaction-flagged egg log → flagged.
+      expect(statuses['egg'], AllergenStatus.flagged);
+      // 1 clean peanut log → inProgress.
+      expect(statuses['peanut'], AllergenStatus.inProgress);
+      // Untouched allergens default to notStarted.
+      expect(statuses['shellfish'], AllergenStatus.notStarted);
+      expect(statuses['fish'], AllergenStatus.notStarted);
+      // Only the bare-minimum repo call is used (no Supabase, no state read).
+      verify(() => mockRepo.getLogs(_babyId)).called(1);
+      verifyNever(() => mockRepo.getProgramState(any()));
+    });
 
     test('propagates repository failure', () async {
       when(() => mockRepo.getLogs(any())).thenAnswer(
@@ -395,9 +392,7 @@ void main() {
     );
 
     test('returns failure when getProgramState fails', () async {
-      when(
-        () => mockRepo.getProgramState(any()),
-      ).thenAnswer(
+      when(() => mockRepo.getProgramState(any())).thenAnswer(
         (_) async => const Result.failure(NetworkException('offline')),
       );
 
@@ -411,9 +406,7 @@ void main() {
       when(
         () => mockRepo.getProgramState(any()),
       ).thenAnswer((_) async => Result.success(_makeProgramState()));
-      when(
-        () => mockRepo.getAllergens(),
-      ).thenAnswer(
+      when(() => mockRepo.getAllergens()).thenAnswer(
         (_) async => const Result.failure(NetworkException('offline')),
       );
 
@@ -473,41 +466,39 @@ void main() {
       },
     );
 
-    test(
-      'new photo path: uploads new, deletes old non-fatal, '
-      'calls updateLog with new photoUrl',
-      () async {
-        final log = _makeLog().copyWith(photoUrl: 'old/path.jpg');
-        when(
-          () => mockStorage.uploadFile(any(), any(), any()),
-        ).thenAnswer((_) async => const Result.success('ignored'));
-        when(
-          () => mockStorage.deleteFile(any(), any()),
-        ).thenAnswer((_) async => const Result.success(null));
-        when(
-          () => mockRepo.updateLog(any()),
-        ).thenAnswer((_) async => Result.success(log));
+    test('new photo path: uploads new, deletes old non-fatal, '
+        'calls updateLog with new photoUrl', () async {
+      final log = _makeLog().copyWith(photoUrl: 'old/path.jpg');
+      when(
+        () => mockStorage.uploadFile(any(), any(), any()),
+      ).thenAnswer((_) async => const Result.success('ignored'));
+      when(
+        () => mockStorage.deleteFile(any(), any()),
+      ).thenAnswer((_) async => const Result.success(null));
+      when(
+        () => mockRepo.updateLog(any()),
+      ).thenAnswer((_) async => Result.success(log));
 
-        final result = await sut.updateAllergenLog(
-          log: log,
-          newPhotoLocalPath: '/tmp/new.jpg',
-          oldPhotoPath: 'old/path.jpg',
-        );
+      final result = await sut.updateAllergenLog(
+        log: log,
+        newPhotoLocalPath: '/tmp/new.jpg',
+        oldPhotoPath: 'old/path.jpg',
+      );
 
-        expect(result.isSuccess, isTrue);
-        verify(() => mockStorage.uploadFile(any(), any(), any())).called(1);
-        verify(
-          () => mockStorage.deleteFile('allergen-photos', 'old/path.jpg'),
-        ).called(1);
+      expect(result.isSuccess, isTrue);
+      verify(() => mockStorage.uploadFile(any(), any(), any())).called(1);
+      verify(
+        () => mockStorage.deleteFile('allergen-photos', 'old/path.jpg'),
+      ).called(1);
 
-        final captured = verify(() => mockRepo.updateLog(captureAny())).captured
-            .single as AllergenLog;
-        // photoUrl now points at the freshly uploaded path
-        // (not the old path passed in).
-        expect(captured.photoUrl, isNot('old/path.jpg'));
-        expect(captured.photoUrl, isNotNull);
-      },
-    );
+      final captured =
+          verify(() => mockRepo.updateLog(captureAny())).captured.single
+              as AllergenLog;
+      // photoUrl now points at the freshly uploaded path
+      // (not the old path passed in).
+      expect(captured.photoUrl, isNot('old/path.jpg'));
+      expect(captured.photoUrl, isNotNull);
+    });
 
     test('upload failure propagates and skips repo.updateLog', () async {
       final log = _makeLog();
@@ -526,42 +517,39 @@ void main() {
       verifyNever(() => mockStorage.deleteFile(any(), any()));
     });
 
-    test(
-      'old-photo delete failure is non-fatal: '
-      'crash recorder called + updateLog still runs',
-      () async {
-        final log = _makeLog();
-        var recorded = 0;
-        sut = AllergenService(
-          mockRepo,
-          mockStorage,
-          crashRecorder:
-              (Object error, StackTrace stack, {String? reason}) async {
-                recorded++;
-              },
-        );
+    test('old-photo delete failure is non-fatal: '
+        'crash recorder called + updateLog still runs', () async {
+      final log = _makeLog();
+      var recorded = 0;
+      sut = AllergenService(
+        mockRepo,
+        mockStorage,
+        crashRecorder:
+            (Object error, StackTrace stack, {String? reason}) async {
+              recorded++;
+            },
+      );
 
-        when(
-          () => mockStorage.uploadFile(any(), any(), any()),
-        ).thenAnswer((_) async => const Result.success('ignored'));
-        when(() => mockStorage.deleteFile(any(), any())).thenAnswer(
-          (_) async => const Result.failure(ServerException('not found')),
-        );
-        when(
-          () => mockRepo.updateLog(any()),
-        ).thenAnswer((_) async => Result.success(log));
+      when(
+        () => mockStorage.uploadFile(any(), any(), any()),
+      ).thenAnswer((_) async => const Result.success('ignored'));
+      when(() => mockStorage.deleteFile(any(), any())).thenAnswer(
+        (_) async => const Result.failure(ServerException('not found')),
+      );
+      when(
+        () => mockRepo.updateLog(any()),
+      ).thenAnswer((_) async => Result.success(log));
 
-        final result = await sut.updateAllergenLog(
-          log: log,
-          newPhotoLocalPath: '/tmp/new.jpg',
-          oldPhotoPath: 'old/path.jpg',
-        );
+      final result = await sut.updateAllergenLog(
+        log: log,
+        newPhotoLocalPath: '/tmp/new.jpg',
+        oldPhotoPath: 'old/path.jpg',
+      );
 
-        expect(result.isSuccess, isTrue);
-        expect(recorded, 1);
-        verify(() => mockRepo.updateLog(any())).called(1);
-      },
-    );
+      expect(result.isSuccess, isTrue);
+      expect(recorded, 1);
+      verify(() => mockRepo.updateLog(any())).called(1);
+    });
   });
 
   // ---------------------------------------------------------------------------
@@ -581,60 +569,54 @@ void main() {
       verifyNever(() => mockStorage.deleteFile(any(), any()));
     });
 
-    test(
-      'with photoPath: deletes photo then deletes log row',
-      () async {
-        when(
-          () => mockStorage.deleteFile(any(), any()),
-        ).thenAnswer((_) async => const Result.success(null));
-        when(
-          () => mockRepo.deleteLog(any()),
-        ).thenAnswer((_) async => const Result.success(null));
+    test('with photoPath: deletes photo then deletes log row', () async {
+      when(
+        () => mockStorage.deleteFile(any(), any()),
+      ).thenAnswer((_) async => const Result.success(null));
+      when(
+        () => mockRepo.deleteLog(any()),
+      ).thenAnswer((_) async => const Result.success(null));
 
-        final result = await sut.deleteAllergenLog(
-          logId: 'log-1',
-          photoPath: 'old/path.jpg',
-        );
+      final result = await sut.deleteAllergenLog(
+        logId: 'log-1',
+        photoPath: 'old/path.jpg',
+      );
 
-        expect(result.isSuccess, isTrue);
-        verify(
-          () => mockStorage.deleteFile('allergen-photos', 'old/path.jpg'),
-        ).called(1);
-        verify(() => mockRepo.deleteLog('log-1')).called(1);
-      },
-    );
+      expect(result.isSuccess, isTrue);
+      verify(
+        () => mockStorage.deleteFile('allergen-photos', 'old/path.jpg'),
+      ).called(1);
+      verify(() => mockRepo.deleteLog('log-1')).called(1);
+    });
 
-    test(
-      'storage delete failure is non-fatal: '
-      'crash recorder called + repo.deleteLog still runs',
-      () async {
-        var recorded = 0;
-        sut = AllergenService(
-          mockRepo,
-          mockStorage,
-          crashRecorder:
-              (Object error, StackTrace stack, {String? reason}) async {
-                recorded++;
-              },
-        );
+    test('storage delete failure is non-fatal: '
+        'crash recorder called + repo.deleteLog still runs', () async {
+      var recorded = 0;
+      sut = AllergenService(
+        mockRepo,
+        mockStorage,
+        crashRecorder:
+            (Object error, StackTrace stack, {String? reason}) async {
+              recorded++;
+            },
+      );
 
-        when(() => mockStorage.deleteFile(any(), any())).thenAnswer(
-          (_) async => const Result.failure(ServerException('not found')),
-        );
-        when(
-          () => mockRepo.deleteLog(any()),
-        ).thenAnswer((_) async => const Result.success(null));
+      when(() => mockStorage.deleteFile(any(), any())).thenAnswer(
+        (_) async => const Result.failure(ServerException('not found')),
+      );
+      when(
+        () => mockRepo.deleteLog(any()),
+      ).thenAnswer((_) async => const Result.success(null));
 
-        final result = await sut.deleteAllergenLog(
-          logId: 'log-1',
-          photoPath: 'old/path.jpg',
-        );
+      final result = await sut.deleteAllergenLog(
+        logId: 'log-1',
+        photoPath: 'old/path.jpg',
+      );
 
-        expect(result.isSuccess, isTrue);
-        expect(recorded, 1);
-        verify(() => mockRepo.deleteLog('log-1')).called(1);
-      },
-    );
+      expect(result.isSuccess, isTrue);
+      expect(recorded, 1);
+      verify(() => mockRepo.deleteLog('log-1')).called(1);
+    });
 
     test('propagates repo.deleteLog failure', () async {
       when(() => mockRepo.deleteLog(any())).thenAnswer(
@@ -679,9 +661,7 @@ void main() {
     });
 
     test('returns allergen matching currentAllergenKey', () async {
-      when(
-        () => mockRepo.getProgramState(any()),
-      ).thenAnswer(
+      when(() => mockRepo.getProgramState(any())).thenAnswer(
         (_) async => Result.success(
           _makeProgramState(currentAllergenKey: 'egg', currentSequenceOrder: 2),
         ),
@@ -723,8 +703,7 @@ void main() {
         () => mockRepo.getAllergens(),
       ).thenAnswer((_) async => Result.success(_allergens));
       when(() => mockRepo.getLogs(any())).thenAnswer(
-        (_) async =>
-            const Result.failure(ServerException('logs fetch failed')),
+        (_) async => const Result.failure(ServerException('logs fetch failed')),
       );
 
       final result = await sut.getAllergenBoardSummary(_babyId);
@@ -738,33 +717,31 @@ void main() {
   // ---------------------------------------------------------------------------
 
   group('AllergenService.saveAllergenLog — photo and failure paths', () {
-    test(
-      'photo upload success: log is saved with non-null photoUrl',
-      () async {
-        const uploadedPath = 'baby-001/123_peanut.jpg';
-        final saved = _makeLog(id: 'log-with-photo')
-            .copyWith(photoUrl: uploadedPath);
-        when(
-          () => mockStorage.uploadFile(any(), any(), any()),
-        ).thenAnswer((_) async => const Result.success(uploadedPath));
-        when(
-          () => mockRepo.saveLog(any()),
-        ).thenAnswer((_) async => Result.success(saved));
+    test('photo upload success: log is saved with non-null photoUrl', () async {
+      const uploadedPath = 'baby-001/123_peanut.jpg';
+      final saved = _makeLog(
+        id: 'log-with-photo',
+      ).copyWith(photoUrl: uploadedPath);
+      when(
+        () => mockStorage.uploadFile(any(), any(), any()),
+      ).thenAnswer((_) async => const Result.success(uploadedPath));
+      when(
+        () => mockRepo.saveLog(any()),
+      ).thenAnswer((_) async => Result.success(saved));
 
-        final result = await sut.saveAllergenLog(
-          babyId: _babyId,
-          allergenKey: _peanutKey,
-          hadReaction: false,
-          photo: File('/tmp/photo.jpg'),
-        );
+      final result = await sut.saveAllergenLog(
+        babyId: _babyId,
+        allergenKey: _peanutKey,
+        hadReaction: false,
+        photo: File('/tmp/photo.jpg'),
+      );
 
-        expect(result.isSuccess, isTrue);
-        final captured =
-            verify(() => mockRepo.saveLog(captureAny())).captured.single
-                as AllergenLog;
-        expect(captured.photoUrl, isNotNull);
-      },
-    );
+      expect(result.isSuccess, isTrue);
+      final captured =
+          verify(() => mockRepo.saveLog(captureAny())).captured.single
+              as AllergenLog;
+      expect(captured.photoUrl, isNotNull);
+    });
 
     test(
       'photo upload failure: log is still saved with null photoUrl',
@@ -807,35 +784,32 @@ void main() {
       verifyNever(() => mockRepo.saveReactionDetail(any()));
     });
 
-    test(
-      'reactionDetail save failure propagates after log is saved',
-      () async {
-        final savedLog = _makeLog(id: 'log-react', hadReaction: true);
-        final detail = ReactionDetail(
-          id: '',
-          logId: '',
-          severity: ReactionSeverity.mild,
-          symptoms: const ['Hives'],
-          createdAt: _now,
-        );
-        when(
-          () => mockRepo.saveLog(any()),
-        ).thenAnswer((_) async => Result.success(savedLog));
-        when(() => mockRepo.saveReactionDetail(any())).thenAnswer(
-          (_) async =>
-              const Result.failure(ServerException('detail insert failed')),
-        );
+    test('reactionDetail save failure propagates after log is saved', () async {
+      final savedLog = _makeLog(id: 'log-react', hadReaction: true);
+      final detail = ReactionDetail(
+        id: '',
+        logId: '',
+        severity: ReactionSeverity.mild,
+        symptoms: const ['Hives'],
+        createdAt: _now,
+      );
+      when(
+        () => mockRepo.saveLog(any()),
+      ).thenAnswer((_) async => Result.success(savedLog));
+      when(() => mockRepo.saveReactionDetail(any())).thenAnswer(
+        (_) async =>
+            const Result.failure(ServerException('detail insert failed')),
+      );
 
-        final result = await sut.saveAllergenLog(
-          babyId: _babyId,
-          allergenKey: _peanutKey,
-          hadReaction: true,
-          reactionDetail: detail,
-        );
+      final result = await sut.saveAllergenLog(
+        babyId: _babyId,
+        allergenKey: _peanutKey,
+        hadReaction: true,
+        reactionDetail: detail,
+      );
 
-        expect(result.isFailure, isTrue);
-      },
-    );
+      expect(result.isFailure, isTrue);
+    });
   });
 
   // ---------------------------------------------------------------------------
@@ -1059,34 +1033,31 @@ void main() {
       },
     );
 
-    test(
-      'deleting one of three clean egg logs via deleteAllergenLog '
-      're-derives egg status as inProgress on the next read',
-      () async {
-        final store = <AllergenLog>[
-          _makeLog(id: 'e1', allergenKey: 'egg'),
-          _makeLog(id: 'e2', allergenKey: 'egg'),
-          _makeLog(id: 'e3', allergenKey: 'egg'),
-        ];
-        when(
-          () => mockRepo.getLogs(any()),
-        ).thenAnswer((_) async => Result.success(List.of(store)));
-        when(() => mockRepo.deleteLog(any())).thenAnswer((invocation) async {
-          final id = invocation.positionalArguments.first as String;
-          store.removeWhere((l) => l.id == id);
-          return const Result.success(null);
-        });
+    test('deleting one of three clean egg logs via deleteAllergenLog '
+        're-derives egg status as inProgress on the next read', () async {
+      final store = <AllergenLog>[
+        _makeLog(id: 'e1', allergenKey: 'egg'),
+        _makeLog(id: 'e2', allergenKey: 'egg'),
+        _makeLog(id: 'e3', allergenKey: 'egg'),
+      ];
+      when(
+        () => mockRepo.getLogs(any()),
+      ).thenAnswer((_) async => Result.success(List.of(store)));
+      when(() => mockRepo.deleteLog(any())).thenAnswer((invocation) async {
+        final id = invocation.positionalArguments.first as String;
+        store.removeWhere((l) => l.id == id);
+        return const Result.success(null);
+      });
 
-        final beforeResult = await sut.getAllergenStatuses(_babyId);
-        expect(beforeResult.dataOrNull!['egg'], AllergenStatus.safe);
+      final beforeResult = await sut.getAllergenStatuses(_babyId);
+      expect(beforeResult.dataOrNull!['egg'], AllergenStatus.safe);
 
-        final deleteResult = await sut.deleteAllergenLog(logId: 'e1');
-        expect(deleteResult.isSuccess, isTrue);
+      final deleteResult = await sut.deleteAllergenLog(logId: 'e1');
+      expect(deleteResult.isSuccess, isTrue);
 
-        final afterResult = await sut.getAllergenStatuses(_babyId);
-        expect(afterResult.dataOrNull!['egg'], AllergenStatus.inProgress);
-        verify(() => mockRepo.deleteLog('e1')).called(1);
-      },
-    );
+      final afterResult = await sut.getAllergenStatuses(_babyId);
+      expect(afterResult.dataOrNull!['egg'], AllergenStatus.inProgress);
+      verify(() => mockRepo.deleteLog('e1')).called(1);
+    });
   });
 }

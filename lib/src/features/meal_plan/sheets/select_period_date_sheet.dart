@@ -12,11 +12,7 @@ import 'package:nibbles/src/features/meal_plan/widgets/meal_plan_date_range_form
 /// action. Pops with the chosen [DateTimeRange] on submit, or `null` on
 /// dismiss.
 class SelectPeriodDateSheet extends StatelessWidget {
-  const SelectPeriodDateSheet({
-    this.initialStart,
-    this.initialEnd,
-    super.key,
-  });
+  const SelectPeriodDateSheet({this.initialStart, this.initialEnd, super.key});
 
   final DateTime? initialStart;
   final DateTime? initialEnd;

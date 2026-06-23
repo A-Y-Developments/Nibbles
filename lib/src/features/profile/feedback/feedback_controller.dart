@@ -56,10 +56,7 @@ class FeedbackController extends _$FeedbackController {
       return false;
     }
 
-    state = state.copyWith(
-      phase: FeedbackPhase.submitting,
-      errorMessage: null,
-    );
+    state = state.copyWith(phase: FeedbackPhase.submitting, errorMessage: null);
 
     final result = await ref.read(feedbackServiceProvider).submit(trimmed);
 

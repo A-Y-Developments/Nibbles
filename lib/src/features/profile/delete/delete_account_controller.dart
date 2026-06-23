@@ -73,18 +73,14 @@ class DeleteAccountController extends _$DeleteAccountController {
 
     state = state.copyWith(isSubmitting: true, errorMessage: null);
 
-    final result = await ref
-        .read(accountServiceProvider)
-        .deleteAccount(reason);
+    final result = await ref.read(accountServiceProvider).deleteAccount(reason);
 
     switch (result) {
       case Success<void>():
         await ref.read(localFlagServiceProvider).clearAll();
         await ref.read(authServiceProvider.notifier).signOut();
         // Success — fire-and-forget. No PII (reason is logged on intent fire).
-        unawaited(
-          ref.read(analyticsProvider).logAccountDeletionCompleted(),
-        );
+        unawaited(ref.read(analyticsProvider).logAccountDeletionCompleted());
         // Don't touch `state` after signOut — the provider is likely disposed
         // by the time the redirect tears the profile subtree down.
         return true;

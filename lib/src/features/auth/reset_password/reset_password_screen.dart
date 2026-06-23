@@ -3,12 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
-import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
-import 'package:nibbles/src/common/components/buttons/app_round_button.dart';
-import 'package:nibbles/src/common/components/inputs/app_text_field.dart';
+import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/features/auth/reset_password/reset_password_controller.dart';
 import 'package:nibbles/src/features/auth/reset_password/reset_password_state.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// NIB-115 — Reset password / AU-03.
 ///
@@ -51,23 +50,21 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     ref.listen(resetPasswordControllerProvider, (_, ResetPasswordState next) {
       if (next.success) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Password updated. Please log in.')),
+          const SnackBar(content: Text('Password updated successfully.')),
         );
-        context.goNamed(AppRoute.login.name);
+        final hasSession = Supabase.instance.client.auth.currentSession != null;
+        context.goNamed(hasSession ? AppRoute.home.name : AppRoute.login.name);
       }
     });
 
     final controller = ref.read(resetPasswordControllerProvider.notifier);
 
-    void goBack() => context.canPop()
-        ? context.pop()
-        : context.goNamed(AppRoute.login.name);
-
     // Per-field helper text — derived from controller state to match the
     // three Figma states. Falls back to the guidance copy when no error.
     const guidance = 'Password must be at least 8 characters';
-    final passwordHelper =
-        state.passwordTooShort ? 'Password is too short' : guidance;
+    final passwordHelper = state.passwordTooShort
+        ? 'Password is too short'
+        : guidance;
     final String confirmHelper;
     if (state.confirmTooShort) {
       confirmHelper = 'Password is too short';
@@ -77,115 +74,94 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
       confirmHelper = guidance;
     }
 
-    final canSubmit = !state.isLoading &&
+    final canSubmit =
+        !state.isLoading &&
         !state.password.isNotValid &&
         state.passwordsMatch &&
         state.confirmPassword.isNotEmpty;
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            stops: [0.19, 0.5],
-            colors: [AppColors.butterSoft, AppColors.background],
+    return GradientScaffold(
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSizes.pagePaddingH,
+            AppSizes.md,
+            AppSizes.pagePaddingH,
+            AppSizes.lg,
           ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSizes.pagePaddingH,
-              AppSizes.md,
-              AppSizes.pagePaddingH,
-              AppSizes.lg,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: AppRoundButton(
-                    icon: const Icon(Icons.arrow_back_rounded),
-                    onPressed: goBack,
-                    tone: AppRoundButtonTone.butter,
-                    semanticLabel: 'Back',
-                  ),
-                ),
-                const SizedBox(height: AppSizes.lg),
-                Text(
-                  // Verbatim from Figma 971:10136 — "Forget Password" (sic).
-                  'Forget Password',
-                  style: textTheme.headlineSmall,
-                  textAlign: TextAlign.left,
-                ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: AppSizes.lg),
+              Text(
+                // Verbatim from Figma 971:10136 — "Forget Password" (sic).
+                'Forget Password',
+                style: textTheme.headlineSmall,
+                textAlign: TextAlign.left,
+              ),
+              const SizedBox(height: AppSizes.sm),
+              Text(
+                guidance,
+                style: textTheme.bodyLarge?.copyWith(color: AppColors.text),
+                textAlign: TextAlign.left,
+              ),
+              const SizedBox(height: AppSizes.xl),
+              AppTextField(
+                key: const Key('reset_password_new_field'),
+                label: 'Password',
+                hintText: 'Input password',
+                obscureText: true,
+                textInputAction: TextInputAction.next,
+                focusNode: _passwordNode,
+                onChanged: controller.updatePassword,
+                onSubmitted: (_) => _confirmNode.requestFocus(),
+                // Helper text is ALWAYS shown (guidance or error) — render
+                // via errorText slot so the colour swap follows the field
+                // border. Forest-green tone per Figma 971:10148 helper.
+                errorText: passwordHelper,
+                errorColor: AppColors.green,
+              ),
+              const SizedBox(height: AppSizes.md),
+              AppTextField(
+                key: const Key('reset_password_confirm_field'),
+                label: 'Retype Password',
+                hintText: 'Retype password',
+                obscureText: true,
+                textInputAction: TextInputAction.done,
+                focusNode: _confirmNode,
+                onChanged: controller.updateConfirmPassword,
+                onSubmitted: (_) {
+                  if (canSubmit) controller.submit();
+                },
+                errorText: confirmHelper,
+                errorColor: AppColors.green,
+              ),
+              if (state.errorMessage != null &&
+                  state.errorMessage != 'Password is too short' &&
+                  state.errorMessage != "Password doesn't match") ...[
                 const SizedBox(height: AppSizes.sm),
                 Text(
-                  guidance,
-                  style: textTheme.bodyLarge?.copyWith(color: AppColors.text),
-                  textAlign: TextAlign.left,
-                ),
-                const SizedBox(height: AppSizes.xl),
-                AppTextField(
-                  key: const Key('reset_password_new_field'),
-                  label: 'Password',
-                  hintText: 'Input password',
-                  obscureText: true,
-                  textInputAction: TextInputAction.next,
-                  focusNode: _passwordNode,
-                  onChanged: controller.updatePassword,
-                  onSubmitted: (_) => _confirmNode.requestFocus(),
-                  // Helper text is ALWAYS shown (guidance or error) — render
-                  // via errorText slot so the colour swap follows the field
-                  // border. Forest-green tone per Figma 971:10148 helper.
-                  errorText: passwordHelper,
-                  errorColor: AppColors.green,
-                ),
-                const SizedBox(height: AppSizes.md),
-                AppTextField(
-                  key: const Key('reset_password_confirm_field'),
-                  label: 'Retype Password',
-                  hintText: 'Retype password',
-                  obscureText: true,
-                  textInputAction: TextInputAction.done,
-                  focusNode: _confirmNode,
-                  onChanged: controller.updateConfirmPassword,
-                  onSubmitted: (_) {
-                    if (canSubmit) controller.submit();
-                  },
-                  errorText: confirmHelper,
-                  errorColor: AppColors.green,
-                ),
-                if (state.errorMessage != null &&
-                    state.errorMessage != 'Password is too short' &&
-                    state.errorMessage != "Password doesn't match") ...[
-                  const SizedBox(height: AppSizes.sm),
-                  Text(
-                    state.errorMessage!,
-                    style: textTheme.bodySmall?.copyWith(
-                      color: AppColors.error,
-                    ),
-                  ),
-                ],
-                const Spacer(),
-                AppPillButton(
-                  key: const Key('reset_password_submit_button'),
-                  label: 'Confirm',
-                  onPressed: canSubmit ? controller.submit : null,
-                  leading: state.isLoading
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.cream,
-                          ),
-                        )
-                      : null,
+                  state.errorMessage!,
+                  style: textTheme.bodySmall?.copyWith(color: AppColors.error),
                 ),
               ],
-            ),
+              const Spacer(),
+              AppPillButton(
+                key: const Key('reset_password_submit_button'),
+                label: 'Confirm',
+                onPressed: canSubmit ? controller.submit : null,
+                leading: state.isLoading
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.cream,
+                        ),
+                      )
+                    : null,
+              ),
+            ],
           ),
         ),
       ),

@@ -123,22 +123,15 @@ void main() {
   }) {
     when(() => mockBabyService.getBaby()).thenAnswer((_) async => _fakeBaby);
     when(
-      () => mockMealPlanService.getRolling7(
-        any(),
-        today: any(named: 'today'),
-      ),
+      () => mockMealPlanService.getRolling7(any(), today: any(named: 'today')),
     ).thenAnswer((_) async => Result.success(entries));
     when(
       () => mockRecipeService.getFlaggedAllergenKeys(any()),
     ).thenAnswer((_) async => const Result.success(<String>{}));
-    when(
-      () => mockAllergenService.getProgramState(any()),
-    ).thenAnswer(
+    when(() => mockAllergenService.getProgramState(any())).thenAnswer(
       (_) async => Result.success(programState ?? _makeProgramState()),
     );
-    when(
-      () => mockAllergenService.getAllergenBoardSummary(any()),
-    ).thenAnswer(
+    when(() => mockAllergenService.getAllergenBoardSummary(any())).thenAnswer(
       (_) async => const Result.success(<AllergenBoardItem>[
         AllergenBoardItem(
           allergen: _peanutAllergen,
@@ -153,72 +146,58 @@ void main() {
   }
 
   group('MealPlanController.build', () {
-    test(
-      'NIB-143: windowStart is most-recent Monday on/before today, '
-      'windowEnd is windowStart + 6 (Sunday), populates entries + baby, '
-      'expanded starts empty',
-      () async {
-        final entry = _makeEntry();
-        stubHappy(entries: [entry]);
+    test('NIB-143: windowStart is most-recent Monday on/before today, '
+        'windowEnd is windowStart + 6 (Sunday), populates entries + baby, '
+        'expanded starts empty', () async {
+      final entry = _makeEntry();
+      stubHappy(entries: [entry]);
 
-        final container = buildContainer();
-        final state = await container.read(
-          mealPlanControllerProvider(_babyId).future,
-        );
+      final container = buildContainer();
+      final state = await container.read(
+        mealPlanControllerProvider(_babyId).future,
+      );
 
-        final today = DateTime.now();
-        final todayDateOnly = DateTime(today.year, today.month, today.day);
-        final expectedStart = todayDateOnly.subtract(
-          Duration(days: todayDateOnly.weekday - 1),
-        );
-        final expectedEnd = expectedStart.add(const Duration(days: 6));
+      final today = DateTime.now();
+      final todayDateOnly = DateTime(today.year, today.month, today.day);
+      final expectedStart = todayDateOnly.subtract(
+        Duration(days: todayDateOnly.weekday - 1),
+      );
+      final expectedEnd = expectedStart.add(const Duration(days: 6));
 
-        expect(state.windowStart, expectedStart);
-        expect(state.windowStart.weekday, DateTime.monday);
-        expect(state.windowEnd, expectedEnd);
-        expect(state.windowEnd.weekday, DateTime.sunday);
-        expect(
-          state.windowEnd.difference(state.windowStart).inDays,
-          6,
-        );
-        expect(state.entries, hasLength(1));
-        expect(state.entries.single.id, 'mp-1');
-        expect(state.baby?.id, _babyId);
-        expect(state.expanded, isEmpty);
-        expect(state.recipes['recipe-001']?.title, 'Peanut Butter Toast');
-      },
-    );
+      expect(state.windowStart, expectedStart);
+      expect(state.windowStart.weekday, DateTime.monday);
+      expect(state.windowEnd, expectedEnd);
+      expect(state.windowEnd.weekday, DateTime.sunday);
+      expect(state.windowEnd.difference(state.windowStart).inDays, 6);
+      expect(state.entries, hasLength(1));
+      expect(state.entries.single.id, 'mp-1');
+      expect(state.baby?.id, _babyId);
+      expect(state.expanded, isEmpty);
+      expect(state.recipes['recipe-001']?.title, 'Peanut Butter Toast');
+    });
 
-    test(
-      'NIB-143: getRolling7 is invoked with the Monday windowStart, '
-      'not today',
-      () async {
-        stubHappy();
-        final container = buildContainer();
-        await container.read(mealPlanControllerProvider(_babyId).future);
+    test('NIB-143: getRolling7 is invoked with the Monday windowStart, '
+        'not today', () async {
+      stubHappy();
+      final container = buildContainer();
+      await container.read(mealPlanControllerProvider(_babyId).future);
 
-        final today = DateTime.now();
-        final todayDateOnly = DateTime(today.year, today.month, today.day);
-        final expectedStart = todayDateOnly.subtract(
-          Duration(days: todayDateOnly.weekday - 1),
-        );
+      final today = DateTime.now();
+      final todayDateOnly = DateTime(today.year, today.month, today.day);
+      final expectedStart = todayDateOnly.subtract(
+        Duration(days: todayDateOnly.weekday - 1),
+      );
 
-        verify(
-          () => mockMealPlanService.getRolling7(
-            _babyId,
-            today: expectedStart,
-          ),
-        ).called(1);
-      },
-    );
+      verify(
+        () => mockMealPlanService.getRolling7(_babyId, today: expectedStart),
+      ).called(1);
+    });
 
     test('build() with getRolling7 failure surfaces AsyncError', () async {
       when(() => mockBabyService.getBaby()).thenAnswer((_) async => _fakeBaby);
       when(
-        () => mockMealPlanService.getRolling7(
-          any(),
-          today: any(named: 'today'),
-        ),
+        () =>
+            mockMealPlanService.getRolling7(any(), today: any(named: 'today')),
       ).thenAnswer(
         (_) async => const Result.failure(ServerException('db down')),
       );
@@ -252,21 +231,19 @@ void main() {
       final key = DateTime.utc(2026, 5, 30);
 
       notifier.toggleExpanded(day);
-      var state =
-          container.read(mealPlanControllerProvider(_babyId)).valueOrNull!;
+      var state = container
+          .read(mealPlanControllerProvider(_babyId))
+          .valueOrNull!;
       expect(state.expanded[key], isTrue);
 
       notifier.toggleExpanded(day);
-      state =
-          container.read(mealPlanControllerProvider(_babyId)).valueOrNull!;
+      state = container.read(mealPlanControllerProvider(_babyId)).valueOrNull!;
       expect(state.expanded[key], isFalse);
 
       // Toggle does not refetch.
       verify(
-        () => mockMealPlanService.getRolling7(
-          any(),
-          today: any(named: 'today'),
-        ),
+        () =>
+            mockMealPlanService.getRolling7(any(), today: any(named: 'today')),
       ).called(1);
     });
   });
@@ -303,10 +280,8 @@ void main() {
 
       expect(ok, isTrue);
       verify(
-        () => mockMealPlanService.getRolling7(
-          any(),
-          today: any(named: 'today'),
-        ),
+        () =>
+            mockMealPlanService.getRolling7(any(), today: any(named: 'today')),
       ).called(2);
     });
 
@@ -340,10 +315,8 @@ void main() {
       expect(ok, isFalse);
       // Only the initial build call — no invalidation.
       verify(
-        () => mockMealPlanService.getRolling7(
-          any(),
-          today: any(named: 'today'),
-        ),
+        () =>
+            mockMealPlanService.getRolling7(any(), today: any(named: 'today')),
       ).called(1);
     });
   });
@@ -369,10 +342,8 @@ void main() {
 
       expect(ok, isTrue);
       verify(
-        () => mockMealPlanService.getRolling7(
-          any(),
-          today: any(named: 'today'),
-        ),
+        () =>
+            mockMealPlanService.getRolling7(any(), today: any(named: 'today')),
       ).called(2);
     });
 
@@ -397,10 +368,8 @@ void main() {
 
       expect(ok, isFalse);
       verify(
-        () => mockMealPlanService.getRolling7(
-          any(),
-          today: any(named: 'today'),
-        ),
+        () =>
+            mockMealPlanService.getRolling7(any(), today: any(named: 'today')),
       ).called(1);
     });
   });
@@ -422,10 +391,8 @@ void main() {
 
       expect(ok, isTrue);
       verify(
-        () => mockMealPlanService.getRolling7(
-          any(),
-          today: any(named: 'today'),
-        ),
+        () =>
+            mockMealPlanService.getRolling7(any(), today: any(named: 'today')),
       ).called(2);
     });
 
@@ -434,8 +401,7 @@ void main() {
       when(
         () => mockMealPlanService.assignRecipe(any(), any(), any()),
       ).thenAnswer(
-        (_) async =>
-            const Result.failure(ServerException('assign failed')),
+        (_) async => const Result.failure(ServerException('assign failed')),
       );
 
       final container = buildContainer();
@@ -447,10 +413,8 @@ void main() {
 
       expect(ok, isFalse);
       verify(
-        () => mockMealPlanService.getRolling7(
-          any(),
-          today: any(named: 'today'),
-        ),
+        () =>
+            mockMealPlanService.getRolling7(any(), today: any(named: 'today')),
       ).called(1);
     });
   });
@@ -472,18 +436,14 @@ void main() {
 
       expect(ok, isTrue);
       verify(
-        () => mockMealPlanService.getRolling7(
-          any(),
-          today: any(named: 'today'),
-        ),
+        () =>
+            mockMealPlanService.getRolling7(any(), today: any(named: 'today')),
       ).called(2);
     });
 
     test('returns false on failure, does NOT invalidate self', () async {
       stubHappy();
-      when(
-        () => mockMealPlanService.removeEntry(any()),
-      ).thenAnswer(
+      when(() => mockMealPlanService.removeEntry(any())).thenAnswer(
         (_) async =>
             const Result<void>.failure(ServerException('delete failed')),
       );
@@ -497,10 +457,8 @@ void main() {
 
       expect(ok, isFalse);
       verify(
-        () => mockMealPlanService.getRolling7(
-          any(),
-          today: any(named: 'today'),
-        ),
+        () =>
+            mockMealPlanService.getRolling7(any(), today: any(named: 'today')),
       ).called(1);
     });
   });
@@ -522,18 +480,14 @@ void main() {
 
       expect(ok, isTrue);
       verify(
-        () => mockMealPlanService.getRolling7(
-          any(),
-          today: any(named: 'today'),
-        ),
+        () =>
+            mockMealPlanService.getRolling7(any(), today: any(named: 'today')),
       ).called(2);
     });
 
     test('returns false on failure, does NOT invalidate self', () async {
       stubHappy();
-      when(
-        () => mockMealPlanService.clearDay(any(), any()),
-      ).thenAnswer(
+      when(() => mockMealPlanService.clearDay(any(), any())).thenAnswer(
         (_) async =>
             const Result<void>.failure(ServerException('clear failed')),
       );
@@ -547,10 +501,8 @@ void main() {
 
       expect(ok, isFalse);
       verify(
-        () => mockMealPlanService.getRolling7(
-          any(),
-          today: any(named: 'today'),
-        ),
+        () =>
+            mockMealPlanService.getRolling7(any(), today: any(named: 'today')),
       ).called(1);
     });
   });

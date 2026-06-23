@@ -43,5 +43,24 @@ final currentBabyIdProvider = AutoDisposeFutureProvider<String?>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef CurrentBabyIdRef = AutoDisposeFutureProviderRef<String?>;
+String _$currentBabyHash() => r'6ae3f660d6ea2e3b41b2d793803157a7faa31f7f';
+
+/// Fetches the current baby entity. Returns null if no baby exists yet.
+///
+/// Copied from [currentBaby].
+@ProviderFor(currentBaby)
+final currentBabyProvider = AutoDisposeFutureProvider<Baby?>.internal(
+  currentBaby,
+  name: r'currentBabyProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$currentBabyHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef CurrentBabyRef = AutoDisposeFutureProviderRef<Baby?>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

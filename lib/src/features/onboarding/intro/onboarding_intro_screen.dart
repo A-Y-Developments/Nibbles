@@ -7,27 +7,9 @@ import 'package:nibbles/gen/assets.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
-import 'package:nibbles/src/common/components/buttons/app_round_button.dart';
-import 'package:nibbles/src/common/components/controls/app_checkbox.dart';
 import 'package:nibbles/src/common/services/local_flag_service.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 
-/// Pre-auth value-prop carousel — 3 device-mockup slides per NIB-60.
-///
-/// Layout per Figma frames 971:10019 / 1242:10897 / 1242:11124:
-///   - shared eyebrow "We'll Help You with" + per-slide Parkinsans bold title
-///   - per-slide phone-mockup illustration (flattened PNGs exported from Figma)
-///   - per-slide Figtree body copy (verbatim from spec; slide-3 duplicates
-///     slide-2 body per audit — PO open question, do not paraphrase)
-///   - bottom row: lime round back-arrow + forestDarkn "Let's Go" pill,
-///     always visible (back is no-op on slide 1).
-///
-/// Behavior:
-///   - PageView of 3 slides; auto-advance every 10s while no user interaction
-///   - dot indicator (active = greenDeep / forestDarkn widened pill) stays
-///     in sync with the live page index
-///   - "Let's Go" on slides 1/2 advances PageView; on slide 3 it flips
-///     app_has_launched and pushes /auth/login
 class OnboardingIntroScreen extends ConsumerStatefulWidget {
   const OnboardingIntroScreen({super.key});
 
@@ -36,137 +18,198 @@ class OnboardingIntroScreen extends ConsumerStatefulWidget {
       _OnboardingIntroScreenState();
 }
 
-class _OnboardingIntroScreenState extends ConsumerState<OnboardingIntroScreen> {
-  // Verbatim copy from .figma-audit/onboarding/{meal-prep-guidance,
-  // grocery-shopping,recipes-meal-planning}/report.md. Straight apostrophes
-  // intentional (ticket explicit). Slide-3 body duplicates slide-2 — flagged
-  // as PO open question on NIB-60.
-  static const _slides = <_IntroSlideData>[
-    _IntroSlideData(
+class _OnboardingIntroScreenState extends ConsumerState<OnboardingIntroScreen>
+    with SingleTickerProviderStateMixin {
+  static final _slides = <_SlideData>[
+    _SlideData(
       title: 'Meal Prep Guidance',
-      body: "We'll help you plan, prepare, and stay consistent with "
+      body:
+          "We'll help you plan, prepare, and stay consistent with "
           'smarter daily meal choices.',
+      image: Assets.images.onboarding.introMealPrep,
+      popup: Assets.images.onboarding.introMealPrepOverlay,
+      popupAlignment: const Alignment(0, -0.18),
+      popupWidthFactor: 0.9,
     ),
-    _IntroSlideData(
+    _SlideData(
       title: 'Grocery Shopping',
-      body: "We'll help you organize your grocery shopping based on your "
+      body:
+          "We'll help you organize your grocery shopping based on your "
           'meal plan, preferences, and daily needs.',
+      image: Assets.images.onboarding.introShoppingList,
+      popup: Assets.images.onboarding.introShoppingListOverlay,
+      popupAlignment: const Alignment(0, -0.05),
+      popupWidthFactor: 0.89,
     ),
-    _IntroSlideData(
+    _SlideData(
       title: 'Recipes & Meal Planning',
-      body: "We'll help you organize your grocery shopping based on your "
+      body:
+          "We'll help you organize your grocery shopping based on your "
           'meal plan, preferences, and daily needs.',
+      image: Assets.images.onboarding.introShoppingList,
     ),
   ];
 
-  static const Duration _autoAdvanceInterval = Duration(seconds: 10);
-  static const Duration _pageAnimDuration = Duration(milliseconds: 280);
+  static const Duration _autoAdvanceInterval = Duration(seconds: 5);
+  static const Duration _switchDuration = Duration(milliseconds: 400);
+  static const Duration _popupAnimDuration = Duration(milliseconds: 400);
+  static const Duration _popupStartDelay = Duration(milliseconds: 300);
 
-  final _pageController = PageController();
-  int _currentPage = 0;
+  late final AnimationController _popupAnim;
+  late final Animation<double> _popupOpacity;
+  late final Animation<Offset> _popupSlide;
+
+  int _currentSlide = 0;
   Timer? _autoAdvanceTimer;
+  Timer? _popupDelayTimer;
 
   @override
   void initState() {
     super.initState();
+    _popupAnim = AnimationController(vsync: this, duration: _popupAnimDuration);
+    _popupOpacity = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _popupAnim, curve: Curves.easeOut));
+    _popupSlide = Tween<Offset>(
+      begin: const Offset(0, 0.15),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _popupAnim, curve: Curves.easeOut));
+
     _scheduleAutoAdvance();
+    _schedulePopupAnim();
   }
 
   @override
   void dispose() {
     _autoAdvanceTimer?.cancel();
-    _pageController.dispose();
+    _popupDelayTimer?.cancel();
+    _popupAnim.dispose();
     super.dispose();
   }
 
-  bool get _isLast => _currentPage == _slides.length - 1;
-
   void _scheduleAutoAdvance() {
     _autoAdvanceTimer?.cancel();
-    // Last slide does not auto-advance — never auto-navigate into auth.
-    if (_isLast) return;
-    _autoAdvanceTimer = Timer(_autoAdvanceInterval, _advanceFromTimer);
+    _autoAdvanceTimer = Timer(_autoAdvanceInterval, _advanceSlide);
   }
 
-  void _advanceFromTimer() {
-    if (!mounted || _isLast) return;
-    _pageController.nextPage(
-      duration: _pageAnimDuration,
-      curve: Curves.easeInOut,
-    );
+  void _schedulePopupAnim() {
+    _popupDelayTimer?.cancel();
+    _popupAnim.reset();
+    _popupDelayTimer = Timer(_popupStartDelay, () {
+      if (mounted) _popupAnim.forward();
+    });
   }
 
-  void _onPageChanged(int page) {
-    setState(() => _currentPage = page);
+  void _advanceSlide() {
+    if (!mounted) return;
+    setState(() {
+      _currentSlide = (_currentSlide + 1) % _slides.length;
+    });
     _scheduleAutoAdvance();
+    _schedulePopupAnim();
   }
 
   Future<void> _onPrimaryPressed() async {
     _autoAdvanceTimer?.cancel();
-    if (_isLast) {
-      // Ensure GoRouter redirect step 1 doesn't bounce us back to intro.
-      ref.read(localFlagServiceProvider).setHasLaunched();
-      if (!mounted) return;
-      context.goNamed(AppRoute.login.name);
-      return;
-    }
-    await _pageController.nextPage(
-      duration: _pageAnimDuration,
-      curve: Curves.easeInOut,
-    );
-  }
-
-  void _onBackPressed() {
-    if (_currentPage == 0) return;
-    _autoAdvanceTimer?.cancel();
-    _pageController.previousPage(
-      duration: _pageAnimDuration,
-      curve: Curves.easeInOut,
-    );
+    ref.read(localFlagServiceProvider).setHasLaunched();
+    if (!mounted) return;
+    context.goNamed(AppRoute.login.name);
   }
 
   @override
   Widget build(BuildContext context) {
+    final slide = _slides[_currentSlide];
+
     return Scaffold(
-      body: DecoratedBox(
-        decoration: const BoxDecoration(
-          // Grad-1 ≈ butter-soft -> cream top->bottom per design_context.md.
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [AppColors.butterSoft, AppColors.cream],
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          AnimatedSwitcher(
+            duration: _switchDuration,
+            switchInCurve: Curves.easeOut,
+            switchOutCurve: Curves.easeIn,
+            transitionBuilder: _slideFadeTransition,
+            child: _SlideImage(key: ValueKey(_currentSlide), slide: slide),
           ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              Expanded(
-                child: NotificationListener<ScrollNotification>(
-                  onNotification: (n) {
-                    // Pause auto-advance while the user is dragging.
-                    if (n is ScrollStartNotification) {
-                      _autoAdvanceTimer?.cancel();
-                    }
-                    return false;
-                  },
-                  child: PageView.builder(
-                    controller: _pageController,
-                    itemCount: _slides.length,
-                    onPageChanged: _onPageChanged,
-                    itemBuilder: (context, index) => _IntroSlide(
-                      data: _slides[index],
-                      slideIndex: index,
-                    ),
-                  ),
-                ),
+          if (slide.popup != null)
+            _SlidePopup(
+              slide: slide,
+              opacity: _popupOpacity,
+              offset: _popupSlide,
+            ),
+          SafeArea(
+            child: Column(
+              children: [
+                const SizedBox(height: AppSizes.lg),
+                _TitleBlock(slide: slide),
+                const Spacer(),
+                _BottomContent(slide: slide, onPrimary: _onPrimaryPressed),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _slideFadeTransition(Widget child, Animation<double> animation) {
+    final slide = Tween<Offset>(
+      begin: const Offset(0, 0.08),
+      end: Offset.zero,
+    ).animate(animation);
+    return FadeTransition(
+      opacity: animation,
+      child: SlideTransition(position: slide, child: child),
+    );
+  }
+}
+
+class _SlideData {
+  const _SlideData({
+    required this.title,
+    required this.body,
+    required this.image,
+    this.popup,
+    this.popupAlignment = Alignment.center,
+    this.popupWidthFactor = 0.8,
+  });
+
+  final String title;
+  final String body;
+  final AssetGenImage image;
+  final AssetGenImage? popup;
+  final Alignment popupAlignment;
+  final double popupWidthFactor;
+}
+
+class _SlidePopup extends StatelessWidget {
+  const _SlidePopup({
+    required this.slide,
+    required this.opacity,
+    required this.offset,
+  });
+
+  final _SlideData slide;
+  final Animation<double> opacity;
+  final Animation<Offset> offset;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Align(
+        alignment: slide.popupAlignment,
+        child: FadeTransition(
+          opacity: opacity,
+          child: SlideTransition(
+            position: offset,
+            child: FractionallySizedBox(
+              widthFactor: slide.popupWidthFactor,
+              child: slide.popup!.image(
+                fit: BoxFit.fitWidth,
+                excludeFromSemantics: true,
               ),
-              _BottomSection(
-                currentPage: _currentPage,
-                slideCount: _slides.length,
-                onPrimary: _onPrimaryPressed,
-                onBack: _onBackPressed,
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -174,249 +217,89 @@ class _OnboardingIntroScreenState extends ConsumerState<OnboardingIntroScreen> {
   }
 }
 
-class _IntroSlideData {
-  const _IntroSlideData({required this.title, required this.body});
+class _SlideImage extends StatelessWidget {
+  const _SlideImage({required this.slide, super.key});
 
-  final String title;
-  final String body;
+  final _SlideData slide;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: slide.image.image(
+        width: double.infinity,
+        fit: BoxFit.fitWidth,
+        excludeFromSemantics: true,
+      ),
+    );
+  }
 }
 
-class _IntroSlide extends StatelessWidget {
-  const _IntroSlide({required this.data, required this.slideIndex});
+class _TitleBlock extends StatelessWidget {
+  const _TitleBlock({required this.slide});
 
-  final _IntroSlideData data;
-  final int slideIndex;
+  final _SlideData slide;
 
   static const _eyebrow = "We'll Help You with";
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    // Title 1/Bold per variables.json — Parkinsans 22/34 (height 1.5454…).
-    final titleStyle = textTheme.titleLarge?.copyWith(
-      color: AppColors.text,
-      height: 34 / 22,
-    );
-    // Body/Regular per variables.json — Figtree 15/22 (height 1.4666…).
-    final bodyStyle = textTheme.bodyLarge?.copyWith(
-      color: AppColors.text,
-      height: 22 / 15,
-    );
-
+    final style = Theme.of(
+      context,
+    ).textTheme.titleLarge?.copyWith(color: AppColors.text, height: 34 / 22);
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.pagePaddingH,
-        vertical: AppSizes.lg,
-      ),
-      child: Column(
-        children: [
-          // Headline block — eyebrow + per-slide title, centered, top of slide.
-          Text(
-            _eyebrow,
-            textAlign: TextAlign.center,
-            style: titleStyle,
-          ),
-          Text(
-            data.title,
-            textAlign: TextAlign.center,
-            style: titleStyle,
-          ),
-          if (slideIndex == 1) ...[
-            const SizedBox(height: AppSizes.xl),
-            const _AppleShoplistRow(),
+      padding: const EdgeInsets.symmetric(horizontal: AppSizes.pagePaddingH),
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        child: Column(
+          key: ValueKey(slide.title),
+          children: [
+            Text(_eyebrow, textAlign: TextAlign.center, style: style),
+            Text(slide.title, textAlign: TextAlign.center, style: style),
           ],
-          Expanded(
-            child: _SlideIllustration(slideIndex: slideIndex),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSizes.sm,
-            ),
-            child: Text(
-              data.body,
-              textAlign: TextAlign.center,
-              style: bodyStyle,
-            ),
-          ),
-          const SizedBox(height: AppSizes.md),
-        ],
+        ),
       ),
     );
   }
 }
 
-/// Slide-2 animated shoplist demo row — checkbox + "Apple" + cancel chip on
-/// `#fffeea`. Spec source: grocery-shopping/report.md "Shoplist-animation".
-class _AppleShoplistRow extends StatelessWidget {
-  const _AppleShoplistRow();
+class _BottomContent extends StatelessWidget {
+  const _BottomContent({required this.slide, required this.onPrimary});
 
-  // Spec literal — `bg #fffeea` per audit. No matching token in app_colors.
-  static const Color _bg = Color(0xFFFFFEEA);
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return Container(
-      key: const Key('onboarding_intro_apple_row'),
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.md,
-        vertical: AppSizes.sp12,
-      ),
-      decoration: BoxDecoration(
-        color: _bg,
-        borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-      ),
-      child: Row(
-        children: [
-          AppCheckbox(value: false, onChanged: (_) {}),
-          const SizedBox(width: AppSizes.sp12),
-          Expanded(
-            child: Text(
-              'Apple',
-              style: textTheme.bodyLarge?.copyWith(color: AppColors.text),
-            ),
-          ),
-          const Icon(
-            Icons.cancel,
-            color: AppColors.destructive,
-            size: AppSizes.iconMd,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Per-slide phone-mockup illustration. Flattened transparent PNGs exported
-/// from Figma (file ASB9HZLodbzJCo5bjkqjy6):
-///   - slide 0 (Meal Prep): phone with the floating TODAY MEALS / ALLERGEN
-///     stats card composited over it (Figma 971:10019)
-///   - slides 1 & 2 (Grocery / Recipes): shared Shopping List mockup — slide 2
-///     reuses slide 1's frame per Figma (duplicate body flagged on NIB-60)
-///
-/// Each PNG has a baked bottom alpha-fade; rendered top-aligned and clipped so
-/// the phone dissolves into the background gradient like the Figma frames.
-class _SlideIllustration extends StatelessWidget {
-  const _SlideIllustration({required this.slideIndex});
-
-  final int slideIndex;
-
-  AssetGenImage get _asset => switch (slideIndex) {
-    0 => Assets.images.onboarding.introMealPrep,
-    _ => Assets.images.onboarding.introShoppingList,
-  };
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return ClipRect(
-          child: OverflowBox(
-            alignment: Alignment.topCenter,
-            maxHeight: double.infinity,
-            child: _asset.image(
-              width: constraints.maxWidth * 0.92,
-              fit: BoxFit.fitWidth,
-              excludeFromSemantics: true,
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _BottomSection extends StatelessWidget {
-  const _BottomSection({
-    required this.currentPage,
-    required this.slideCount,
-    required this.onPrimary,
-    required this.onBack,
-  });
-
-  final int currentPage;
-  final int slideCount;
+  final _SlideData slide;
   final VoidCallback onPrimary;
-  final VoidCallback onBack;
 
   @override
   Widget build(BuildContext context) {
+    final bodyStyle = Theme.of(
+      context,
+    ).textTheme.bodyLarge?.copyWith(color: AppColors.text, height: 22 / 15);
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSizes.pagePaddingH,
-        AppSizes.md,
+        0,
         AppSizes.pagePaddingH,
         AppSizes.pagePaddingV,
       ),
       child: Column(
         children: [
-          Semantics(
-            container: true,
-            liveRegion: true,
-            label: 'Page ${currentPage + 1} of $slideCount',
-            excludeSemantics: true,
-            child: _DotIndicator(
-              count: slideCount,
-              currentIndex: currentPage,
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            child: Text(
+              slide.body,
+              key: ValueKey(slide.body),
+              textAlign: TextAlign.center,
+              style: bodyStyle,
             ),
           ),
           const SizedBox(height: AppSizes.lg),
-          Row(
-            children: [
-              AppRoundButton(
-                key: const Key('onboarding_intro_back'),
-                icon: const Icon(Icons.arrow_back),
-                tone: AppRoundButtonTone.butter,
-                // Disable on slide 1 — no previous slide.
-                onPressed: currentPage == 0 ? null : onBack,
-                semanticLabel: 'Back',
-              ),
-              const SizedBox(width: AppSizes.sp12),
-              Expanded(
-                child: AppPillButton(
-                  key: const Key('onboarding_intro_primary'),
-                  label: "Let's Go",
-                  onPressed: onPrimary,
-                ),
-              ),
-            ],
+          AppPillButton(
+            key: const Key('onboarding_intro_primary'),
+            label: "Let's Go!",
+            onPressed: onPrimary,
           ),
         ],
       ),
-    );
-  }
-}
-
-/// Inline animated dot indicator. Active dot widens into a forestDarkn pill.
-/// Spec forbids extracting this into a shared widget.
-class _DotIndicator extends StatelessWidget {
-  const _DotIndicator({
-    required this.count,
-    required this.currentIndex,
-  });
-
-  final int count;
-  final int currentIndex;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List<Widget>.generate(count, (i) {
-        final active = i == currentIndex;
-        return AnimatedContainer(
-          key: Key('onboarding_intro_dot_$i'),
-          duration: const Duration(milliseconds: 240),
-          curve: Curves.easeOut,
-          margin: const EdgeInsets.symmetric(horizontal: AppSizes.xs),
-          width: active ? AppSizes.sp20 : AppSizes.sm,
-          height: AppSizes.sm,
-          decoration: BoxDecoration(
-            color: active ? AppColors.greenDeep : AppColors.borderMuted,
-            borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-          ),
-        );
-      }),
     );
   }
 }

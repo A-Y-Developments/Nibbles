@@ -4,29 +4,22 @@ import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/cards/app_card.dart';
 import 'package:nibbles/src/common/components/chips/app_chip.dart';
 
-/// Recipe banner card — sits just under the hero image. Shows the title,
-/// a "Best for $ageRange" subtitle line, and the diet (nutrition) chips.
-///
-/// Mirrors Figma node 1129:13972 (recipe-library-detail-1 / -2). Figma has
-/// no separate category pill on this card — `category` is intentionally
-/// ignored at the visual layer for the redesign.
+/// White info card that overlaps the bottom of the hero image. Shows the
+/// recipe title, a "Best for $ageRange" subtitle, and the nutrition chips.
+/// Figma node 1129:13972.
 class RecipeBannerCard extends StatelessWidget {
   const RecipeBannerCard({
     required this.title,
     required this.ageRange,
     required this.nutritionTags,
-    this.category,
+    this.makes,
     super.key,
   });
 
   final String title;
   final String ageRange;
   final List<String> nutritionTags;
-
-  /// Retained on the constructor for compatibility with the existing
-  /// controller wiring. Not rendered in the redesign — Figma omits a
-  /// category pill on this card.
-  final String? category;
+  final String? makes;
 
   String _humanize(String raw) {
     return raw
@@ -39,13 +32,11 @@ class RecipeBannerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final hasDietChips = nutritionTags.isNotEmpty;
+    final hasChips = nutritionTags.isNotEmpty;
+    final makesLabel = makes;
 
     return AppCard(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.md,
-        vertical: AppSizes.md,
-      ),
+      padding: const EdgeInsets.all(AppSizes.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -63,14 +54,22 @@ class RecipeBannerCard extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          if (hasDietChips) ...[
+          if (makesLabel != null && makesLabel.isNotEmpty) ...[
+            const SizedBox(height: AppSizes.xs),
+            Text(
+              'Makes $makesLabel',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: AppColors.fgMuted,
+              ),
+            ),
+          ],
+          if (hasChips) ...[
             const SizedBox(height: AppSizes.sm),
             Wrap(
               spacing: AppSizes.xs,
               runSpacing: AppSizes.xs,
               children: [
-                for (final tag in nutritionTags)
-                  AppChip(label: _humanize(tag)),
+                for (final tag in nutritionTags) AppChip(label: _humanize(tag)),
               ],
             ),
           ],

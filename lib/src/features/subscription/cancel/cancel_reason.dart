@@ -30,14 +30,8 @@ enum CancelReason {
     analyticsKey: 'no_longer_needed',
   ),
   // Verbatim double space preserved per Figma 1216:12034.
-  accidental(
-    label: 'I subscribed by  accident',
-    analyticsKey: 'accidental',
-  ),
-  other(
-    label: 'Other',
-    analyticsKey: 'other',
-  );
+  accidental(label: 'I subscribed by  accident', analyticsKey: 'accidental'),
+  other(label: 'Other', analyticsKey: 'other');
 
   const CancelReason({required this.label, required this.analyticsKey});
 

@@ -26,10 +26,9 @@ class OnboardingBabySetupScreen extends ConsumerWidget {
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) controller.previousStep();
       },
-      child: Scaffold(
-        backgroundColor: AppColors.background,
+      child: GradientScaffold(
         appBar: AppBar(
-          backgroundColor: AppColors.background,
+          backgroundColor: Colors.transparent,
           elevation: 0,
           leading: state.step > 0
               ? IconButton(

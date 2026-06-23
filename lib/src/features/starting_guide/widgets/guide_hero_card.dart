@@ -10,11 +10,7 @@ import 'package:nibbles/src/features/starting_guide/widgets/baby_face_glyph.dart
 /// (kit.css line 102-117): `bg-card-tint`, `r-xl` radius, 14px 16px padding,
 /// `.tip__ttl` title (700 14px/1.2 Parkinsans, fg-strong).
 class GuideHeroCard extends StatelessWidget {
-  const GuideHeroCard({
-    required this.title,
-    required this.subtitle,
-    super.key,
-  });
+  const GuideHeroCard({required this.title, required this.subtitle, super.key});
 
   final String title;
   final String subtitle;

@@ -55,9 +55,7 @@ class GuidePhilosophyCard extends StatelessWidget {
                 Wrap(
                   spacing: AppSizes.sm,
                   runSpacing: AppSizes.sm,
-                  children: [
-                    for (final label in chips) AppChip(label: label),
-                  ],
+                  children: [for (final label in chips) AppChip(label: label)],
                 ),
               ],
             ),

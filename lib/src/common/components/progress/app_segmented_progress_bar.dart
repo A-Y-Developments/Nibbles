@@ -18,8 +18,8 @@ class AppSegmentedProgressBar extends StatelessWidget {
     this.tone = AppSegmentedProgressTone.green,
     this.height = 8,
     super.key,
-  })  : assert(filledCount >= 0, 'filledCount must be >= 0'),
-        assert(totalSegments > 0, 'totalSegments must be > 0');
+  }) : assert(filledCount >= 0, 'filledCount must be >= 0'),
+       assert(totalSegments > 0, 'totalSegments must be > 0');
 
   /// Number of filled segments (clamped to [totalSegments]).
   final int filledCount;

@@ -164,9 +164,7 @@ void main() {
   testWidgets(
     'P0 boot failure renders the Try again retry UI (no navigation)',
     (tester) async {
-      when(
-        () => babyProfile.getBaby(),
-      ).thenThrow(Exception('no connectivity'));
+      when(() => babyProfile.getBaby()).thenThrow(Exception('no connectivity'));
       final router = _makeRouter();
 
       await tester.pumpWidget(
@@ -223,26 +221,25 @@ void main() {
   // Analytics
   // ---------------------------------------------------------------------------
 
-  testWidgets(
-    'emits app_open (boot) and screen_view(splash) (first frame)',
-    (tester) async {
-      final router = _makeRouter();
+  testWidgets('emits app_open (boot) and screen_view(splash) (first frame)', (
+    tester,
+  ) async {
+    final router = _makeRouter();
 
-      await tester.pumpWidget(
-        _buildSut(babyProfile: babyProfile, flags: flags, router: router),
-      );
-      await tester.pump(const Duration(seconds: 2));
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(
+      _buildSut(babyProfile: babyProfile, flags: flags, router: router),
+    );
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pumpAndSettle();
 
-      final names = analytics.loggedEvents.map((e) => e['name']).toList();
-      expect(names, contains('app_open'));
-      expect(names, contains('screen_view'));
+    final names = analytics.loggedEvents.map((e) => e['name']).toList();
+    expect(names, contains('app_open'));
+    expect(names, contains('screen_view'));
 
-      final screenView = analytics.loggedEvents.firstWhere(
-        (e) => e['name'] == 'screen_view',
-      );
-      final params = screenView['parameters'] as Map<String, Object?>?;
-      expect(params?['screen_name'], 'splash');
-    },
-  );
+    final screenView = analytics.loggedEvents.firstWhere(
+      (e) => e['name'] == 'screen_view',
+    );
+    final params = screenView['parameters'] as Map<String, Object?>?;
+    expect(params?['screen_name'], 'splash');
+  });
 }

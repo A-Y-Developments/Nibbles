@@ -50,12 +50,11 @@ class _FakeChain<T> implements PostgrestFilterBuilder<T> {
       );
 
   @override
-  PostgrestTransformBuilder<PostgrestMap> single() =>
-      _FakeChain<PostgrestMap>(
-        payload: _payload,
-        error: _error,
-        filters: _recordedFilters,
-      );
+  PostgrestTransformBuilder<PostgrestMap> single() => _FakeChain<PostgrestMap>(
+    payload: _payload,
+    error: _error,
+    filters: _recordedFilters,
+  );
 
   @override
   PostgrestTransformBuilder<PostgrestMap?> maybeSingle() =>
@@ -72,20 +71,16 @@ class _FakeChain<T> implements PostgrestFilterBuilder<T> {
   }) => _future.then(onValue, onError: onError);
 
   @override
-  Future<T> catchError(
-    Function onError, {
-    bool Function(Object error)? test,
-  }) => _future.catchError(onError, test: test);
+  Future<T> catchError(Function onError, {bool Function(Object error)? test}) =>
+      _future.catchError(onError, test: test);
 
   @override
   Future<T> whenComplete(FutureOr<void> Function() action) =>
       _future.whenComplete(action);
 
   @override
-  Future<T> timeout(
-    Duration timeLimit, {
-    FutureOr<T> Function()? onTimeout,
-  }) => _future.timeout(timeLimit, onTimeout: onTimeout);
+  Future<T> timeout(Duration timeLimit, {FutureOr<T> Function()? onTimeout}) =>
+      _future.timeout(timeLimit, onTimeout: onTimeout);
 
   @override
   Stream<T> asStream() => _future.asStream();
@@ -269,9 +264,7 @@ void main() {
       final builder = _FakeQueryBuilder(
         payload: _babyRow(name: 'Max', gender: 'male'),
       );
-      when(
-        () => mockSupabase.from('babies'),
-      ).thenAnswer((_) => builder);
+      when(() => mockSupabase.from('babies')).thenAnswer((_) => builder);
 
       final result = await buildSut().updateBaby(
         'baby-1',
@@ -385,10 +378,7 @@ void main() {
     });
 
     test('returns false on error', () async {
-      stubTable(
-        'babies',
-        error: const PostgrestException(message: 'db error'),
-      );
+      stubTable('babies', error: const PostgrestException(message: 'db error'));
 
       final result = await buildSut().isOnboardingCompleted();
 

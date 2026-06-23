@@ -12,5 +12,6 @@ class Baby with _$Baby {
     required DateTime dateOfBirth,
     required Gender gender,
     required bool onboardingCompleted,
+    @Default(<bool>[]) List<bool> readinessSigns,
   }) = _Baby;
 }

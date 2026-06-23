@@ -38,16 +38,16 @@ class AllergenTrackerScreen extends ConsumerWidget {
     final babyIdAsync = ref.watch(currentBabyIdProvider);
 
     return babyIdAsync.when(
-      loading: () => const _GradientScaffold(
-        child: Center(child: CircularProgressIndicator()),
+      loading: () => const GradientScaffold(
+        body: Center(child: CircularProgressIndicator()),
       ),
-      error: (_, __) => const _GradientScaffold(
-        child: Center(child: Text('Could not load baby profile.')),
+      error: (_, __) => const GradientScaffold(
+        body: Center(child: Text('Could not load baby profile.')),
       ),
       data: (babyId) {
         if (babyId == null) {
-          return const _GradientScaffold(
-            child: Center(child: Text('No baby profile found.')),
+          return const GradientScaffold(
+            body: Center(child: Text('No baby profile found.')),
           );
         }
         return _TrackerBody(babyId: babyId);
@@ -75,8 +75,8 @@ class _TrackerBodyState extends ConsumerState<_TrackerBody> {
       allergenTrackerControllerProvider(widget.babyId),
     );
 
-    return _GradientScaffold(
-      child: SafeArea(
+    return GradientScaffold(
+      body: SafeArea(
         bottom: false,
         child: trackerAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
@@ -102,9 +102,7 @@ class _TrackerBodyState extends ConsumerState<_TrackerBody> {
     if (index == _segmentIndex) return;
     setState(() => _segmentIndex = index);
     final segment = index == 1 ? 'big_11' : 'ongoing';
-    unawaited(
-      Analytics.instance.logAllergenSegmentChanged(segment: segment),
-    );
+    unawaited(Analytics.instance.logAllergenSegmentChanged(segment: segment));
   }
 
   Future<void> _startIntroduce(Allergen allergen) async {
@@ -119,36 +117,6 @@ class _TrackerBodyState extends ConsumerState<_TrackerBody> {
     if ((logged ?? false) && mounted) {
       ref.invalidate(allergenTrackerControllerProvider(widget.babyId));
     }
-  }
-}
-
-/// Scaffold with the Figma "Grad-1" butter→light-grey gradient.
-///
-/// Approximates CSS `linear-gradient(~135deg, #FFFCD5 19.168%, #F5F5F5 50%)`
-/// (the two Figma frames differ slightly — 148.769deg vs 134.875deg —
-/// the difference is immaterial; we pick a single token-canonical angle).
-class _GradientScaffold extends StatelessWidget {
-  const _GradientScaffold({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            // ~135° (top-left → bottom-right).
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            stops: [0.19168, 0.5],
-            colors: [AppColors.butterSoft, Color(0xFFF5F5F5)],
-          ),
-        ),
-        child: child,
-      ),
-    );
   }
 }
 
@@ -204,14 +172,12 @@ class _TrackerContent extends ConsumerWidget {
   int get _flaggedCount =>
       state.statuses.values.where((s) => s == AllergenStatus.flagged).length;
 
-  int get _notTriedCount => state.statuses.values
-      .where((s) => s == AllergenStatus.notStarted)
-      .length;
+  int get _notTriedCount =>
+      state.statuses.values.where((s) => s == AllergenStatus.notStarted).length;
 
   /// "Introduced" = anything past `notStarted`. Drives the ring numerator.
-  int get _introducedCount => state.statuses.values
-      .where((s) => s != AllergenStatus.notStarted)
-      .length;
+  int get _introducedCount =>
+      state.statuses.values.where((s) => s != AllergenStatus.notStarted).length;
 
   bool get _isBig11 => segmentIndex == 1;
 
@@ -222,9 +188,8 @@ class _TrackerContent extends ConsumerWidget {
     // initial. Falls back to a neutral glyph when the read is still in flight.
     final babyAsync = ref.watch(_currentBabyProvider);
     final babyInitial = babyAsync.maybeWhen(
-      data: (b) => (b?.name.isNotEmpty ?? false)
-          ? b!.name[0].toUpperCase()
-          : '?',
+      data: (b) =>
+          (b?.name.isNotEmpty ?? false) ? b!.name[0].toUpperCase() : '?',
       orElse: () => '?',
     );
 
@@ -340,9 +305,9 @@ class _TrackerAppBar extends StatelessWidget {
               // Verbatim Figma copy: plural "Trackers".
               'Allergen Trackers',
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                color: AppColors.fgStrong,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(color: AppColors.fgStrong),
             ),
           ),
           const SizedBox(width: AppSizes.roundButton),
@@ -457,8 +422,7 @@ class _OngoingList extends StatelessWidget {
                 cleanLogCount: logs
                     .where((l) => l.allergenKey == a.key && !l.hadReaction)
                     .length,
-                totalLogCount:
-                    logs.where((l) => l.allergenKey == a.key).length,
+                totalLogCount: logs.where((l) => l.allergenKey == a.key).length,
                 onTap: () => onAllergenTap(a),
               ),
               const SizedBox(height: AppSizes.sm),
@@ -521,9 +485,9 @@ class _SectionPlaceholder extends StatelessWidget {
       child: Text(
         text,
         textAlign: TextAlign.center,
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-          color: AppColors.fgFaint,
-        ),
+        style: Theme.of(
+          context,
+        ).textTheme.bodyMedium?.copyWith(color: AppColors.fgFaint),
       ),
     );
   }
@@ -583,8 +547,7 @@ class _Big11Sections extends StatelessWidget {
       cleanLogCount: logs
           .where((l) => l.allergenKey == allergen.key && !l.hadReaction)
           .length,
-      totalLogCount:
-          logs.where((l) => l.allergenKey == allergen.key).length,
+      totalLogCount: logs.where((l) => l.allergenKey == allergen.key).length,
       onTap: () => onAllergenTap(allergen),
     );
   }

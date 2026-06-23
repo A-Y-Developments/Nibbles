@@ -11,843 +11,486 @@ INSERT INTO allergens (key, display_name, sequence_order) VALUES
 ON CONFLICT (key) DO NOTHING;
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- RECIPES (57 total — covers all 9 allergens + allergen-free options)
+-- RECIPES (20 total — "Baby's First Nibbles" e-book, 6 categories)
+-- Replaces the previous placeholder set. thumbnail_url left null (the client
+-- shows a fallback image); real photos are wired separately.
 -- ─────────────────────────────────────────────────────────────────────────────
 
-INSERT INTO recipes (id, title, age_range, allergen_tags, ingredients, steps, serving_guidance, notes) VALUES
+DELETE FROM recipes;
 
--- ── PEANUT (10) ──────────────────────────────────────────────────────────────
+INSERT INTO recipes (
+  id, title, age_range, allergen_tags, ingredients, steps,
+  serving_guidance, makes, category, nutrition_tags, utensils,
+  storage_note, freezer_note, texture_tip, why_this_meal
+) VALUES
 
-(
-  'a0000001-0000-0000-0000-000000000001',
-  'Peanut Butter Banana Puree',
-  '6+ months',
-  ARRAY['peanut'],
-  '[{"name":"ripe banana","quantity":"1 medium"},{"name":"smooth peanut butter","quantity":"1 tsp"},{"name":"breast milk or formula","quantity":"1–2 tbsp"}]',
-  ARRAY[
-    'Peel and slice the banana.',
-    'Blend banana with peanut butter until smooth.',
-    'Add breast milk or formula to reach desired consistency.'
-  ],
-  'Serve chilled or at room temperature on a spoon or preloaded spoon.',
-  'Use smooth, no-added-sugar peanut butter. Thin further for first introduction.'
-),
-(
-  'a0000001-0000-0000-0000-000000000002',
-  'Peanut Butter Sweet Potato Mash',
-  '6+ months',
-  ARRAY['peanut'],
-  '[{"name":"sweet potato","quantity":"1 small"},{"name":"smooth peanut butter","quantity":"1 tsp"},{"name":"water or formula","quantity":"2 tbsp"}]',
-  ARRAY[
-    'Peel and cube sweet potato.',
-    'Steam for 12–15 minutes until very soft.',
-    'Mash with peanut butter and water until smooth.'
-  ],
-  'Serve warm on a spoon.',
-  'Sweet potato masks the peanut taste well — good for first introduction.'
-),
-(
-  'a0000001-0000-0000-0000-000000000003',
-  'Peanut Butter Apple Sauce',
-  '6+ months',
-  ARRAY['peanut'],
-  '[{"name":"apple","quantity":"1 medium"},{"name":"smooth peanut butter","quantity":"1 tsp"}]',
-  ARRAY[
-    'Peel, core, and dice the apple.',
-    'Cook in a small saucepan with 2 tbsp water for 8–10 minutes until soft.',
-    'Blend until smooth, then stir in peanut butter.'
-  ],
-  'Serve at room temperature.',
-  NULL
-),
-(
-  'a0000001-0000-0000-0000-000000000004',
-  'Peanut Oat Porridge',
-  '6+ months',
-  ARRAY['peanut'],
-  '[{"name":"rolled oats","quantity":"3 tbsp"},{"name":"water or formula","quantity":"150 ml"},{"name":"smooth peanut butter","quantity":"1 tsp"}]',
-  ARRAY[
-    'Cook oats with liquid over medium heat for 5 minutes, stirring constantly.',
-    'Remove from heat and stir in peanut butter.',
-    'Allow to cool to lukewarm.'
-  ],
-  'Serve warm. Thin with extra formula if needed.',
-  NULL
-),
-(
-  'a0000001-0000-0000-0000-000000000005',
-  'Peanut Butter Avocado Mash',
-  '6+ months',
-  ARRAY['peanut'],
-  '[{"name":"ripe avocado","quantity":"½"},{"name":"smooth peanut butter","quantity":"1 tsp"},{"name":"lemon juice","quantity":"a few drops"}]',
-  ARRAY[
-    'Scoop avocado flesh into a bowl.',
-    'Add peanut butter and lemon juice.',
-    'Mash together until smooth and combined.'
-  ],
-  'Serve immediately on a spoon or spread on soft toast fingers.',
-  'Lemon juice prevents browning and adds vitamin C.'
-),
-(
-  'a0000001-0000-0000-0000-000000000006',
-  'Peanut Butter Pear Puree',
-  '6+ months',
-  ARRAY['peanut'],
-  '[{"name":"ripe pear","quantity":"1 medium"},{"name":"smooth peanut butter","quantity":"1 tsp"}]',
-  ARRAY[
-    'Peel, core, and dice the pear.',
-    'Steam for 6–8 minutes until very soft.',
-    'Blend with peanut butter until smooth.'
-  ],
-  'Serve at room temperature on a spoon.',
-  NULL
-),
-(
-  'a0000001-0000-0000-0000-000000000007',
-  'Peanut Butter Carrot Puree',
-  '7+ months',
-  ARRAY['peanut'],
-  '[{"name":"carrots","quantity":"2 medium"},{"name":"smooth peanut butter","quantity":"1 tsp"},{"name":"water","quantity":"3 tbsp"}]',
-  ARRAY[
-    'Peel and chop carrots.',
-    'Boil for 15 minutes until tender.',
-    'Blend with peanut butter and water until smooth.'
-  ],
-  'Serve warm. Can be chilled and stored for 48 hours.',
-  NULL
-),
-(
-  'a0000001-0000-0000-0000-000000000008',
-  'Peanut Butter Yogurt Dip',
-  '7+ months',
-  ARRAY['peanut','dairy'],
-  '[{"name":"plain whole-milk yogurt","quantity":"4 tbsp"},{"name":"smooth peanut butter","quantity":"1 tsp"}]',
-  ARRAY[
-    'Stir peanut butter into yogurt until fully combined.'
-  ],
-  'Serve as a dip with soft fruit slices or as a spoonable puree.',
-  'Also introduces dairy — check allergens individually first.'
-),
-(
-  'a0000001-0000-0000-0000-000000000009',
-  'Peanut Noodles',
-  '10+ months',
-  ARRAY['peanut','wheat','soy'],
-  '[{"name":"soft-cooked spaghetti","quantity":"30 g"},{"name":"smooth peanut butter","quantity":"1 tbsp"},{"name":"warm water","quantity":"2 tbsp"},{"name":"splash of low-sodium soy sauce","quantity":"½ tsp"}]',
-  ARRAY[
-    'Cook spaghetti until very soft. Cut into short pieces.',
-    'Whisk peanut butter with warm water and soy sauce until saucy.',
-    'Toss noodles in sauce and cool slightly.'
-  ],
-  'Serve in a bowl; let baby self-feed with hands or a fork.',
-  'Introduces peanut and wheat together — only serve if both have been cleared individually.'
-),
-(
-  'a0000001-0000-0000-0000-000000000010',
-  'Peanut Butter Banana Pancakes',
-  '10+ months',
-  ARRAY['peanut','egg','wheat'],
-  '[{"name":"ripe banana","quantity":"1 small"},{"name":"egg","quantity":"1"},{"name":"smooth peanut butter","quantity":"1 tbsp"},{"name":"whole wheat flour","quantity":"2 tbsp"}]',
-  ARRAY[
-    'Mash banana in a bowl.',
-    'Whisk in egg and peanut butter.',
-    'Stir in flour until just combined.',
-    'Cook small dollops in a lightly oiled pan over medium heat, 2 minutes per side.'
-  ],
-  'Cut into small pieces. Serve warm or at room temperature.',
-  'Multi-allergen — only serve when peanut, egg, and wheat have each been cleared.'
-),
-
--- ── EGG (8) ──────────────────────────────────────────────────────────────────
+-- ── IRON-RICH PURÉES (5) ─────────────────────────────────────────────────────
 
 (
-  'a0000002-0000-0000-0000-000000000001',
-  'Soft Scrambled Eggs',
-  '6+ months',
-  ARRAY['egg','dairy'],
-  '[{"name":"egg","quantity":"1"},{"name":"breast milk or formula","quantity":"1 tbsp"},{"name":"unsalted butter","quantity":"a small knob"}]',
+  'e0000000-0000-0000-0000-000000000001',
+  'Beef, Sweet Potato & Bone Broth Purée',
+  '6m+',
+  ARRAY[]::text[],
+  '[{"name":"beef mince","quantity":"80g"},{"name":"sweet potato, peeled and cut into small cubes","quantity":"120g"},{"name":"unsalted bone broth (can use water also)","quantity":"80ml"},{"name":"extra virgin olive oil","quantity":"1 tsp"}]',
   ARRAY[
-    'Whisk egg with breast milk or formula.',
-    'Melt butter in a pan over low heat.',
-    'Pour in egg mixture and stir gently until just set and custardy.'
+    'Add the sweet potato to a small pot and cover with water. Bring to a boil over medium-high heat, then reduce to a simmer and cook for 10–12 minutes, or until very soft. Drain.',
+    'While the sweet potato is cooking, heat a small frying pan over medium heat. Add the beef mince and cook for 5–6 minutes, breaking it up with a spoon until fully browned and cooked through.',
+    'Add the cooked sweet potato, cooked beef, bone broth, and olive oil to a blender.',
+    'Blend for 30–60 seconds until smooth. Add 1–2 extra tablespoons of warm water if you want a thinner consistency.'
   ],
-  'Serve warm. Mash further with a fork for younger babies.',
-  'Do not overcook — rubbery eggs are harder for babies to manage.'
+  'Serve at a texture suitable for your baby''s stage.',
+  '2–3 small servings',
+  'Iron-Rich Purées',
+  ARRAY['Iron-Rich','Protein'],
+  ARRAY['small pot','small frying pan','blender or stick blender','spoon'],
+  'Fridge up to 48 hours in an airtight container',
+  'Freeze up to 3 months in small portions',
+  'For a younger baby, blend until very smooth. For a baby further along, leave it slightly thicker.',
+  'Beef is one of the best sources of highly absorbable iron, and sweet potato adds gentle sweetness plus vitamin C to support iron absorption.'
 ),
 (
-  'a0000002-0000-0000-0000-000000000002',
-  'Egg Yolk Puree',
-  '6+ months',
-  ARRAY['egg'],
-  '[{"name":"egg","quantity":"1"},{"name":"breast milk or formula","quantity":"1–2 tsp"}]',
+  'e0000000-0000-0000-0000-000000000002',
+  'Chicken Liver, Apple & Sweet Potato Purée',
+  '6m+',
+  ARRAY[]::text[],
+  '[{"name":"chicken liver, trimmed","quantity":"70g"},{"name":"sweet potato, peeled and cubed","quantity":"100g"},{"name":"apple, peeled, cored, and chopped","quantity":"70g"},{"name":"water or unsalted bone broth","quantity":"40–60ml"},{"name":"extra virgin olive oil","quantity":"1 tsp"}]',
   ARRAY[
-    'Hard-boil the egg for 10 minutes.',
-    'Peel and separate the yolk.',
-    'Mash yolk with breast milk until smooth and lump-free.'
+    'Add the sweet potato and apple to a small pot with a little water or place them in a steamer basket. Cook for 10–12 minutes, until both are very soft.',
+    'Heat a small frying pan over low to medium heat. Add the chicken liver and cook for 2–3 minutes per side, until fully cooked through with no pink remaining in the centre.',
+    'Add the cooked liver, sweet potato, apple, olive oil, and 40ml water or broth to a blender.',
+    'Blend until smooth. Add a little more liquid if needed to reach your preferred consistency.'
   ],
-  'Serve on a spoon. Can be mixed into vegetable purees.',
-  'Starting with just the yolk reduces reaction risk for sensitive babies.'
+  'Serve at a texture suitable for your baby''s stage.',
+  '2 small servings',
+  'Iron-Rich Purées',
+  ARRAY['Iron-Rich'],
+  ARRAY['small pot or steamer','small frying pan','blender','spoon'],
+  'Fridge up to 24 hours',
+  'Freeze up to 2 months',
+  'This works best as a smooth purée when first introducing liver.',
+  'Chicken liver is extremely rich in iron and other key nutrients, making it a strong intentional addition when focusing on iron-first feeding.'
 ),
 (
-  'a0000002-0000-0000-0000-000000000003',
-  'French Omelette Fingers',
-  '7+ months',
-  ARRAY['egg','dairy'],
-  '[{"name":"eggs","quantity":"2"},{"name":"water","quantity":"1 tbsp"},{"name":"unsalted butter","quantity":"a small knob"}]',
+  'e0000000-0000-0000-0000-000000000003',
+  'Lamb, Carrot & Olive Oil Purée',
+  '6m+',
+  ARRAY[]::text[],
+  '[{"name":"lamb mince","quantity":"80g"},{"name":"carrot, peeled and chopped","quantity":"100g"},{"name":"warm water or unsalted bone broth","quantity":"60ml"},{"name":"extra virgin olive oil","quantity":"1 tsp"}]',
   ARRAY[
-    'Whisk eggs with water.',
-    'Melt butter in a small non-stick pan over medium-low heat.',
-    'Pour in egg mixture; when edges set, fold omelette in half.',
-    'Slide onto a board and cut into finger-width strips.'
+    'Steam or boil the carrot for 10–12 minutes, until very soft.',
+    'Heat a small frying pan over medium heat. Add the lamb mince and cook for 5–6 minutes, breaking it up as it cooks, until fully cooked through.',
+    'Add the cooked carrot, lamb, olive oil, and water or broth to a blender.',
+    'Blend until smooth.'
   ],
-  'Serve warm or at room temperature as finger food.',
-  NULL
+  'Serve at a texture suitable for your baby''s stage.',
+  '2–3 small servings',
+  'Iron-Rich Purées',
+  ARRAY['Iron-Rich','Healthy Fats'],
+  ARRAY['small pot or steamer','small frying pan','blender'],
+  'Fridge up to 48 hours',
+  'Freeze up to 3 months',
+  'Add a little extra warm water for a thinner purée if needed.',
+  'Lamb provides highly absorbable iron, while olive oil adds healthy fats to help make the meal more energy-dense.'
 ),
 (
-  'a0000002-0000-0000-0000-000000000004',
-  'Egg and Avocado Mash',
-  '7+ months',
-  ARRAY['egg'],
-  '[{"name":"hard-boiled egg","quantity":"1"},{"name":"ripe avocado","quantity":"½"}]',
+  'e0000000-0000-0000-0000-000000000004',
+  'Sardine, Potato & Parsley Mash',
+  '6m+',
+  ARRAY['fish'],
+  '[{"name":"white potato, peeled and chopped","quantity":"120g"},{"name":"canned sardines in spring water, drained well and checked for larger bones","quantity":"60g"},{"name":"finely chopped parsley","quantity":"1 tsp"},{"name":"extra virgin olive oil","quantity":"1 tsp"}]',
   ARRAY[
-    'Mash the peeled hard-boiled egg.',
-    'Mash avocado separately, then combine.',
-    'Mix until desired consistency is reached.'
+    'Add the potato to a small pot, cover with water, and bring to a boil. Reduce to a simmer and cook for 10–12 minutes, until very soft. Drain.',
+    'Place the cooked potato in a bowl and mash thoroughly with a fork.',
+    'Add the sardines, parsley, and olive oil. Mash and mix until well combined.'
   ],
-  'Serve on a spoon or spread on soft toast.',
-  NULL
+  'Serve at a texture suitable for your baby''s stage.',
+  '2 small servings',
+  'Iron-Rich Purées',
+  ARRAY['Iron-Rich','Omega-3'],
+  ARRAY['small pot or steamer','bowl','fork'],
+  'Fridge up to 24 hours',
+  'Freeze up to 2 months',
+  'Keep it smooth and soft at first, then gradually leave a few soft lumps as your baby gets more confident.',
+  'Sardines provide iron, omega-3 fats, and soft texture in one simple meal.'
 ),
 (
-  'a0000002-0000-0000-0000-000000000005',
-  'Mini Egg Muffins',
-  '8+ months',
-  ARRAY['egg','dairy'],
-  '[{"name":"eggs","quantity":"3"},{"name":"whole-milk ricotta","quantity":"2 tbsp"},{"name":"finely grated zucchini","quantity":"¼ cup"},{"name":"grated cheddar","quantity":"2 tbsp"}]',
+  'e0000000-0000-0000-0000-000000000005',
+  'Slow-Cooked Lamb, Pumpkin & Zucchini Purée',
+  '6m+',
+  ARRAY[]::text[],
+  '[{"name":"lamb shoulder or lamb leg, cut into small cubes","quantity":"180g"},{"name":"pumpkin, peeled and cubed","quantity":"150g"},{"name":"zucchini, chopped","quantity":"80g"},{"name":"water or unsalted bone broth","quantity":"250ml"},{"name":"extra virgin olive oil","quantity":"1 tsp"}]',
   ARRAY[
-    'Preheat oven to 180 °C. Grease a mini-muffin tin.',
-    'Whisk eggs and ricotta together.',
-    'Stir in zucchini and cheddar.',
-    'Spoon into tin and bake 12–14 minutes until set.'
+    'Add the lamb, pumpkin, zucchini, and water or broth to the slow cooker.',
+    'Cook on LOW for 6–7 hours or HIGH for 3–4 hours, until the lamb is very tender and the vegetables are soft.',
+    'Use a spoon to transfer the lamb and vegetables to a blender. Add 60–80ml of the cooking liquid and olive oil.',
+    'Blend until smooth. Add extra cooking liquid as needed until you get a silky purée.'
   ],
-  'Allow to cool, then cut in half for younger babies. Great as finger food.',
-  'Can be stored refrigerated for 3 days.'
-),
-(
-  'a0000002-0000-0000-0000-000000000006',
-  'Soft-Boiled Egg Soldiers',
-  '9+ months',
-  ARRAY['egg','wheat'],
-  '[{"name":"egg","quantity":"1"},{"name":"wholemeal bread slice","quantity":"1"}]',
-  ARRAY[
-    'Boil egg for 6 minutes for a jammy yolk.',
-    'Toast bread lightly and cut into thin fingers.',
-    'Place egg in an egg cup and cut the top off.'
-  ],
-  'Dip toast soldiers into the runny yolk.',
-  'Soft-boiled egg is safe if the egg is lion-stamped (UK) or pasteurised.'
-),
-(
-  'a0000002-0000-0000-0000-000000000007',
-  'Egg Fried Rice',
-  '10+ months',
-  ARRAY['egg','sesame'],
-  '[{"name":"cooked white rice","quantity":"½ cup"},{"name":"egg","quantity":"1"},{"name":"frozen peas","quantity":"2 tbsp"},{"name":"sesame oil","quantity":"½ tsp"}]',
-  ARRAY[
-    'Heat oil in a wok or pan over medium heat.',
-    'Add rice and peas; stir for 2 minutes.',
-    'Push rice to the side, crack in the egg, and scramble.',
-    'Mix egg through rice and cook 1 more minute.'
-  ],
-  'Serve warm in small pieces. Encourage self-feeding with a spoon.',
-  'Skip salt. Use very low-sodium soy sauce if desired at 12+ months.'
-),
-(
-  'a0000002-0000-0000-0000-000000000008',
-  'Veggie Egg Frittata',
-  '10+ months',
-  ARRAY['egg','dairy'],
-  '[{"name":"eggs","quantity":"4"},{"name":"milk","quantity":"3 tbsp"},{"name":"cherry tomatoes","quantity":"6, halved"},{"name":"baby spinach","quantity":"handful"},{"name":"grated cheddar","quantity":"3 tbsp"}]',
-  ARRAY[
-    'Preheat oven to 180 °C.',
-    'Whisk eggs with milk.',
-    'Pour into an oven-safe pan, scatter tomatoes, spinach, and cheese.',
-    'Bake 18–20 minutes until puffed and golden.'
-  ],
-  'Cool and cut into small squares. Serve at room temperature.',
-  NULL
+  'Serve at a texture suitable for your baby''s stage.',
+  '3–4 small servings',
+  'Iron-Rich Purées',
+  ARRAY['Iron-Rich','Protein'],
+  ARRAY['small cooker','blender','spoon','chopping board','knife'],
+  'Fridge up to 48 hours',
+  'Freeze up to 3 months',
+  'This recipe blends beautifully and becomes very soft, making it ideal for babies early in their solids journey.',
+  'Slow-cooking makes the lamb incredibly tender while keeping the meal rich in highly absorbable iron and easy to digest.'
 ),
 
--- ── DAIRY (8) ────────────────────────────────────────────────────────────────
+-- ── WHIPPED BONE MARROW (1) ──────────────────────────────────────────────────
 
 (
-  'a0000003-0000-0000-0000-000000000001',
-  'Greek Yogurt Banana Bowl',
-  '6+ months',
-  ARRAY['dairy'],
-  '[{"name":"plain whole-milk Greek yogurt","quantity":"4 tbsp"},{"name":"ripe banana","quantity":"½"}]',
+  'e0000000-0000-0000-0000-000000000006',
+  'Whipped Bone Marrow',
+  '6m+',
+  ARRAY[]::text[],
+  '[{"name":"marrow bones, split lengthways or canoe-cut","quantity":"3"},{"name":"extra virgin olive oil","quantity":"1 tsp"}]',
   ARRAY[
-    'Mash banana with a fork.',
-    'Swirl mashed banana through yogurt.'
+    'Preheat the oven to 200ºC.',
+    'Place the marrow bones cut-side up on a baking tray.',
+    'Roast for 15–18 minutes, until the marrow is soft and loosened.',
+    'Allow to cool for 5 minutes, then scoop the marrow out with a spoon.',
+    'Add the marrow and olive oil to a small blender and blend for 20–30 seconds until smooth and whipped.'
   ],
-  'Serve chilled or at room temperature on a spoon.',
-  'Use plain, unsweetened yogurt only.'
-),
-(
-  'a0000003-0000-0000-0000-000000000002',
-  'Cottage Cheese and Peach',
-  '7+ months',
-  ARRAY['dairy'],
-  '[{"name":"full-fat cottage cheese","quantity":"3 tbsp"},{"name":"ripe peach","quantity":"½"}]',
-  ARRAY[
-    'Peel and dice peach (or blend if puree consistency needed).',
-    'Stir peach through cottage cheese.'
-  ],
-  'Serve chilled. Blend smooth for younger babies.',
-  NULL
-),
-(
-  'a0000003-0000-0000-0000-000000000003',
-  'Creamy Mashed Potato',
-  '7+ months',
-  ARRAY['dairy'],
-  '[{"name":"potato","quantity":"1 medium"},{"name":"unsalted butter","quantity":"1 tsp"},{"name":"whole milk","quantity":"2 tbsp"}]',
-  ARRAY[
-    'Peel and cube potato.',
-    'Boil for 15 minutes until very soft.',
-    'Drain and mash with butter and milk until lump-free.'
-  ],
-  'Serve warm. Add extra milk to thin for younger babies.',
-  NULL
-),
-(
-  'a0000003-0000-0000-0000-000000000004',
-  'Cheese and Broccoli Bites',
-  '8+ months',
-  ARRAY['dairy','egg'],
-  '[{"name":"broccoli florets","quantity":"1 cup"},{"name":"egg","quantity":"2"},{"name":"grated cheddar","quantity":"½ cup"},{"name":"plain flour","quantity":"3 tbsp"}]',
-  ARRAY[
-    'Preheat oven to 190 °C. Line a baking sheet.',
-    'Finely chop or pulse broccoli.',
-    'Mix with beaten egg, cheddar, and flour.',
-    'Shape into small patties and bake 18 minutes, flipping halfway.'
-  ],
-  'Serve warm as finger food.',
-  NULL
-),
-(
-  'a0000003-0000-0000-0000-000000000005',
-  'Yogurt Berry Swirl',
-  '7+ months',
-  ARRAY['dairy'],
-  '[{"name":"plain whole-milk yogurt","quantity":"5 tbsp"},{"name":"blueberries or strawberries","quantity":"¼ cup"}]',
-  ARRAY[
-    'Cook berries in a small pan with 1 tsp water for 3–4 minutes until soft.',
-    'Cool, then gently mash or puree.',
-    'Swirl berry mixture through yogurt.'
-  ],
-  'Serve chilled or at room temperature.',
-  'Cooking berries reduces choking risk and improves digestibility.'
-),
-(
-  'a0000003-0000-0000-0000-000000000006',
-  'Ricotta Toast',
-  '8+ months',
-  ARRAY['dairy','wheat'],
-  '[{"name":"wholemeal bread","quantity":"1 slice"},{"name":"full-fat ricotta","quantity":"2 tbsp"},{"name":"ripe banana slices","quantity":"a few"}]',
-  ARRAY[
-    'Toast bread lightly, then cut into fingers.',
-    'Spread ricotta generously over fingers.',
-    'Top with banana slices, pressed in gently.'
-  ],
-  'Serve as finger food.',
-  NULL
-),
-(
-  'a0000003-0000-0000-0000-000000000007',
-  'Milk Porridge',
-  '7+ months',
-  ARRAY['dairy'],
-  '[{"name":"rolled oats","quantity":"3 tbsp"},{"name":"whole milk","quantity":"150 ml"},{"name":"mashed banana","quantity":"1 tbsp"}]',
-  ARRAY[
-    'Combine oats and milk in a saucepan.',
-    'Cook over medium heat for 5 minutes, stirring.',
-    'Stir in mashed banana and cool to lukewarm.'
-  ],
-  'Serve warm in a bowl.',
-  NULL
-),
-(
-  'a0000003-0000-0000-0000-000000000008',
-  'Soft Cheese Pasta',
-  '9+ months',
-  ARRAY['dairy','wheat'],
-  '[{"name":"small pasta (stelline or orzo)","quantity":"30 g"},{"name":"cream cheese","quantity":"1 tbsp"},{"name":"grated Parmesan","quantity":"1 tsp"},{"name":"steamed peas","quantity":"2 tbsp"}]',
-  ARRAY[
-    'Cook pasta until very soft.',
-    'Drain, reserving 2 tbsp pasta water.',
-    'Stir through cream cheese and Parmesan with pasta water to make a sauce.',
-    'Mix in peas.'
-  ],
-  'Serve warm.',
-  NULL
+  'Stir ½–1 teaspoon through warm purées, mashes, or soft finger foods.',
+  'About 8–10 teaspoons',
+  'Whipped Bone Marrow',
+  ARRAY['Healthy Fats','Energy-Dense'],
+  ARRAY['oven','baking tray','spoon','small blender or mini food processor'],
+  'Fridge up to 3 days',
+  'Freeze up to 3 months in small portions',
+  null,
+  'This is an easy way to enrich meals with energy-dense fats when feeding with intention.'
 ),
 
--- ── TREE NUTS (6) ────────────────────────────────────────────────────────────
+-- ── IRON-RICH FINGER FOODS (5) ───────────────────────────────────────────────
 
 (
-  'a0000004-0000-0000-0000-000000000001',
-  'Almond Butter Banana Puree',
-  '6+ months',
-  ARRAY['tree_nuts'],
-  '[{"name":"ripe banana","quantity":"1 medium"},{"name":"smooth almond butter","quantity":"1 tsp"},{"name":"formula or breast milk","quantity":"1 tbsp"}]',
+  'e0000000-0000-0000-0000-000000000007',
+  'Chicken Liver, Apple & Sweet Potato Patties',
+  '6m+',
+  ARRAY['egg','wheat','dairy'],
+  '[{"name":"chicken liver","quantity":"100g"},{"name":"sweet potato, peeled and cubed","quantity":"120g"},{"name":"apple, peeled and finely grated","quantity":"60g"},{"name":"egg","quantity":"1"},{"name":"oat flour","quantity":"2 tbsp"},{"name":"olive oil or butter for the pan","quantity":"1 tsp"}]',
   ARRAY[
-    'Mash banana until smooth.',
-    'Stir in almond butter and formula.',
-    'Mix until fully combined.'
+    'Boil or steam the sweet potato for 10–12 minutes until very soft. Mash well in a bowl.',
+    'Heat a frying pan over low to medium heat and cook the chicken liver for 2–3 minutes per side, until fully cooked. Mash finely with a fork or chop very finely.',
+    'Add the cooked liver, mashed sweet potato, grated apple, egg, and oat flour to a bowl. Mix until combined.',
+    'Heat a lightly greased frying pan over low heat.',
+    'Spoon small amounts of mixture into the pan and flatten gently into patties.',
+    'Cook for 3–4 minutes on the first side, then flip carefully and cook for another 3 minutes, until set and lightly golden.'
   ],
-  'Serve on a spoon or preloaded spoon.',
-  'Use 100% almond butter with no added salt or sugar.'
+  'Serve at a texture suitable for your baby''s stage.',
+  '6–8 small patties',
+  'Iron-Rich Finger Foods',
+  ARRAY['Iron-Rich','Finger Food'],
+  ARRAY['small pot','frying pan','mixing bowl','fork or masher','spoon'],
+  'Fridge up to 2 days',
+  'Freeze up to 2 months',
+  'Keep them small and soft so they''re easy for baby to hold and gum.',
+  'This is one of the strongest iron-focused meals in the book and a practical way to include liver without making it feel over the top.'
 ),
 (
-  'a0000004-0000-0000-0000-000000000002',
-  'Cashew Cream Pasta',
-  '10+ months',
-  ARRAY['tree_nuts','wheat'],
-  '[{"name":"small pasta","quantity":"30 g"},{"name":"raw cashews soaked overnight","quantity":"¼ cup"},{"name":"water","quantity":"¼ cup"},{"name":"garlic powder","quantity":"a pinch"}]',
+  'e0000000-0000-0000-0000-000000000008',
+  'Sardine, Potato & Parsley Patties',
+  '6m+',
+  ARRAY['fish','wheat','egg'],
+  '[{"name":"canned sardines in spring water, drained","quantity":"200g"},{"name":"white potato, peeled and chopped","quantity":"150g"},{"name":"egg","quantity":"1"},{"name":"oat flour","quantity":"2 tbsp"},{"name":"finely chopped parsley","quantity":"1 tbsp"},{"name":"olive oil for the pan","quantity":"1 tsp"}]',
   ARRAY[
-    'Drain soaked cashews and blend with water and garlic powder until completely smooth.',
-    'Cook pasta until very soft, drain.',
-    'Toss pasta in cashew cream, adding pasta water to loosen.'
+    'Boil the potato for 10–12 minutes until very soft. Drain and mash in a bowl.',
+    'Add the sardines and mash them into the potato.',
+    'Add the egg, oat flour, and parsley. Mix well.',
+    'Heat a lightly oiled frying pan over low to medium heat.',
+    'Form the mixture into small patties.',
+    'Cook for 3–4 minutes on each side until lightly golden and cooked through.'
   ],
-  'Serve warm.',
-  'Blend cashew sauce extra smooth — no lumps for young babies.'
+  'Serve at a texture suitable for your baby''s stage.',
+  '6 small patties',
+  'Iron-Rich Finger Foods',
+  ARRAY['Iron-Rich','Omega-3','Finger Food'],
+  ARRAY['small pot','bowl','fork','frying pan'],
+  'Fridge up to 2 days',
+  'Freeze up to 2 months',
+  'They should stay soft in the middle. Let them cool fully before serving.',
+  'A simple way to give baby iron, omega-3 fats, and a soft finger food texture in one.'
 ),
 (
-  'a0000004-0000-0000-0000-000000000003',
-  'Walnut and Banana Porridge',
-  '8+ months',
-  ARRAY['tree_nuts'],
-  '[{"name":"rolled oats","quantity":"3 tbsp"},{"name":"water","quantity":"150 ml"},{"name":"walnut butter (finely ground walnuts)","quantity":"1 tsp"},{"name":"mashed banana","quantity":"1 tbsp"}]',
+  'e0000000-0000-0000-0000-000000000009',
+  'Barramundi, Zucchini & Dill Fritters',
+  '6m+',
+  ARRAY['fish','wheat','egg'],
+  '[{"name":"barramundi fillet","quantity":"200g"},{"name":"zucchini, grated","quantity":"100g"},{"name":"egg","quantity":"1"},{"name":"plain flour or oat flour","quantity":"2 tbsp"},{"name":"finely chopped dill","quantity":"1 tsp"},{"name":"olive oil for cooking","quantity":"1 tsp"}]',
   ARRAY[
-    'Cook oats with water for 5 minutes.',
-    'Stir in walnut butter and banana.',
-    'Cool to lukewarm.'
+    'Cook the barramundi first. Heat a frying pan over medium heat and cook the fillet for 3–4 minutes per side, until fully cooked and flaky. Let cool slightly, then flake finely.',
+    'Squeeze excess moisture out of the grated zucchini using your hands or a clean tea towel.',
+    'In a bowl, combine the flaked barramundi, zucchini, egg, flour, and dill. Mix well.',
+    'Heat a lightly oiled pan over low to medium heat.',
+    'Spoon in small portions of the mixture and flatten gently.',
+    'Cook for 3 minutes on each side until firm and lightly golden.'
   ],
-  'Serve warm.',
-  'Ground walnuts must be very fine — whole or chopped walnuts are a choking hazard.'
+  'Serve at a texture suitable for your baby''s stage.',
+  '6–7 small fritters',
+  'Iron-Rich Finger Foods',
+  ARRAY['Protein','Finger Food'],
+  ARRAY['small frying pan','bowl','grater','spoon'],
+  'Fridge up to 2 days',
+  'Freeze up to 2 months',
+  'These should be soft and moist inside, not dry.',
+  'Barramundi gives quality protein and fish-based nutrients in a very baby-friendly format.'
 ),
 (
-  'a0000004-0000-0000-0000-000000000004',
-  'Almond Milk Oatmeal',
-  '7+ months',
-  ARRAY['tree_nuts'],
-  '[{"name":"rolled oats","quantity":"3 tbsp"},{"name":"unsweetened almond milk","quantity":"150 ml"},{"name":"cinnamon","quantity":"a pinch"}]',
-  ARRAY[
-    'Combine oats, almond milk, and cinnamon in a saucepan.',
-    'Cook over medium heat 5 minutes, stirring constantly.',
-    'Cool to lukewarm.'
-  ],
-  'Serve warm.',
-  'Use unsweetened, calcium-fortified almond milk.'
-),
-(
-  'a0000004-0000-0000-0000-000000000005',
-  'Pecan Sweet Potato Mash',
-  '8+ months',
-  ARRAY['tree_nuts'],
-  '[{"name":"sweet potato","quantity":"1 small"},{"name":"pecan butter (finely ground pecans)","quantity":"1 tsp"}]',
-  ARRAY[
-    'Roast or steam sweet potato until very soft.',
-    'Mash, then stir in pecan butter until smooth.'
-  ],
-  'Serve warm.',
-  NULL
-),
-(
-  'a0000004-0000-0000-0000-000000000006',
-  'Hazelnut Porridge',
-  '8+ months',
-  ARRAY['tree_nuts'],
-  '[{"name":"rolled oats","quantity":"3 tbsp"},{"name":"water","quantity":"150 ml"},{"name":"hazelnut butter","quantity":"1 tsp"},{"name":"ripe pear","quantity":"¼, grated"}]',
-  ARRAY[
-    'Cook oats with water for 5 minutes.',
-    'Stir in hazelnut butter and grated pear.',
-    'Cool to lukewarm.'
-  ],
-  'Serve warm.',
-  'Use 100% hazelnut butter, no added sugar.'
-),
-
--- ── SESAME (5) ───────────────────────────────────────────────────────────────
-
-(
-  'a0000005-0000-0000-0000-000000000001',
-  'Tahini Banana Puree',
-  '6+ months',
-  ARRAY['sesame'],
-  '[{"name":"ripe banana","quantity":"1 medium"},{"name":"tahini","quantity":"1 tsp"},{"name":"formula or breast milk","quantity":"1 tbsp"}]',
-  ARRAY[
-    'Mash banana until smooth.',
-    'Stir in tahini and formula until fully combined.'
-  ],
-  'Serve on a spoon.',
-  'Tahini (sesame paste) is a gentle way to introduce sesame.'
-),
-(
-  'a0000005-0000-0000-0000-000000000002',
-  'Hummus Dip',
-  '7+ months',
-  ARRAY['sesame'],
-  '[{"name":"canned chickpeas (no salt)","quantity":"200 g, drained"},{"name":"tahini","quantity":"1 tbsp"},{"name":"lemon juice","quantity":"1 tsp"},{"name":"water","quantity":"3 tbsp"}]',
-  ARRAY[
-    'Blend all ingredients until completely smooth.',
-    'Add more water if needed to reach a spreadable consistency.'
-  ],
-  'Serve as a dip with soft pita strips or vegetable sticks.',
-  NULL
-),
-(
-  'a0000005-0000-0000-0000-000000000003',
-  'Sesame Sweet Potato Fingers',
-  '8+ months',
-  ARRAY['sesame'],
-  '[{"name":"sweet potato","quantity":"1 medium"},{"name":"sesame oil","quantity":"½ tsp"}]',
-  ARRAY[
-    'Preheat oven to 200 °C.',
-    'Slice sweet potato into finger-sized sticks, skin on.',
-    'Toss in sesame oil and roast 25 minutes until soft inside and lightly caramelised.'
-  ],
-  'Cool to finger-food temperature. Serve as self-feeding finger food.',
-  NULL
-),
-(
-  'a0000005-0000-0000-0000-000000000004',
-  'Sesame Chicken Puree',
-  '7+ months',
-  ARRAY['sesame'],
-  '[{"name":"chicken thigh (boneless, skinless)","quantity":"60 g"},{"name":"sesame oil","quantity":"¼ tsp"},{"name":"water","quantity":"4 tbsp"}]',
-  ARRAY[
-    'Steam chicken for 12 minutes until cooked through.',
-    'Blend with sesame oil and water until smooth.'
-  ],
-  'Serve warm on a spoon or mix into vegetable purees.',
-  NULL
-),
-(
-  'a0000005-0000-0000-0000-000000000005',
-  'Sesame Noodles',
-  '10+ months',
-  ARRAY['sesame','wheat'],
-  '[{"name":"soft-cooked spaghetti","quantity":"30 g"},{"name":"tahini","quantity":"1 tsp"},{"name":"warm water","quantity":"1 tbsp"},{"name":"grated cucumber","quantity":"1 tbsp"}]',
-  ARRAY[
-    'Cook spaghetti until very soft. Cut into short pieces.',
-    'Whisk tahini with warm water to make a sauce.',
-    'Toss noodles with tahini sauce and cucumber.'
-  ],
-  'Serve at room temperature.',
-  'Introduces sesame and wheat — clear individually first.'
-),
-
--- ── SOY (5) ──────────────────────────────────────────────────────────────────
-
-(
-  'a0000006-0000-0000-0000-000000000001',
-  'Soft Tofu and Broccoli Puree',
-  '6+ months',
-  ARRAY['soy'],
-  '[{"name":"silken tofu","quantity":"50 g"},{"name":"broccoli florets","quantity":"½ cup"}]',
-  ARRAY[
-    'Steam broccoli for 10 minutes until very soft.',
-    'Blend with silken tofu until smooth.'
-  ],
-  'Serve warm on a spoon.',
-  'Silken tofu blends very smoothly and is a gentle soy introduction.'
-),
-(
-  'a0000006-0000-0000-0000-000000000002',
-  'Edamame Mash',
-  '7+ months',
-  ARRAY['soy'],
-  '[{"name":"shelled edamame (frozen)","quantity":"½ cup"},{"name":"water","quantity":"3 tbsp"},{"name":"lemon juice","quantity":"a few drops"}]',
-  ARRAY[
-    'Cook edamame according to package instructions.',
-    'Blend with water and lemon juice until smooth.'
-  ],
-  'Serve warm or at room temperature.',
-  NULL
-),
-(
-  'a0000006-0000-0000-0000-000000000003',
-  'Tofu Veggie Stir-Fry Puree',
-  '8+ months',
-  ARRAY['soy','sesame'],
-  '[{"name":"firm tofu","quantity":"60 g"},{"name":"carrot","quantity":"½, diced"},{"name":"zucchini","quantity":"½, diced"},{"name":"sesame oil","quantity":"½ tsp"}]',
-  ARRAY[
-    'Steam carrot and zucchini until very soft, about 12 minutes.',
-    'Cube tofu and pan-fry in sesame oil until lightly golden.',
-    'Blend all together, adding water to reach desired consistency.'
-  ],
-  'Serve warm, chunky for older babies or blended smooth for younger ones.',
-  NULL
-),
-(
-  'a0000006-0000-0000-0000-000000000004',
-  'Edamame and Sweet Potato Puree',
-  '7+ months',
-  ARRAY['soy'],
-  '[{"name":"shelled edamame (frozen)","quantity":"¼ cup"},{"name":"sweet potato","quantity":"1 small"}]',
-  ARRAY[
-    'Steam sweet potato until very soft.',
-    'Cook edamame, then blend both together until smooth.'
-  ],
-  'Serve warm.',
-  NULL
-),
-(
-  'a0000006-0000-0000-0000-000000000005',
-  'Tofu Fingers',
-  '9+ months',
-  ARRAY['soy'],
-  '[{"name":"firm tofu block","quantity":"100 g"},{"name":"olive oil","quantity":"1 tsp"}]',
-  ARRAY[
-    'Press tofu between paper towels for 10 minutes to remove excess moisture.',
-    'Cut into finger-sized sticks.',
-    'Pan-fry in olive oil over medium heat, 2–3 minutes per side, until golden.'
-  ],
-  'Serve at room temperature as finger food.',
-  'Crispy outside, soft inside — great texture for self-feeding.'
-),
-
--- ── WHEAT (5) ────────────────────────────────────────────────────────────────
-
-(
-  'a0000007-0000-0000-0000-000000000001',
-  'Soft Bread Fingers',
-  '6+ months',
+  'e0000000-0000-0000-0000-000000000010',
+  'Beef, Potato & Mozzarella Balls',
+  '6m+',
   ARRAY['wheat','dairy'],
-  '[{"name":"soft white bread (thick slice)","quantity":"1"},{"name":"unsalted butter","quantity":"a thin scrape"}]',
+  '[{"name":"beef mince","quantity":"150g"},{"name":"white potato, peeled and cubed","quantity":"120g"},{"name":"mozzarella, finely grated","quantity":"40g"},{"name":"oat flour","quantity":"1 tbsp"}]',
   ARRAY[
-    'Remove crusts.',
-    'Spread a very thin layer of butter.',
-    'Cut into finger-width strips.'
+    'Preheat oven to 180ºC. Line a baking tray with baking paper.',
+    'Boil the potato for 10–12 minutes until soft. Drain and mash well.',
+    'Add the beef mince, mashed potato, mozzarella, and oat flour to a bowl. Mix thoroughly.',
+    'Roll into small balls, about walnut size or smaller.',
+    'Place on the tray and bake for 14–16 minutes, turning once halfway, until cooked through.',
+    'Air fryer option: cook at 180ºC for 10–12 minutes.'
   ],
-  'Serve as a self-feeding finger food.',
-  'Bread should be soft — toast is too hard for early self-feeding.'
+  'Serve at a texture suitable for your baby''s stage.',
+  '8 small balls',
+  'Iron-Rich Finger Foods',
+  ARRAY['Iron-Rich','Finger Food'],
+  ARRAY['small pot','mixing bowl','oven or air fryer','baking tray'],
+  'Fridge up to 2 days',
+  'Freeze up to 3 months',
+  'These should be soft inside and easy to squash between fingers.',
+  'Beef supports iron intake, while mozzarella and potato make the meal more energy-dense for growing babies.'
 ),
 (
-  'a0000007-0000-0000-0000-000000000002',
-  'Whole Wheat Banana Pancakes',
-  '7+ months',
-  ARRAY['wheat','egg','dairy'],
-  '[{"name":"whole wheat flour","quantity":"¼ cup"},{"name":"egg","quantity":"1"},{"name":"mashed banana","quantity":"½"},{"name":"milk","quantity":"3 tbsp"}]',
-  ARRAY[
-    'Whisk all ingredients together.',
-    'Drop tablespoon-sized dollops onto a lightly greased pan over medium heat.',
-    'Cook 2 minutes per side until golden.'
-  ],
-  'Cut into small pieces. Serve warm or at room temperature.',
-  NULL
-),
-(
-  'a0000007-0000-0000-0000-000000000003',
-  'Buttery Soft Pasta',
-  '7+ months',
-  ARRAY['wheat','dairy'],
-  '[{"name":"small pasta (stelline or orzo)","quantity":"30 g"},{"name":"unsalted butter","quantity":"1 tsp"}]',
-  ARRAY[
-    'Cook pasta until very soft.',
-    'Drain and toss with butter.'
-  ],
-  'Serve warm.',
-  NULL
-),
-(
-  'a0000007-0000-0000-0000-000000000004',
-  'Mini Wheat Muffins',
-  '9+ months',
-  ARRAY['wheat','egg','dairy'],
-  '[{"name":"whole wheat flour","quantity":"½ cup"},{"name":"egg","quantity":"1"},{"name":"whole milk","quantity":"¼ cup"},{"name":"unsalted butter","quantity":"2 tbsp, melted"},{"name":"mashed banana","quantity":"½"}]',
-  ARRAY[
-    'Preheat oven to 175 °C. Grease a mini-muffin tin.',
-    'Mix all wet ingredients together.',
-    'Fold in flour until just combined.',
-    'Spoon into tin and bake 12 minutes.'
-  ],
-  'Cool before serving. Break into small pieces for younger babies.',
-  NULL
-),
-(
-  'a0000007-0000-0000-0000-000000000005',
-  'Pasta with Tomato and Veggies',
-  '9+ months',
+  'e0000000-0000-0000-0000-000000000011',
+  'Lamb & Pumpkin Soft Koftas',
+  '6m+',
   ARRAY['wheat'],
-  '[{"name":"small pasta","quantity":"30 g"},{"name":"canned crushed tomatoes","quantity":"3 tbsp"},{"name":"finely diced zucchini","quantity":"2 tbsp"},{"name":"olive oil","quantity":"½ tsp"}]',
+  '[{"name":"lamb mince","quantity":"150g"},{"name":"pumpkin, peeled and cubed","quantity":"120g"},{"name":"oat flour","quantity":"1 tbsp"},{"name":"olive oil for cooking","quantity":"1 tsp"}]',
   ARRAY[
-    'Sauté zucchini in oil 3 minutes.',
-    'Add tomatoes and simmer 5 minutes.',
-    'Cook pasta until very soft, drain, and toss with sauce.'
+    'Boil or steam the pumpkin for 10–12 minutes until soft. Drain and mash well.',
+    'Add the lamb mince, mashed pumpkin, and oat flour to a bowl. Mix until combined.',
+    'Shape into small koftas or short finger-shaped pieces.',
+    'Heat a lightly oiled frying pan over low to medium heat.',
+    'Cook the koftas for 3–4 minutes per side, turning until browned lightly and fully cooked through.'
   ],
-  'Serve warm.',
-  NULL
+  'Serve at a texture suitable for your baby''s stage.',
+  '6–8 mini koftas',
+  'Iron-Rich Finger Foods',
+  ARRAY['Iron-Rich','Finger Food'],
+  ARRAY['small pot','bowl','frying pan'],
+  'Fridge up to 2 days',
+  'Freeze up to 3 months',
+  'These should stay soft and tender, not firm or dry.',
+  'Lamb is a strong iron source, and pumpkin makes the texture naturally softer and more baby-friendly.'
 ),
 
--- ── FISH (5) ─────────────────────────────────────────────────────────────────
+-- ── STOOL-SOFTENING MEALS (3) ────────────────────────────────────────────────
 
 (
-  'a0000008-0000-0000-0000-000000000001',
-  'Salmon and Sweet Potato Puree',
-  '6+ months',
+  'e0000000-0000-0000-0000-000000000012',
+  'Pear, Oat & Cinnamon Mash',
+  '6m+',
+  ARRAY['wheat'],
+  '[{"name":"ripe pear, peeled, cored, and chopped","quantity":"1"},{"name":"rolled oats","quantity":"2 tbsp"},{"name":"water","quantity":"80ml"},{"name":"cinnamon","quantity":"small pinch"}]',
+  ARRAY[
+    'Add the pear, oats, and water to a small pot.',
+    'Bring to a gentle simmer over medium heat.',
+    'Cook for 8–10 minutes, stirring occasionally, until the pear is soft and the oats are cooked.',
+    'Mash with a fork until soft and spoonable. Stir through the cinnamon.'
+  ],
+  'Serve at a texture suitable for your baby''s stage.',
+  '2 servings',
+  'Stool-Softening Meals',
+  ARRAY['Fibre','Digestion'],
+  ARRAY['small pot','fork or masher'],
+  'Fridge up to 2 days',
+  'Freeze up to 2 months',
+  'Add a splash of warm water if it thickens too much.',
+  'Pear and oats provide gentle fibre to help support digestion.'
+),
+(
+  'e0000000-0000-0000-0000-000000000013',
+  'Prune, Apple & Chia Blend',
+  '6m+',
+  ARRAY[]::text[],
+  '[{"name":"prunes","quantity":"4"},{"name":"apple, peeled and chopped","quantity":"80g"},{"name":"chia seeds","quantity":"1 tsp"},{"name":"warm water","quantity":"60ml"}]',
+  ARRAY[
+    'Place the prunes in a bowl with the warm water and soak for 10 minutes.',
+    'Add the soaked prunes, soaking water, apple, and chia seeds to a blender.',
+    'Blend until smooth.',
+    'Let sit for 5 minutes so the chia softens further.'
+  ],
+  'Serve at a texture suitable for your baby''s stage.',
+  '2 servings',
+  'Stool-Softening Meals',
+  ARRAY['Fibre','Digestion'],
+  ARRAY['small bowl','blender'],
+  'Fridge up to 2 days',
+  'Freeze up to 2 months',
+  'This works best smooth.',
+  'Prunes and chia are practical ingredients to support bowel regularity when baby seems a little backed up.'
+),
+(
+  'e0000000-0000-0000-0000-000000000014',
+  'Sweet Potato, Lentil & Olive Oil Mash',
+  '6m+',
+  ARRAY[]::text[],
+  '[{"name":"sweet potato, peeled and cubed","quantity":"120g"},{"name":"red lentils","quantity":"2 tbsp"},{"name":"water","quantity":"200ml"},{"name":"extra virgin olive oil","quantity":"1 tsp"}]',
+  ARRAY[
+    'Add the sweet potato, lentils, and water to a small pot.',
+    'Bring to a boil, then reduce to a simmer.',
+    'Cook for 12–15 minutes, until the sweet potato is very soft and the lentils have broken down.',
+    'Drain any excess water if needed.',
+    'Mash well with a fork and stir through the olive oil.'
+  ],
+  'Serve at a texture suitable for your baby''s stage.',
+  '2 servings',
+  'Stool-Softening Meals',
+  ARRAY['Fibre','Healthy Fats'],
+  ARRAY['small pot','fork or masher'],
+  'Fridge up to 2 days',
+  'Freeze up to 3 months',
+  'Mash until soft and spoonable, or blend for a smoother texture.',
+  'This meal combines fibre and healthy fats in a simple way to support digestion.'
+),
+
+-- ── 10-MINUTE MEALS (MINIMAL PREP) (3) ───────────────────────────────────────
+
+(
+  'e0000000-0000-0000-0000-000000000015',
+  'Scrambled Egg & Avocado Mash',
+  '6m+',
+  ARRAY['egg','dairy'],
+  '[{"name":"egg","quantity":"1"},{"name":"avocado","quantity":"½"},{"name":"butter or olive oil","quantity":"1 tsp"}]',
+  ARRAY[
+    'Crack the egg into a bowl and whisk lightly with a fork.',
+    'Heat a small frying pan over low heat and add the butter or olive oil.',
+    'Pour in the egg and cook gently for 2–3 minutes, stirring slowly until softly scrambled.',
+    'Mash the avocado in a bowl.',
+    'Serve the scrambled egg mixed into the avocado or side by side.'
+  ],
+  'Serve at a texture suitable for your baby''s stage.',
+  '1–2 small servings',
+  '10-Minute Meals (Minimal Prep)',
+  ARRAY['Quick','Healthy Fats','Protein'],
+  ARRAY['small frying pan','bowl','fork','spatula'],
+  'Best served fresh, or fridge up to 24 hours',
+  'Not recommended',
+  'Keep the egg soft, not dry.',
+  'Quick, easy, and full of healthy fats and protein when you need something fast but still intentional.'
+),
+(
+  'e0000000-0000-0000-0000-000000000016',
+  'Quick Beef & Zucchini Bowl',
+  '6m+',
+  ARRAY[]::text[],
+  '[{"name":"beef mince","quantity":"80g"},{"name":"small zucchini, finely grated","quantity":"½"},{"name":"olive oil","quantity":"1 tsp"}]',
+  ARRAY[
+    'Heat a frying pan over medium heat.',
+    'Add the beef mince and cook for 4–5 minutes until browned.',
+    'Add the grated zucchini and cook for another 2–3 minutes until softened.',
+    'Stir through the olive oil and let it cool before serving.',
+    'Be sure to blend all ingredients to a suitable consistency for your baby.'
+  ],
+  'Serve at a texture suitable for your baby''s stage.',
+  '1–2 small servings',
+  '10-Minute Meals (Minimal Prep)',
+  ARRAY['Quick','Iron-Rich'],
+  ARRAY['small frying pan','grater','spoon','bowl'],
+  'Fridge up to 24 hours',
+  'Freeze up to 2 months',
+  'The zucchini keeps the mixture softer and more moist.',
+  'A realistic, fast iron-rich option for busy days.'
+),
+(
+  'e0000000-0000-0000-0000-000000000017',
+  'Soft Salmon & Sweet Potato Bowl',
+  '6m+',
   ARRAY['fish'],
-  '[{"name":"salmon fillet (skinless)","quantity":"60 g"},{"name":"sweet potato","quantity":"1 small"}]',
+  '[{"name":"salmon fillet","quantity":"80g"},{"name":"sweet potato, peeled and cubed","quantity":"100g"},{"name":"olive oil","quantity":"1 tsp"}]',
   ARRAY[
-    'Bake or steam salmon for 12 minutes until fully cooked.',
-    'Steam sweet potato until very soft.',
-    'Blend both together, adding water as needed, until smooth. Remove any bones.'
+    'Cook the sweet potato in the microwave with a splash of water for 5–6 minutes, or steam until soft.',
+    'While that cooks, heat a frying pan over medium heat and cook the salmon for 3–4 minutes per side, until fully cooked.',
+    'Mash the sweet potato in a bowl, flake the salmon finely, and mix together with olive oil.',
+    'Be sure to blend all ingredients to a suitable consistency for your baby.'
   ],
-  'Serve warm on a spoon.',
-  'Double-check for small bones before blending.'
+  'Serve at a texture suitable for your baby''s stage.',
+  '1–2 small servings',
+  '10-Minute Meals (Minimal Prep)',
+  ARRAY['Quick','Omega-3'],
+  ARRAY['microwave or steamer','small frying pan','bowl','fork'],
+  'Fridge up to 24 hours',
+  'Freeze up to 2 months',
+  'Keep the salmon in very soft flakes and mix well through the mash.',
+  'Salmon adds healthy fats and protein, while sweet potato keeps the meal soft and easy to eat.'
+),
+
+-- ── HIGH-ENERGY MEALS FOR SMALL APPETITES (3) ────────────────────────────────
+
+(
+  'e0000000-0000-0000-0000-000000000018',
+  'Beef & Ghee Mini Mash',
+  '6m+',
+  ARRAY['dairy'],
+  '[{"name":"beef mince","quantity":"80g"},{"name":"white potato, peeled and cubed","quantity":"100g"},{"name":"ghee","quantity":"1 tsp"}]',
+  ARRAY[
+    'Boil the potato for 10–12 minutes until very soft. Drain and mash well.',
+    'Heat a frying pan over medium heat and cook the beef for 5–6 minutes until fully browned.',
+    'Mix the cooked beef through the mashed potato and stir in the ghee.'
+  ],
+  'Serve at a texture suitable for your baby''s stage.',
+  '2 servings',
+  'High-Energy Meals for Small Appetites',
+  ARRAY['Energy-Dense','Iron-Rich'],
+  ARRAY['small frying pan','small pot','bowl','fork'],
+  'Fridge up to 2 days',
+  'Freeze up to 3 months',
+  'Mash more thoroughly for an earlier stage baby.',
+  'A simple way to combine iron and extra energy in one easy meal for babies who don''t eat big volumes.'
 ),
 (
-  'a0000008-0000-0000-0000-000000000002',
-  'Tuna Pasta',
-  '9+ months',
-  ARRAY['fish','wheat','dairy'],
-  '[{"name":"small pasta","quantity":"30 g"},{"name":"canned tuna in water (no salt)","quantity":"30 g, drained"},{"name":"cream cheese","quantity":"1 tbsp"},{"name":"frozen peas","quantity":"2 tbsp"}]',
-  ARRAY[
-    'Cook pasta until very soft with peas in the last 2 minutes.',
-    'Drain. Stir through cream cheese and flaked tuna.'
-  ],
-  'Serve warm.',
-  'Use canned tuna in spring water, no added salt.'
-),
-(
-  'a0000008-0000-0000-0000-000000000003',
-  'Baked Cod with Carrot Mash',
-  '7+ months',
+  'e0000000-0000-0000-0000-000000000019',
+  'Salmon, Avocado & Olive Oil Bowl',
+  '6m+',
   ARRAY['fish'],
-  '[{"name":"cod fillet","quantity":"60 g"},{"name":"carrots","quantity":"2, diced"},{"name":"olive oil","quantity":"½ tsp"}]',
+  '[{"name":"salmon fillet","quantity":"80g"},{"name":"avocado","quantity":"½"},{"name":"extra virgin olive oil","quantity":"1 tsp"}]',
   ARRAY[
-    'Rub cod with oil and bake at 180 °C for 15 minutes.',
-    'Steam carrots until soft.',
-    'Mash carrots and flake fish over top, checking for bones.',
-    'Blend together or serve chunky for older babies.'
+    'Heat a frying pan over medium heat and cook the salmon for 3–4 minutes per side until fully cooked.',
+    'Flake the salmon well with a fork.',
+    'Mash the avocado in a bowl.',
+    'Add the salmon and olive oil and mix gently.'
   ],
-  'Serve warm.',
-  NULL
+  'Serve at a texture suitable for your baby''s stage.',
+  '1 small serving',
+  'High-Energy Meals for Small Appetites',
+  ARRAY['Energy-Dense','Healthy Fats','Omega-3'],
+  ARRAY['small frying pan','bowl','fork'],
+  'Fridge up to 24 hours',
+  'Not recommended',
+  'This should stay very soft and creamy.',
+  'High in healthy fats, this is a great option when you want more calories packed into a smaller amount of food.'
 ),
 (
-  'a0000008-0000-0000-0000-000000000004',
-  'Salmon Cakes',
-  '10+ months',
-  ARRAY['fish','egg'],
-  '[{"name":"cooked flaked salmon","quantity":"80 g"},{"name":"egg","quantity":"1"},{"name":"mashed potato","quantity":"2 tbsp"},{"name":"fresh dill","quantity":"a pinch"}]',
+  'e0000000-0000-0000-0000-000000000020',
+  'Egg, Ricotta & Butter Soft Scramble',
+  '6m+',
+  ARRAY['egg','dairy'],
+  '[{"name":"egg","quantity":"1"},{"name":"ricotta","quantity":"1 tbsp"},{"name":"butter","quantity":"1 tsp"}]',
   ARRAY[
-    'Mix all ingredients together.',
-    'Shape into small flat cakes.',
-    'Pan-fry in a little olive oil, 3 minutes per side, until golden.'
+    'Crack the egg into a bowl and whisk lightly.',
+    'Heat a small frying pan over low heat and add the butter.',
+    'Pour in the egg and cook gently for 2 minutes, stirring slowly.',
+    'Just before it''s done, stir through the ricotta and cook for another 30–60 seconds until soft and creamy.'
   ],
-  'Serve at room temperature as finger food.',
-  'Check for bones carefully before mixing.'
-),
-(
-  'a0000008-0000-0000-0000-000000000005',
-  'Creamy Salmon Orzo',
-  '10+ months',
-  ARRAY['fish','wheat','dairy'],
-  '[{"name":"orzo","quantity":"30 g"},{"name":"salmon fillet","quantity":"60 g"},{"name":"cream cheese","quantity":"1 tbsp"},{"name":"baby spinach","quantity":"handful"}]',
-  ARRAY[
-    'Cook orzo until very soft.',
-    'Steam or poach salmon until cooked; flake and check for bones.',
-    'Toss orzo with cream cheese, spinach, and salmon.'
-  ],
-  'Serve warm.',
-  NULL
-),
-
--- ── SHELLFISH (5) ────────────────────────────────────────────────────────────
-
-(
-  'a0000009-0000-0000-0000-000000000001',
-  'Prawn and Avocado Puree',
-  '7+ months',
-  ARRAY['shellfish'],
-  '[{"name":"cooked prawns (peeled, deveined)","quantity":"60 g"},{"name":"ripe avocado","quantity":"½"},{"name":"lemon juice","quantity":"a few drops"}]',
-  ARRAY[
-    'Blend prawns until smooth, adding a little water if needed.',
-    'Mash avocado separately.',
-    'Combine both with lemon juice to taste.'
-  ],
-  'Serve chilled or at room temperature on a spoon.',
-  'Use fully cooked, fresh or frozen-then-thawed prawns. Never raw.'
-),
-(
-  'a0000009-0000-0000-0000-000000000002',
-  'Crab and Sweet Potato Mash',
-  '8+ months',
-  ARRAY['shellfish'],
-  '[{"name":"crab meat (cooked)","quantity":"40 g"},{"name":"sweet potato","quantity":"1 small"}]',
-  ARRAY[
-    'Steam sweet potato until very soft, then mash.',
-    'Stir in flaked crab meat.',
-    'Blend further if a smoother texture is needed.'
-  ],
-  'Serve warm.',
-  'Use real crab — avoid imitation crab which contains wheat and additives.'
-),
-(
-  'a0000009-0000-0000-0000-000000000003',
-  'Prawn Risotto',
-  '10+ months',
-  ARRAY['shellfish','dairy'],
-  '[{"name":"arborio rice","quantity":"3 tbsp"},{"name":"cooked prawns","quantity":"40 g"},{"name":"low-sodium vegetable stock","quantity":"200 ml"},{"name":"Parmesan","quantity":"1 tsp"}]',
-  ARRAY[
-    'Simmer stock in a pot.',
-    'Cook rice in a separate small pan, adding stock a ladleful at a time, stirring until absorbed, about 18 minutes.',
-    'Stir in chopped prawns and Parmesan; cook 2 more minutes.'
-  ],
-  'Serve warm.',
-  NULL
-),
-(
-  'a0000009-0000-0000-0000-000000000004',
-  'Soft Shrimp Noodles',
-  '10+ months',
-  ARRAY['shellfish','wheat','dairy'],
-  '[{"name":"soft-cooked spaghetti","quantity":"30 g"},{"name":"cooked shrimp (chopped small)","quantity":"40 g"},{"name":"butter","quantity":"½ tsp"},{"name":"garlic powder","quantity":"a pinch"}]',
-  ARRAY[
-    'Cook spaghetti until very soft, then cut into short pieces.',
-    'Melt butter in a small pan, add garlic powder and shrimp, heat 2 minutes.',
-    'Toss noodles with shrimp.'
-  ],
-  'Serve warm.',
-  NULL
-),
-(
-  'a0000009-0000-0000-0000-000000000005',
-  'Crab Cake Bites',
-  '11+ months',
-  ARRAY['shellfish','egg','wheat'],
-  '[{"name":"crab meat (cooked)","quantity":"80 g"},{"name":"egg","quantity":"1"},{"name":"breadcrumbs","quantity":"2 tbsp"},{"name":"lemon zest","quantity":"a pinch"},{"name":"fresh parsley","quantity":"1 tsp, finely chopped"}]',
-  ARRAY[
-    'Combine all ingredients and mix well.',
-    'Shape into small flat cakes.',
-    'Bake at 200 °C for 15 minutes, flipping halfway.'
-  ],
-  'Cool and serve as finger food.',
-  'Only serve when shellfish, egg, and wheat have each been cleared individually.'
+  'Serve at a texture suitable for your baby''s stage.',
+  '1 small serving',
+  'High-Energy Meals for Small Appetites',
+  ARRAY['Energy-Dense','Protein'],
+  ARRAY['small frying pan','bowl','fork','spatula'],
+  'Best served fresh, or fridge up to 24 hours',
+  'Not recommended',
+  'Keep it loose and soft rather than fully set.',
+  'This is soft, energy-dense, and easy to eat for babies who do better with smaller, richer meals.'
 )
 
 ON CONFLICT (id) DO NOTHING;
-
--- ─────────────────────────────────────────────────────────────────────────────
--- RECIPE THUMBNAILS (picsum.photos seeded — deterministic, free, no auth)
--- ─────────────────────────────────────────────────────────────────────────────
-UPDATE recipes SET thumbnail_url = 'https://picsum.photos/seed/peanut-recipe/400/300'    WHERE id LIKE 'a0000001%';
-UPDATE recipes SET thumbnail_url = 'https://picsum.photos/seed/egg-recipe/400/300'       WHERE id LIKE 'a0000002%';
-UPDATE recipes SET thumbnail_url = 'https://picsum.photos/seed/dairy-recipe/400/300'     WHERE id LIKE 'a0000003%';
-UPDATE recipes SET thumbnail_url = 'https://picsum.photos/seed/treenuts-recipe/400/300'  WHERE id LIKE 'a0000004%';
-UPDATE recipes SET thumbnail_url = 'https://picsum.photos/seed/sesame-recipe/400/300'    WHERE id LIKE 'a0000005%';
-UPDATE recipes SET thumbnail_url = 'https://picsum.photos/seed/soy-recipe/400/300'       WHERE id LIKE 'a0000006%';
-UPDATE recipes SET thumbnail_url = 'https://picsum.photos/seed/wheat-recipe/400/300'     WHERE id LIKE 'a0000007%';
-UPDATE recipes SET thumbnail_url = 'https://picsum.photos/seed/fish-recipe/400/300'      WHERE id LIKE 'a0000008%';
-UPDATE recipes SET thumbnail_url = 'https://picsum.photos/seed/shellfish-recipe/400/300' WHERE id LIKE 'a0000009%';

@@ -18,9 +18,7 @@ class GuideIconTileGrid extends StatelessWidget {
     return Wrap(
       spacing: AppSizes.sp12,
       runSpacing: AppSizes.sp12,
-      children: [
-        for (final label in labels) _Tile(label: label),
-      ],
+      children: [for (final label in labels) _Tile(label: label)],
     );
   }
 }

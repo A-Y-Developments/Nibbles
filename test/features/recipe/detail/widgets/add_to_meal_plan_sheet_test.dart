@@ -76,16 +76,15 @@ void main() {
       },
     );
 
-    testWidgets(
-      'the default-expanded day row exposes an "Add" pill button',
-      (tester) async {
-        await _setupViewport(tester);
-        await _openSheet(tester);
+    testWidgets('the default-expanded day row exposes an "Add" pill button', (
+      tester,
+    ) async {
+      await _setupViewport(tester);
+      await _openSheet(tester);
 
-        // The first day row is expanded by default → "Add" pill is visible.
-        expect(find.widgetWithText(AppPillButton, 'Add'), findsOneWidget);
-      },
-    );
+      // The first day row is expanded by default → "Add" pill is visible.
+      expect(find.widgetWithText(AppPillButton, 'Add'), findsOneWidget);
+    });
   });
 
   group('AddToMealPlanSheet — counter + CTA gating', () {

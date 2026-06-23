@@ -5,8 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
-import 'package:nibbles/src/common/components/feedback/empty_state.dart';
-import 'package:nibbles/src/common/components/navigation/app_header.dart';
+import 'package:nibbles/src/app/themes/app_typography.dart';
+import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/common/services/local_flag_service.dart';
 import 'package:nibbles/src/features/starting_guide/constants/articles.dart';
 import 'package:nibbles/src/features/starting_guide/starting_guide_controller.dart';
@@ -71,75 +71,77 @@ class _StartingGuideHubScreenState
 
     final header = SafeArea(
       bottom: false,
-      child: AppHeader(
-        title: 'Starting Guide',
-        leading: GuideBackButton(onTap: _onBack),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSizes.sp12,
+          vertical: AppSizes.sm,
+        ),
+        child: Row(
+          children: [
+            GuideBackButton(onTap: _onBack),
+            const SizedBox(width: AppSizes.xs),
+            Expanded(
+              child: Text(
+                'Starting Guide',
+                style: AppTypography.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.fgStrong,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Container(
-        decoration: const BoxDecoration(
-          // Grad-1 (matches profile_screen): CSS
-          // linear-gradient(152.612deg, #FFFCD5 19.168%, #F5F5F5 50%).
-          gradient: LinearGradient(
-            begin: Alignment(-0.460, -0.888),
-            end: Alignment(0.460, 0.888),
-            stops: [0.19168, 0.5],
-            colors: [AppColors.butterSoft, Color(0xFFF5F5F5)],
-          ),
+    return GradientScaffold(
+      body: guideAsync.when(
+        loading: () => Column(
+          children: [
+            header,
+            const Expanded(child: Center(child: CircularProgressIndicator())),
+          ],
         ),
-        child: guideAsync.when(
-          loading: () => Column(
-            children: [
-              header,
-              const Expanded(
-                child: Center(child: CircularProgressIndicator()),
-              ),
-            ],
-          ),
-          error: (_, __) => Column(
-            children: [
-              header,
-              Expanded(
-                child: Center(
-                  child: EmptyState(
-                    title: "Couldn't load the Starting Guide.",
-                    subtitle: 'Pull down or tap retry to try again.',
-                    ctaLabel: 'Retry',
-                    onCtaPressed: () =>
-                        ref.invalidate(startingGuideControllerProvider),
-                  ),
+        error: (_, __) => Column(
+          children: [
+            header,
+            Expanded(
+              child: Center(
+                child: EmptyState(
+                  title: "Couldn't load the Starting Guide.",
+                  subtitle: 'Pull down or tap retry to try again.',
+                  ctaLabel: 'Retry',
+                  onCtaPressed: () =>
+                      ref.invalidate(startingGuideControllerProvider),
                 ),
               ),
-            ],
-          ),
-          data: (state) => CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(child: header),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSizes.pagePaddingH,
-                  AppSizes.md,
-                  AppSizes.pagePaddingH,
-                  AppSizes.xl,
-                ),
-                sliver: SliverList.separated(
-                  itemCount: state.articles.length,
-                  separatorBuilder: (_, __) =>
-                      const SizedBox(height: AppSizes.sp12),
-                  itemBuilder: (context, index) {
-                    final article = state.articles[index];
-                    return ArticleCard(
-                      article: article,
-                      onTap: () => _openArticle(article.slug),
-                    );
-                  },
-                ),
+            ),
+          ],
+        ),
+        data: (state) => CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(child: header),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSizes.md,
+                AppSizes.md,
+                AppSizes.md,
+                AppSizes.xl,
               ),
-            ],
-          ),
+              sliver: SliverList.separated(
+                itemCount: state.articles.length,
+                separatorBuilder: (_, __) =>
+                    const SizedBox(height: AppSizes.md),
+                itemBuilder: (context, index) {
+                  final article = state.articles[index];
+                  return ArticleCard(
+                    article: article,
+                    onTap: () => _openArticle(article.slug),
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );

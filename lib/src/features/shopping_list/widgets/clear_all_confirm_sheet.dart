@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
-import 'package:nibbles/src/common/components/brand/quatrefoil.dart';
+import 'package:nibbles/src/common/components/brand/brand_flower.dart';
 import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
 
 /// Bulk-delete confirmation sheet for the Shopping List
@@ -10,12 +10,16 @@ import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
 ///
 /// White sheet with top corners rounded 30px, scrim 50% black.
 /// Title "Are you sure you want to delete?" (Parkinsans Bold 17, centered),
-/// 153px quatrefoil illustration, Cancel (outline forest) + Delete (filled
+/// 153px quatrefoil illustration, Cancel (plain forest text) + Delete (filled
 /// forest) bottom row. Resolves to `true` when Delete is tapped, `false` /
 /// `null` otherwise.
+///
+/// Presented on the root navigator so the sheet + scrim sit OVER the bottom
+/// navigation bar (Figma 971:9958) rather than inside the shell body.
 Future<bool?> showClearAllConfirmSheet(BuildContext context) {
   return showModalBottomSheet<bool>(
     context: context,
+    useRootNavigator: true,
     backgroundColor: AppColors.surface,
     barrierColor: Colors.black.withValues(alpha: 0.5),
     isScrollControlled: true,
@@ -59,15 +63,15 @@ class _ClearAllConfirmSheet extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: AppSizes.sm),
-            const Center(child: Quatrefoil(size: 153)),
-            const SizedBox(height: AppSizes.sm),
+            const SizedBox(height: AppSizes.lg),
+            const Center(child: BrandFlower(size: 153)),
+            const SizedBox(height: AppSizes.lg),
             Row(
               children: [
                 Expanded(
                   child: AppPillButton(
                     label: 'Cancel',
-                    variant: AppPillButtonVariant.secondary,
+                    variant: AppPillButtonVariant.text,
                     onPressed: () => Navigator.of(context).pop(false),
                   ),
                 ),

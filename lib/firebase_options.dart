@@ -40,19 +40,19 @@ class DefaultFirebaseOptions {
   }
 
   static FirebaseOptions get android => FirebaseOptions(
-        apiKey: FlavorConfig.instance.firebaseAndroidApiKey,
-        appId: FlavorConfig.instance.firebaseAndroidAppId,
-        messagingSenderId: FlavorConfig.instance.firebaseMessagingSenderId,
-        projectId: FlavorConfig.instance.firebaseProjectId,
-        storageBucket: FlavorConfig.instance.firebaseStorageBucket,
-      );
+    apiKey: FlavorConfig.instance.firebaseAndroidApiKey,
+    appId: FlavorConfig.instance.firebaseAndroidAppId,
+    messagingSenderId: FlavorConfig.instance.firebaseMessagingSenderId,
+    projectId: FlavorConfig.instance.firebaseProjectId,
+    storageBucket: FlavorConfig.instance.firebaseStorageBucket,
+  );
 
   static FirebaseOptions get ios => FirebaseOptions(
-        apiKey: FlavorConfig.instance.firebaseIosApiKey,
-        appId: FlavorConfig.instance.firebaseIosAppId,
-        messagingSenderId: FlavorConfig.instance.firebaseMessagingSenderId,
-        projectId: FlavorConfig.instance.firebaseProjectId,
-        storageBucket: FlavorConfig.instance.firebaseStorageBucket,
-        iosBundleId: FlavorConfig.instance.firebaseIosBundleId,
-      );
+    apiKey: FlavorConfig.instance.firebaseIosApiKey,
+    appId: FlavorConfig.instance.firebaseIosAppId,
+    messagingSenderId: FlavorConfig.instance.firebaseMessagingSenderId,
+    projectId: FlavorConfig.instance.firebaseProjectId,
+    storageBucket: FlavorConfig.instance.firebaseStorageBucket,
+    iosBundleId: FlavorConfig.instance.firebaseIosBundleId,
+  );
 }

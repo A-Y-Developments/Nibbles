@@ -314,9 +314,7 @@ class Analytics {
   Future<void> logRecipeSearch({int? queryLength}) async {
     await _logEvent(
       'recipe_search',
-      parameters: {
-        if (queryLength != null) 'query_length': queryLength,
-      },
+      parameters: {if (queryLength != null) 'query_length': queryLength},
     );
   }
 
@@ -329,10 +327,7 @@ class Analytics {
   // TODO(NIB-53): callers should pass `source` via GoRouter `extra` so we can
   // distinguish hub vs article entry points.
   Future<void> logStartingGuideOpened({required String source}) async {
-    await _logEvent(
-      'starting_guide_opened',
-      parameters: {'source': source},
-    );
+    await _logEvent('starting_guide_opened', parameters: {'source': source});
   }
 
   Future<void> logStartingGuideArticleViewed({required String slug}) async {
@@ -475,10 +470,7 @@ class Analytics {
   }
 
   Future<void> logAccountDeletionStarted({required String reason}) async {
-    await _logEvent(
-      'account_deletion_started',
-      parameters: {'reason': reason},
-    );
+    await _logEvent('account_deletion_started', parameters: {'reason': reason});
   }
 
   Future<void> logAccountDeletionCompleted() async {

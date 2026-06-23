@@ -82,6 +82,8 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(ConsentType.solidsIntroduction);
+    registerFallbackValue(Gender.preferNotToSay);
+    registerFallbackValue(<bool>[]);
   });
 
   setUp(() {
@@ -90,7 +92,7 @@ void main() {
     crashRecorder = _CrashRecorderSpy();
 
     when(
-      () => babyProfile.createBaby(any(), any()),
+      () => babyProfile.createBaby(any(), any(), any(), any()),
     ).thenAnswer((_) async => Result.success(_fakeBaby));
     when(
       () => consent.recordConsent(
@@ -132,126 +134,115 @@ void main() {
     },
   );
 
-  test(
-    'records BOTH solidsIntroduction and under6MoResponsibility when baby '
-    'DOB is younger than 6 months at submit time',
-    () async {
-      final container = _makeContainer(
-        babyProfile: babyProfile,
-        consent: consent,
-        crashRecorder: crashRecorder,
-      );
-      final controller = container.read(onboardingControllerProvider.notifier)
-        ..updateName('Lily')
-        // 2 months old — well under the 6mo cutoff.
-        ..updateDob(DateTime.now().subtract(const Duration(days: 60)));
+  test('records BOTH solidsIntroduction and under6MoResponsibility when baby '
+      'DOB is younger than 6 months at submit time', () async {
+    final container = _makeContainer(
+      babyProfile: babyProfile,
+      consent: consent,
+      crashRecorder: crashRecorder,
+    );
+    final controller = container.read(onboardingControllerProvider.notifier)
+      ..updateName('Lily')
+      // 2 months old — well under the 6mo cutoff.
+      ..updateDob(DateTime.now().subtract(const Duration(days: 60)));
 
-      final ok = await controller.submit();
+    final ok = await controller.submit();
 
-      expect(ok, isTrue);
-      verify(
-        () => consent.recordConsent(
-          babyId: 'baby-001',
-          type: ConsentType.solidsIntroduction,
-        ),
-      ).called(1);
-      verify(
-        () => consent.recordConsent(
-          babyId: 'baby-001',
-          type: ConsentType.under6MoResponsibility,
-        ),
-      ).called(1);
-    },
-  );
+    expect(ok, isTrue);
+    verify(
+      () => consent.recordConsent(
+        babyId: 'baby-001',
+        type: ConsentType.solidsIntroduction,
+      ),
+    ).called(1);
+    verify(
+      () => consent.recordConsent(
+        babyId: 'baby-001',
+        type: ConsentType.under6MoResponsibility,
+      ),
+    ).called(1);
+  });
 
-  test(
-    'P2 — consent insert failure does NOT block submit and logs to '
-    'Crashlytics with the consent_type for triage',
-    () async {
-      when(
-        () => consent.recordConsent(
-          babyId: any(named: 'babyId'),
-          type: any(named: 'type'),
-        ),
-      ).thenAnswer(
-        (_) async => const Result.failure(ServerException('rls denied')),
-      );
+  test('P2 — consent insert failure does NOT block submit and logs to '
+      'Crashlytics with the consent_type for triage', () async {
+    when(
+      () => consent.recordConsent(
+        babyId: any(named: 'babyId'),
+        type: any(named: 'type'),
+      ),
+    ).thenAnswer(
+      (_) async => const Result.failure(ServerException('rls denied')),
+    );
 
-      final container = _makeContainer(
-        babyProfile: babyProfile,
-        consent: consent,
-        crashRecorder: crashRecorder,
-      );
-      final controller = container.read(onboardingControllerProvider.notifier)
-        ..updateName('Lily')
-        ..updateDob(DateTime.now().subtract(const Duration(days: 60)));
+    final container = _makeContainer(
+      babyProfile: babyProfile,
+      consent: consent,
+      crashRecorder: crashRecorder,
+    );
+    final controller = container.read(onboardingControllerProvider.notifier)
+      ..updateName('Lily')
+      ..updateDob(DateTime.now().subtract(const Duration(days: 60)));
 
-      final ok = await controller.submit();
+    final ok = await controller.submit();
 
-      // Still succeeds — DB receipt failure must not surface as a blocker.
-      expect(ok, isTrue);
-      final state = container.read(onboardingControllerProvider);
-      expect(state.submitErrorMessage, isNull);
-      expect(state.isSubmitting, isFalse);
+    // Still succeeds — DB receipt failure must not surface as a blocker.
+    expect(ok, isTrue);
+    final state = container.read(onboardingControllerProvider);
+    expect(state.submitErrorMessage, isNull);
+    expect(state.isSubmitting, isFalse);
 
-      // Both calls were attempted (the second consent didn't short-circuit
-      // on the first failure — they're independent receipts).
-      verify(
-        () => consent.recordConsent(
-          babyId: 'baby-001',
-          type: ConsentType.solidsIntroduction,
-        ),
-      ).called(1);
-      verify(
-        () => consent.recordConsent(
-          babyId: 'baby-001',
-          type: ConsentType.under6MoResponsibility,
-        ),
-      ).called(1);
+    // Both calls were attempted (the second consent didn't short-circuit
+    // on the first failure — they're independent receipts).
+    verify(
+      () => consent.recordConsent(
+        babyId: 'baby-001',
+        type: ConsentType.solidsIntroduction,
+      ),
+    ).called(1);
+    verify(
+      () => consent.recordConsent(
+        babyId: 'baby-001',
+        type: ConsentType.under6MoResponsibility,
+      ),
+    ).called(1);
 
-      expect(crashRecorder.captured, hasLength(2));
-      for (final call in crashRecorder.captured) {
-        expect(call.reason, 'onboarding_consent_record_failure');
-        expect(call.error.toString(), contains('rls denied'));
-      }
-      expect(
-        crashRecorder.captured
-            .expand((c) => c.information)
-            .toList(),
-        containsAll(<String>[
-          'consent_type=solids_introduction',
-          'consent_type=under_6mo_responsibility',
-        ]),
-      );
-    },
-  );
+    expect(crashRecorder.captured, hasLength(2));
+    for (final call in crashRecorder.captured) {
+      expect(call.reason, 'onboarding_consent_record_failure');
+      expect(call.error.toString(), contains('rls denied'));
+    }
+    expect(
+      crashRecorder.captured.expand((c) => c.information).toList(),
+      containsAll(<String>[
+        'consent_type=solids_introduction',
+        'consent_type=under_6mo_responsibility',
+      ]),
+    );
+  });
 
-  test(
-    'when createBaby fails, no consent receipts are attempted',
-    () async {
-      when(() => babyProfile.createBaby(any(), any())).thenAnswer(
-        (_) async => const Result.failure(NetworkException('offline')),
-      );
+  test('when createBaby fails, no consent receipts are attempted', () async {
+    when(() => babyProfile.createBaby(any(), any(), any(), any())).thenAnswer(
+      (_) async => const Result.failure(NetworkException('offline')),
+    );
 
-      final container = _makeContainer(
-        babyProfile: babyProfile,
-        consent: consent,
-        crashRecorder: crashRecorder,
-      );
-      final controller = container.read(onboardingControllerProvider.notifier)
-        ..updateName('Lily')
-        ..updateDob(DateTime.now().subtract(const Duration(days: 60)));
+    final container = _makeContainer(
+      babyProfile: babyProfile,
+      consent: consent,
+      crashRecorder: crashRecorder,
+    );
+    final controller = container.read(onboardingControllerProvider.notifier)
+      ..updateName('Lily')
+      ..updateDob(DateTime.now().subtract(const Duration(days: 60)));
 
-      final ok = await controller.submit();
+    final ok = await controller.submit();
 
-      expect(ok, isFalse);
-      verifyNever(
-        () => consent.recordConsent(
-          babyId: any(named: 'babyId'),
-          type: any(named: 'type'),
-        ),
-      );
-      expect(crashRecorder.captured, isEmpty);
-    },
-  );
+    expect(ok, isFalse);
+    verifyNever(
+      () => consent.recordConsent(
+        babyId: any(named: 'babyId'),
+        type: any(named: 'type'),
+      ),
+    );
+    expect(crashRecorder.captured, isEmpty);
+  });
 }

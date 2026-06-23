@@ -24,9 +24,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// real baby record. Used by the visual-gate render phase in the build
 /// pipeline. When the flag is false (default), everything below is inert and
 /// production behaviour is unchanged.
-const bool kQaBypass = bool.fromEnvironment(
-  'NIBBLES_QA_BYPASS',
-);
+const bool kQaBypass = bool.fromEnvironment('NIBBLES_QA_BYPASS');
 
 /// Synthetic baby surfaced by [_QaBabyProfileRepository] so screens that need
 /// a baby record (Home, Profile, Profile Edit) render without a Supabase row.
@@ -72,9 +70,7 @@ List<Override> qaBypassOverrides() {
   if (!kQaBypass) return const [];
   return [
     authRepositoryProvider.overrideWithValue(const _QaAuthRepository()),
-    babyProfileRepositoryProvider.overrideWithValue(
-      _QaBabyProfileRepository(),
-    ),
+    babyProfileRepositoryProvider.overrideWithValue(_QaBabyProfileRepository()),
     allergenRepositoryProvider.overrideWithValue(const _QaAllergenRepository()),
     mealPlanRepositoryProvider.overrideWithValue(const _QaMealPlanRepository()),
   ];
@@ -139,6 +135,7 @@ class _QaBabyProfileRepository implements BabyProfileRepository {
     String name,
     DateTime dob, [
     Gender gender = Gender.preferNotToSay,
+    List<bool> readinessSigns = const [],
   ]) async => Result.success(_baby);
 
   @override

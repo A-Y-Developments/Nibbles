@@ -19,7 +19,9 @@ final _privateConstructorUsedError = UnsupportedError(
 mixin _$RegisterState {
   EmailInput get email => throw _privateConstructorUsedError;
   PasswordInput get password => throw _privateConstructorUsedError;
+  String get confirmPassword => throw _privateConstructorUsedError;
   bool get obscure => throw _privateConstructorUsedError;
+  bool get obscureConfirm => throw _privateConstructorUsedError;
   bool get isLoading => throw _privateConstructorUsedError;
   String? get errorMessage => throw _privateConstructorUsedError;
 
@@ -40,7 +42,9 @@ abstract class $RegisterStateCopyWith<$Res> {
   $Res call({
     EmailInput email,
     PasswordInput password,
+    String confirmPassword,
     bool obscure,
+    bool obscureConfirm,
     bool isLoading,
     String? errorMessage,
   });
@@ -63,7 +67,9 @@ class _$RegisterStateCopyWithImpl<$Res, $Val extends RegisterState>
   $Res call({
     Object? email = null,
     Object? password = null,
+    Object? confirmPassword = null,
     Object? obscure = null,
+    Object? obscureConfirm = null,
     Object? isLoading = null,
     Object? errorMessage = freezed,
   }) {
@@ -77,9 +83,17 @@ class _$RegisterStateCopyWithImpl<$Res, $Val extends RegisterState>
                 ? _value.password
                 : password // ignore: cast_nullable_to_non_nullable
                       as PasswordInput,
+            confirmPassword: null == confirmPassword
+                ? _value.confirmPassword
+                : confirmPassword // ignore: cast_nullable_to_non_nullable
+                      as String,
             obscure: null == obscure
                 ? _value.obscure
                 : obscure // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            obscureConfirm: null == obscureConfirm
+                ? _value.obscureConfirm
+                : obscureConfirm // ignore: cast_nullable_to_non_nullable
                       as bool,
             isLoading: null == isLoading
                 ? _value.isLoading
@@ -107,7 +121,9 @@ abstract class _$$RegisterStateImplCopyWith<$Res>
   $Res call({
     EmailInput email,
     PasswordInput password,
+    String confirmPassword,
     bool obscure,
+    bool obscureConfirm,
     bool isLoading,
     String? errorMessage,
   });
@@ -129,7 +145,9 @@ class __$$RegisterStateImplCopyWithImpl<$Res>
   $Res call({
     Object? email = null,
     Object? password = null,
+    Object? confirmPassword = null,
     Object? obscure = null,
+    Object? obscureConfirm = null,
     Object? isLoading = null,
     Object? errorMessage = freezed,
   }) {
@@ -143,9 +161,17 @@ class __$$RegisterStateImplCopyWithImpl<$Res>
             ? _value.password
             : password // ignore: cast_nullable_to_non_nullable
                   as PasswordInput,
+        confirmPassword: null == confirmPassword
+            ? _value.confirmPassword
+            : confirmPassword // ignore: cast_nullable_to_non_nullable
+                  as String,
         obscure: null == obscure
             ? _value.obscure
             : obscure // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        obscureConfirm: null == obscureConfirm
+            ? _value.obscureConfirm
+            : obscureConfirm // ignore: cast_nullable_to_non_nullable
                   as bool,
         isLoading: null == isLoading
             ? _value.isLoading
@@ -166,7 +192,9 @@ class _$RegisterStateImpl extends _RegisterState {
   const _$RegisterStateImpl({
     this.email = const EmailInput.pure(),
     this.password = const PasswordInput.pure(),
+    this.confirmPassword = '',
     this.obscure = true,
+    this.obscureConfirm = true,
     this.isLoading = false,
     this.errorMessage,
   }) : super._();
@@ -179,7 +207,13 @@ class _$RegisterStateImpl extends _RegisterState {
   final PasswordInput password;
   @override
   @JsonKey()
+  final String confirmPassword;
+  @override
+  @JsonKey()
   final bool obscure;
+  @override
+  @JsonKey()
+  final bool obscureConfirm;
   @override
   @JsonKey()
   final bool isLoading;
@@ -188,7 +222,7 @@ class _$RegisterStateImpl extends _RegisterState {
 
   @override
   String toString() {
-    return 'RegisterState(email: $email, password: $password, obscure: $obscure, isLoading: $isLoading, errorMessage: $errorMessage)';
+    return 'RegisterState(email: $email, password: $password, confirmPassword: $confirmPassword, obscure: $obscure, obscureConfirm: $obscureConfirm, isLoading: $isLoading, errorMessage: $errorMessage)';
   }
 
   @override
@@ -199,7 +233,11 @@ class _$RegisterStateImpl extends _RegisterState {
             (identical(other.email, email) || other.email == email) &&
             (identical(other.password, password) ||
                 other.password == password) &&
+            (identical(other.confirmPassword, confirmPassword) ||
+                other.confirmPassword == confirmPassword) &&
             (identical(other.obscure, obscure) || other.obscure == obscure) &&
+            (identical(other.obscureConfirm, obscureConfirm) ||
+                other.obscureConfirm == obscureConfirm) &&
             (identical(other.isLoading, isLoading) ||
                 other.isLoading == isLoading) &&
             (identical(other.errorMessage, errorMessage) ||
@@ -211,7 +249,9 @@ class _$RegisterStateImpl extends _RegisterState {
     runtimeType,
     email,
     password,
+    confirmPassword,
     obscure,
+    obscureConfirm,
     isLoading,
     errorMessage,
   );
@@ -229,7 +269,9 @@ abstract class _RegisterState extends RegisterState {
   const factory _RegisterState({
     final EmailInput email,
     final PasswordInput password,
+    final String confirmPassword,
     final bool obscure,
+    final bool obscureConfirm,
     final bool isLoading,
     final String? errorMessage,
   }) = _$RegisterStateImpl;
@@ -240,7 +282,11 @@ abstract class _RegisterState extends RegisterState {
   @override
   PasswordInput get password;
   @override
+  String get confirmPassword;
+  @override
   bool get obscure;
+  @override
+  bool get obscureConfirm;
   @override
   bool get isLoading;
   @override

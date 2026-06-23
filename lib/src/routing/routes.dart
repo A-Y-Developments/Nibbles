@@ -33,6 +33,8 @@ import 'package:nibbles/src/features/recipe/detail/recipe_detail_screen.dart';
 import 'package:nibbles/src/features/recipe/library/recipe_library_screen.dart';
 import 'package:nibbles/src/features/shopping_list/shopping_list_screen.dart';
 import 'package:nibbles/src/features/splash/splash_screen.dart';
+import 'package:nibbles/src/features/starting_guide/feeding_principles/feeding_principles_screen.dart';
+import 'package:nibbles/src/features/starting_guide/first_nibbles/first_nibbles_screen.dart';
 import 'package:nibbles/src/features/starting_guide/starting_guide_article_screen.dart';
 import 'package:nibbles/src/features/starting_guide/starting_guide_hub_screen.dart';
 import 'package:nibbles/src/features/subscription/manage/manage_subscription_screen.dart';
@@ -113,18 +115,29 @@ String? resolveAppRedirect({
     return AppRoute.onboardingName.path;
   }
 
-  // 5. Phase B — readiness 5-step.
+  // 5. Phase B — readiness 5-step. Whitelist name + dob too so back-nav from
+  //    readiness Q1 reaches the DOB ("baby born") screen without bouncing.
   if (!readinessDone) {
-    if (location == AppRoute.onboardingReadiness.path) return null;
+    const phaseB = {
+      '/onboarding/name',
+      '/onboarding/dob',
+      '/onboarding/readiness',
+    };
+    if (phaseB.contains(location)) return null;
     return AppRoute.onboardingReadiness.path;
   }
 
   // 6. Phase C — result + consent. Both share `onboarding_done` (flag flips
-  //    only after createBaby succeeds at consent submit). Whitelist both so
-  //    result -> consent forward nav does not bounce; landing is consent so
-  //    kill-and-resume lands on the actionable screen, not the pass-through.
+  //    only after createBaby succeeds at consent submit). Whitelist readiness
+  //    too so result back-nav reaches readiness without bouncing forward to
+  //    consent; landing is consent so kill-and-resume lands on the actionable
+  //    screen, not a pass-through.
   if (!onboardingDone) {
-    const phaseC = {'/onboarding/result', '/onboarding/consent'};
+    const phaseC = {
+      '/onboarding/readiness',
+      '/onboarding/result',
+      '/onboarding/consent',
+    };
     if (phaseC.contains(location)) return null;
     return AppRoute.onboardingConsent.path;
   }
@@ -147,19 +160,21 @@ String? resolveAppRedirect({
   };
   if (gatedPaths.contains(location)) return AppRoute.home.path;
 
-  // 8. M2 paywall guard (NIB-144). Onboarded but unsubscribed users are
-  //    redirected to the paywall. Allow the paywall itself and the post-
-  //    purchase transition screen through so the purchase flow can complete.
-  //    `devPaywallSkipped` (NIB-150) is the dev-flavor-only QA seam past the
-  //    gate — always false in prod (see dev_paywall_skip.dart).
-  if (!isSubscribed && !devPaywallSkipped) {
-    const subscriptionAllowedPaths = {
-      '/subscription/paywall',
-      '/subscription/success',
-    };
-    if (subscriptionAllowedPaths.contains(location)) return null;
-    return AppRoute.paywall.path;
-  }
+  // 8. M2 paywall guard (NIB-144) — DISABLED while M2 is deferred. Onboarded
+  //    users reach /home regardless of subscription state. Re-enable by
+  //    restoring the guard below once the paywall ships.
+  //    NOTE: the post-consent loading screen (/onboarding/baby-setup-loading)
+  //    is NOT in `gatedPaths`, so with this guard active it would itself be
+  //    bounced to the paywall before its dwell completes.
+  //
+  // if (!isSubscribed && !devPaywallSkipped) {
+  //   const subscriptionAllowedPaths = {
+  //     '/subscription/paywall',
+  //     '/subscription/success',
+  //   };
+  //   if (subscriptionAllowedPaths.contains(location)) return null;
+  //   return AppRoute.paywall.path;
+  // }
 
   return null;
 }
@@ -440,9 +455,16 @@ GoRouter goRouter(Ref ref) {
                         path: ':slug',
                         name: AppRoute.startingGuideArticle.name,
                         parentNavigatorKey: rootNavigatorKey,
-                        builder: (context, state) => StartingGuideArticleScreen(
-                          slug: state.pathParameters['slug'] ?? '',
-                        ),
+                        builder: (context, state) {
+                          final slug = state.pathParameters['slug'] ?? '';
+                          if (slug == 'first-nibbles') {
+                            return const FirstNibblesScreen();
+                          }
+                          if (slug == 'feeding-principles') {
+                            return const FeedingPrinciplesScreen();
+                          }
+                          return StartingGuideArticleScreen(slug: slug);
+                        },
                       ),
                     ],
                   ),

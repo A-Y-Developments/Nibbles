@@ -5,9 +5,7 @@ import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/services/subscription_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-ProviderContainer _makeContainer({
-  SubscriptionLaunchUrlFn? launchUrl,
-}) {
+ProviderContainer _makeContainer({SubscriptionLaunchUrlFn? launchUrl}) {
   final c = ProviderContainer(
     overrides: [
       if (launchUrl != null)
@@ -41,15 +39,19 @@ void main() {
   });
 
   group('SubscriptionService.info', () {
-    test('returns SubscriptionInfo(isActive: false) when state is false',
-        () async {
-      final c = _makeContainer();
-      final result = await c.read(subscriptionServiceProvider.notifier).info();
+    test(
+      'returns SubscriptionInfo(isActive: false) when state is false',
+      () async {
+        final c = _makeContainer();
+        final result = await c
+            .read(subscriptionServiceProvider.notifier)
+            .info();
 
-      expect(result.isSuccess, isTrue);
-      final info = result.dataOrNull!;
-      expect(info.isActive, isFalse);
-    });
+        expect(result.isSuccess, isTrue);
+        final info = result.dataOrNull!;
+        expect(info.isActive, isFalse);
+      },
+    );
 
     test('returns active SubscriptionInfo when state is true', () async {
       final c = _makeContainer();
@@ -71,15 +73,13 @@ void main() {
   group('SubscriptionService.loadOfferings', () {
     test('returns Success with the placeholder trial offering', () async {
       final c = _makeContainer();
-      final result =
-          await c.read(subscriptionServiceProvider.notifier).loadOfferings();
+      final result = await c
+          .read(subscriptionServiceProvider.notifier)
+          .loadOfferings();
 
       expect(result.isSuccess, isTrue);
       final offering = result.dataOrNull!;
-      expect(
-        offering,
-        equals(SubscriptionService.placeholderTrialOffering),
-      );
+      expect(offering, equals(SubscriptionService.placeholderTrialOffering));
       expect(offering.trialDays, 3);
       expect(offering.periodLabel, 'yearly');
     });
@@ -90,8 +90,9 @@ void main() {
       final c = _makeContainer();
       expect(c.read(subscriptionServiceProvider), isFalse);
 
-      final result =
-          await c.read(subscriptionServiceProvider.notifier).purchaseDefault();
+      final result = await c
+          .read(subscriptionServiceProvider.notifier)
+          .purchaseDefault();
 
       expect(result, isA<Success<void>>());
       expect(c.read(subscriptionServiceProvider), isTrue);
@@ -101,14 +102,12 @@ void main() {
   group('SubscriptionService.restore', () {
     test('returns Failure(NotFoundException) with canonical message', () async {
       final c = _makeContainer();
-      final result =
-          await c.read(subscriptionServiceProvider.notifier).restore();
+      final result = await c
+          .read(subscriptionServiceProvider.notifier)
+          .restore();
 
       expect(result, isA<Failure<void>>());
-      expect(
-        (result as Failure<void>).error,
-        isA<NotFoundException>(),
-      );
+      expect((result as Failure<void>).error, isA<NotFoundException>());
       expect(result.error.message, 'No active subscription found.');
     });
   });
@@ -136,10 +135,7 @@ void main() {
           .openManagementPage();
 
       expect(result, isA<Failure<void>>());
-      expect(
-        (result as Failure<void>).error,
-        isA<UnknownException>(),
-      );
+      expect((result as Failure<void>).error, isA<UnknownException>());
       expect(
         result.error.message,
         contains("Couldn't open subscription settings"),

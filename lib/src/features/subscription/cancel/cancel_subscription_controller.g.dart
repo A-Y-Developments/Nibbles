@@ -7,7 +7,7 @@ part of 'cancel_subscription_controller.dart';
 // **************************************************************************
 
 String _$cancelSubscriptionControllerHash() =>
-    r'f344e2d60dfc053868216ae225bdeaf52628468c';
+    r'12d22d251683f935e5a6cde1f4eadc1fe115e300';
 
 /// Drives the cancel-subscription reason overlay (NIB-82).
 ///

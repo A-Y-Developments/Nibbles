@@ -245,9 +245,8 @@ void main() {
         () => mockAllergenRepo.getLogs(_babyId),
       ).thenAnswer((_) async => const Result.success([]));
       when(() => mockRecipeRepo.getAllRecipes()).thenAnswer(
-        (_) async => Result.success(
-          List.generate(15, (i) => _makeRecipe(id: 'r$i')),
-        ),
+        (_) async =>
+            Result.success(List.generate(15, (i) => _makeRecipe(id: 'r$i'))),
       );
 
       final result = await sut.getGeneralRecommendations(_babyId);
@@ -261,9 +260,8 @@ void main() {
         () => mockAllergenRepo.getLogs(_babyId),
       ).thenAnswer((_) async => const Result.success([]));
       when(() => mockRecipeRepo.getAllRecipes()).thenAnswer(
-        (_) async => Result.success(
-          List.generate(3, (i) => _makeRecipe(id: 'r$i')),
-        ),
+        (_) async =>
+            Result.success(List.generate(3, (i) => _makeRecipe(id: 'r$i'))),
       );
 
       final result = await sut.getGeneralRecommendations(_babyId);

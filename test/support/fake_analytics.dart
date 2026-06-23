@@ -152,10 +152,8 @@ class FakeAnalytics implements Analytics {
   Future<void> logAllergenAdvanced({
     required String fromKey,
     required String toKey,
-  }) async => _record('allergen_advanced', {
-    'from_key': fromKey,
-    'to_key': toKey,
-  });
+  }) async =>
+      _record('allergen_advanced', {'from_key': fromKey, 'to_key': toKey});
 
   @override
   Future<void> logAllergenProgramCompleted() async =>
@@ -271,9 +269,8 @@ class FakeAnalytics implements Analytics {
   @override
   Future<void> logHomeOngoingAllergenTapped({
     required String allergenKey,
-  }) async => _record('home_ongoing_allergen_tapped', {
-    'allergen_key': allergenKey,
-  });
+  }) async =>
+      _record('home_ongoing_allergen_tapped', {'allergen_key': allergenKey});
 
   @override
   Future<void> logHomeCreateFirstMealTapped() async =>

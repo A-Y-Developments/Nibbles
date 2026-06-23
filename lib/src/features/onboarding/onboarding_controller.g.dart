@@ -29,7 +29,7 @@ final onboardingCrashRecorderProvider =
 // ignore: unused_element
 typedef OnboardingCrashRecorderRef = ProviderRef<OnboardingCrashRecorderFn>;
 String _$onboardingControllerHash() =>
-    r'544f9760f6806eda50153136af8205ff55ea8c59';
+    r'22e4461096b5e11e189dcad6e68766ea819ebb78';
 
 /// Single hoisted controller for the new onboarding flow.
 ///

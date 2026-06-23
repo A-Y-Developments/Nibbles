@@ -67,46 +67,42 @@ void main() {
       expect(find.text('Seeded description'), findsOneWidget);
     });
 
-    testWidgets(
-      'Cancel returns null — typed text is discarded',
-      (tester) async {
-        final box = await _openSheet(tester);
+    testWidgets('Cancel returns null — typed text is discarded', (
+      tester,
+    ) async {
+      final box = await _openSheet(tester);
 
-        await tester.enterText(
-          find.byKey(const Key('attachment_title_field')),
-          'Should not commit',
-        );
-        await tester.tap(find.byKey(const Key('attachment_cancel_button')));
-        await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const Key('attachment_title_field')),
+        'Should not commit',
+      );
+      await tester.tap(find.byKey(const Key('attachment_cancel_button')));
+      await tester.pumpAndSettle();
 
-        expect(box.wasCalled, isTrue);
-        expect(box.value, isNull);
-      },
-    );
+      expect(box.wasCalled, isTrue);
+      expect(box.value, isNull);
+    });
 
-    testWidgets(
-      'Add returns the typed title and description',
-      (tester) async {
-        final box = await _openSheet(tester);
+    testWidgets('Add returns the typed title and description', (tester) async {
+      final box = await _openSheet(tester);
 
-        await tester.enterText(
-          find.byKey(const Key('attachment_title_field')),
-          'Rash on cheek area',
-        );
-        await tester.enterText(
-          find.byKey(const Key('attachment_description_field')),
-          'Taken 30 min after feeding',
-        );
-        await tester.tap(find.byKey(const Key('attachment_add_button')));
-        await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const Key('attachment_title_field')),
+        'Rash on cheek area',
+      );
+      await tester.enterText(
+        find.byKey(const Key('attachment_description_field')),
+        'Taken 30 min after feeding',
+      );
+      await tester.tap(find.byKey(const Key('attachment_add_button')));
+      await tester.pumpAndSettle();
 
-        expect(box.wasCalled, isTrue);
-        expect(box.value, isNotNull);
-        expect(box.value!.title, 'Rash on cheek area');
-        expect(box.value!.description, 'Taken 30 min after feeding');
-        expect(box.value!.photoPath, isNull);
-      },
-    );
+      expect(box.wasCalled, isTrue);
+      expect(box.value, isNotNull);
+      expect(box.value!.title, 'Rash on cheek area');
+      expect(box.value!.description, 'Taken 30 min after feeding');
+      expect(box.value!.photoPath, isNull);
+    });
 
     testWidgets(
       'photo preview is an "Add photo" button that opens the source picker',

@@ -7,9 +7,11 @@ import 'package:nibbles/src/app/constants/allergen_emoji.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
+import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/features/recipe/library/recipe_library_controller.dart';
+import 'package:nibbles/src/features/recipe/library/recipe_library_mock.dart';
 import 'package:nibbles/src/features/recipe/library/recipe_library_state.dart';
 import 'package:nibbles/src/features/recipe/library/widgets/library_header.dart';
 import 'package:nibbles/src/features/recipe/library/widgets/read_guide_banner.dart';
@@ -42,15 +44,19 @@ class RecipeLibraryScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (kRecipeLibraryUseMock) {
+      return const _RecipeLibraryMockBody();
+    }
+
     final babyIdAsync = ref.watch(currentBabyIdProvider);
 
     return babyIdAsync.when(
-      loading: () => const _PageScaffold(
+      loading: () => const GradientScaffold(
         body: Center(
           child: CircularProgressIndicator(semanticsLabel: 'Loading recipes'),
         ),
       ),
-      error: (_, __) => _PageScaffold(
+      error: (_, __) => GradientScaffold(
         body: Semantics(
           liveRegion: true,
           container: true,
@@ -59,7 +65,7 @@ class RecipeLibraryScreen extends ConsumerWidget {
       ),
       data: (babyId) {
         if (babyId == null) {
-          return _PageScaffold(
+          return GradientScaffold(
             body: Semantics(
               liveRegion: true,
               container: true,
@@ -69,32 +75,6 @@ class RecipeLibraryScreen extends ConsumerWidget {
         }
         return _RecipeLibraryBody(babyId: babyId);
       },
-    );
-  }
-}
-
-/// Shared scaffold with the Recipe Library butter -> cream page gradient
-/// (Figma 971:8644 root linear-gradient(128.4deg, #FFFCD5 19%, #F5F5F5 50%)).
-class _PageScaffold extends StatelessWidget {
-  const _PageScaffold({required this.body});
-
-  final Widget body;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            stops: [0.19, 0.5],
-            colors: [AppColors.butterSoft, AppColors.cream],
-          ),
-        ),
-        child: body,
-      ),
     );
   }
 }
@@ -155,7 +135,7 @@ class _RecipeLibraryBodyState extends ConsumerState<_RecipeLibraryBody> {
 
     final searchValue = libraryAsync.valueOrNull?.searchQuery ?? '';
 
-    return _PageScaffold(
+    return GradientScaffold(
       body: Column(
         children: [
           LibraryHeader(
@@ -234,6 +214,7 @@ class _RecipeContent extends StatelessWidget {
     return RefreshIndicator(
       onRefresh: onRefresh,
       child: ListView(
+        padding: EdgeInsets.zero,
         children: [
           if (!state.isStartingGuideSeen)
             ReadGuideBanner(onTap: onReadGuideTap),
@@ -260,6 +241,54 @@ class _RecipeContent extends StatelessWidget {
   }
 }
 
+/// Visual-only mock body used while [kRecipeLibraryUseMock] is on. Owns a
+/// local search controller and renders [_RecipeContent] from
+/// [buildMockRecipeLibraryState] — no baby profile or controller needed.
+class _RecipeLibraryMockBody extends StatefulWidget {
+  const _RecipeLibraryMockBody();
+
+  @override
+  State<_RecipeLibraryMockBody> createState() => _RecipeLibraryMockBodyState();
+}
+
+class _RecipeLibraryMockBodyState extends State<_RecipeLibraryMockBody> {
+  final _searchController = TextEditingController();
+  String _search = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _openStartingGuide() => context.pushNamed(AppRoute.startingGuide.name);
+
+  @override
+  Widget build(BuildContext context) {
+    final state = buildMockRecipeLibraryState().copyWith(searchQuery: _search);
+
+    return GradientScaffold(
+      body: Column(
+        children: [
+          LibraryHeader(
+            searchController: _searchController,
+            searchValue: _search,
+            onSearchChanged: (q) => setState(() => _search = q.trim()),
+            onBookmarkTap: _openStartingGuide,
+          ),
+          Expanded(
+            child: _RecipeContent(
+              state: state,
+              onReadGuideTap: _openStartingGuide,
+              onRefresh: () async {},
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _ErrorView extends StatelessWidget {
   const _ErrorView({required this.onRetry});
 
@@ -270,6 +299,7 @@ class _ErrorView extends StatelessWidget {
     return RefreshIndicator(
       onRefresh: onRetry,
       child: ListView(
+        padding: EdgeInsets.zero,
         children: [
           SizedBox(
             height: MediaQuery.of(context).size.height * 0.6,
@@ -318,6 +348,7 @@ class _EmptyView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
+      padding: EdgeInsets.zero,
       children: [
         if (!isStartingGuideSeen) ReadGuideBanner(onTap: onReadGuideTap),
         SizedBox(

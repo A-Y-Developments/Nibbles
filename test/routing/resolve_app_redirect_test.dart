@@ -133,11 +133,17 @@ void main() {
       );
     });
 
-    test('readiness bounces every other path', () {
+    test('name + dob allowed so back-nav from readiness Q1 reaches DOB', () {
+      expect(
+        resolve(at: AppRoute.onboardingName.path, babySetup: true),
+        isNull,
+      );
+      expect(resolve(at: AppRoute.onboardingDob.path, babySetup: true), isNull);
+    });
+
+    test('readiness bounces forward paths back to readiness', () {
       for (final other in [
         AppRoute.home.path,
-        AppRoute.onboardingName.path,
-        AppRoute.onboardingDob.path,
         AppRoute.onboardingResult.path,
         AppRoute.onboardingConsent.path,
       ]) {
@@ -173,13 +179,23 @@ void main() {
       },
     );
 
-    test('phase C bounces every other path to consent (the landing screen — '
+    test('readiness is allowed so back-nav from result reaches readiness', () {
+      expect(
+        resolve(
+          at: AppRoute.onboardingReadiness.path,
+          babySetup: true,
+          readiness: true,
+        ),
+        isNull,
+      );
+    });
+
+    test('phase C bounces unrelated paths to consent (the landing screen — '
         'kill/resume must land on the actionable submit step)', () {
       for (final other in [
         AppRoute.home.path,
         AppRoute.onboardingName.path,
         AppRoute.onboardingDob.path,
-        AppRoute.onboardingReadiness.path,
       ]) {
         expect(
           resolve(at: other, babySetup: true, readiness: true),
@@ -290,38 +306,33 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
-  // NIB-144 — M2 paywall guard.
-  //
-  // Decision locked in NIB-120: M2 guard re-enabled, paywall mandatory.
-  // Onboarded but unsubscribed users are redirected to /subscription/paywall;
-  // the paywall itself and the post-purchase success screen are allowed
-  // through so the purchase flow can complete.
+  // M2 paywall guard — DISABLED while M2 is deferred (step 8 commented out in
+  // resolveAppRedirect). Onboarded users reach /home regardless of subscription
+  // state. These rows pin the disabled behaviour; restore them to the NIB-144
+  // contract (unsubscribed -> /subscription/paywall) when the paywall ships.
   // ---------------------------------------------------------------------------
-  group('NIB-144 M2 paywall guard', () {
-    test(
-      'onboarded + unsubscribed user is redirected to /subscription/paywall',
-      () {
-        for (final p in [
-          AppRoute.home.path,
-          AppRoute.mealPlan.path,
-          AppRoute.shoppingList.path,
-          AppRoute.recipeLibrary.path,
-          AppRoute.profile.path,
-        ]) {
-          expect(
-            resolve(
-              at: p,
-              babySetup: true,
-              readiness: true,
-              onboarding: true,
-              subscribed: false,
-            ),
-            AppRoute.paywall.path,
-            reason: p,
-          );
-        }
-      },
-    );
+  group('M2 paywall guard (disabled — M2 deferred)', () {
+    test('onboarded + unsubscribed user reaches /home + tabs (guard off)', () {
+      for (final p in [
+        AppRoute.home.path,
+        AppRoute.mealPlan.path,
+        AppRoute.shoppingList.path,
+        AppRoute.recipeLibrary.path,
+        AppRoute.profile.path,
+      ]) {
+        expect(
+          resolve(
+            at: p,
+            babySetup: true,
+            readiness: true,
+            onboarding: true,
+            subscribed: false,
+          ),
+          isNull,
+          reason: p,
+        );
+      }
+    });
 
     test(
       'onboarded + unsubscribed user can reach paywall + success screens',
@@ -418,7 +429,9 @@ void main() {
       );
     });
 
-    test('skip flag defaults to false — guard intact when omitted', () {
+    test('guard disabled — omitted skip flag still reaches /home', () {
+      // With the M2 guard off, the skip flag is moot: an onboarded unsubscribed
+      // user reaches /home whether or not devSkip is set.
       expect(
         resolve(
           at: AppRoute.home.path,
@@ -427,7 +440,7 @@ void main() {
           onboarding: true,
           subscribed: false,
         ),
-        AppRoute.paywall.path,
+        isNull,
       );
     });
   });

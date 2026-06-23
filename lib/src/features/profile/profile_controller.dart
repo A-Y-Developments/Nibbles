@@ -19,9 +19,6 @@ class ProfileController extends _$ProfileController {
     // paywall ships.
     final subscriptionLabel = baby == null ? null : 'No Subscription';
 
-    return ProfileState(
-      baby: baby,
-      subscriptionLabel: subscriptionLabel,
-    );
+    return ProfileState(baby: baby, subscriptionLabel: subscriptionLabel);
   }
 }

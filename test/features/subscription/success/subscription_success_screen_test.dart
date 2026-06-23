@@ -50,19 +50,17 @@ GoRouter _routerFor(Widget screen) => GoRouter(
   ],
 );
 
-Widget _buildSut({
-  required GoRouter router,
-  bool startActive = true,
-}) => ProviderScope(
-  overrides: [
-    subscriptionServiceProvider.overrideWith(
-      startActive
-          ? _ActiveSubscriptionService.new
-          : _InactiveSubscriptionService.new,
-    ),
-  ],
-  child: MaterialApp.router(routerConfig: router),
-);
+Widget _buildSut({required GoRouter router, bool startActive = true}) =>
+    ProviderScope(
+      overrides: [
+        subscriptionServiceProvider.overrideWith(
+          startActive
+              ? _ActiveSubscriptionService.new
+              : _InactiveSubscriptionService.new,
+        ),
+      ],
+      child: MaterialApp.router(routerConfig: router),
+    );
 
 /// Reads the *target* opacity of the [AnimatedOpacity] that wraps the widget
 /// keyed [key]. Target (not currently-tweened) opacity is what we assert
@@ -140,56 +138,48 @@ void main() {
     },
   );
 
-  testWidgets(
-    'after successDwell elapses the screen auto-routes to /home',
-    (tester) async {
-      final router = _routerFor(const SubscriptionSuccessScreen());
-      await tester.pumpWidget(_buildSut(router: router));
+  testWidgets('after successDwell elapses the screen auto-routes to /home', (
+    tester,
+  ) async {
+    final router = _routerFor(const SubscriptionSuccessScreen());
+    await tester.pumpWidget(_buildSut(router: router));
 
-      // Loading dwell + success dwell → screen schedules the /home push.
-      await tester.pump(SubscriptionSuccessController.loadingMinDwell);
-      await tester.pump();
-      await tester.pump(SubscriptionSuccessController.successDwell);
-      await tester.pumpAndSettle();
+    // Loading dwell + success dwell → screen schedules the /home push.
+    await tester.pump(SubscriptionSuccessController.loadingMinDwell);
+    await tester.pump();
+    await tester.pump(SubscriptionSuccessController.successDwell);
+    await tester.pumpAndSettle();
 
-      expect(find.text('HOME_STUB'), findsOneWidget);
-      expect(
-        router.routerDelegate.currentConfiguration.uri.path,
-        AppRoute.home.path,
-      );
-    },
-  );
+    expect(find.text('HOME_STUB'), findsOneWidget);
+    expect(
+      router.routerDelegate.currentConfiguration.uri.path,
+      AppRoute.home.path,
+    );
+  });
 
-  testWidgets(
-    'slow path: flips to success after loadingTimeout + min-dwell',
-    (tester) async {
-      final router = _routerFor(const SubscriptionSuccessScreen());
-      await tester.pumpWidget(_buildSut(router: router, startActive: false));
-      await tester.pump();
+  testWidgets('slow path: flips to success after loadingTimeout + min-dwell', (
+    tester,
+  ) async {
+    final router = _routerFor(const SubscriptionSuccessScreen());
+    await tester.pumpWidget(_buildSut(router: router, startActive: false));
+    await tester.pump();
 
-      expect(
-        _opacityOf(
-          tester,
-          const Key('subscription_success_done_label'),
-        ),
-        0.0,
-      );
+    expect(
+      _opacityOf(tester, const Key('subscription_success_done_label')),
+      0.0,
+    );
 
-      // Timeout fires _flipAfter; since DateTime.now() is not faked,
-      // remaining≈loadingMinDwell and a second timer is scheduled.
-      await tester.pump(SubscriptionSuccessController.loadingTimeout);
-      await tester.pump(SubscriptionSuccessController.loadingMinDwell);
-      await tester.pump();
+    // Timeout fires _flipAfter; since DateTime.now() is not faked,
+    // remaining≈loadingMinDwell and a second timer is scheduled.
+    await tester.pump(SubscriptionSuccessController.loadingTimeout);
+    await tester.pump(SubscriptionSuccessController.loadingMinDwell);
+    await tester.pump();
 
-      expect(
-        _opacityOf(
-          tester,
-          const Key('subscription_success_done_label'),
-        ),
-        1.0,
-      );
-    },
-  );
+    expect(
+      _opacityOf(tester, const Key('subscription_success_done_label')),
+      1.0,
+    );
+  });
 
   testWidgets(
     'PopScope blocks back navigation while provisioning is in flight',

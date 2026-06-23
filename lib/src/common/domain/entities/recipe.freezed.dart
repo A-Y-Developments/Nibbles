@@ -28,6 +28,7 @@ mixin _$Recipe {
   List<Ingredient> get ingredients => throw _privateConstructorUsedError;
   List<String> get steps => throw _privateConstructorUsedError;
   String get howToServe => throw _privateConstructorUsedError;
+  String? get makes => throw _privateConstructorUsedError;
   String? get notes => throw _privateConstructorUsedError;
   String? get thumbnailUrl => throw _privateConstructorUsedError;
   List<String> get nutritionTags => throw _privateConstructorUsedError;
@@ -60,6 +61,7 @@ abstract class $RecipeCopyWith<$Res> {
     List<Ingredient> ingredients,
     List<String> steps,
     String howToServe,
+    String? makes,
     String? notes,
     String? thumbnailUrl,
     List<String> nutritionTags,
@@ -94,6 +96,7 @@ class _$RecipeCopyWithImpl<$Res, $Val extends Recipe>
     Object? ingredients = null,
     Object? steps = null,
     Object? howToServe = null,
+    Object? makes = freezed,
     Object? notes = freezed,
     Object? thumbnailUrl = freezed,
     Object? nutritionTags = null,
@@ -134,6 +137,10 @@ class _$RecipeCopyWithImpl<$Res, $Val extends Recipe>
                 ? _value.howToServe
                 : howToServe // ignore: cast_nullable_to_non_nullable
                       as String,
+            makes: freezed == makes
+                ? _value.makes
+                : makes // ignore: cast_nullable_to_non_nullable
+                      as String?,
             notes: freezed == notes
                 ? _value.notes
                 : notes // ignore: cast_nullable_to_non_nullable
@@ -192,6 +199,7 @@ abstract class _$$RecipeImplCopyWith<$Res> implements $RecipeCopyWith<$Res> {
     List<Ingredient> ingredients,
     List<String> steps,
     String howToServe,
+    String? makes,
     String? notes,
     String? thumbnailUrl,
     List<String> nutritionTags,
@@ -225,6 +233,7 @@ class __$$RecipeImplCopyWithImpl<$Res>
     Object? ingredients = null,
     Object? steps = null,
     Object? howToServe = null,
+    Object? makes = freezed,
     Object? notes = freezed,
     Object? thumbnailUrl = freezed,
     Object? nutritionTags = null,
@@ -265,6 +274,10 @@ class __$$RecipeImplCopyWithImpl<$Res>
             ? _value.howToServe
             : howToServe // ignore: cast_nullable_to_non_nullable
                   as String,
+        makes: freezed == makes
+            ? _value.makes
+            : makes // ignore: cast_nullable_to_non_nullable
+                  as String?,
         notes: freezed == notes
             ? _value.notes
             : notes // ignore: cast_nullable_to_non_nullable
@@ -317,6 +330,7 @@ class _$RecipeImpl implements _Recipe {
     required final List<Ingredient> ingredients,
     required final List<String> steps,
     required this.howToServe,
+    this.makes,
     this.notes,
     this.thumbnailUrl,
     final List<String> nutritionTags = const <String>[],
@@ -368,6 +382,8 @@ class _$RecipeImpl implements _Recipe {
   @override
   final String howToServe;
   @override
+  final String? makes;
+  @override
   final String? notes;
   @override
   final String? thumbnailUrl;
@@ -403,7 +419,7 @@ class _$RecipeImpl implements _Recipe {
 
   @override
   String toString() {
-    return 'Recipe(id: $id, title: $title, ageRange: $ageRange, allergenTags: $allergenTags, ingredients: $ingredients, steps: $steps, howToServe: $howToServe, notes: $notes, thumbnailUrl: $thumbnailUrl, nutritionTags: $nutritionTags, category: $category, utensils: $utensils, storageNote: $storageNote, freezerNote: $freezerNote, textureTip: $textureTip, whyThisMeal: $whyThisMeal)';
+    return 'Recipe(id: $id, title: $title, ageRange: $ageRange, allergenTags: $allergenTags, ingredients: $ingredients, steps: $steps, howToServe: $howToServe, makes: $makes, notes: $notes, thumbnailUrl: $thumbnailUrl, nutritionTags: $nutritionTags, category: $category, utensils: $utensils, storageNote: $storageNote, freezerNote: $freezerNote, textureTip: $textureTip, whyThisMeal: $whyThisMeal)';
   }
 
   @override
@@ -426,6 +442,7 @@ class _$RecipeImpl implements _Recipe {
             const DeepCollectionEquality().equals(other._steps, _steps) &&
             (identical(other.howToServe, howToServe) ||
                 other.howToServe == howToServe) &&
+            (identical(other.makes, makes) || other.makes == makes) &&
             (identical(other.notes, notes) || other.notes == notes) &&
             (identical(other.thumbnailUrl, thumbnailUrl) ||
                 other.thumbnailUrl == thumbnailUrl) &&
@@ -457,6 +474,7 @@ class _$RecipeImpl implements _Recipe {
     const DeepCollectionEquality().hash(_ingredients),
     const DeepCollectionEquality().hash(_steps),
     howToServe,
+    makes,
     notes,
     thumbnailUrl,
     const DeepCollectionEquality().hash(_nutritionTags),
@@ -491,6 +509,7 @@ abstract class _Recipe implements Recipe {
     required final List<Ingredient> ingredients,
     required final List<String> steps,
     required final String howToServe,
+    final String? makes,
     final String? notes,
     final String? thumbnailUrl,
     final List<String> nutritionTags,
@@ -518,6 +537,8 @@ abstract class _Recipe implements Recipe {
   List<String> get steps;
   @override
   String get howToServe;
+  @override
+  String? get makes;
   @override
   String? get notes;
   @override

@@ -34,8 +34,7 @@ void main() {
     test('success — maps SubscriptionInfo into state', () async {
       final c = _container(_InactiveSubscriptionService.new);
 
-      final state =
-          await c.read(manageSubscriptionControllerProvider.future);
+      final state = await c.read(manageSubscriptionControllerProvider.future);
 
       expect(state, isA<ManageSubscriptionState>());
       expect(state.info.isActive, isFalse);

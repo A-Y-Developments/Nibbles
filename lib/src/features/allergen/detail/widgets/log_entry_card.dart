@@ -118,9 +118,9 @@ class _BabyAvatar extends StatelessWidget {
       child: Text(
         initial,
         style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: AppColors.greenDeep,
-              fontWeight: FontWeight.w700,
-            ),
+          color: AppColors.greenDeep,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }

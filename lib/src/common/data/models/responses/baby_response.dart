@@ -15,6 +15,9 @@ class BabyResponse with _$BabyResponse {
     @JsonKey(name: 'date_of_birth') required String dateOfBirth,
     required String gender,
     @JsonKey(name: 'onboarding_completed') required bool onboardingCompleted,
+    @JsonKey(name: 'readiness_signs')
+    @Default(<bool>[])
+    List<bool> readinessSigns,
   }) = _BabyResponse;
 
   factory BabyResponse.fromJson(Map<String, dynamic> json) =>

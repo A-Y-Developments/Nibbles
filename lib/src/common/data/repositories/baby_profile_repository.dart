@@ -12,10 +12,15 @@ part 'baby_profile_repository.g.dart';
 abstract interface class BabyProfileRepository {
   /// Gender is optional — the redesigned onboarding (NIB-120) drops the
   /// selector. Defaults to [Gender.preferNotToSay] when omitted.
+  ///
+  /// [readinessSigns] persists the onboarding readiness result (index 0 = the
+  /// Q1 pediatrician gate, 1-5 = the Q2-Q6 developmental signs) so the
+  /// 5 Sign Readiness guide page can reflect it later.
   Future<Result<Baby>> createBaby(
     String name,
     DateTime dob, [
     Gender gender = Gender.preferNotToSay,
+    List<bool> readinessSigns = const [],
   ]);
   Future<Baby?> getBaby();
   Future<Result<Baby>> updateBaby(
@@ -45,6 +50,7 @@ class BabyProfileRepositoryImpl implements BabyProfileRepository {
     String name,
     DateTime dob, [
     Gender gender = Gender.preferNotToSay,
+    List<bool> readinessSigns = const [],
   ]) async {
     try {
       // Atomic: the `create_baby_with_program` RPC inserts the baby row AND its
@@ -57,6 +63,7 @@ class BabyProfileRepositoryImpl implements BabyProfileRepository {
           'p_name': name,
           'p_date_of_birth': dob.toIso8601String().split('T').first,
           'p_gender': gender.toJson(),
+          'p_readiness_signs': readinessSigns,
         },
       );
       final row = res is List

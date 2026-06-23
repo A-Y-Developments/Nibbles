@@ -58,10 +58,8 @@ final _fakeBaby = Baby(
   onboardingCompleted: true,
 );
 
-AuthState _sessionEvent({required bool loggedIn}) => AuthState(
-  AuthChangeEvent.initialSession,
-  loggedIn ? _FakeSession() : null,
-);
+AuthState _sessionEvent({required bool loggedIn}) =>
+    AuthState(AuthChangeEvent.initialSession, loggedIn ? _FakeSession() : null);
 
 class _FakeSession extends Fake implements Session {}
 
@@ -149,22 +147,25 @@ void main() {
     },
   );
 
-  test('no session: settle event with null session routes to /auth/login', () async {
-    final controller = StreamController<AuthState>.broadcast();
-    addTearDown(controller.close);
-    final container = _makeContainer(
-      initiallyLoggedIn: false,
-      stream: controller.stream,
-      babyProfile: babyProfile,
-      flags: flags,
-    );
+  test(
+    'no session: settle event with null session routes to /auth/login',
+    () async {
+      final controller = StreamController<AuthState>.broadcast();
+      addTearDown(controller.close);
+      final container = _makeContainer(
+        initiallyLoggedIn: false,
+        stream: controller.stream,
+        babyProfile: babyProfile,
+        flags: flags,
+      );
 
-    final future = container.read(splashControllerProvider.future);
-    await Future<void>.delayed(Duration.zero);
-    controller.add(_sessionEvent(loggedIn: false));
+      final future = container.read(splashControllerProvider.future);
+      await Future<void>.delayed(Duration.zero);
+      controller.add(_sessionEvent(loggedIn: false));
 
-    expect(await future, '/auth/login');
-  });
+      expect(await future, '/auth/login');
+    },
+  );
 
   test(
     'stalled restore resolves via timeout to /auth/login, never hangs',
@@ -204,15 +205,16 @@ void main() {
     controller.add(_sessionEvent(loggedIn: false));
 
     expect(await future, '/onboarding/intro');
-    verify(flags.setHasLaunched).called(1);
+    // Launch flag stays unset on a fresh, logged-out boot — only the intro
+    // screen's "Let's Go!" tap flips it. Setting it here would skip onboarding
+    // if the app were killed on the intro screen.
+    verifyNever(flags.setHasLaunched);
   });
 
   test(
     'guarded baby read failure surfaces as SplashBootException (P0)',
     () async {
-      when(
-        () => babyProfile.getBaby(),
-      ).thenThrow(Exception('no connectivity'));
+      when(() => babyProfile.getBaby()).thenThrow(Exception('no connectivity'));
       final container = _makeContainer(
         initiallyLoggedIn: true,
         stream: const Stream.empty(),
@@ -259,56 +261,45 @@ void main() {
     },
   );
 
-  test(
-    'baby exists but onboarding incomplete routes to /onboarding/intro AND '
-    'resets stale onboarding progress flags',
-    () async {
-      when(
-        () => babyProfile.onboardingCompleted,
-      ).thenAnswer((_) async => false);
-      final container = _makeContainer(
-        initiallyLoggedIn: true,
-        stream: const Stream.empty(),
-        babyProfile: babyProfile,
-        flags: flags,
-      );
+  test('baby exists but onboarding incomplete routes to /onboarding/intro AND '
+      'resets stale onboarding progress flags', () async {
+    when(() => babyProfile.onboardingCompleted).thenAnswer((_) async => false);
+    final container = _makeContainer(
+      initiallyLoggedIn: true,
+      stream: const Stream.empty(),
+      babyProfile: babyProfile,
+      flags: flags,
+    );
 
-      expect(
-        await container.read(splashControllerProvider.future),
-        '/onboarding/intro',
-      );
-      verifyNever(flags.setOnboardingReadinessDone);
-      verifyNever(flags.setOnboardingBabySetupDone);
-      verifyNever(flags.setOnboardingDone);
-      verify(flags.resetOnboardingProgress).called(1);
-    },
-  );
+    expect(
+      await container.read(splashControllerProvider.future),
+      '/onboarding/intro',
+    );
+    verifyNever(flags.setOnboardingReadinessDone);
+    verifyNever(flags.setOnboardingBabySetupDone);
+    verifyNever(flags.setOnboardingDone);
+    verify(flags.resetOnboardingProgress).called(1);
+  });
 
-  test(
-    'all good (logged in, baby, onboarding done) routes to /home and '
-    'seeds onboarding flags',
-    () async {
-      final container = _makeContainer(
-        initiallyLoggedIn: true,
-        stream: const Stream.empty(),
-        babyProfile: babyProfile,
-        flags: flags,
-      );
+  test('all good (logged in, baby, onboarding done) routes to /home and '
+      'seeds onboarding flags', () async {
+    final container = _makeContainer(
+      initiallyLoggedIn: true,
+      stream: const Stream.empty(),
+      babyProfile: babyProfile,
+      flags: flags,
+    );
 
-      expect(
-        await container.read(splashControllerProvider.future),
-        '/home',
-      );
-      // Supabase truth seeds local flags so reinstalls skip onboarding.
-      // NIB-51: all three onboarding flags are seeded (onboarding_done is the
-      // new final gate added with the name->DOB->readiness->result->consent
-      // flow); without it, an already-onboarded reinstaller would be bounced
-      // into /onboarding/consent by the new redirect.
-      verify(flags.setOnboardingReadinessDone).called(1);
-      verify(flags.setOnboardingBabySetupDone).called(1);
-      verify(flags.setOnboardingDone).called(1);
-    },
-  );
+    expect(await container.read(splashControllerProvider.future), '/home');
+    // Supabase truth seeds local flags so reinstalls skip onboarding.
+    // NIB-51: all three onboarding flags are seeded (onboarding_done is the
+    // new final gate added with the name->DOB->readiness->result->consent
+    // flow); without it, an already-onboarded reinstaller would be bounced
+    // into /onboarding/consent by the new redirect.
+    verify(flags.setOnboardingReadinessDone).called(1);
+    verify(flags.setOnboardingBabySetupDone).called(1);
+    verify(flags.setOnboardingDone).called(1);
+  });
 
   test(
     'reinstall: first launch but session restored -> backfills flags, /home',
@@ -325,10 +316,7 @@ void main() {
         flags: flags,
       );
 
-      expect(
-        await container.read(splashControllerProvider.future),
-        '/home',
-      );
+      expect(await container.read(splashControllerProvider.future), '/home');
       verify(flags.setHasLaunched).called(1);
       verify(flags.setOnboardingReadinessDone).called(1);
       verify(flags.setOnboardingBabySetupDone).called(1);
@@ -336,26 +324,23 @@ void main() {
     },
   );
 
-  test(
-    'guarded onboardingCompleted read failure surfaces as '
-    'SplashBootException (P0)',
-    () async {
-      // Second guarded read (after getBaby) throwing must also be rewrapped,
-      // not leaked as a raw error.
-      when(
-        () => babyProfile.onboardingCompleted,
-      ).thenThrow(Exception('no connectivity'));
-      final container = _makeContainer(
-        initiallyLoggedIn: true,
-        stream: const Stream.empty(),
-        babyProfile: babyProfile,
-        flags: flags,
-      );
+  test('guarded onboardingCompleted read failure surfaces as '
+      'SplashBootException (P0)', () async {
+    // Second guarded read (after getBaby) throwing must also be rewrapped,
+    // not leaked as a raw error.
+    when(
+      () => babyProfile.onboardingCompleted,
+    ).thenThrow(Exception('no connectivity'));
+    final container = _makeContainer(
+      initiallyLoggedIn: true,
+      stream: const Stream.empty(),
+      babyProfile: babyProfile,
+      flags: flags,
+    );
 
-      await expectLater(
-        container.read(splashControllerProvider.future),
-        throwsA(isA<SplashBootException>()),
-      );
-    },
-  );
+    await expectLater(
+      container.read(splashControllerProvider.future),
+      throwsA(isA<SplashBootException>()),
+    );
+  });
 }

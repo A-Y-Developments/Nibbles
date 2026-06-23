@@ -54,14 +54,12 @@ class AllergenLogDetailScreen extends ConsumerWidget {
     );
 
     return asyncState.when(
-      loading: () => Scaffold(
-        backgroundColor: AppColors.background,
-        appBar: AppBar(backgroundColor: AppColors.background, elevation: 0),
+      loading: () => GradientScaffold(
+        appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
         body: const Center(child: CircularProgressIndicator()),
       ),
-      error: (err, _) => Scaffold(
-        backgroundColor: AppColors.background,
-        appBar: AppBar(backgroundColor: AppColors.background, elevation: 0),
+      error: (err, _) => GradientScaffold(
+        appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(AppSizes.pagePaddingH),
@@ -77,9 +75,9 @@ class AllergenLogDetailScreen extends ConsumerWidget {
                 Text(
                   err is AppException ? err.message : 'Something went wrong.',
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: AppColors.fgMuted,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyLarge?.copyWith(color: AppColors.fgMuted),
                 ),
                 const SizedBox(height: AppSizes.lg),
                 AppPillButton(
@@ -95,11 +93,8 @@ class AllergenLogDetailScreen extends ConsumerWidget {
           ),
         ),
       ),
-      data: (state) => _LogDetailView(
-        state: state,
-        allergenKey: allergenKey,
-        logId: logId,
-      ),
+      data: (state) =>
+          _LogDetailView(state: state, allergenKey: allergenKey, logId: logId),
     );
   }
 }
@@ -182,9 +177,7 @@ class _LogDetailViewState extends ConsumerState<_LogDetailView> {
 
     if (result.isFailure) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Couldn't delete log. Please try again."),
-        ),
+        const SnackBar(content: Text("Couldn't delete log. Please try again.")),
       );
       return;
     }
@@ -216,9 +209,7 @@ class _LogDetailViewState extends ConsumerState<_LogDetailView> {
       final allSafe =
           statuses != null &&
           statuses.isNotEmpty &&
-          statuses.values.every(
-            (AllergenStatus s) => s == AllergenStatus.safe,
-          );
+          statuses.values.every((AllergenStatus s) => s == AllergenStatus.safe);
       if (allSafe) {
         await flagService.markProgramCompletionShown(babyId);
         if (!mounted) return;
@@ -248,16 +239,12 @@ class _LogDetailViewState extends ConsumerState<_LogDetailView> {
     final log = _state.log;
     final notes = log.notes?.trim();
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return GradientScaffold(
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_rounded,
-            color: AppColors.fgStrong,
-          ),
+          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.fgStrong),
           onPressed: () => context.pop(),
         ),
         title: Text(
@@ -369,10 +356,7 @@ class _FieldLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: AppTypography.headline,
-    );
+    return Text(text, style: AppTypography.headline);
   }
 }
 
@@ -473,10 +457,7 @@ class _AttachmentBlock extends ConsumerWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (title != null && title.isNotEmpty)
-                      Text(
-                        title,
-                        style: AppTypography.headline,
-                      ),
+                      Text(title, style: AppTypography.headline),
                     if (description != null && description.isNotEmpty) ...[
                       if (title != null && title.isNotEmpty)
                         const SizedBox(height: AppSizes.sp2),

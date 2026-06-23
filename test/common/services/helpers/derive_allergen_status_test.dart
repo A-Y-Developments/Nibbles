@@ -25,11 +25,7 @@ void main() {
     });
 
     test('3 clean logs → safe (NEVER completed)', () {
-      final logs = [
-        _log(id: 'a'),
-        _log(id: 'b'),
-        _log(id: 'c'),
-      ];
+      final logs = [_log(id: 'a'), _log(id: 'b'), _log(id: 'c')];
       expect(deriveStatusForLogs(logs), AllergenStatus.safe);
       // Canonical rule: passed allergens are `safe`, not `completed`.
       expect(
@@ -45,19 +41,16 @@ void main() {
       );
     });
 
-    test(
-      '3 clean logs THEN 1 reaction-flagged log → flagged '
-      '(regression: flagged dominates over safe)',
-      () {
-        final logs = [
-          _log(id: 'a'),
-          _log(id: 'b'),
-          _log(id: 'c'),
-          _log(id: 'd', hadReaction: true),
-        ];
-        expect(deriveStatusForLogs(logs), AllergenStatus.flagged);
-      },
-    );
+    test('3 clean logs THEN 1 reaction-flagged log → flagged '
+        '(regression: flagged dominates over safe)', () {
+      final logs = [
+        _log(id: 'a'),
+        _log(id: 'b'),
+        _log(id: 'c'),
+        _log(id: 'd', hadReaction: true),
+      ];
+      expect(deriveStatusForLogs(logs), AllergenStatus.flagged);
+    });
   });
 
   group('kAllergenKeys', () {

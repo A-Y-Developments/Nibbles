@@ -21,9 +21,7 @@ class _FakeChain<T> implements PostgrestFilterBuilder<T> {
   final Object? _error;
 
   Future<T> get _future =>
-      _error != null
-          ? Future<T>.error(_error)
-          : Future<T>.value(_payload as T);
+      _error != null ? Future<T>.error(_error) : Future<T>.value(_payload as T);
 
   @override
   PostgrestFilterBuilder<T> eq(String column, Object value) {
@@ -68,11 +66,7 @@ class _FakeChain<T> implements PostgrestFilterBuilder<T> {
 
   @override
   PostgrestTransformBuilder<PostgrestMap> single() =>
-      _FakeChain<PostgrestMap>(
-        owner: _owner,
-        payload: _payload,
-        error: _error,
-      );
+      _FakeChain<PostgrestMap>(owner: _owner, payload: _payload, error: _error);
 
   @override
   PostgrestTransformBuilder<PostgrestMap?> maybeSingle() =>
@@ -89,20 +83,16 @@ class _FakeChain<T> implements PostgrestFilterBuilder<T> {
   }) => _future.then(onValue, onError: onError);
 
   @override
-  Future<T> catchError(
-    Function onError, {
-    bool Function(Object error)? test,
-  }) => _future.catchError(onError, test: test);
+  Future<T> catchError(Function onError, {bool Function(Object error)? test}) =>
+      _future.catchError(onError, test: test);
 
   @override
   Future<T> whenComplete(FutureOr<void> Function() action) =>
       _future.whenComplete(action);
 
   @override
-  Future<T> timeout(
-    Duration timeLimit, {
-    FutureOr<T> Function()? onTimeout,
-  }) => _future.timeout(timeLimit, onTimeout: onTimeout);
+  Future<T> timeout(Duration timeLimit, {FutureOr<T> Function()? onTimeout}) =>
+      _future.timeout(timeLimit, onTimeout: onTimeout);
 
   @override
   Stream<T> asStream() => _future.asStream();
@@ -183,11 +173,7 @@ void main() {
   MealPlanRepositoryImpl buildSut() =>
       MealPlanRepositoryImpl(supabaseClient: mockSupabase);
 
-  _FakeQueryBuilder stubTable(
-    String table, {
-    Object? payload,
-    Object? error,
-  }) {
+  _FakeQueryBuilder stubTable(String table, {Object? payload, Object? error}) {
     final builder = _FakeQueryBuilder(payload: payload, error: error);
     when(() => mockSupabase.from(table)).thenAnswer((_) => builder);
     return builder;
@@ -275,10 +261,7 @@ void main() {
 
   group('getWeekMeals', () {
     test('delegates to getEntriesInRange with same date range', () async {
-      final builder = stubTable(
-        'meal_plan_entries',
-        payload: [_entryRow()],
-      );
+      final builder = stubTable('meal_plan_entries', payload: [_entryRow()]);
 
       final result = await buildSut().getWeekMeals(
         'baby-1',
@@ -418,10 +401,7 @@ void main() {
         ),
       ]);
 
-      expect(
-        result.errorOrNull,
-        _failsWith<ServerException>('insert failed'),
-      );
+      expect(result.errorOrNull, _failsWith<ServerException>('insert failed'));
     });
 
     test('unknown error maps to UnknownException', () async {

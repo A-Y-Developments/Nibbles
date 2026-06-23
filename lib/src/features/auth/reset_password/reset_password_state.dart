@@ -21,14 +21,12 @@ class ResetPasswordState with _$ResetPasswordState {
 
   /// True when the user has typed in the password field and it is too short
   /// (formz [PasswordInput] minimum is 8 chars).
-  bool get passwordTooShort =>
-      password.value.isNotEmpty && password.isNotValid;
+  bool get passwordTooShort => password.value.isNotEmpty && password.isNotValid;
 
   /// True when the confirm field has text and the password field is also
   /// too short — mirrors the Figma "Password is too short" helper on the
   /// retype field (state 4 / node 971:10148).
-  bool get confirmTooShort =>
-      confirmPassword.isNotEmpty && password.isNotValid;
+  bool get confirmTooShort => confirmPassword.isNotEmpty && password.isNotValid;
 
   /// True when the confirm field has text, the password field is valid
   /// (≥8 chars), and the two values disagree — mirrors the Figma

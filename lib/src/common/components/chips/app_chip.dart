@@ -67,7 +67,8 @@ class AppChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final fg = _foreground;
-    final leading = icon ??
+    final leading =
+        icon ??
         (emoji != null
             ? Text(emoji!, style: const TextStyle(fontSize: 11, height: 1))
             : null);

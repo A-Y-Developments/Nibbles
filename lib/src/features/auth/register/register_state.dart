@@ -9,12 +9,17 @@ class RegisterState with _$RegisterState {
   const factory RegisterState({
     @Default(EmailInput.pure()) EmailInput email,
     @Default(PasswordInput.pure()) PasswordInput password,
+    @Default('') String confirmPassword,
     @Default(true) bool obscure,
+    @Default(true) bool obscureConfirm,
     @Default(false) bool isLoading,
     String? errorMessage,
   }) = _RegisterState;
 
   const RegisterState._();
 
-  bool get isValid => email.isValid && password.isValid;
+  bool get passwordsMatch =>
+      confirmPassword.isNotEmpty && password.value == confirmPassword;
+
+  bool get isValid => email.isValid && password.isValid && passwordsMatch;
 }

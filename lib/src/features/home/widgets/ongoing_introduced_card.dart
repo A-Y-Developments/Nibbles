@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nibbles/gen/assets.gen.dart';
 import 'package:nibbles/src/app/constants/allergen_emoji.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
@@ -51,7 +52,6 @@ class OngoingIntroducedCard extends StatelessWidget {
     final key = _ongoingKey;
     if (key == null) return const SizedBox.shrink();
 
-    final emoji = AllergenEmoji.get(key);
     final name = AllergenEmoji.displayName(key);
     final filled = (logCounts[key] ?? 0).clamp(0, _target);
 
@@ -96,7 +96,10 @@ class OngoingIntroducedCard extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    _CoralThumb(emoji: emoji),
+                    // Coral petal blob + white carton are baked into the SVG.
+                    // Icon is allergen-specific in the design; only Milk ships
+                    // today, so it stands in for every ongoing allergen.
+                    Assets.images.home.allergenMilk.svg(width: 62, height: 62),
                     const SizedBox(width: AppSizes.sp12),
                     Expanded(
                       child: Column(
@@ -133,30 +136,6 @@ class OngoingIntroducedCard extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _CoralThumb extends StatelessWidget {
-  const _CoralThumb({required this.emoji});
-
-  final String emoji;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 62,
-      height: 62,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [AppColors.coral, AppColors.orange50],
-        ),
-        borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-      ),
-      alignment: Alignment.center,
-      child: Text(emoji, style: const TextStyle(fontSize: 28, height: 1)),
     );
   }
 }

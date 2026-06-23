@@ -51,10 +51,10 @@ class DetailStatusPill extends StatelessWidget {
       child: Text(
         s.label,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: s.fg,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.4,
-            ),
+          color: s.fg,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.4,
+        ),
       ),
     );
   }

@@ -45,18 +45,13 @@ class PaywallController extends _$PaywallController {
   Future<void> reloadOfferings() => _loadOfferings();
 
   Future<void> _loadOfferings() async {
-    state = state.copyWith(
-      phase: PaywallPhase.loading,
-      errorMessage: null,
-    );
-    final result = await ref.read(subscriptionServiceProvider.notifier)
+    state = state.copyWith(phase: PaywallPhase.loading, errorMessage: null);
+    final result = await ref
+        .read(subscriptionServiceProvider.notifier)
         .loadOfferings();
     result.fold(
       onSuccess: (offering) {
-        state = state.copyWith(
-          phase: PaywallPhase.ready,
-          offering: offering,
-        );
+        state = state.copyWith(phase: PaywallPhase.ready, offering: offering);
       },
       onFailure: (error) {
         state = state.copyWith(
@@ -76,7 +71,8 @@ class PaywallController extends _$PaywallController {
       return const Result.success(null);
     }
     state = state.copyWith(action: PaywallAction.purchasing);
-    final result = await ref.read(subscriptionServiceProvider.notifier)
+    final result = await ref
+        .read(subscriptionServiceProvider.notifier)
         .purchaseDefault();
 
     final productId = state.offering?.productId ?? '';
@@ -96,12 +92,11 @@ class PaywallController extends _$PaywallController {
       return const Result.success(null);
     }
     state = state.copyWith(action: PaywallAction.restoring);
-    final result = await ref.read(subscriptionServiceProvider.notifier)
+    final result = await ref
+        .read(subscriptionServiceProvider.notifier)
         .restore();
 
-    result.whenOrNull(
-      success: (_) => unawaited(_logSubscriptionRestored()),
-    );
+    result.whenOrNull(success: (_) => unawaited(_logSubscriptionRestored()));
 
     state = state.copyWith(action: PaywallAction.none);
     return result;

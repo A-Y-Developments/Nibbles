@@ -30,6 +30,8 @@ mixin _$BabyResponse {
   String get gender => throw _privateConstructorUsedError;
   @JsonKey(name: 'onboarding_completed')
   bool get onboardingCompleted => throw _privateConstructorUsedError;
+  @JsonKey(name: 'readiness_signs')
+  List<bool> get readinessSigns => throw _privateConstructorUsedError;
 
   /// Serializes this BabyResponse to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -55,6 +57,7 @@ abstract class $BabyResponseCopyWith<$Res> {
     @JsonKey(name: 'date_of_birth') String dateOfBirth,
     String gender,
     @JsonKey(name: 'onboarding_completed') bool onboardingCompleted,
+    @JsonKey(name: 'readiness_signs') List<bool> readinessSigns,
   });
 }
 
@@ -79,6 +82,7 @@ class _$BabyResponseCopyWithImpl<$Res, $Val extends BabyResponse>
     Object? dateOfBirth = null,
     Object? gender = null,
     Object? onboardingCompleted = null,
+    Object? readinessSigns = null,
   }) {
     return _then(
       _value.copyWith(
@@ -106,6 +110,10 @@ class _$BabyResponseCopyWithImpl<$Res, $Val extends BabyResponse>
                 ? _value.onboardingCompleted
                 : onboardingCompleted // ignore: cast_nullable_to_non_nullable
                       as bool,
+            readinessSigns: null == readinessSigns
+                ? _value.readinessSigns
+                : readinessSigns // ignore: cast_nullable_to_non_nullable
+                      as List<bool>,
           )
           as $Val,
     );
@@ -128,6 +136,7 @@ abstract class _$$BabyResponseImplCopyWith<$Res>
     @JsonKey(name: 'date_of_birth') String dateOfBirth,
     String gender,
     @JsonKey(name: 'onboarding_completed') bool onboardingCompleted,
+    @JsonKey(name: 'readiness_signs') List<bool> readinessSigns,
   });
 }
 
@@ -151,6 +160,7 @@ class __$$BabyResponseImplCopyWithImpl<$Res>
     Object? dateOfBirth = null,
     Object? gender = null,
     Object? onboardingCompleted = null,
+    Object? readinessSigns = null,
   }) {
     return _then(
       _$BabyResponseImpl(
@@ -178,6 +188,10 @@ class __$$BabyResponseImplCopyWithImpl<$Res>
             ? _value.onboardingCompleted
             : onboardingCompleted // ignore: cast_nullable_to_non_nullable
                   as bool,
+        readinessSigns: null == readinessSigns
+            ? _value._readinessSigns
+            : readinessSigns // ignore: cast_nullable_to_non_nullable
+                  as List<bool>,
       ),
     );
   }
@@ -193,7 +207,9 @@ class _$BabyResponseImpl implements _BabyResponse {
     @JsonKey(name: 'date_of_birth') required this.dateOfBirth,
     required this.gender,
     @JsonKey(name: 'onboarding_completed') required this.onboardingCompleted,
-  });
+    @JsonKey(name: 'readiness_signs')
+    final List<bool> readinessSigns = const <bool>[],
+  }) : _readinessSigns = readinessSigns;
 
   factory _$BabyResponseImpl.fromJson(Map<String, dynamic> json) =>
       _$$BabyResponseImplFromJson(json);
@@ -213,10 +229,18 @@ class _$BabyResponseImpl implements _BabyResponse {
   @override
   @JsonKey(name: 'onboarding_completed')
   final bool onboardingCompleted;
+  final List<bool> _readinessSigns;
+  @override
+  @JsonKey(name: 'readiness_signs')
+  List<bool> get readinessSigns {
+    if (_readinessSigns is EqualUnmodifiableListView) return _readinessSigns;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_readinessSigns);
+  }
 
   @override
   String toString() {
-    return 'BabyResponse(id: $id, userId: $userId, name: $name, dateOfBirth: $dateOfBirth, gender: $gender, onboardingCompleted: $onboardingCompleted)';
+    return 'BabyResponse(id: $id, userId: $userId, name: $name, dateOfBirth: $dateOfBirth, gender: $gender, onboardingCompleted: $onboardingCompleted, readinessSigns: $readinessSigns)';
   }
 
   @override
@@ -231,7 +255,11 @@ class _$BabyResponseImpl implements _BabyResponse {
                 other.dateOfBirth == dateOfBirth) &&
             (identical(other.gender, gender) || other.gender == gender) &&
             (identical(other.onboardingCompleted, onboardingCompleted) ||
-                other.onboardingCompleted == onboardingCompleted));
+                other.onboardingCompleted == onboardingCompleted) &&
+            const DeepCollectionEquality().equals(
+              other._readinessSigns,
+              _readinessSigns,
+            ));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -244,6 +272,7 @@ class _$BabyResponseImpl implements _BabyResponse {
     dateOfBirth,
     gender,
     onboardingCompleted,
+    const DeepCollectionEquality().hash(_readinessSigns),
   );
 
   /// Create a copy of BabyResponse
@@ -269,6 +298,7 @@ abstract class _BabyResponse implements BabyResponse {
     required final String gender,
     @JsonKey(name: 'onboarding_completed')
     required final bool onboardingCompleted,
+    @JsonKey(name: 'readiness_signs') final List<bool> readinessSigns,
   }) = _$BabyResponseImpl;
 
   factory _BabyResponse.fromJson(Map<String, dynamic> json) =
@@ -289,6 +319,9 @@ abstract class _BabyResponse implements BabyResponse {
   @override
   @JsonKey(name: 'onboarding_completed')
   bool get onboardingCompleted;
+  @override
+  @JsonKey(name: 'readiness_signs')
+  List<bool> get readinessSigns;
 
   /// Create a copy of BabyResponse
   /// with the given fields replaced by the non-null parameter values.

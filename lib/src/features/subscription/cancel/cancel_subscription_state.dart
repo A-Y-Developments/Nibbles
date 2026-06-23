@@ -11,7 +11,6 @@ part 'cancel_subscription_state.freezed.dart';
 /// `errorMessage` here.
 @freezed
 class CancelSubscriptionState with _$CancelSubscriptionState {
-  const factory CancelSubscriptionState({
-    @Default(false) bool isSubmitting,
-  }) = _CancelSubscriptionState;
+  const factory CancelSubscriptionState({@Default(false) bool isSubmitting}) =
+      _CancelSubscriptionState;
 }

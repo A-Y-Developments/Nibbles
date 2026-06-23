@@ -1,10 +1,11 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nibbles/gen/fonts.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
-import 'package:nibbles/src/common/components/brand/quatrefoil.dart';
-import 'package:nibbles/src/common/components/controls/app_segmented_control.dart';
+import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/common/domain/entities/shopping_list_item.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/features/shopping_list/shopping_list_controller.dart';
@@ -41,50 +42,26 @@ class ShoppingListScreen extends ConsumerWidget {
     final babyIdAsync = ref.watch(currentBabyIdProvider);
 
     return babyIdAsync.when(
-      loading: () =>
-          const _PageScaffold(body: Center(child: CircularProgressIndicator())),
-      error: (_, __) => const _PageScaffold(
+      loading: () => const GradientScaffold(
+        resizeToAvoidBottomInset: false,
+        body: Center(child: CircularProgressIndicator()),
+      ),
+      error: (_, __) => const GradientScaffold(
+        resizeToAvoidBottomInset: false,
         body: Center(child: Text('Could not load baby profile.')),
       ),
       data: (babyId) {
         if (babyId == null) {
-          return const _PageScaffold(
+          return const GradientScaffold(
+            resizeToAvoidBottomInset: false,
             body: Center(child: Text('No baby profile found.')),
           );
         }
-        return _PageScaffold(body: _ShoppingListBody(babyId: babyId));
+        return GradientScaffold(
+          resizeToAvoidBottomInset: false,
+          body: _ShoppingListBody(babyId: babyId),
+        );
       },
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Page scaffold — Grad-1 wash (butterSoft → cream)
-// ---------------------------------------------------------------------------
-
-class _PageScaffold extends StatelessWidget {
-  const _PageScaffold({required this.body});
-
-  final Widget body;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      // Critical: resizeToAvoidBottomInset=false stops the list behind the
-      // Add Ingredients sheet from reflowing when the keyboard appears.
-      resizeToAvoidBottomInset: false,
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            stops: [0.19, 0.5],
-            colors: [AppColors.butterSoft, AppColors.cream],
-          ),
-        ),
-        child: body,
-      ),
     );
   }
 }
@@ -204,8 +181,8 @@ class _ShoppingListBodyState extends ConsumerState<_ShoppingListBody> {
   Future<void> _submitAdd() async {
     final raw = _addController.text;
     if (raw.trim().isEmpty) return;
-    // Default per Open Question 3: keep card open, clear field after add.
     _addController.clear();
+    if (mounted) Navigator.of(context).pop();
 
     try {
       await ref
@@ -252,8 +229,7 @@ class _ShoppingListBodyState extends ConsumerState<_ShoppingListBody> {
                     },
                   ),
                   const SizedBox(height: AppSizes.sp12),
-                  AppSegmentedControl(
-                    segments: const ['List', 'Bought'],
+                  _ListBoughtTabs(
                     selectedIndex: _selectedTab,
                     onChanged: (i) => setState(() => _selectedTab = i),
                   ),
@@ -317,10 +293,52 @@ class _ShoppingListHeader extends StatelessWidget {
         ),
         _AddChip(onTap: onAddPressed),
         const SizedBox(width: AppSizes.sm),
-        ShoppingListOverflowMenu(
+        PopupMenuButton<ShoppingListMenuAction>(
+          tooltip: 'More options',
+          position: PopupMenuPosition.under,
+          offset: const Offset(0, AppSizes.sm),
+          color: AppColors.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+          ),
           onSelected: onMenuSelected,
+          itemBuilder: (context) => const [
+            PopupMenuItem(
+              value: ShoppingListMenuAction.copy,
+              child: _MenuItemContent(
+                icon: Icons.copy,
+                label: 'Copy to Clipboard',
+              ),
+            ),
+            PopupMenuItem(
+              value: ShoppingListMenuAction.clear,
+              child: _MenuItemContent(
+                icon: Icons.delete_outline,
+                label: 'Clear shopping list',
+              ),
+            ),
+          ],
           child: const _OverflowChip(),
         ),
+      ],
+    );
+  }
+}
+
+/// Leading-icon + label row used inside the native overflow [PopupMenuButton].
+class _MenuItemContent extends StatelessWidget {
+  const _MenuItemContent({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: AppColors.text),
+        const SizedBox(width: AppSizes.sm),
+        Text(label, style: AppTypography.textTheme.bodyLarge),
       ],
     );
   }
@@ -362,29 +380,104 @@ class _AddChip extends StatelessWidget {
 }
 
 /// 40x40 green-deep rounded-square chip hosting the more_horiz overflow.
-/// Wrapped externally by [ShoppingListOverflowMenu] which handles tap-to-open.
+/// Used as the child of the header's native overflow PopupMenuButton.
 /// Mirrors Figma 971:9858 / 971:9943 (Button-chips, bg ForestDarkn, rounded-[10px]).
 class _OverflowChip extends StatelessWidget {
   const _OverflowChip();
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: 'More options',
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: AppColors.greenDeep,
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        ),
-        alignment: Alignment.center,
-        child: const Icon(
-          Icons.more_horiz,
-          color: AppColors.onGreen,
-          size: AppSizes.iconMd,
-          semanticLabel: '',
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: AppColors.greenDeep,
+        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+      ),
+      alignment: Alignment.center,
+      child: const Icon(
+        Icons.more_horiz,
+        color: AppColors.onGreen,
+        size: AppSizes.iconMd,
+        semanticLabel: '',
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// List / Bought tabs — native CupertinoSlidingSegmentedControl (Figma 962:6668)
+//   Track borderSoft, forest thumb, Parkinsans SemiBold 15/22 labels.
+//   LayoutBuilder + per-segment SizedBox forces the control to span full width
+//   (the native control otherwise hugs its content).
+// ---------------------------------------------------------------------------
+
+class _ListBoughtTabs extends StatelessWidget {
+  const _ListBoughtTabs({required this.selectedIndex, required this.onChanged});
+
+  final int selectedIndex;
+  final ValueChanged<int> onChanged;
+
+  static const double _trackPadding = 3;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final segmentWidth = (constraints.maxWidth - _trackPadding * 2) / 2;
+        return CupertinoSlidingSegmentedControl<int>(
+          groupValue: selectedIndex,
+          backgroundColor: AppColors.borderSoft,
+          thumbColor: AppColors.green,
+          padding: const EdgeInsets.all(_trackPadding),
+          onValueChanged: (value) {
+            if (value != null) onChanged(value);
+          },
+          children: {
+            0: _SegmentLabel(
+              label: 'List',
+              active: selectedIndex == 0,
+              width: segmentWidth,
+            ),
+            1: _SegmentLabel(
+              label: 'Bought',
+              active: selectedIndex == 1,
+              width: segmentWidth,
+            ),
+          },
+        );
+      },
+    );
+  }
+}
+
+class _SegmentLabel extends StatelessWidget {
+  const _SegmentLabel({
+    required this.label,
+    required this.active,
+    required this.width,
+  });
+
+  final String label;
+  final bool active;
+  final double width;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: width,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSizes.sm),
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontFamily: FontFamily.parkinsans,
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            height: 22 / 15,
+            color: active ? AppColors.onGreen : AppColors.green,
+          ),
         ),
       ),
     );
@@ -593,7 +686,7 @@ class _CancelChip extends StatelessWidget {
 
 // ---------------------------------------------------------------------------
 // Empty state — Figma 971:9989
-//   Centered Quatrefoil flower + verbatim caption, no CTA.
+//   Centered brand flower + verbatim caption, no CTA.
 // ---------------------------------------------------------------------------
 
 class _EmptyState extends StatelessWidget {
@@ -605,11 +698,11 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Quatrefoil(size: 153),
+          const BrandFlower(size: 153),
           // Figma 971:9989 empty-state gap-[10px] (no 10px spacing token).
           const SizedBox(height: 10),
           Text(
-            'No items in your list yet',
+            'You don’t have any list yet',
             textAlign: TextAlign.center,
             style: AppTypography.textTheme.bodyLarge,
           ),

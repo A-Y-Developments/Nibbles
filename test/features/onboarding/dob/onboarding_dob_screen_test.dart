@@ -134,28 +134,25 @@ void main() {
     expect(chip.data, isNot('Less than a month'));
   });
 
-  testWidgets(
-    'Next persists the picked DOB, flips onboarding_baby_setup_done, '
-    'navigates to /onboarding/readiness',
-    (tester) async {
-      final container = _makeContainer(flags: flags);
-      await _pumpScreen(tester, container: container);
+  testWidgets('Next persists the picked DOB, flips onboarding_baby_setup_done, '
+      'navigates to /onboarding/readiness', (tester) async {
+    final container = _makeContainer(flags: flags);
+    await _pumpScreen(tester, container: container);
 
-      // Tap Next without scrolling — default DOB (≈ 6 months ago) is valid.
-      await tester.tap(find.byKey(const Key('onboarding_dob_next')));
-      await tester.pumpAndSettle();
+    // Tap Next without scrolling — default DOB (≈ 6 months ago) is valid.
+    await tester.tap(find.byKey(const Key('onboarding_dob_next')));
+    await tester.pumpAndSettle();
 
-      // Controller has a DOB stored.
-      final dob = container.read(onboardingControllerProvider).dob;
-      expect(dob, isNotNull);
+    // Controller has a DOB stored.
+    final dob = container.read(onboardingControllerProvider).dob;
+    expect(dob, isNotNull);
 
-      // Flag flip fired exactly once.
-      verify(flags.setOnboardingBabySetupDone).called(1);
+    // Flag flip fired exactly once.
+    verify(flags.setOnboardingBabySetupDone).called(1);
 
-      // Navigation landed on the readiness stub.
-      expect(find.text('READINESS_STUB'), findsOneWidget);
-    },
-  );
+    // Navigation landed on the readiness stub.
+    expect(find.text('READINESS_STUB'), findsOneWidget);
+  });
 
   testWidgets(
     'Back button navigates to /onboarding/name when no pop target exists',
@@ -224,43 +221,40 @@ void main() {
     );
   });
 
-  testWidgets(
-    'selection lime band renders BEHIND the picker text, not over it '
-    '(no opaque selectionOverlay)',
-    (tester) async {
-      final container = _makeContainer(flags: flags);
-      await _pumpScreen(tester, container: container);
+  testWidgets('selection lime band renders BEHIND the picker text, not over it '
+      '(no opaque selectionOverlay)', (tester) async {
+    final container = _makeContainer(flags: flags);
+    await _pumpScreen(tester, container: container);
 
-      final wheel = find.byKey(const Key('onboarding_dob_year_wheel'));
+    final wheel = find.byKey(const Key('onboarding_dob_year_wheel'));
 
-      // The CupertinoPicker no longer paints an opaque selectionOverlay —
-      // it is an empty SizedBox so the value text stays legible.
-      final picker = tester.widget<CupertinoPicker>(
-        find.descendant(of: wheel, matching: find.byType(CupertinoPicker)),
-      );
-      expect(picker.selectionOverlay, isA<SizedBox>());
+    // The CupertinoPicker no longer paints an opaque selectionOverlay —
+    // it is an empty SizedBox so the value text stays legible.
+    final picker = tester.widget<CupertinoPicker>(
+      find.descendant(of: wheel, matching: find.byType(CupertinoPicker)),
+    );
+    expect(picker.selectionOverlay, isA<SizedBox>());
 
-      // A lime band Container sits inside the same column as a sibling of the
-      // picker (the background pill). Match by its lime decoration color.
-      final limeBand = find.descendant(
-        of: wheel,
-        matching: find.byWidgetPredicate(
-          (w) =>
-              w is Container &&
-              w.decoration is BoxDecoration &&
-              (w.decoration! as BoxDecoration).color == AppColors.lime,
-        ),
-      );
-      expect(limeBand, findsOneWidget);
+    // A lime band Container sits inside the same column as a sibling of the
+    // picker (the background pill). Match by its lime decoration color.
+    final limeBand = find.descendant(
+      of: wheel,
+      matching: find.byWidgetPredicate(
+        (w) =>
+            w is Container &&
+            w.decoration is BoxDecoration &&
+            (w.decoration! as BoxDecoration).color == AppColors.lime,
+      ),
+    );
+    expect(limeBand, findsOneWidget);
 
-      // The selected value text (greenDeep) still renders.
-      final selectedText = find.descendant(
-        of: wheel,
-        matching: find.byWidgetPredicate(
-          (w) => w is Text && w.style?.color == AppColors.greenDeep,
-        ),
-      );
-      expect(selectedText, findsWidgets);
-    },
-  );
+    // The selected value text (greenDeep) still renders.
+    final selectedText = find.descendant(
+      of: wheel,
+      matching: find.byWidgetPredicate(
+        (w) => w is Text && w.style?.color == AppColors.greenDeep,
+      ),
+    );
+    expect(selectedText, findsWidgets);
+  });
 }

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
+import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/services/auth_service.dart';
@@ -52,8 +53,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final babyIdAsync = ref.watch(currentBabyIdProvider);
 
     return babyIdAsync.when(
-      loading: () => const Scaffold(
-        backgroundColor: AppColors.background,
+      loading: () => const GradientScaffold(
         body: Center(child: CircularProgressIndicator()),
       ),
       error: (_, __) => _ProfileError(
@@ -83,8 +83,7 @@ class _ProfileBody extends ConsumerWidget {
     final asyncState = ref.watch(profileControllerProvider(babyId));
 
     return asyncState.when(
-      loading: () => const Scaffold(
-        backgroundColor: AppColors.background,
+      loading: () => const GradientScaffold(
         body: Center(child: CircularProgressIndicator()),
       ),
       error: (err, _) => _ProfileError(
@@ -110,81 +109,65 @@ class _ProfileContent extends ConsumerWidget {
 
     void goBack() => context.canPop() ? context.pop() : context.go('/home');
 
-    // Figma audit (node 1189:10278): screen background is
-    // linear-gradient(152.612deg, #FFFCD5 19.168%, #F5F5F5 50%) (Grad-1).
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            // 152.612deg in CSS ≈ Alignment(sinθ, -cosθ).
-            // sin(152.612°) ≈ 0.460, cos(152.612°) ≈ -0.888.
-            // butter (butterSoft) renders at top; gray at bottom.
-            begin: Alignment(-0.460, -0.888),
-            end: Alignment(0.460, 0.888),
-            stops: [0.19168, 0.5],
-            colors: [AppColors.butterSoft, Color(0xFFF5F5F5)],
-          ),
-        ),
-        child: SafeArea(
-          bottom: false,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              ProfileHeader(onBack: goBack),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSizes.md,
-                    0,
-                    AppSizes.md,
-                    AppSizes.pagePaddingV,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      ProfileAvatarCard(
-                        name: baby.name,
-                        ageLabel: _ageLabel(baby.dateOfBirth),
-                        onEdit: () =>
-                            context.pushNamed(AppRoute.profileEdit.name),
-                      ),
-                      const PremiumTeaserCard(),
-                      const SizedBox(height: AppSizes.lg),
-                      SettingsRow(
-                        key: const Key('profile_manage_subscription_row'),
-                        title: 'Manage Subscription',
-                        subtitle: state.subscriptionLabel ?? 'No Subscription',
-                        // NIB-73 — push the Manage Subscription screen.
-                        onTap: () =>
-                            context.pushNamed(AppRoute.manageSubscription.name),
-                      ),
-                      const SizedBox(height: AppSizes.sp12),
-                      SettingsRow(
-                        key: const Key('profile_feedback_row'),
-                        title: 'Give Feedback',
-                        onTap: () =>
-                            context.pushNamed(AppRoute.profileFeedback.name),
-                      ),
-                      const SizedBox(height: AppSizes.sp12),
-                      SettingsRow(
-                        key: const Key('profile_sign_out_button'),
-                        title: 'Sign out',
-                        onTap: () => _confirmSignOut(context, ref),
-                      ),
-                      const SizedBox(height: AppSizes.sp12),
-                      SettingsRow(
-                        key: const Key('profile_delete_account_row'),
-                        title: 'Delete account',
-                        danger: true,
-                        onTap: () => showDeleteAccountOverlay(context),
-                      ),
-                    ],
-                  ),
+    return GradientScaffold(
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ProfileHeader(onBack: goBack),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSizes.md,
+                  0,
+                  AppSizes.md,
+                  AppSizes.pagePaddingV,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    ProfileAvatarCard(
+                      name: baby.name,
+                      ageLabel: _ageLabel(baby.dateOfBirth),
+                      onEdit: () =>
+                          context.pushNamed(AppRoute.profileEdit.name),
+                    ),
+                    const PremiumTeaserCard(),
+                    const SizedBox(height: AppSizes.lg),
+                    SettingsRow(
+                      key: const Key('profile_manage_subscription_row'),
+                      title: 'Manage Subscription',
+                      subtitle: state.subscriptionLabel ?? 'No Subscription',
+                      // NIB-73 — push the Manage Subscription screen.
+                      onTap: () =>
+                          context.pushNamed(AppRoute.manageSubscription.name),
+                    ),
+                    const SizedBox(height: AppSizes.sp12),
+                    SettingsRow(
+                      key: const Key('profile_feedback_row'),
+                      title: 'Give Feedback',
+                      onTap: () =>
+                          context.pushNamed(AppRoute.profileFeedback.name),
+                    ),
+                    const SizedBox(height: AppSizes.sp12),
+                    SettingsRow(
+                      key: const Key('profile_sign_out_button'),
+                      title: 'Sign out',
+                      onTap: () => _confirmSignOut(context, ref),
+                    ),
+                    const SizedBox(height: AppSizes.sp12),
+                    SettingsRow(
+                      key: const Key('profile_delete_account_row'),
+                      title: 'Delete account',
+                      danger: true,
+                      onTap: () => showDeleteAccountOverlay(context),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -252,8 +235,7 @@ class _ProfileError extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return GradientScaffold(
       body: SafeArea(
         child: Center(
           child: Padding(

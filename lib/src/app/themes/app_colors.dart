@@ -57,6 +57,8 @@ abstract final class AppColors {
   static const Color coral = Color(0xFFF8A175);
   static const Color coralSoft = Color(0xFFFDF2EC);
   static const Color coralDeep = Color(0xFFC97850);
+  // Nibble-primary-Salmon — recipe detail storage / freezer card fill.
+  static const Color salmon = Color(0xFFEBA27C);
 
   // Burgundy ghost — soft pediatrician-advisory tint
   // (Nibble-primary-BurgundyGhost — recipe detail allergen card).
@@ -64,6 +66,18 @@ abstract final class AppColors {
 
   // Cream surface base
   static const Color cream = Color(0xFFFFFDF8);
+  // Nibble primary cream (Figma --nibble-primary-cream) — Nibbles Goals card.
+  static const Color cardCream = Color(0xFFFFFCD9);
+  // Nibble primary burgundy (Figma --nibble-primary-burgundy) — Feeding
+  // Principles "Items to Avoid" card. Distinct from `burgundy` (#77393B).
+  static const Color cardBurgundy = Color(0xFF6F3D3D);
+  // Nibble primary burgundy-dark (Figma --nibble-primary-burgundydark) —
+  // 5 Sign Readiness score chip on the cream signs card.
+  static const Color burgundyDark = Color(0xFF4A2828);
+
+  // Loading-ring gold (post-onboarding transition orbit). Swap to #D69E2E
+  // (warning) or #C8CA5A (butterDark) for a less metallic tone.
+  static const Color gold = Color(0xFFE3B341);
 
   // Warm red — destructive
   static const Color destructive = Color(0xFF851E1E);

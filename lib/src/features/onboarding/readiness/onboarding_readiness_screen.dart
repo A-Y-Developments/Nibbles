@@ -128,123 +128,115 @@ class _OnboardingReadinessScreenState
     );
     final isNextEnabled = currentAnswer != null;
 
-    return Scaffold(
-      // Gradient background: butterSoft → light grey per Figma readiness spec.
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [AppColors.butterSoft, Color(0xFFF5F5F5)],
+    return GradientScaffold(
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSizes.pagePaddingH,
           ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSizes.pagePaddingH,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Scroll the question content so short devices / large text
-                // scales never overflow; the Back/Next footer stays pinned to
-                // the bottom (mirrors the result + consent siblings).
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const SizedBox(height: AppSizes.md),
-                        Semantics(
-                          liveRegion: true,
-                          container: true,
-                          label:
-                              'Question ${_currentIndex + 1} of '
-                              '$_readinessTotalSteps',
-                          child: Center(
-                            child: Text(
-                              '${_currentIndex + 1} of '
-                              '$_readinessTotalSteps Questions',
-                              key: const Key('onboarding_readiness_counter'),
-                              style: textTheme.bodyMedium?.copyWith(
-                                color: AppColors.fgStrong,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: AppSizes.sm),
-                        ReadinessProgressBar(
-                          stepCount: _readinessTotalSteps,
-                          currentIndex: _currentIndex,
-                        ),
-                        const SizedBox(height: AppSizes.xl),
-                        Text(
-                          title,
-                          textAlign: TextAlign.center,
-                          style: textTheme.titleLarge,
-                        ),
-                        const SizedBox(height: AppSizes.md),
-                        Text(
-                          step.body,
-                          textAlign: TextAlign.center,
-                          style: textTheme.bodyMedium?.copyWith(
-                            color: AppColors.fgMuted,
-                          ),
-                        ),
-                        const SizedBox(height: AppSizes.lg),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: ReadinessChoiceCard(
-                                key: const Key('readiness_choice_yes'),
-                                identifier: 'readiness_choice_yes',
-                                label: step.yesLabel,
-                                selected: currentAnswer ?? false,
-                                onTap: () => _recordAnswer(isYes: true),
-                              ),
-                            ),
-                            const SizedBox(width: AppSizes.md),
-                            Expanded(
-                              child: ReadinessChoiceCard(
-                                key: const Key('readiness_choice_unsure'),
-                                identifier: 'readiness_choice_unsure',
-                                label: step.noLabel,
-                                selected: currentAnswer == false,
-                                onTap: () => _recordAnswer(isYes: false),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: AppSizes.pagePaddingV),
-                  child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Scroll the question content so short devices / large text
+              // scales never overflow; the Back/Next footer stays pinned to
+              // the bottom (mirrors the result + consent siblings).
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      AppRoundButton(
-                        key: const Key('onboarding_readiness_back'),
-                        icon: const Icon(Icons.arrow_back_rounded),
-                        tone: AppRoundButtonTone.butter,
-                        semanticLabel: 'Back',
-                        onPressed: _onBack,
-                      ),
-                      const SizedBox(width: AppSizes.sm),
-                      Expanded(
-                        child: AppPillButton(
-                          key: const Key('onboarding_readiness_next'),
-                          label: 'Next',
-                          onPressed: isNextEnabled ? _onNext : null,
+                      const SizedBox(height: AppSizes.md),
+                      Semantics(
+                        liveRegion: true,
+                        container: true,
+                        label:
+                            'Question ${_currentIndex + 1} of '
+                            '$_readinessTotalSteps',
+                        child: Center(
+                          child: Text(
+                            '${_currentIndex + 1} of '
+                            '$_readinessTotalSteps Questions',
+                            key: const Key('onboarding_readiness_counter'),
+                            style: textTheme.bodyMedium?.copyWith(
+                              color: AppColors.fgStrong,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
+                      ),
+                      const SizedBox(height: AppSizes.sm),
+                      ReadinessProgressBar(
+                        stepCount: _readinessTotalSteps,
+                        currentIndex: _currentIndex,
+                      ),
+                      const SizedBox(height: AppSizes.xl),
+                      Text(
+                        title,
+                        textAlign: TextAlign.center,
+                        style: textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: AppSizes.md),
+                      Text(
+                        step.body,
+                        textAlign: TextAlign.center,
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: AppColors.fgMuted,
+                        ),
+                      ),
+                      const SizedBox(height: AppSizes.lg),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: ReadinessChoiceCard(
+                              key: const Key('readiness_choice_yes'),
+                              identifier: 'readiness_choice_yes',
+                              label: step.yesLabel,
+                              selected: currentAnswer ?? false,
+                              affirmative: true,
+                              onTap: () => _recordAnswer(isYes: true),
+                            ),
+                          ),
+                          const SizedBox(width: AppSizes.md),
+                          Expanded(
+                            child: ReadinessChoiceCard(
+                              key: const Key('readiness_choice_unsure'),
+                              identifier: 'readiness_choice_unsure',
+                              label: step.noLabel,
+                              selected: currentAnswer == false,
+                              affirmative: false,
+                              onTap: () => _recordAnswer(isYes: false),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
-              ],
-            ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: AppSizes.pagePaddingV),
+                child: Row(
+                  children: [
+                    AppRoundButton(
+                      key: const Key('onboarding_readiness_back'),
+                      icon: const Icon(Icons.arrow_back_rounded),
+                      tone: AppRoundButtonTone.butter,
+                      semanticLabel: 'Back',
+                      onPressed: _onBack,
+                    ),
+                    const SizedBox(width: AppSizes.sm),
+                    Expanded(
+                      child: AppPillButton(
+                        key: const Key('onboarding_readiness_next'),
+                        label: 'Next',
+                        onPressed: isNextEnabled ? _onNext : null,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -287,10 +279,13 @@ class _OnboardingReadinessScreenState
 
   void _onBack() {
     if (_currentIndex == 0) {
-      // Pre-MVP order is name -> dob -> readiness, so back from Q1 always
-      // pops to DOB.
+      // Flow order is name -> dob -> readiness, so back from Q1 returns to the
+      // DOB ("baby born") screen. readiness is reached via `goNamed`, so the
+      // stack usually can't pop — fall through to `goNamed(dob)`.
       if (context.canPop()) {
         context.pop();
+      } else {
+        context.goNamed(AppRoute.onboardingDob.name);
       }
       return;
     }
@@ -310,7 +305,10 @@ class _OnboardingReadinessScreenState
     // flipped before GoRouter's redirect reads it — avoids the fire-and-forget
     // race that existed when the flag was written from the Screen layer.
     ref.read(onboardingControllerProvider.notifier).completeReadiness();
-    context.goNamed(AppRoute.onboardingResult.name);
+    // Push (not go) so the result keeps readiness on the stack — back from the
+    // result is a plain pop that returns to the last question with answers
+    // intact. Phase C whitelists readiness so the pop isn't redirect-bounced.
+    context.pushNamed(AppRoute.onboardingResult.name);
   }
 }
 

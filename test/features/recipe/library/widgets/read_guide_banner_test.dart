@@ -27,13 +27,15 @@ void main() {
     handle.dispose();
   });
 
-  testWidgets('renders the decorative brand quatrefoil blobs (Figma 1015:6820)',
-      (tester) async {
-    await tester.pumpWidget(_wrap(ReadGuideBanner(onTap: () {})));
-    await tester.pump();
+  testWidgets(
+    'renders the decorative brand quatrefoil blobs (Figma 1015:6820)',
+    (tester) async {
+      await tester.pumpWidget(_wrap(ReadGuideBanner(onTap: () {})));
+      await tester.pump();
 
-    // Two clipped sage blobs sit in the banner's top-right per the design.
-    expect(find.byType(Quatrefoil), findsNWidgets(2));
-    expect(find.byType(ClipRRect), findsWidgets);
-  });
+      // Two clipped sage blobs sit in the banner's top-right per the design.
+      expect(find.byType(Quatrefoil), findsNWidgets(2));
+      expect(find.byType(ClipRRect), findsWidgets);
+    },
+  );
 }

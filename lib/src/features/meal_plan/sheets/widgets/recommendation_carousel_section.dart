@@ -175,9 +175,7 @@ class _Counter extends StatelessWidget {
         decoration: BoxDecoration(
           color: background,
           borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-          border: active
-              ? Border.all(color: foreground, width: 1.5)
-              : null,
+          border: active ? Border.all(color: foreground, width: 1.5) : null,
         ),
         child: Text(
           label,

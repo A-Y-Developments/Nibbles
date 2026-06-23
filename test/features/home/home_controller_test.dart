@@ -91,10 +91,12 @@ void main() {
       final recipe = _MockRecipeService();
 
       when(babyProfile.getBaby).thenAnswer((_) async => null);
-      when(() => allergen.getLogs(_babyId))
-          .thenAnswer((_) async => const Result.success([]));
-      when(() => mealPlan.getRolling7(_babyId))
-          .thenAnswer((_) async => const Result.success([]));
+      when(
+        () => allergen.getLogs(_babyId),
+      ).thenAnswer((_) async => const Result.success([]));
+      when(
+        () => mealPlan.getRolling7(_babyId),
+      ).thenAnswer((_) async => const Result.success([]));
 
       final container = _makeContainer(
         babyProfile: babyProfile,
@@ -102,8 +104,9 @@ void main() {
         mealPlan: mealPlan,
         recipe: recipe,
       );
-      final state =
-          await container.read(homeControllerProvider(_babyId).future);
+      final state = await container.read(
+        homeControllerProvider(_babyId).future,
+      );
 
       expect(state.baby, isNull);
       expect(state.allergenStatuses, isEmpty);
@@ -120,11 +123,11 @@ void main() {
 
       when(babyProfile.getBaby).thenAnswer((_) async => _baby);
       when(() => allergen.getLogs(_babyId)).thenAnswer(
-        (_) async =>
-            const Result.failure(ServerException('logs fetch failed')),
+        (_) async => const Result.failure(ServerException('logs fetch failed')),
       );
-      when(() => mealPlan.getRolling7(_babyId))
-          .thenAnswer((_) async => const Result.success([]));
+      when(
+        () => mealPlan.getRolling7(_babyId),
+      ).thenAnswer((_) async => const Result.success([]));
 
       final container = _makeContainer(
         babyProfile: babyProfile,
@@ -146,8 +149,9 @@ void main() {
       final recipe = _MockRecipeService();
 
       when(babyProfile.getBaby).thenAnswer((_) async => _baby);
-      when(() => allergen.getLogs(_babyId))
-          .thenAnswer((_) async => const Result.success([]));
+      when(
+        () => allergen.getLogs(_babyId),
+      ).thenAnswer((_) async => const Result.success([]));
       when(() => mealPlan.getRolling7(_babyId)).thenAnswer(
         (_) async =>
             const Result.failure(ServerException('meal plan fetch failed')),
@@ -175,10 +179,12 @@ void main() {
       final recipe = _MockRecipeService();
 
       when(babyProfile.getBaby).thenAnswer((_) async => _baby);
-      when(() => allergen.getLogs(_babyId))
-          .thenAnswer((_) async => const Result.success([]));
-      when(() => mealPlan.getRolling7(_babyId))
-          .thenAnswer((_) async => const Result.success([]));
+      when(
+        () => allergen.getLogs(_babyId),
+      ).thenAnswer((_) async => const Result.success([]));
+      when(
+        () => mealPlan.getRolling7(_babyId),
+      ).thenAnswer((_) async => const Result.success([]));
 
       final container = _makeContainer(
         babyProfile: babyProfile,
@@ -186,12 +192,14 @@ void main() {
         mealPlan: mealPlan,
         recipe: recipe,
       );
-      final state =
-          await container.read(homeControllerProvider(_babyId).future);
+      final state = await container.read(
+        homeControllerProvider(_babyId).future,
+      );
 
       expect(
-        state.allergenStatuses.values
-            .every((s) => s == AllergenStatus.notStarted),
+        state.allergenStatuses.values.every(
+          (s) => s == AllergenStatus.notStarted,
+        ),
         isTrue,
       );
     });
@@ -203,11 +211,12 @@ void main() {
       final recipe = _MockRecipeService();
 
       when(babyProfile.getBaby).thenAnswer((_) async => _baby);
-      when(() => allergen.getLogs(_babyId)).thenAnswer(
-        (_) async => Result.success([_log('peanut')]),
-      );
-      when(() => mealPlan.getRolling7(_babyId))
-          .thenAnswer((_) async => const Result.success([]));
+      when(
+        () => allergen.getLogs(_babyId),
+      ).thenAnswer((_) async => Result.success([_log('peanut')]));
+      when(
+        () => mealPlan.getRolling7(_babyId),
+      ).thenAnswer((_) async => const Result.success([]));
 
       final container = _makeContainer(
         babyProfile: babyProfile,
@@ -215,8 +224,9 @@ void main() {
         mealPlan: mealPlan,
         recipe: recipe,
       );
-      final state =
-          await container.read(homeControllerProvider(_babyId).future);
+      final state = await container.read(
+        homeControllerProvider(_babyId).future,
+      );
 
       expect(state.allergenStatuses['peanut'], AllergenStatus.inProgress);
     });
@@ -231,8 +241,9 @@ void main() {
       when(() => allergen.getLogs(_babyId)).thenAnswer(
         (_) async => Result.success([_log('egg', hadReaction: true)]),
       );
-      when(() => mealPlan.getRolling7(_babyId))
-          .thenAnswer((_) async => const Result.success([]));
+      when(
+        () => mealPlan.getRolling7(_babyId),
+      ).thenAnswer((_) async => const Result.success([]));
 
       final container = _makeContainer(
         babyProfile: babyProfile,
@@ -240,8 +251,9 @@ void main() {
         mealPlan: mealPlan,
         recipe: recipe,
       );
-      final state =
-          await container.read(homeControllerProvider(_babyId).future);
+      final state = await container.read(
+        homeControllerProvider(_babyId).future,
+      );
 
       expect(state.allergenStatuses['egg'], AllergenStatus.flagged);
     });
@@ -262,8 +274,9 @@ void main() {
           _log('peanut', hadReaction: true, n: 2),
         ]),
       );
-      when(() => mealPlan.getRolling7(_babyId))
-          .thenAnswer((_) async => const Result.success([]));
+      when(
+        () => mealPlan.getRolling7(_babyId),
+      ).thenAnswer((_) async => const Result.success([]));
 
       final container = _makeContainer(
         babyProfile: babyProfile,
@@ -271,8 +284,9 @@ void main() {
         mealPlan: mealPlan,
         recipe: recipe,
       );
-      final state =
-          await container.read(homeControllerProvider(_babyId).future);
+      final state = await container.read(
+        homeControllerProvider(_babyId).future,
+      );
 
       expect(state.allergenLogCounts['peanut'], 2);
     });
@@ -287,13 +301,15 @@ void main() {
       final today = DateTime.now();
 
       when(babyProfile.getBaby).thenAnswer((_) async => _baby);
-      when(() => allergen.getLogs(_babyId))
-          .thenAnswer((_) async => const Result.success([]));
-      when(() => mealPlan.getRolling7(_babyId)).thenAnswer(
-        (_) async => Result.success([_entry(today)]),
-      );
-      when(() => recipe.getRecipeById('recipe-1'))
-          .thenAnswer((_) async => const Result.success(_recipe));
+      when(
+        () => allergen.getLogs(_babyId),
+      ).thenAnswer((_) async => const Result.success([]));
+      when(
+        () => mealPlan.getRolling7(_babyId),
+      ).thenAnswer((_) async => Result.success([_entry(today)]));
+      when(
+        () => recipe.getRecipeById('recipe-1'),
+      ).thenAnswer((_) async => const Result.success(_recipe));
 
       final container = _makeContainer(
         babyProfile: babyProfile,
@@ -301,40 +317,45 @@ void main() {
         mealPlan: mealPlan,
         recipe: recipe,
       );
-      final state =
-          await container.read(homeControllerProvider(_babyId).future);
+      final state = await container.read(
+        homeControllerProvider(_babyId).future,
+      );
 
       expect(state.todaysMeals.length, 1);
       expect(state.todaysRecipes['recipe-1'], _recipe);
     });
 
-    test('future entry excluded from todaysMeals, hasAnyPlannedMeal true',
-        () async {
-      final babyProfile = _MockBabyProfileService();
-      final allergen = _MockAllergenService();
-      final mealPlan = _MockMealPlanService();
-      final recipe = _MockRecipeService();
-      final tomorrow = DateTime.now().add(const Duration(days: 1));
+    test(
+      'future entry excluded from todaysMeals, hasAnyPlannedMeal true',
+      () async {
+        final babyProfile = _MockBabyProfileService();
+        final allergen = _MockAllergenService();
+        final mealPlan = _MockMealPlanService();
+        final recipe = _MockRecipeService();
+        final tomorrow = DateTime.now().add(const Duration(days: 1));
 
-      when(babyProfile.getBaby).thenAnswer((_) async => _baby);
-      when(() => allergen.getLogs(_babyId))
-          .thenAnswer((_) async => const Result.success([]));
-      when(() => mealPlan.getRolling7(_babyId)).thenAnswer(
-        (_) async => Result.success([_entry(tomorrow)]),
-      );
+        when(babyProfile.getBaby).thenAnswer((_) async => _baby);
+        when(
+          () => allergen.getLogs(_babyId),
+        ).thenAnswer((_) async => const Result.success([]));
+        when(
+          () => mealPlan.getRolling7(_babyId),
+        ).thenAnswer((_) async => Result.success([_entry(tomorrow)]));
 
-      final container = _makeContainer(
-        babyProfile: babyProfile,
-        allergen: allergen,
-        mealPlan: mealPlan,
-        recipe: recipe,
-      );
-      final state =
-          await container.read(homeControllerProvider(_babyId).future);
+        final container = _makeContainer(
+          babyProfile: babyProfile,
+          allergen: allergen,
+          mealPlan: mealPlan,
+          recipe: recipe,
+        );
+        final state = await container.read(
+          homeControllerProvider(_babyId).future,
+        );
 
-      expect(state.todaysMeals, isEmpty);
-      expect(state.hasAnyPlannedMeal, isTrue);
-    });
+        expect(state.todaysMeals, isEmpty);
+        expect(state.hasAnyPlannedMeal, isTrue);
+      },
+    );
 
     test('failed recipe fetch is silently skipped (P3)', () async {
       final babyProfile = _MockBabyProfileService();
@@ -344,16 +365,18 @@ void main() {
       final today = DateTime.now();
 
       when(babyProfile.getBaby).thenAnswer((_) async => _baby);
-      when(() => allergen.getLogs(_babyId))
-          .thenAnswer((_) async => const Result.success([]));
+      when(
+        () => allergen.getLogs(_babyId),
+      ).thenAnswer((_) async => const Result.success([]));
       when(() => mealPlan.getRolling7(_babyId)).thenAnswer(
         (_) async => Result.success([
           _entry(today),
           _entry(today, recipeId: 'recipe-2'),
         ]),
       );
-      when(() => recipe.getRecipeById('recipe-1'))
-          .thenAnswer((_) async => const Result.success(_recipe));
+      when(
+        () => recipe.getRecipeById('recipe-1'),
+      ).thenAnswer((_) async => const Result.success(_recipe));
       when(() => recipe.getRecipeById('recipe-2')).thenAnswer(
         (_) async => const Result.failure(ServerException('not found')),
       );
@@ -364,8 +387,9 @@ void main() {
         mealPlan: mealPlan,
         recipe: recipe,
       );
-      final state =
-          await container.read(homeControllerProvider(_babyId).future);
+      final state = await container.read(
+        homeControllerProvider(_babyId).future,
+      );
 
       expect(state.todaysMeals.length, 2);
       expect(state.todaysRecipes.containsKey('recipe-1'), isTrue);
@@ -379,10 +403,12 @@ void main() {
       final recipe = _MockRecipeService();
 
       when(babyProfile.getBaby).thenAnswer((_) async => _baby);
-      when(() => allergen.getLogs(_babyId))
-          .thenAnswer((_) async => const Result.success([]));
-      when(() => mealPlan.getRolling7(_babyId))
-          .thenAnswer((_) async => const Result.success([]));
+      when(
+        () => allergen.getLogs(_babyId),
+      ).thenAnswer((_) async => const Result.success([]));
+      when(
+        () => mealPlan.getRolling7(_babyId),
+      ).thenAnswer((_) async => const Result.success([]));
 
       final container = _makeContainer(
         babyProfile: babyProfile,

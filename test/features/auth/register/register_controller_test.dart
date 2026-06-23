@@ -31,16 +31,17 @@ void main() {
     ).thenAnswer((_) => const Stream.empty());
     when(mockFlags.isOnboardingBabySetupDone).thenReturn(true);
 
-    container = ProviderContainer(
-      overrides: [
-        authRepositoryProvider.overrideWithValue(mockRepo),
-        localFlagServiceProvider.overrideWithValue(mockFlags),
-        analyticsProvider.overrideWithValue(fakeAnalytics),
-      ],
-    )
-    // Hold the controller alive across awaits so state isn't lost to
-    // auto-dispose between assertions.
-    ..listen<RegisterState>(registerControllerProvider, (_, __) {});
+    container =
+        ProviderContainer(
+            overrides: [
+              authRepositoryProvider.overrideWithValue(mockRepo),
+              localFlagServiceProvider.overrideWithValue(mockFlags),
+              analyticsProvider.overrideWithValue(fakeAnalytics),
+            ],
+          )
+          // Hold the controller alive across awaits so state isn't lost to
+          // auto-dispose between assertions.
+          ..listen<RegisterState>(registerControllerProvider, (_, __) {});
   });
 
   tearDown(() => container.dispose());
@@ -53,25 +54,24 @@ void main() {
   // ---------------------------------------------------------------------------
 
   group('submit (email)', () {
-    test('returns true on Success and fires method_selected + success',
-        () async {
-      when(
-        () => mockRepo.signUp(any(), any()),
-      ).thenAnswer((_) async => const Result.success(null));
+    test(
+      'returns true on Success and fires method_selected + success',
+      () async {
+        when(
+          () => mockRepo.signUp(any(), any()),
+        ).thenAnswer((_) async => const Result.success(null));
 
-      final ok = await readController().submit();
-      await Future<void>.delayed(Duration.zero);
+        final ok = await readController().submit();
+        await Future<void>.delayed(Duration.zero);
 
-      expect(ok, isTrue);
-      expect(
-        fakeAnalytics.eventNames,
-        ['sign_up_method_selected', 'sign_up_success'],
-      );
-      expect(
-        fakeAnalytics.calls[0].parameters,
-        {'method': 'email'},
-      );
-    });
+        expect(ok, isTrue);
+        expect(fakeAnalytics.eventNames, [
+          'sign_up_method_selected',
+          'sign_up_success',
+        ]);
+        expect(fakeAnalytics.calls[0].parameters, {'method': 'email'});
+      },
+    );
 
     test('returns false on Failure and fires sign_up_failure', () async {
       when(() => mockRepo.signUp(any(), any())).thenAnswer(
@@ -82,14 +82,14 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       expect(ok, isFalse);
-      expect(
-        fakeAnalytics.eventNames,
-        ['sign_up_method_selected', 'sign_up_failure'],
-      );
-      expect(
-        fakeAnalytics.calls[1].parameters,
-        {'method': 'email', 'error_code': 'server_exception'},
-      );
+      expect(fakeAnalytics.eventNames, [
+        'sign_up_method_selected',
+        'sign_up_failure',
+      ]);
+      expect(fakeAnalytics.calls[1].parameters, {
+        'method': 'email',
+        'error_code': 'server_exception',
+      });
     });
   });
 
@@ -110,61 +110,59 @@ void main() {
       final state = container.read(registerControllerProvider);
       expect(state.isLoading, isFalse);
       expect(state.errorMessage, isNull);
-      expect(
-        fakeAnalytics.eventNames,
-        ['sign_up_method_selected', 'sign_up_success'],
-      );
-      expect(
-        fakeAnalytics.calls[0].parameters,
-        {'method': 'google'},
-      );
+      expect(fakeAnalytics.eventNames, [
+        'sign_up_method_selected',
+        'sign_up_success',
+      ]);
+      expect(fakeAnalytics.calls[0].parameters, {'method': 'google'});
     });
 
-    test('returns false on Success(false) (cancel) and fires cancel event',
-        () async {
-      when(
-        () => mockRepo.signInWithGoogle(),
-      ).thenAnswer((_) async => const Result.success(false));
+    test(
+      'returns false on Success(false) (cancel) and fires cancel event',
+      () async {
+        when(
+          () => mockRepo.signInWithGoogle(),
+        ).thenAnswer((_) async => const Result.success(false));
 
-      final ok = await readController().signInWithGoogle();
-      await Future<void>.delayed(Duration.zero);
+        final ok = await readController().signInWithGoogle();
+        await Future<void>.delayed(Duration.zero);
 
-      expect(ok, isFalse);
-      final state = container.read(registerControllerProvider);
-      expect(state.isLoading, isFalse);
-      expect(state.errorMessage, isNull);
-      expect(
-        fakeAnalytics.eventNames,
-        ['sign_up_method_selected', 'social_login_cancelled'],
-      );
-      expect(
-        fakeAnalytics.calls.last.parameters,
-        {'provider': 'google'},
-      );
-    });
+        expect(ok, isFalse);
+        final state = container.read(registerControllerProvider);
+        expect(state.isLoading, isFalse);
+        expect(state.errorMessage, isNull);
+        expect(fakeAnalytics.eventNames, [
+          'sign_up_method_selected',
+          'social_login_cancelled',
+        ]);
+        expect(fakeAnalytics.calls.last.parameters, {'provider': 'google'});
+      },
+    );
 
-    test('returns false on Failure, sets errorMessage and fires failure event',
-        () async {
-      when(() => mockRepo.signInWithGoogle()).thenAnswer(
-        (_) async => const Result.failure(ServerException('Google failed')),
-      );
+    test(
+      'returns false on Failure, sets errorMessage and fires failure event',
+      () async {
+        when(() => mockRepo.signInWithGoogle()).thenAnswer(
+          (_) async => const Result.failure(ServerException('Google failed')),
+        );
 
-      final ok = await readController().signInWithGoogle();
-      await Future<void>.delayed(Duration.zero);
+        final ok = await readController().signInWithGoogle();
+        await Future<void>.delayed(Duration.zero);
 
-      expect(ok, isFalse);
-      final state = container.read(registerControllerProvider);
-      expect(state.isLoading, isFalse);
-      expect(state.errorMessage, 'Google failed');
-      expect(
-        fakeAnalytics.eventNames,
-        ['sign_up_method_selected', 'sign_up_failure'],
-      );
-      expect(
-        fakeAnalytics.calls.last.parameters,
-        {'method': 'google', 'error_code': 'server_exception'},
-      );
-    });
+        expect(ok, isFalse);
+        final state = container.read(registerControllerProvider);
+        expect(state.isLoading, isFalse);
+        expect(state.errorMessage, 'Google failed');
+        expect(fakeAnalytics.eventNames, [
+          'sign_up_method_selected',
+          'sign_up_failure',
+        ]);
+        expect(fakeAnalytics.calls.last.parameters, {
+          'method': 'google',
+          'error_code': 'server_exception',
+        });
+      },
+    );
   });
 
   // ---------------------------------------------------------------------------
@@ -181,35 +179,31 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       expect(ok, isTrue);
-      expect(
-        fakeAnalytics.eventNames,
-        ['sign_up_method_selected', 'sign_up_success'],
-      );
-      expect(
-        fakeAnalytics.calls[0].parameters,
-        {'method': 'apple'},
-      );
+      expect(fakeAnalytics.eventNames, [
+        'sign_up_method_selected',
+        'sign_up_success',
+      ]);
+      expect(fakeAnalytics.calls[0].parameters, {'method': 'apple'});
     });
 
-    test('returns false on Success(false) (cancel) and fires cancel event',
-        () async {
-      when(
-        () => mockRepo.signInWithApple(),
-      ).thenAnswer((_) async => const Result.success(false));
+    test(
+      'returns false on Success(false) (cancel) and fires cancel event',
+      () async {
+        when(
+          () => mockRepo.signInWithApple(),
+        ).thenAnswer((_) async => const Result.success(false));
 
-      final ok = await readController().signInWithApple();
-      await Future<void>.delayed(Duration.zero);
+        final ok = await readController().signInWithApple();
+        await Future<void>.delayed(Duration.zero);
 
-      expect(ok, isFalse);
-      expect(
-        fakeAnalytics.eventNames,
-        ['sign_up_method_selected', 'social_login_cancelled'],
-      );
-      expect(
-        fakeAnalytics.calls.last.parameters,
-        {'provider': 'apple'},
-      );
-    });
+        expect(ok, isFalse);
+        expect(fakeAnalytics.eventNames, [
+          'sign_up_method_selected',
+          'social_login_cancelled',
+        ]);
+        expect(fakeAnalytics.calls.last.parameters, {'provider': 'apple'});
+      },
+    );
 
     test('returns false on Failure and sets errorMessage', () async {
       when(() => mockRepo.signInWithApple()).thenAnswer(
@@ -223,14 +217,14 @@ void main() {
       final state = container.read(registerControllerProvider);
       expect(state.isLoading, isFalse);
       expect(state.errorMessage, 'Apple failed');
-      expect(
-        fakeAnalytics.eventNames,
-        ['sign_up_method_selected', 'sign_up_failure'],
-      );
-      expect(
-        fakeAnalytics.calls.last.parameters,
-        {'method': 'apple', 'error_code': 'server_exception'},
-      );
+      expect(fakeAnalytics.eventNames, [
+        'sign_up_method_selected',
+        'sign_up_failure',
+      ]);
+      expect(fakeAnalytics.calls.last.parameters, {
+        'method': 'apple',
+        'error_code': 'server_exception',
+      });
     });
   });
 }

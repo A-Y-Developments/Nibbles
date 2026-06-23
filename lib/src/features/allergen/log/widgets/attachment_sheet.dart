@@ -43,9 +43,7 @@ Future<AttachmentSheetResult?> showAttachmentSheet(
       ),
     ),
     builder: (ctx) => Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(ctx).viewInsets.bottom,
-      ),
+      padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
       child: _AttachmentSheet(
         initialPhotoPath: initialPhotoPath,
         initialTitle: initialTitle,
@@ -110,8 +108,9 @@ class _AttachmentSheetState extends State<_AttachmentSheet> {
       context: context,
       backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.vertical(top: Radius.circular(AppSizes.radiusXl)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppSizes.radiusXl),
+        ),
       ),
       builder: (ctx) => SafeArea(
         child: Column(

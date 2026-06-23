@@ -48,7 +48,7 @@ class _DeleteLogConfirmationDialog extends StatelessWidget {
           children: [
             const _QuestionText(),
             const SizedBox(height: AppSizes.md),
-            const Quatrefoil(size: 153),
+            const BrandFlower(size: 153),
             const SizedBox(height: AppSizes.lg),
             Row(
               children: [

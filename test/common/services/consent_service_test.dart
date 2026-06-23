@@ -44,28 +44,30 @@ void main() {
       ).called(1);
     });
 
-    test('forwards under6MoResponsibility to the repository unchanged',
-        () async {
-      when(
-        () => mockRepo.recordConsent(
-          babyId: any(named: 'babyId'),
-          type: any(named: 'type'),
-        ),
-      ).thenAnswer((_) async => const Result.success(null));
+    test(
+      'forwards under6MoResponsibility to the repository unchanged',
+      () async {
+        when(
+          () => mockRepo.recordConsent(
+            babyId: any(named: 'babyId'),
+            type: any(named: 'type'),
+          ),
+        ).thenAnswer((_) async => const Result.success(null));
 
-      final result = await sut.recordConsent(
-        babyId: 'baby-2',
-        type: ConsentType.under6MoResponsibility,
-      );
-
-      expect(result, isA<Success<void>>());
-      verify(
-        () => mockRepo.recordConsent(
+        final result = await sut.recordConsent(
           babyId: 'baby-2',
           type: ConsentType.under6MoResponsibility,
-        ),
-      ).called(1);
-    });
+        );
+
+        expect(result, isA<Success<void>>());
+        verify(
+          () => mockRepo.recordConsent(
+            babyId: 'baby-2',
+            type: ConsentType.under6MoResponsibility,
+          ),
+        ).called(1);
+      },
+    );
 
     test('returns Result.failure when repository fails', () async {
       when(

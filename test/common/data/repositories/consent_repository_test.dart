@@ -84,9 +84,32 @@ class _CapturingQueryBuilder extends _MockQueryBuilder {
 
 void main() {
   group('ConsentRepositoryImpl.recordConsent', () {
+    test('inserts {user_id, baby_id, consent_type=solids_introduction} '
+        'and returns success', () async {
+      final mockSupabase = _MockSupabaseClient();
+      final mockAuth = _MockGoTrueClient();
+      final builder = _CapturingQueryBuilder(() {});
+
+      when(() => mockSupabase.auth).thenReturn(mockAuth);
+      when(() => mockAuth.currentUser).thenReturn(_FakeUser());
+      when(() => mockSupabase.from('consents')).thenAnswer((_) => builder);
+
+      final sut = ConsentRepositoryImpl(supabaseClient: mockSupabase);
+      final result = await sut.recordConsent(
+        babyId: 'baby-1',
+        type: ConsentType.solidsIntroduction,
+      );
+
+      expect(result, isA<Success<void>>());
+      expect(builder.capturedValues, {
+        'user_id': 'user-1',
+        'baby_id': 'baby-1',
+        'consent_type': 'solids_introduction',
+      });
+    });
+
     test(
-      'inserts {user_id, baby_id, consent_type=solids_introduction} '
-      'and returns success',
+      'maps the under_6mo_responsibility enum value to its dbValue',
       () async {
         final mockSupabase = _MockSupabaseClient();
         final mockAuth = _MockGoTrueClient();
@@ -94,49 +117,21 @@ void main() {
 
         when(() => mockSupabase.auth).thenReturn(mockAuth);
         when(() => mockAuth.currentUser).thenReturn(_FakeUser());
-        when(
-          () => mockSupabase.from('consents'),
-        ).thenAnswer((_) => builder);
+        when(() => mockSupabase.from('consents')).thenAnswer((_) => builder);
 
         final sut = ConsentRepositoryImpl(supabaseClient: mockSupabase);
         final result = await sut.recordConsent(
           babyId: 'baby-1',
-          type: ConsentType.solidsIntroduction,
+          type: ConsentType.under6MoResponsibility,
         );
 
         expect(result, isA<Success<void>>());
-        expect(builder.capturedValues, {
-          'user_id': 'user-1',
-          'baby_id': 'baby-1',
-          'consent_type': 'solids_introduction',
-        });
+        expect(
+          builder.capturedValues?['consent_type'],
+          'under_6mo_responsibility',
+        );
       },
     );
-
-    test('maps the under_6mo_responsibility enum value to its dbValue',
-        () async {
-      final mockSupabase = _MockSupabaseClient();
-      final mockAuth = _MockGoTrueClient();
-      final builder = _CapturingQueryBuilder(() {});
-
-      when(() => mockSupabase.auth).thenReturn(mockAuth);
-      when(() => mockAuth.currentUser).thenReturn(_FakeUser());
-      when(
-        () => mockSupabase.from('consents'),
-      ).thenAnswer((_) => builder);
-
-      final sut = ConsentRepositoryImpl(supabaseClient: mockSupabase);
-      final result = await sut.recordConsent(
-        babyId: 'baby-1',
-        type: ConsentType.under6MoResponsibility,
-      );
-
-      expect(result, isA<Success<void>>());
-      expect(
-        builder.capturedValues?['consent_type'],
-        'under_6mo_responsibility',
-      );
-    });
 
     test('maps PostgrestException to Failure(ServerException) — P2 fallback '
         'caller logs to Crashlytics and proceeds', () async {
@@ -148,9 +143,7 @@ void main() {
 
       when(() => mockSupabase.auth).thenReturn(mockAuth);
       when(() => mockAuth.currentUser).thenReturn(_FakeUser());
-      when(
-        () => mockSupabase.from('consents'),
-      ).thenAnswer((_) => builder);
+      when(() => mockSupabase.from('consents')).thenAnswer((_) => builder);
 
       final sut = ConsentRepositoryImpl(supabaseClient: mockSupabase);
       final result = await sut.recordConsent(
@@ -164,8 +157,7 @@ void main() {
       expect(failure.error.message, 'rls denied');
     });
 
-    test('maps any other thrown Object to Failure(UnknownException)',
-        () async {
+    test('maps any other thrown Object to Failure(UnknownException)', () async {
       final mockSupabase = _MockSupabaseClient();
       final mockAuth = _MockGoTrueClient();
       final builder = _CapturingQueryBuilder(() {
@@ -174,9 +166,7 @@ void main() {
 
       when(() => mockSupabase.auth).thenReturn(mockAuth);
       when(() => mockAuth.currentUser).thenReturn(_FakeUser());
-      when(
-        () => mockSupabase.from('consents'),
-      ).thenAnswer((_) => builder);
+      when(() => mockSupabase.from('consents')).thenAnswer((_) => builder);
 
       final sut = ConsentRepositoryImpl(supabaseClient: mockSupabase);
       final result = await sut.recordConsent(

@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nibbles/gen/assets.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
@@ -187,7 +188,10 @@ class _OnboardingDobScreenState extends ConsumerState<OnboardingDobScreen> {
   void _onNext() {
     ref.read(onboardingControllerProvider.notifier).updateDob(_selected);
     ref.read(localFlagServiceProvider).setOnboardingBabySetupDone();
-    context.goNamed(AppRoute.onboardingReadiness.name);
+    // Push (not go) so readiness keeps DOB on the stack — back from Q1 is a
+    // plain pop. The Phase B whitelist allows /onboarding/dob so the pop
+    // doesn't get bounced back to readiness by the redirect.
+    context.pushNamed(AppRoute.onboardingReadiness.name);
   }
 
   @override
@@ -204,108 +208,98 @@ class _OnboardingDobScreenState extends ConsumerState<OnboardingDobScreen> {
     );
     final days = List<int>.generate(_daysInMonth(_year, _month), (i) => i + 1);
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      // Grad-1 background — linear-gradient(~154.4deg, #FFFCD5 19.168%,
-      // #F5F5F5 50%). Same pattern as profile/starting-guide screens.
-      body: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment(-0.460, -0.888),
-            end: Alignment(0.460, 0.888),
-            stops: [0.19168, 0.5],
-            colors: [AppColors.butterSoft, Color(0xFFF5F5F5)],
+    return GradientScaffold(
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSizes.pagePaddingH,
+            vertical: AppSizes.pagePaddingV,
           ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSizes.pagePaddingH,
-              vertical: AppSizes.pagePaddingV,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Center(
-                  child: Text.rich(
-                    TextSpan(
-                      style: textTheme.titleLarge,
-                      children: [
-                        const TextSpan(text: 'When was '),
-                        TextSpan(
-                          text: firstName,
-                          style: textTheme.titleLarge?.copyWith(
-                            color: AppColors.coral,
-                          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Text.rich(
+                  TextSpan(
+                    style: textTheme.titleLarge,
+                    children: [
+                      const TextSpan(text: 'When was '),
+                      TextSpan(
+                        text: firstName,
+                        style: textTheme.titleLarge?.copyWith(
+                          color: AppColors.coral,
                         ),
-                        const TextSpan(text: ' born?'),
-                      ],
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                const SizedBox(height: AppSizes.sm),
-                Text(
-                  'We use this to suggest the right foods at the right time.',
-                  style: textTheme.bodyLarge?.copyWith(
-                    color: AppColors.fgMuted,
+                      ),
+                      const TextSpan(text: ' born?'),
+                    ],
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: AppSizes.xl),
-                const Center(child: Quatrefoil()),
-                const SizedBox(height: AppSizes.md),
-                Center(
-                  child: _AgeChip(
-                    key: const Key('onboarding_dob_age_label'),
-                    label: _ageLabel(_selected),
+              ),
+              const SizedBox(height: AppSizes.sm),
+              Text(
+                'We use this to suggest the right foods at the right time.',
+                style: textTheme.bodyLarge?.copyWith(color: AppColors.fgMuted),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSizes.xl),
+              Center(
+                child: Assets.images.onboarding.babyIcon.svg(
+                  width: 154,
+                  height: 154,
+                ),
+              ),
+              const SizedBox(height: AppSizes.md),
+              Center(
+                child: _AgeChip(
+                  key: const Key('onboarding_dob_age_label'),
+                  label: _ageLabel(_selected),
+                ),
+              ),
+              const SizedBox(height: AppSizes.lg),
+              _DateWheelRow(
+                yearCtrl: _yearCtrl,
+                monthCtrl: _monthCtrl,
+                dayCtrl: _dayCtrl,
+                years: years,
+                months: _monthAbbr,
+                days: days,
+                selectedYearIndex: _year - _minYear,
+                selectedMonthIndex: _month - 1,
+                selectedDayIndex: _day - 1,
+                wheelHeight: _wheelHeight,
+                itemExtent: _wheelItemExtent,
+                onYearChanged: _onYearChanged,
+                onMonthChanged: _onMonthChanged,
+                onDayChanged: _onDayChanged,
+              ),
+              const Spacer(),
+              Row(
+                children: [
+                  AppRoundButton(
+                    key: const Key('onboarding_dob_back'),
+                    tone: AppRoundButtonTone.lime,
+                    icon: const Icon(Icons.arrow_back_rounded),
+                    semanticLabel: 'Back',
+                    onPressed: () {
+                      if (context.canPop()) {
+                        context.pop();
+                      } else {
+                        context.goNamed(AppRoute.onboardingName.name);
+                      }
+                    },
                   ),
-                ),
-                const SizedBox(height: AppSizes.lg),
-                _DateWheelRow(
-                  yearCtrl: _yearCtrl,
-                  monthCtrl: _monthCtrl,
-                  dayCtrl: _dayCtrl,
-                  years: years,
-                  months: _monthAbbr,
-                  days: days,
-                  selectedYearIndex: _year - _minYear,
-                  selectedMonthIndex: _month - 1,
-                  selectedDayIndex: _day - 1,
-                  wheelHeight: _wheelHeight,
-                  itemExtent: _wheelItemExtent,
-                  onYearChanged: _onYearChanged,
-                  onMonthChanged: _onMonthChanged,
-                  onDayChanged: _onDayChanged,
-                ),
-                const Spacer(),
-                Row(
-                  children: [
-                    AppRoundButton(
-                      key: const Key('onboarding_dob_back'),
-                      tone: AppRoundButtonTone.lime,
-                      icon: const Icon(Icons.arrow_back_rounded),
-                      semanticLabel: 'Back',
-                      onPressed: () {
-                        if (context.canPop()) {
-                          context.pop();
-                        } else {
-                          context.goNamed(AppRoute.onboardingName.name);
-                        }
-                      },
+                  const SizedBox(width: AppSizes.sm),
+                  Expanded(
+                    child: AppPillButton(
+                      key: const Key('onboarding_dob_next'),
+                      label: "Let's Go!",
+                      onPressed: _onNext,
                     ),
-                    const SizedBox(width: AppSizes.sm),
-                    Expanded(
-                      child: AppPillButton(
-                        key: const Key('onboarding_dob_next'),
-                        label: 'Next',
-                        onPressed: _onNext,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),

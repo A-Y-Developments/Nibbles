@@ -58,14 +58,15 @@ class _SwipeRevealRowState extends State<SwipeRevealRow>
   @override
   void initState() {
     super.initState();
-    _anim = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 180),
-    )..addListener(() {
-        setState(() {
-          _dragOffset = _anim.value * _deleteRevealWidth;
+    _anim =
+        AnimationController(
+          vsync: this,
+          duration: const Duration(milliseconds: 180),
+        )..addListener(() {
+          setState(() {
+            _dragOffset = _anim.value * _deleteRevealWidth;
+          });
         });
-      });
     widget.controller.addListener(_onControllerChange);
   }
 
@@ -95,10 +96,7 @@ class _SwipeRevealRowState extends State<SwipeRevealRow>
   void _onHorizontalDragUpdate(DragUpdateDetails d) {
     setState(() {
       // dx is negative when dragging left
-      _dragOffset = (_dragOffset - d.delta.dx).clamp(
-        0.0,
-        _deleteRevealWidth,
-      );
+      _dragOffset = (_dragOffset - d.delta.dx).clamp(0.0, _deleteRevealWidth);
     });
   }
 
@@ -174,9 +172,7 @@ class _DeletePill extends StatelessWidget {
         ),
         child: Text(
           'Delete',
-          style: AppTypography.headline.copyWith(
-            color: AppColors.onGreen,
-          ),
+          style: AppTypography.headline.copyWith(color: AppColors.onGreen),
         ),
       ),
     );

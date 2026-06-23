@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
-import 'package:nibbles/src/common/components/brand/quatrefoil.dart';
+import 'package:nibbles/src/common/components/brand/brand_flower.dart';
 import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
 
 /// Empty / zero-data state. Mirrors components-empty-state preview:
@@ -32,7 +32,7 @@ class EmptyState extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Quatrefoil(size: markSize),
+        BrandFlower(size: markSize),
         const SizedBox(height: AppSizes.sm + 2),
         Text(
           title,

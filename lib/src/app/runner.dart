@@ -82,10 +82,5 @@ Future<void> bootstrap({required Flavor flavor}) async {
       : FlavorConfig.instance.revenueCatGoogleKey;
   await Purchases.configure(PurchasesConfiguration(revenueCatKey));
 
-  runApp(
-    ProviderScope(
-      overrides: qaBypassOverrides(),
-      child: const App(),
-    ),
-  );
+  runApp(ProviderScope(overrides: qaBypassOverrides(), child: const App()));
 }

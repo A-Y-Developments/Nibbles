@@ -7,7 +7,7 @@ part of 'allergen_detail_controller.dart';
 // **************************************************************************
 
 String _$allergenDetailControllerHash() =>
-    r'95f9fa96772f1bbffec528b29b9bfad1fb58bd1b';
+    r'2d526872b6da717c3d2c550578748a566c943ac3';
 
 /// Copied from Dart SDK
 class _SystemHash {

@@ -9,14 +9,20 @@ class TipCard extends StatelessWidget {
     required this.title,
     required this.body,
     this.glyph = 'i',
+    this.leading,
     super.key,
   });
 
   final String title;
   final String body;
 
-  /// Glyph rendered inside the greenDeep circle (kit default "i").
+  /// Glyph rendered inside the greenDeep circle (kit default "i"). Ignored
+  /// when [leading] is supplied.
   final String glyph;
+
+  /// Optional leading icon (e.g. a brand SVG blob) rendered in place of the
+  /// default greenDeep glyph circle. Sized by the caller.
+  final Widget? leading;
 
   @override
   Widget build(BuildContext context) {
@@ -37,23 +43,24 @@ class TipCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: AppSizes.tipGlyph,
-            height: AppSizes.tipGlyph,
-            decoration: const BoxDecoration(
-              color: AppColors.greenDeep,
-              shape: BoxShape.circle,
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              glyph,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: AppColors.butter,
-                fontWeight: FontWeight.w700,
-                height: 1,
+          leading ??
+              Container(
+                width: AppSizes.tipGlyph,
+                height: AppSizes.tipGlyph,
+                decoration: const BoxDecoration(
+                  color: AppColors.greenDeep,
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  glyph,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: AppColors.butter,
+                    fontWeight: FontWeight.w700,
+                    height: 1,
+                  ),
+                ),
               ),
-            ),
-          ),
           const SizedBox(width: AppSizes.sp12),
           Expanded(
             child: Column(

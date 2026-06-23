@@ -37,12 +37,7 @@ const _peanut = Allergen(
   emoji: '🥜',
 );
 
-const _egg = Allergen(
-  key: 'egg',
-  name: 'Egg',
-  sequenceOrder: 2,
-  emoji: '🥚',
-);
+const _egg = Allergen(key: 'egg', name: 'Egg', sequenceOrder: 2, emoji: '🥚');
 
 AllergenBoardItem _boardItem(Allergen allergen) => AllergenBoardItem(
   allergen: allergen,
@@ -78,12 +73,11 @@ void main() {
     test('returns state with correct babyName and babyId', () async {
       when(
         () => allergenSvc.getAllergenBoardSummary(any()),
-      ).thenAnswer(
-        (_) async => Result.success([_boardItem(_peanut)]),
-      );
+      ).thenAnswer((_) async => Result.success([_boardItem(_peanut)]));
 
-      final state = await makeContainer()
-          .read(allergenCompleteControllerProvider.future);
+      final state = await makeContainer().read(
+        allergenCompleteControllerProvider.future,
+      );
 
       expect(state.babyName, 'Lily');
       expect(state.babyId, _babyId);
@@ -91,15 +85,13 @@ void main() {
     });
 
     test('sorts allergens by sequenceOrder ascending', () async {
-      when(
-        () => allergenSvc.getAllergenBoardSummary(any()),
-      ).thenAnswer(
-        (_) async =>
-            Result.success([_boardItem(_egg), _boardItem(_peanut)]),
+      when(() => allergenSvc.getAllergenBoardSummary(any())).thenAnswer(
+        (_) async => Result.success([_boardItem(_egg), _boardItem(_peanut)]),
       );
 
-      final state = await makeContainer()
-          .read(allergenCompleteControllerProvider.future);
+      final state = await makeContainer().read(
+        allergenCompleteControllerProvider.future,
+      );
 
       expect(state.allergens.first.sequenceOrder, 1);
       expect(state.allergens.last.sequenceOrder, 2);
@@ -114,19 +106,14 @@ void main() {
         throwsA(isA<UnknownException>()),
       );
 
-      expect(
-        c.read(allergenCompleteControllerProvider).hasError,
-        isTrue,
-      );
+      expect(c.read(allergenCompleteControllerProvider).hasError, isTrue);
     });
 
     test('enters error state on getAllergenBoardSummary failure', () async {
       const error = ServerException('service unavailable');
       when(
         () => allergenSvc.getAllergenBoardSummary(any()),
-      ).thenAnswer(
-        (_) async => const Result.failure(error),
-      );
+      ).thenAnswer((_) async => const Result.failure(error));
 
       final c = makeContainer();
       await expectLater(
@@ -134,10 +121,7 @@ void main() {
         throwsA(isA<ServerException>()),
       );
 
-      expect(
-        c.read(allergenCompleteControllerProvider).hasError,
-        isTrue,
-      );
+      expect(c.read(allergenCompleteControllerProvider).hasError, isTrue);
     });
   });
 
@@ -145,22 +129,16 @@ void main() {
     test('calls setProgramCompletionShown with babyId', () async {
       when(
         () => allergenSvc.getAllergenBoardSummary(any()),
-      ).thenAnswer(
-        (_) async => Result.success([_boardItem(_peanut)]),
-      );
+      ).thenAnswer((_) async => Result.success([_boardItem(_peanut)]));
       when(
         () => localFlags.setProgramCompletionShown(any()),
       ).thenAnswer((_) {});
 
       final c = makeContainer();
       await c.read(allergenCompleteControllerProvider.future);
-      c
-          .read(allergenCompleteControllerProvider.notifier)
-          .markShown();
+      c.read(allergenCompleteControllerProvider.notifier).markShown();
 
-      verify(
-        () => localFlags.setProgramCompletionShown(_babyId),
-      ).called(1);
+      verify(() => localFlags.setProgramCompletionShown(_babyId)).called(1);
     });
 
     test('is a no-op when build errored', () async {
@@ -172,13 +150,9 @@ void main() {
         throwsA(isA<Object>()),
       );
 
-      c
-          .read(allergenCompleteControllerProvider.notifier)
-          .markShown();
+      c.read(allergenCompleteControllerProvider.notifier).markShown();
 
-      verifyNever(
-        () => localFlags.setProgramCompletionShown(any()),
-      );
+      verifyNever(() => localFlags.setProgramCompletionShown(any()));
     });
   });
 }

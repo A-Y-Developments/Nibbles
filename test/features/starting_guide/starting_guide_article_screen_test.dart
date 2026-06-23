@@ -199,64 +199,62 @@ void main() {
       },
     );
 
-    testWidgets(
-      "'first-nibbles' primary CTA → routes to recipe-library",
-      (tester) async {
-        const slug = 'first-nibbles';
-        await _pump(tester, slug: slug);
+    testWidgets("'first-nibbles' primary CTA → routes to recipe-library", (
+      tester,
+    ) async {
+      const slug = 'first-nibbles';
+      await _pump(tester, slug: slug);
 
-        final article = kStartingGuideArticles.firstWhere(
-          (a) => a.slug == slug,
+      final article = kStartingGuideArticles.firstWhere((a) => a.slug == slug);
+      final ctas = _allCtas(article);
+      final primary = ctas.firstWhere(
+        (c) => c.routeName == AppRoute.recipeLibrary.name,
+      );
+
+      await tester.ensureVisible(find.text(primary.label));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(primary.label));
+      await tester.pumpAndSettle();
+
+      expect(find.text('LIBRARY_STUB'), findsOneWidget);
+    });
+
+    testWidgets("'introduction' renders Essential Nutrients icon tiles", (
+      tester,
+    ) async {
+      await _pump(tester, slug: 'introduction');
+
+      for (final label in ['Iron', 'Minerals', 'Vitamins', 'Zinc']) {
+        expect(find.text(label), findsWidgets);
+      }
+    });
+
+    testWidgets("'feeding-principles' renders 'The Big 11' allergen chips", (
+      tester,
+    ) async {
+      await _pump(tester, slug: 'feeding-principles');
+
+      // Sample a few chips from The Big 11. 'Egg' is also in the iron-rich
+      // grid as 'Eggs' (plural) — checking distinct labels avoids overlap.
+      for (final label in ['Almond', 'Cashew', 'Wallnut', 'Sesame']) {
+        expect(
+          find.text(label),
+          findsWidgets,
+          reason: 'allergen chip "$label" missing',
         );
-        final ctas = _allCtas(article);
-        final primary = ctas.firstWhere(
-          (c) => c.routeName == AppRoute.recipeLibrary.name,
-        );
-
-        await tester.ensureVisible(find.text(primary.label));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text(primary.label));
-        await tester.pumpAndSettle();
-
-        expect(find.text('LIBRARY_STUB'), findsOneWidget);
-      },
-    );
+      }
+    });
 
     testWidgets(
-      "'introduction' renders Essential Nutrients icon tiles",
-      (tester) async {
-        await _pump(tester, slug: 'introduction');
-
-        for (final label in ['Iron', 'Minerals', 'Vitamins', 'Zinc']) {
-          expect(find.text(label), findsWidgets);
-        }
-      },
-    );
-
-    testWidgets(
-      "'feeding-principles' renders 'The Big 11' allergen chips",
-      (tester) async {
-        await _pump(tester, slug: 'feeding-principles');
-
-        // Sample a few chips from The Big 11. 'Egg' is also in the iron-rich
-        // grid as 'Eggs' (plural) — checking distinct labels avoids overlap.
-        for (final label in ['Almond', 'Cashew', 'Wallnut', 'Sesame']) {
-          expect(
-            find.text(label),
-            findsWidgets,
-            reason: 'allergen chip "$label" missing',
-          );
-        }
-      },
-    );
-
-    testWidgets(
-      "'readiness-signs' renders the Readiness Signs checklist + score",
+      "'readiness-signs' renders the bespoke signs card (no baby -> 0/6)",
       (tester) async {
         await _pump(tester, slug: 'readiness-signs');
 
+        // No Supabase in this harness -> currentBaby resolves null, so the
+        // card reflects an empty result: name fallback + 0/6 + all six labels.
         expect(find.text('Readiness Signs'), findsOneWidget);
-        expect(find.text('3/5'), findsOneWidget);
+        expect(find.text('0/6'), findsOneWidget);
+        expect(find.text('Your baby readiness result'), findsOneWidget);
       },
     );
   });

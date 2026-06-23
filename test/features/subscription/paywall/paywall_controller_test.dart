@@ -60,8 +60,7 @@ void main() {
     test('success — returns Success and resets action', () async {
       final c = _container(svc: _RestoringService.new);
 
-      final result =
-          await c.read(paywallControllerProvider.notifier).restore();
+      final result = await c.read(paywallControllerProvider.notifier).restore();
 
       expect(result.isSuccess, isTrue);
       expect(c.read(paywallControllerProvider).action, PaywallAction.none);

@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:nibbles/gen/assets.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
-import 'package:nibbles/src/common/components/cards/tip_card.dart';
 
-/// Tip card variant used on the recipe detail screen for "Texture Tip" and
-/// "Why this meal".
-///
-/// Thin wrapper around the design-system [TipCard] that fixes a feature-
-/// specific icon per tip kind. Hides itself when the body is null or empty so
-/// callers can drop a single line per slot without ad-hoc null checks.
+/// Cream tip card with a bowl illustration on the right. Used for "Texture
+/// Tip" and "Why This Meal?". Figma nodes 1474:53335 / 1474:53348.
 enum RecipeTipKind { textureTip, whyThisMeal }
 
 class RecipeTipCard extends StatelessWidget {
@@ -19,25 +15,55 @@ class RecipeTipCard extends StatelessWidget {
 
   String get _title => switch (kind) {
     RecipeTipKind.textureTip => 'Texture Tip',
-    RecipeTipKind.whyThisMeal => 'Why this meal',
+    RecipeTipKind.whyThisMeal => 'Why This Meal?',
   };
 
-  String get _glyph => switch (kind) {
-    RecipeTipKind.textureTip => 'T',
-    RecipeTipKind.whyThisMeal => '?',
+  AssetGenImage get _illustration => switch (kind) {
+    RecipeTipKind.textureTip => Assets.images.recipe.textureIllustration,
+    RecipeTipKind.whyThisMeal => Assets.images.recipe.whyMealIllustration,
   };
 
   @override
   Widget build(BuildContext context) {
     final text = body;
     if (text == null || text.isEmpty) return const SizedBox.shrink();
+    final theme = Theme.of(context);
 
-    return DecoratedBox(
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSizes.md,
+        vertical: AppSizes.lg,
+      ),
       decoration: BoxDecoration(
-        color: AppColors.butterSoft,
+        color: AppColors.cardCream,
         borderRadius: BorderRadius.circular(AppSizes.radiusXl),
       ),
-      child: TipCard(title: _title, body: text, glyph: _glyph),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _title,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: AppColors.fgStrong,
+                  ),
+                ),
+                const SizedBox(height: AppSizes.xs),
+                Text(
+                  text,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: AppColors.fgDefault,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSizes.sm),
+          _illustration.image(width: 100, fit: BoxFit.contain),
+        ],
+      ),
     );
   }
 }

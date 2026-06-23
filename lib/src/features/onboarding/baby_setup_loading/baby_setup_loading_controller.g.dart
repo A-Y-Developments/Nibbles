@@ -7,7 +7,7 @@ part of 'baby_setup_loading_controller.dart';
 // **************************************************************************
 
 String _$babySetupLoadingControllerHash() =>
-    r'6f190638946c66e1b0f9afb10a33e1176b06c233';
+    r'47fc54d284050f8898b3e1f3f66019305d029434';
 
 /// NIB-137 — passive transition shown after the consent step submits
 /// successfully and before the user lands on /home.

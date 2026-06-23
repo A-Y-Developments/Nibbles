@@ -163,8 +163,7 @@ class SubscriptionService extends _$SubscriptionService {
   /// Resolves the platform-default management URL. iOS / Android only — web
   /// and desktop fall through to the iOS URL since the app ships
   /// mobile-only per CLAUDE.md (iOS 15+ / Android 10+).
-  String get _managementUrl =>
-      defaultTargetPlatform == TargetPlatform.android
-          ? androidManagementUrl
-          : iosManagementUrl;
+  String get _managementUrl => defaultTargetPlatform == TargetPlatform.android
+      ? androidManagementUrl
+      : iosManagementUrl;
 }

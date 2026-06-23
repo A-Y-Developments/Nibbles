@@ -11,6 +11,7 @@ extension BabyResponseMapper on BabyResponse {
       dateOfBirth: DateTime.parse(dateOfBirth),
       gender: _parseGender(gender),
       onboardingCompleted: onboardingCompleted,
+      readinessSigns: readinessSigns,
     );
   }
 }

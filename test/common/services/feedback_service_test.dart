@@ -17,17 +17,19 @@ void main() {
   });
 
   group('FeedbackService.submit', () {
-    test('forwards the message to the repository and returns success',
-        () async {
-      when(
-        () => mockRepo.submit(any()),
-      ).thenAnswer((_) async => const Result.success(null));
+    test(
+      'forwards the message to the repository and returns success',
+      () async {
+        when(
+          () => mockRepo.submit(any()),
+        ).thenAnswer((_) async => const Result.success(null));
 
-      final result = await sut.submit('love the app!');
+        final result = await sut.submit('love the app!');
 
-      expect(result, isA<Success<void>>());
-      verify(() => mockRepo.submit('love the app!')).called(1);
-    });
+        expect(result, isA<Success<void>>());
+        verify(() => mockRepo.submit('love the app!')).called(1);
+      },
+    );
 
     test('returns Result.failure when repository fails', () async {
       when(() => mockRepo.submit(any())).thenAnswer(

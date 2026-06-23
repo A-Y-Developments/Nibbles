@@ -1,45 +1,39 @@
 import 'package:flutter/material.dart';
-import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/gen/assets.gen.dart';
 
 /// Lime hero backdrop behind the Home dashboard's header + greeting + stats.
 ///
-/// Mirrors Figma node 1189:10761 — a full-bleed lime (#EAEC98) panel whose
-/// bottom edge dips into a shallow centre curve. Rendered via a [ClipPath] so
-/// it needs no bundled asset. Meant to be the back layer of a [Stack] sized to
-/// the chrome it sits behind.
+/// Mirrors Figma node 1242:10153 (`Rectangle 100`) — a full-bleed lime
+/// (#EAEC98) panel whose bottom edge dips into a shallow centre curve, with
+/// two soft white "cloud" blobs (`clouddd`) drifting across the top. Both are
+/// the designer's exported SVGs so the curve + blob geometry match exactly.
+/// Meant to be the back layer of a [Stack] sized to the chrome it sits behind.
 class HomeHero extends StatelessWidget {
   const HomeHero({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return ClipPath(
-      clipper: _HeroClipper(),
-      child: const ColoredBox(color: AppColors.lime),
+    return ClipRect(
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Positioned.fill(
+            child: Assets.images.home.heroBackdrop.svg(fit: BoxFit.fill),
+          ),
+          // Large cloud bleeding off the top-left, behind the greeting.
+          Positioned(
+            top: -8,
+            left: -52,
+            child: Assets.images.home.heroCloud.svg(width: 208, height: 208),
+          ),
+          // Smaller cloud tucked into the top-right corner.
+          Positioned(
+            top: 28,
+            right: -40,
+            child: Assets.images.home.heroCloud.svg(width: 156, height: 156),
+          ),
+        ],
+      ),
     );
   }
-}
-
-class _HeroClipper extends CustomClipper<Path> {
-  // Native Figma path box is 402×346; the straight sides drop to y=311.536
-  // before the bottom curve, so the curve occupies the lowest ~10%.
-  static const double _nativeW = 402;
-  static const double _nativeStraightY = 311.536;
-  static const double _nativeH = 346;
-
-  @override
-  Path getClip(Size size) {
-    final w = size.width;
-    final h = size.height;
-    final straightY = h * _nativeStraightY / _nativeH;
-    double sx(double x) => w * x / _nativeW;
-    return Path()
-      ..lineTo(w, 0)
-      ..lineTo(w, straightY)
-      ..cubicTo(w, straightY, sx(354.5), h, sx(201), h)
-      ..cubicTo(sx(47.5), h, 0, straightY, 0, straightY)
-      ..close();
-  }
-
-  @override
-  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
 }

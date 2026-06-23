@@ -136,25 +136,28 @@ void main() {
   }
 
   group('build() — allergen degradation', () {
-    test('allergen program/logs read failure still renders the recipe', () async {
-      when(
-        () => recipeSvc.getRecipeById(any()),
-      ).thenAnswer((_) async => const Result.success(_recipe));
-      when(
-        () => allergenSvc.getProgramState(any()),
-      ).thenAnswer((_) async => const Result.failure(NetworkException()));
-      when(
-        () => allergenSvc.getLogs(any()),
-      ).thenAnswer((_) async => const Result.failure(NetworkException()));
+    test(
+      'allergen program/logs read failure still renders the recipe',
+      () async {
+        when(
+          () => recipeSvc.getRecipeById(any()),
+        ).thenAnswer((_) async => const Result.success(_recipe));
+        when(
+          () => allergenSvc.getProgramState(any()),
+        ).thenAnswer((_) async => const Result.failure(NetworkException()));
+        when(
+          () => allergenSvc.getLogs(any()),
+        ).thenAnswer((_) async => const Result.failure(NetworkException()));
 
-      final state = await container().read(
-        recipeDetailControllerProvider(_babyId, 'r1').future,
-      );
+        final state = await container().read(
+          recipeDetailControllerProvider(_babyId, 'r1').future,
+        );
 
-      expect(state.recipe.id, 'r1');
-      expect(state.currentAllergenKey, '');
-      expect(state.allergenStatuses, isEmpty);
-    });
+        expect(state.recipe.id, 'r1');
+        expect(state.currentAllergenKey, '');
+        expect(state.allergenStatuses, isEmpty);
+      },
+    );
 
     test('recipe read failure throws (recipe is essential)', () async {
       stubFailedBuild();

@@ -10,7 +10,6 @@ part 'manage_subscription_state.freezed.dart';
 /// subscribed/trial (plan card + timeline + Cancel CTA) layout.
 @freezed
 class ManageSubscriptionState with _$ManageSubscriptionState {
-  const factory ManageSubscriptionState({
-    required SubscriptionInfo info,
-  }) = _ManageSubscriptionState;
+  const factory ManageSubscriptionState({required SubscriptionInfo info}) =
+      _ManageSubscriptionState;
 }

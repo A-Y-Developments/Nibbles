@@ -108,11 +108,7 @@ class MealPlanService {
     String babyId,
     DateTime startDate,
     DateTime endDate,
-  ) => _repo.deleteRange(
-    babyId,
-    _dateOnly(startDate),
-    _dateOnly(endDate),
-  );
+  ) => _repo.deleteRange(babyId, _dateOnly(startDate), _dateOnly(endDate));
 
   /// Returns deduplicated ingredient names across all recipes planned for the
   /// 7-day week starting on [weekStart].

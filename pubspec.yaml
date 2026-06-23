@@ -94,7 +94,12 @@ flutter:
     - assets/images/
     - assets/images/auth/
     - assets/images/onboarding/
+    - assets/images/profile/
+    - assets/images/recipe/
+    - assets/images/guide/
+    - assets/images/home/
     - assets/icons/
+    - assets/icons/nav/
     - assets/jsons/
     # Figtree body font — bundled so google_fonts resolves from assets (no
     # runtime HTTP fetch). Files MUST keep the Google Fonts API names so

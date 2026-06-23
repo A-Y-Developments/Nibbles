@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
+import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/common/domain/entities/baby.dart';
 import 'package:nibbles/src/common/domain/entities/meal_plan_entry.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
@@ -52,9 +53,10 @@ class MealPlanScreen extends ConsumerWidget {
     final babyIdAsync = ref.watch(currentBabyIdProvider);
 
     return babyIdAsync.when(
-      loading: () =>
-          const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (_, __) => Scaffold(
+      loading: () => const GradientScaffold(
+        body: Center(child: CircularProgressIndicator()),
+      ),
+      error: (_, __) => GradientScaffold(
         body: Center(
           child: Semantics(
             liveRegion: true,
@@ -78,7 +80,7 @@ class MealPlanScreen extends ConsumerWidget {
       ),
       data: (babyId) {
         if (babyId == null) {
-          return Scaffold(
+          return GradientScaffold(
             body: Center(
               child: Semantics(
                 liveRegion: true,
@@ -136,8 +138,7 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
       mealPlanControllerProvider(widget.babyId),
     );
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return GradientScaffold(
       body: controllerAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, __) => _ErrorView(
@@ -192,10 +193,8 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
       state.windowStart.day,
     );
     final end = _effectiveWindowEnd(state);
-    final dayCount = DateTime(end.year, end.month, end.day)
-            .difference(start)
-            .inDays +
-        1;
+    final dayCount =
+        DateTime(end.year, end.month, end.day).difference(start).inDays + 1;
     unawaited(
       ref.read(analyticsProvider).logMealPlanViewed(dayCount: dayCount),
     );
@@ -242,9 +241,7 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
 
   Future<void> _onCreateMealPlanFromEmpty(DateTimeRange range) async {
     final days = range.end.difference(range.start).inDays + 1;
-    unawaited(
-      ref.read(analyticsProvider).logMealPrepRangeSelected(days: days),
-    );
+    unawaited(ref.read(analyticsProvider).logMealPrepRangeSelected(days: days));
     final picked = await showBrowseMealSheet(
       context,
       babyId: widget.babyId,
@@ -267,16 +264,11 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
     if (!mounted) return;
 
     final assignments = [
-      for (final r in picked)
-        RecipeAssignment(recipeId: r.id, dayOffset: 0),
+      for (final r in picked) RecipeAssignment(recipeId: r.id, dayOffset: 0),
     ];
     final ok = await ref
         .read(mealPlanControllerProvider(widget.babyId).notifier)
-        .appendBulkPrep(
-          startDate: day,
-          endDate: day,
-          assignments: assignments,
-        );
+        .appendBulkPrep(startDate: day, endDate: day, assignments: assignments);
     if (!ok) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -310,10 +302,8 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
           state.windowStart.day,
         );
         final end = _effectiveWindowEnd(state);
-        final dayCount = DateTime(end.year, end.month, end.day)
-                .difference(start)
-                .inDays +
-            1;
+        final dayCount =
+            DateTime(end.year, end.month, end.day).difference(start).inDays + 1;
         unawaited(analytics.logMealPlanAddToShopList(dayCount: dayCount));
         await _openRangeAddToShoplist(start, end);
       case _ScreenMenuAction.createMealPrep:
@@ -356,9 +346,7 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
     if (!mounted) return;
 
     final days = range.end.difference(range.start).inDays + 1;
-    unawaited(
-      ref.read(analyticsProvider).logMealPrepRangeSelected(days: days),
-    );
+    unawaited(ref.read(analyticsProvider).logMealPrepRangeSelected(days: days));
     final picked = await showBrowseMealSheet(
       context,
       babyId: widget.babyId,
@@ -524,8 +512,7 @@ class _PopulatedView extends StatelessWidget {
   final ValueChanged<DateTime> onToggleExpanded;
   final ValueChanged<String> onRecipeTap;
 
-  static DateTime _dateOnly(DateTime dt) =>
-      DateTime(dt.year, dt.month, dt.day);
+  static DateTime _dateOnly(DateTime dt) => DateTime(dt.year, dt.month, dt.day);
 
   /// Match the controller's UTC date-only normalization (see
   /// `MealPlanController._expandedKey`) so accordion expand state survives
@@ -571,24 +558,20 @@ class _PopulatedView extends StatelessWidget {
             slivers: [
               const SliverToBoxAdapter(child: SizedBox(height: AppSizes.sm)),
               SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, i) {
-                    final day = days[i];
-                    return DayAccordionCard(
-                      day: day,
-                      entries: _entriesForDay(day),
-                      recipes: state.recipes,
-                      flaggedAllergenKeys: state.flaggedAllergenKeys,
-                      isExpanded: state.expanded[_expandedKey(day)] ?? false,
-                      onToggle: () => onToggleExpanded(day),
-                      onAdd: () => onDayAdd(day),
-                      onRecipeTap: onRecipeTap,
-                      onMenuSelected: (action) =>
-                          onDayMenuSelected(day, action),
-                    );
-                  },
-                  childCount: days.length,
-                ),
+                delegate: SliverChildBuilderDelegate((context, i) {
+                  final day = days[i];
+                  return DayAccordionCard(
+                    day: day,
+                    entries: _entriesForDay(day),
+                    recipes: state.recipes,
+                    flaggedAllergenKeys: state.flaggedAllergenKeys,
+                    isExpanded: state.expanded[_expandedKey(day)] ?? false,
+                    onToggle: () => onToggleExpanded(day),
+                    onAdd: () => onDayAdd(day),
+                    onRecipeTap: onRecipeTap,
+                    onMenuSelected: (action) => onDayMenuSelected(day, action),
+                  );
+                }, childCount: days.length),
               ),
               SliverToBoxAdapter(child: AddDatePill(onPressed: onAddDate)),
               const SliverToBoxAdapter(child: SizedBox(height: AppSizes.xl)),
@@ -636,10 +619,7 @@ class _PopulatedView extends StatelessWidget {
         ),
         PopupMenuItem<_ScreenMenuAction>(
           value: _ScreenMenuAction.createMealPrep,
-          child: _ScreenMenuRow(
-            icon: Icons.add,
-            label: 'Create new meal prep',
-          ),
+          child: _ScreenMenuRow(icon: Icons.add, label: 'Create new meal prep'),
         ),
         PopupMenuItem<_ScreenMenuAction>(
           value: _ScreenMenuAction.clearCurrentWeek,
