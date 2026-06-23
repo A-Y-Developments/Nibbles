@@ -3,10 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nibbles/gen/assets.gen.dart';
+import 'package:nibbles/gen/fonts.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
-import 'package:nibbles/src/app/themes/app_typography.dart';
-import 'package:nibbles/src/common/components/brand/quatrefoil.dart';
 import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
 import 'package:nibbles/src/features/splash/splash_controller.dart';
 import 'package:nibbles/src/logging/analytics.dart';
@@ -50,7 +50,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     final state = ref.watch(splashControllerProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: AppColors.green,
       body: SafeArea(
         child: Center(
           child: state.hasError
@@ -62,16 +62,33 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   }
 
   Widget _buildBranding(BuildContext context) {
-    return const Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Quatrefoil(size: AppSizes.avatarXl),
-        SizedBox(height: AppSizes.md),
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Text('nibbles', style: AppTypography.brandWordmark),
-        ),
-      ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSizes.pagePaddingH),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            'Welcome to',
+            style: TextStyle(
+              fontFamily: FontFamily.parkinsans,
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              height: 22 / 15,
+              color: AppColors.cream,
+            ),
+          ),
+          const SizedBox(height: 17),
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSizes.pagePaddingH,
+            ),
+            child: Assets.images.nibblesLogo.image(
+              width: double.infinity,
+              fit: BoxFit.fitWidth,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

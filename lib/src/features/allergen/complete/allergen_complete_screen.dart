@@ -21,8 +21,7 @@ class AllergenCompleteScreen extends ConsumerWidget {
           ref.read(allergenCompleteControllerProvider.notifier).markShown();
         }
       },
-      child: Scaffold(
-        backgroundColor: AppColors.background,
+      child: GradientScaffold(
         body: stateAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => Center(
@@ -44,9 +43,8 @@ class AllergenCompleteScreen extends ConsumerWidget {
                   const SizedBox(height: AppSizes.lg),
                   AppPillButton(
                     label: 'Retry',
-                    onPressed: () => ref.invalidate(
-                      allergenCompleteControllerProvider,
-                    ),
+                    onPressed: () =>
+                        ref.invalidate(allergenCompleteControllerProvider),
                     size: AppPillButtonSize.small,
                     expand: false,
                   ),

@@ -1,95 +1,70 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nibbles/src/features/onboarding/onboarding_state.dart';
-import 'package:nibbles/src/features/onboarding/result/onboarding_result_screen.dart';
+import 'package:nibbles/src/features/onboarding/readiness/readiness_signs.dart';
 
-/// NIB-105 — pure derivation tests for the readiness `signs_met` -> `ready`
-/// rule used by the result + (downstream) consent screens.
+/// Pure derivation tests for the readiness `signs_met` -> `ready` rule used by
+/// the result screen.
 ///
-/// The threshold lives next to the result screen as
-/// [readinessReadyThreshold] (NIB-120 majority gate, 3/5). These tests pin
-/// that contract so a silent edit of the constant or the `signs_met`
-/// counting rule (`.where((a) => a ?? false).length`) breaks the build,
-/// not the user's flow.
+/// The result reflects all SIX questions: the pediatrician gate (Q1) plus the
+/// five Q2-Q6 developmental signs. The baby is "ready" only when every sign is
+/// met, pinned by [kReadinessReadyThreshold] (6). These tests pin that contract
+/// so a silent edit of the constant or the counting rule breaks the build, not
+/// the user's flow.
 void main() {
-  group('readinessReadyThreshold contract', () {
-    test('threshold is 3 (NIB-120 majority gate, 3/5)', () {
-      expect(readinessReadyThreshold, 3);
+  group('kReadinessReadyThreshold contract', () {
+    test('threshold is 6 (all signs required)', () {
+      expect(kReadinessReadyThreshold, 6);
     });
 
-    test(
-      'state seed has the expected length (5 questions) so signs_met '
-      'arithmetic on `readinessAnswers` is well-defined',
-      () {
-        const seed = OnboardingState();
-        expect(seed.readinessAnswers.length, readinessQuestionCount);
-        expect(seed.readinessAnswers, [null, null, null, null, null]);
-      },
-    );
-  });
-
-  group('signs_met derivation from readinessAnswers (length 5, nullable bools)',
-      () {
-    // Tiny pure helper mirrors the inline derivation in
-    // `OnboardingResultScreen.build`:
-    //   `answers.where((a) => a ?? false).length`.
-    // We pin the rule here so any future drift inside the screen reads as a
-    // diff against this helper.
-    int signsMet(List<bool?> answers) =>
-        answers.where((a) => a ?? false).length;
-
-    bool isReady(List<bool?> answers) =>
-        signsMet(answers) >= readinessReadyThreshold;
-
-    test('0/5 -> NOT ready', () {
-      const answers = <bool?>[false, false, false, false, false];
-      expect(signsMet(answers), 0);
-      expect(isReady(answers), isFalse);
-    });
-
-    test('1/5 -> NOT ready (below threshold)', () {
-      const answers = <bool?>[true, false, false, false, false];
-      expect(signsMet(answers), 1);
-      expect(isReady(answers), isFalse);
-    });
-
-    test('2/5 -> NOT ready (one below threshold)', () {
-      const answers = <bool?>[true, true, false, false, false];
-      expect(signsMet(answers), 2);
-      expect(isReady(answers), isFalse);
-    });
-
-    test('3/5 -> ready (boundary; majority gate flips here)', () {
-      const answers = <bool?>[true, true, true, false, false];
-      expect(signsMet(answers), 3);
-      expect(isReady(answers), isTrue);
-    });
-
-    test('5/5 -> ready', () {
-      const answers = <bool?>[true, true, true, true, true];
-      expect(signsMet(answers), 5);
-      expect(isReady(answers), isTrue);
-    });
-
-    test('partial-nullables: null counts as NOT met (defensive)', () {
-      const answers = <bool?>[true, null, null, null, null];
-      expect(signsMet(answers), 1);
-      expect(isReady(answers), isFalse);
-    });
-
-    test(
-      'partial-nullables: 3 true + 2 null still ready (majority gate is '
-      'true-count, not "every answer is captured")',
-      () {
-        const answers = <bool?>[true, true, true, null, null];
-        expect(signsMet(answers), 3);
-        expect(isReady(answers), isTrue);
-      },
-    );
-
-    test('all-null seed (untouched) -> NOT ready', () {
-      const answers = <bool?>[null, null, null, null, null];
-      expect(signsMet(answers), 0);
-      expect(isReady(answers), isFalse);
+    test('state seed has the expected length (5 developmental signs) so the '
+        'six-sign list = pediatrician + answers is well-defined', () {
+      const seed = OnboardingState();
+      expect(seed.readinessAnswers.length, readinessQuestionCount);
+      expect(seed.readinessAnswers, [null, null, null, null, null]);
     });
   });
+
+  group(
+    'signs_met derivation over the six-sign list (pediatrician + Q2-Q6)',
+    () {
+      // Mirrors the inline derivation in `OnboardingResultScreen.build`:
+      //   final signs = <bool?>[pediatricianApproved, ...answers];
+      //   signs.where((a) => a ?? false).length
+      // `signs[0]` is the pediatrician gate; `signs[1..5]` are Q2-Q6.
+      int signsMet(List<bool?> signs) => signs.where((a) => a ?? false).length;
+
+      bool isReady(List<bool?> signs) =>
+          signsMet(signs) >= kReadinessReadyThreshold;
+
+      test('all six met -> ready', () {
+        const signs = <bool?>[true, true, true, true, true, true];
+        expect(signsMet(signs), 6);
+        expect(isReady(signs), isTrue);
+      });
+
+      test('five of six (pediatrician not approved) -> NOT ready', () {
+        const signs = <bool?>[false, true, true, true, true, true];
+        expect(signsMet(signs), 5);
+        expect(isReady(signs), isFalse);
+      });
+
+      test('one developmental sign missing -> NOT ready', () {
+        const signs = <bool?>[true, true, true, true, true, false];
+        expect(signsMet(signs), 5);
+        expect(isReady(signs), isFalse);
+      });
+
+      test('null counts as NOT met (defensive)', () {
+        const signs = <bool?>[null, true, true, true, true, true];
+        expect(signsMet(signs), 5);
+        expect(isReady(signs), isFalse);
+      });
+
+      test('all-null seed (untouched) -> NOT ready', () {
+        const signs = <bool?>[null, null, null, null, null, null];
+        expect(signsMet(signs), 0);
+        expect(isReady(signs), isFalse);
+      });
+    },
+  );
 }

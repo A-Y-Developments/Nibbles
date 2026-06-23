@@ -218,13 +218,15 @@ class _MonthGrid extends StatelessWidget {
     final firstDay = DateTime(focusedMonth.year, focusedMonth.month);
     // DateTime.weekday returns 1 (Mon) .. 7 (Sun). Sun-start grid → 0..6.
     final leadingBlanks = firstDay.weekday % 7;
-    final daysInMonth =
-        DateTime(focusedMonth.year, focusedMonth.month + 1, 0).day;
+    final daysInMonth = DateTime(
+      focusedMonth.year,
+      focusedMonth.month + 1,
+      0,
+    ).day;
     final totalCells = leadingBlanks + daysInMonth;
     final rows = (totalCells / 7).ceil();
     final today = _dateOnly(DateTime.now());
-    final selected =
-        selectedDate == null ? null : _dateOnly(selectedDate!);
+    final selected = selectedDate == null ? null : _dateOnly(selectedDate!);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -264,11 +266,7 @@ class _MonthGrid extends StatelessWidget {
     if (dayOffset < 0 || dayOffset >= daysInMonth) {
       return const _DayPlaceholder();
     }
-    final day = DateTime(
-      focusedMonth.year,
-      focusedMonth.month,
-      dayOffset + 1,
-    );
+    final day = DateTime(focusedMonth.year, focusedMonth.month, dayOffset + 1);
     final isToday = _sameDate(day, today);
     final isSelected = selected != null && _sameDate(day, selected);
     final isOutOfRange = _outOfRange(day);
@@ -300,8 +298,7 @@ class _DayPlaceholder extends StatelessWidget {
   const _DayPlaceholder();
 
   @override
-  Widget build(BuildContext context) =>
-      const SizedBox(height: AppSizes.sp40);
+  Widget build(BuildContext context) => const SizedBox(height: AppSizes.sp40);
 }
 
 class _DayCell extends StatelessWidget {

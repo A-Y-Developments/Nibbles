@@ -6,9 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
-import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
-import 'package:nibbles/src/common/components/buttons/app_round_button.dart';
-import 'package:nibbles/src/common/components/inputs/app_text_field.dart';
+import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/domain/formz/email_input.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
@@ -18,21 +16,17 @@ import 'package:nibbles/src/features/profile/profile_controller.dart';
 import 'package:nibbles/src/logging/analytics.dart';
 
 // ── Figma frame 1200:10475 spec values (profile-edit only) ──────────────
-// Avatar PNG is 143x143 in Figma; no asset shipped, so we keep the coral
-// circle + cream icon (same fallback used by ProfileAvatarCard) at 143px.
-const double _kEditAvatarSize = 143;
+// Peach baby-circle avatar is 143x143 in Figma — `BabyAvatar` default size.
 // Form column inset: 16px left, 17px right (Figma); use 16 symmetrically.
 const double _kFormPaddingH = 16;
 // Field group gap (between fields) = 17; label→input gap = 11.
 const double _kFieldGroupGap = 17;
 const double _kLabelGap = 11;
-// Page background Grad-1 (linear-gradient 154.372deg butter→light-grey).
-const Color _kGradEnd = Color(0xFFF5F5F5);
 
 /// PR-02 — Edit Profile.
 ///
 /// Mirrors Figma frame 1200:10475: Grad-1 page wash (butter→#f5f5f5 at
-/// ~154°), back chip + "Change Profile" header, 143px coral avatar puck,
+/// ~154°), back chip + "Change Profile" header, 143px peach baby avatar,
 /// then First Name / Last Name (Optional) / Email labelled fields and a
 /// primary "Save" pill.
 class ProfileEditScreen extends ConsumerStatefulWidget {
@@ -68,7 +62,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
     final babyIdAsync = ref.watch(currentBabyIdProvider);
 
     return babyIdAsync.when(
-      loading: () => const _ProfileEditScaffold(
+      loading: () => const GradientScaffold(
         body: Center(child: CircularProgressIndicator()),
       ),
       error: (_, __) => _ProfileEditError(
@@ -98,7 +92,7 @@ class _ProfileEditBody extends ConsumerWidget {
     final asyncState = ref.watch(profileEditControllerProvider(babyId));
 
     return asyncState.when(
-      loading: () => const _ProfileEditScaffold(
+      loading: () => const GradientScaffold(
         body: Center(child: CircularProgressIndicator()),
       ),
       error: (err, _) => _ProfileEditError(
@@ -177,7 +171,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     // shared AppTypography.headline token (NIB token consolidation).
     const labelStyle = AppTypography.headline;
 
-    return _ProfileEditScaffold(
+    return GradientScaffold(
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -312,34 +306,6 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
   }
 }
 
-/// Scaffold with the Grad-1 page wash (Figma: linear-gradient 154.372deg
-/// from #fffcd5 at 19.168% to #f5f5f5 at 50%). Flutter's [LinearGradient]
-/// uses begin/end alignments; ~154° clockwise from "up" maps to a top-left
-/// → bottom-right diagonal — Alignment.topLeft → Alignment.bottomRight.
-class _ProfileEditScaffold extends StatelessWidget {
-  const _ProfileEditScaffold({required this.body});
-
-  final Widget body;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.butterSoft,
-      body: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            stops: [0.19, 0.5],
-            colors: [AppColors.butterSoft, _kGradEnd],
-          ),
-        ),
-        child: body,
-      ),
-    );
-  }
-}
-
 class _EditHeader extends StatelessWidget {
   const _EditHeader({required this.onBack});
 
@@ -386,27 +352,7 @@ class _EditAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ExcludeSemantics(
-      child: Center(
-        child: Container(
-          width: _kEditAvatarSize,
-          height: _kEditAvatarSize,
-          decoration: const BoxDecoration(
-            color: AppColors.coral,
-            shape: BoxShape.circle,
-          ),
-          child: const Center(
-            child: Icon(
-              Icons.child_care_rounded,
-              // ~74px glyph fits the 143px coral puck while echoing the
-              // ProfileScreen avatar proportions (64 glyph in 120 puck).
-              size: 74,
-              color: AppColors.cream,
-            ),
-          ),
-        ),
-      ),
-    );
+    return const Center(child: BabyAvatar());
   }
 }
 
@@ -445,7 +391,7 @@ class _ProfileEditError extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return _ProfileEditScaffold(
+    return GradientScaffold(
       body: SafeArea(
         child: Center(
           child: Padding(

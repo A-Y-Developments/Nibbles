@@ -3,9 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
-import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
-import 'package:nibbles/src/common/components/buttons/app_round_button.dart';
-import 'package:nibbles/src/common/components/inputs/app_text_field.dart';
+import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/features/auth/forgot_password/forgot_password_controller.dart';
 import 'package:nibbles/src/features/auth/forgot_password/forgot_password_state.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
@@ -35,55 +33,37 @@ class ForgotPasswordScreen extends ConsumerWidget {
     void goBack() =>
         context.canPop() ? context.pop() : context.goNamed(AppRoute.login.name);
 
-    return Scaffold(
-      // Grad-1 — butterSoft→cream diagonal. Scaffold transparent so the
-      // gradient covers behind SafeArea.
-      backgroundColor: Colors.transparent,
-      body: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            stops: [0.19, 0.5],
-            colors: [AppColors.butterSoft, AppColors.background],
+    return GradientScaffold(
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSizes.pagePaddingH,
+            AppSizes.md,
+            AppSizes.pagePaddingH,
+            AppSizes.lg,
           ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSizes.pagePaddingH,
-              AppSizes.md,
-              AppSizes.pagePaddingH,
-              AppSizes.lg,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: AppRoundButton(
-                    icon: const Icon(Icons.arrow_back_rounded),
-                    onPressed: goBack,
-                    tone: AppRoundButtonTone.butter,
-                    semanticLabel: 'Back',
-                  ),
-                ),
-                const SizedBox(height: AppSizes.lg),
-                Expanded(
-                  child: state.sent
-                      ? _ConfirmationView(onBackToLogin: goBack)
-                      : _InputView(
-                          state: state,
-                          onEmailChanged: ref
-                              .read(forgotPasswordControllerProvider.notifier)
-                              .updateEmail,
-                          onSubmit: ref
-                              .read(forgotPasswordControllerProvider.notifier)
-                              .submit,
-                        ),
-                ),
-              ],
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Align(
+                alignment: Alignment.centerLeft,
+                child: _BackPill(onPressed: goBack),
+              ),
+              const SizedBox(height: AppSizes.lg),
+              Expanded(
+                child: state.sent
+                    ? _ConfirmationView(onBackToLogin: goBack)
+                    : _InputView(
+                        state: state,
+                        onEmailChanged: ref
+                            .read(forgotPasswordControllerProvider.notifier)
+                            .updateEmail,
+                        onSubmit: ref
+                            .read(forgotPasswordControllerProvider.notifier)
+                            .submit,
+                      ),
+              ),
+            ],
           ),
         ),
       ),
@@ -207,6 +187,39 @@ class _ConfirmationView extends StatelessWidget {
           onPressed: onBackToLogin,
         ),
       ],
+    );
+  }
+}
+
+class _BackPill extends StatelessWidget {
+  const _BackPill({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: 'Back',
+      child: Material(
+        color: AppColors.butter,
+        borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+          child: const Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: AppSizes.sp20,
+              vertical: AppSizes.sp12,
+            ),
+            child: Icon(
+              Icons.arrow_back_rounded,
+              color: AppColors.greenDeep,
+              size: 20,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

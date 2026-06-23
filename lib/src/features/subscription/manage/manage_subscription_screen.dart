@@ -6,8 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
-import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
-import 'package:nibbles/src/common/components/buttons/app_round_button.dart';
+import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/domain/entities/subscription_info.dart';
 import 'package:nibbles/src/features/subscription/cancel/cancel_subscription_overlay.dart';
@@ -59,10 +58,13 @@ class _ManageSubscriptionScreenState
     final asyncState = ref.watch(manageSubscriptionControllerProvider);
 
     return asyncState.when(
-      loading: () => const _ManageSubscriptionScaffold(
-        child: Center(
-          key: Key('manage_subscription_loading'),
-          child: CircularProgressIndicator(),
+      loading: () => const GradientScaffold(
+        body: SafeArea(
+          bottom: false,
+          child: Center(
+            key: Key('manage_subscription_loading'),
+            child: CircularProgressIndicator(),
+          ),
         ),
       ),
       error: (err, _) => _ManageSubscriptionError(
@@ -72,35 +74,6 @@ class _ManageSubscriptionScreenState
         onRetry: () => ref.invalidate(manageSubscriptionControllerProvider),
       ),
       data: (state) => _ManageSubscriptionBody(state: state),
-    );
-  }
-}
-
-/// Shared scaffold — butter-soft → grey gradient background that mirrors the
-/// `Grad-1` token from variables.json (`linear-gradient(154.372deg, #FFFCD5
-/// 19.168%, #F5F5F5 50%)`). All branches sit on this same canvas.
-class _ManageSubscriptionScaffold extends StatelessWidget {
-  const _ManageSubscriptionScaffold({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            // 154.372deg in CSS — same convention as profile_screen.dart.
-            // sin(154.372°) ≈ 0.433, cos(154.372°) ≈ -0.901.
-            begin: Alignment(-0.433, 0.901),
-            end: Alignment(0.433, -0.901),
-            stops: [0.19168, 0.5],
-            colors: [AppColors.butterSoft, Color(0xFFF5F5F5)],
-          ),
-        ),
-        child: SafeArea(bottom: false, child: child),
-      ),
     );
   }
 }
@@ -116,13 +89,27 @@ class _ManageSubscriptionBody extends StatelessWidget {
 
     void goBack() => context.canPop() ? context.pop() : context.go('/home');
 
-    return _ManageSubscriptionScaffold(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _ManageSubscriptionHeader(onBack: goBack),
-          Expanded(
-            child: SingleChildScrollView(
+    return GradientScaffold(
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _ManageSubscriptionHeader(onBack: goBack),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSizes.md,
+                  0,
+                  AppSizes.md,
+                  AppSizes.pagePaddingV,
+                ),
+                child: info.isActive
+                    ? _SubscribedSection(info: info)
+                    : const _NotSubscribedSection(),
+              ),
+            ),
+            Padding(
               padding: const EdgeInsets.fromLTRB(
                 AppSizes.md,
                 0,
@@ -130,33 +117,22 @@ class _ManageSubscriptionBody extends StatelessWidget {
                 AppSizes.pagePaddingV,
               ),
               child: info.isActive
-                  ? _SubscribedSection(info: info)
-                  : const _NotSubscribedSection(),
+                  ? AppPillButton(
+                      key: const Key('manage_subscription_cancel_cta'),
+                      label: 'Cancel Subscription',
+                      variant: AppPillButtonVariant.ghost,
+                      size: AppPillButtonSize.small,
+                      onPressed: () => _onCancelPressed(context),
+                    )
+                  : AppPillButton(
+                      key: const Key('manage_subscription_go_premium_cta'),
+                      label: 'Go Premium',
+                      size: AppPillButtonSize.small,
+                      onPressed: () => context.pushNamed(AppRoute.paywall.name),
+                    ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSizes.md,
-              0,
-              AppSizes.md,
-              AppSizes.pagePaddingV,
-            ),
-            child: info.isActive
-                ? AppPillButton(
-                    key: const Key('manage_subscription_cancel_cta'),
-                    label: 'Cancel Subscription',
-                    variant: AppPillButtonVariant.ghost,
-                    size: AppPillButtonSize.small,
-                    onPressed: () => _onCancelPressed(context),
-                  )
-                : AppPillButton(
-                    key: const Key('manage_subscription_go_premium_cta'),
-                    label: 'Go Premium',
-                    size: AppPillButtonSize.small,
-                    onPressed: () => context.pushNamed(AppRoute.paywall.name),
-                  ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -488,36 +464,39 @@ class _ManageSubscriptionError extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return _ManageSubscriptionScaffold(
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSizes.pagePaddingH),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                Icons.error_outline,
-                size: AppSizes.iconXl,
-                color: AppColors.destructive,
-              ),
-              const SizedBox(height: AppSizes.md),
-              Text(
-                message,
-                key: const Key('manage_subscription_error_message'),
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: AppColors.fgMuted,
+    return GradientScaffold(
+      body: SafeArea(
+        bottom: false,
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSizes.pagePaddingH),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.error_outline,
+                  size: AppSizes.iconXl,
+                  color: AppColors.destructive,
                 ),
-              ),
-              if (onRetry != null) ...[
-                const SizedBox(height: AppSizes.lg),
-                FilledButton(
-                  key: const Key('manage_subscription_retry_button'),
-                  onPressed: onRetry,
-                  child: const Text('Try Again'),
+                const SizedBox(height: AppSizes.md),
+                Text(
+                  message,
+                  key: const Key('manage_subscription_error_message'),
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: AppColors.fgMuted,
+                  ),
                 ),
+                if (onRetry != null) ...[
+                  const SizedBox(height: AppSizes.lg),
+                  FilledButton(
+                    key: const Key('manage_subscription_retry_button'),
+                    onPressed: onRetry,
+                    child: const Text('Try Again'),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),

@@ -17,8 +17,7 @@ class MockAuthRepository extends Mock implements AuthRepository {}
 
 class MockLocalFlagService extends Mock implements LocalFlagService {}
 
-class MockBabyProfileRepository extends Mock
-    implements BabyProfileRepository {}
+class MockBabyProfileRepository extends Mock implements BabyProfileRepository {}
 
 void main() {
   late MockAuthRepository mockRepo;
@@ -263,68 +262,62 @@ void main() {
   });
 
   group('AuthService backfill on signIn', () {
-    test(
-      'when onboarding NOT done locally, queries the baby repo and '
-      'backfills both flags on a completed remote profile',
-      () async {
-        // Reset flags mock so isOnboardingBabySetupDone == false hits the
-        // backfill branch.
-        final mockFlagsBackfill = MockLocalFlagService();
-        when(mockFlagsBackfill.isOnboardingBabySetupDone).thenReturn(false);
-        when(mockFlagsBackfill.setOnboardingReadinessDone).thenAnswer((_) {});
-        when(mockFlagsBackfill.setOnboardingBabySetupDone).thenAnswer((_) {});
+    test('when onboarding NOT done locally, queries the baby repo and '
+        'backfills both flags on a completed remote profile', () async {
+      // Reset flags mock so isOnboardingBabySetupDone == false hits the
+      // backfill branch.
+      final mockFlagsBackfill = MockLocalFlagService();
+      when(mockFlagsBackfill.isOnboardingBabySetupDone).thenReturn(false);
+      when(mockFlagsBackfill.setOnboardingReadinessDone).thenAnswer((_) {});
+      when(mockFlagsBackfill.setOnboardingBabySetupDone).thenAnswer((_) {});
 
-        final mockBabyRepo = MockBabyProfileRepository();
-        when(mockBabyRepo.isOnboardingCompleted).thenAnswer((_) async => true);
+      final mockBabyRepo = MockBabyProfileRepository();
+      when(mockBabyRepo.isOnboardingCompleted).thenAnswer((_) async => true);
 
-        when(
-          () => mockRepo.signIn(any(), any()),
-        ).thenAnswer((_) async => const Result.success(null));
+      when(
+        () => mockRepo.signIn(any(), any()),
+      ).thenAnswer((_) async => const Result.success(null));
 
-        final localContainer = ProviderContainer(
-          overrides: [
-            authRepositoryProvider.overrideWithValue(mockRepo),
-            localFlagServiceProvider.overrideWithValue(mockFlagsBackfill),
-            babyProfileRepositoryProvider.overrideWithValue(mockBabyRepo),
-          ],
-        );
-        addTearDown(localContainer.dispose);
+      final localContainer = ProviderContainer(
+        overrides: [
+          authRepositoryProvider.overrideWithValue(mockRepo),
+          localFlagServiceProvider.overrideWithValue(mockFlagsBackfill),
+          babyProfileRepositoryProvider.overrideWithValue(mockBabyRepo),
+        ],
+      );
+      addTearDown(localContainer.dispose);
 
-        final localSut = localContainer.read(authServiceProvider.notifier);
-        await localSut.signIn('alice@example.com', 'password123');
+      final localSut = localContainer.read(authServiceProvider.notifier);
+      await localSut.signIn('alice@example.com', 'password123');
 
-        verify(mockBabyRepo.isOnboardingCompleted).called(1);
-        verify(mockFlagsBackfill.setOnboardingReadinessDone).called(1);
-        verify(mockFlagsBackfill.setOnboardingBabySetupDone).called(1);
-      },
-    );
+      verify(mockBabyRepo.isOnboardingCompleted).called(1);
+      verify(mockFlagsBackfill.setOnboardingReadinessDone).called(1);
+      verify(mockFlagsBackfill.setOnboardingBabySetupDone).called(1);
+    });
 
-    test(
-      'when onboarding already done locally, does NOT hit the baby repo '
-      '(short-circuit)',
-      () async {
-        final mockBabyRepo = MockBabyProfileRepository();
+    test('when onboarding already done locally, does NOT hit the baby repo '
+        '(short-circuit)', () async {
+      final mockBabyRepo = MockBabyProfileRepository();
 
-        when(
-          () => mockRepo.signIn(any(), any()),
-        ).thenAnswer((_) async => const Result.success(null));
+      when(
+        () => mockRepo.signIn(any(), any()),
+      ).thenAnswer((_) async => const Result.success(null));
 
-        // Default container already stubs isOnboardingBabySetupDone -> true.
-        final localContainer = ProviderContainer(
-          overrides: [
-            authRepositoryProvider.overrideWithValue(mockRepo),
-            localFlagServiceProvider.overrideWithValue(mockFlags),
-            babyProfileRepositoryProvider.overrideWithValue(mockBabyRepo),
-          ],
-        );
-        addTearDown(localContainer.dispose);
+      // Default container already stubs isOnboardingBabySetupDone -> true.
+      final localContainer = ProviderContainer(
+        overrides: [
+          authRepositoryProvider.overrideWithValue(mockRepo),
+          localFlagServiceProvider.overrideWithValue(mockFlags),
+          babyProfileRepositoryProvider.overrideWithValue(mockBabyRepo),
+        ],
+      );
+      addTearDown(localContainer.dispose);
 
-        final localSut = localContainer.read(authServiceProvider.notifier);
-        await localSut.signIn('alice@example.com', 'password123');
+      final localSut = localContainer.read(authServiceProvider.notifier);
+      await localSut.signIn('alice@example.com', 'password123');
 
-        verifyNever(mockBabyRepo.isOnboardingCompleted);
-      },
-    );
+      verifyNever(mockBabyRepo.isOnboardingCompleted);
+    });
   });
 
   group('AuthService computed properties', () {

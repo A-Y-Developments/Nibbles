@@ -467,10 +467,7 @@ void main() {
 
       await buildSut().getLogs('baby-1', allergenKey: 'egg');
 
-      expect(builder.filters, [
-        ('baby_id', 'baby-1'),
-        ('allergen_key', 'egg'),
-      ]);
+      expect(builder.filters, [('baby_id', 'baby-1'), ('allergen_key', 'egg')]);
     });
 
     test('PostgrestException maps to ServerException', () async {

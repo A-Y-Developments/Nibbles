@@ -25,6 +25,7 @@ void main() {
   setUpAll(() {
     registerFallbackValue(Gender.female);
     registerFallbackValue(DateTime(2024));
+    registerFallbackValue(<bool>[]);
   });
 
   setUp(() {
@@ -37,7 +38,7 @@ void main() {
       'delegates to repo.createBaby and never does the old 2nd write',
       () async {
         when(
-          () => mockRepo.createBaby(any(), any(), any()),
+          () => mockRepo.createBaby(any(), any(), any(), any()),
         ).thenAnswer((_) async => Result.success(_fakeBaby));
 
         final result = await sut.createBaby(
@@ -49,7 +50,12 @@ void main() {
         expect(result.isSuccess, isTrue);
         expect((result as Success<Baby>).data.name, 'Lily');
         verify(
-          () => mockRepo.createBaby('Lily', DateTime(2024, 6), Gender.female),
+          () => mockRepo.createBaby(
+            'Lily',
+            DateTime(2024, 6),
+            Gender.female,
+            any(),
+          ),
         ).called(1);
         // Atomicity now lives in the RPC; the service must NOT issue the old
         // separate program-state write (the source of the orphan/dup bug).
@@ -58,7 +64,7 @@ void main() {
     );
 
     test('propagates a repo.createBaby failure', () async {
-      when(() => mockRepo.createBaby(any(), any(), any())).thenAnswer(
+      when(() => mockRepo.createBaby(any(), any(), any(), any())).thenAnswer(
         (_) async => const Result.failure(ServerException('DB error')),
       );
 
@@ -72,29 +78,27 @@ void main() {
       verifyNever(() => mockRepo.createAllergenProgramState(any()));
     });
 
-    test(
-      'defaults gender to preferNotToSay when omitted',
-      () async {
-        when(
-          () => mockRepo.createBaby(any(), any(), any()),
-        ).thenAnswer((_) async => Result.success(_fakeBaby));
+    test('defaults gender to preferNotToSay when omitted', () async {
+      when(
+        () => mockRepo.createBaby(any(), any(), any(), any()),
+      ).thenAnswer((_) async => Result.success(_fakeBaby));
 
-        final result = await sut.createBaby('Lily', DateTime(2024, 6));
+      final result = await sut.createBaby('Lily', DateTime(2024, 6));
 
-        expect(result.isSuccess, isTrue);
-        verify(
-          () => mockRepo.createBaby(
-            'Lily',
-            DateTime(2024, 6),
-            // Explicit value is the assertion of this test — mocktail needs the
-            // literal to match the captured argument.
-            // ignore: avoid_redundant_argument_values
-            Gender.preferNotToSay,
-          ),
-        ).called(1);
-        verifyNever(() => mockRepo.createAllergenProgramState(any()));
-      },
-    );
+      expect(result.isSuccess, isTrue);
+      verify(
+        () => mockRepo.createBaby(
+          'Lily',
+          DateTime(2024, 6),
+          // Explicit value is the assertion of this test — mocktail needs the
+          // literal to match the captured argument.
+          // ignore: avoid_redundant_argument_values
+          Gender.preferNotToSay,
+          any(),
+        ),
+      ).called(1);
+      verifyNever(() => mockRepo.createAllergenProgramState(any()));
+    });
   });
 
   group('BabyProfileService.getBaby', () {

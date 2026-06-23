@@ -25,7 +25,7 @@ class _MockLocalFlagService extends Mock implements LocalFlagService {}
 /// telemetry payload without touching real Firebase.
 class _CrashCapture {
   final List<({String? reason, List<String>? information, String error})>
-      calls = [];
+  calls = [];
 
   Future<void> record(
     Object error,
@@ -33,9 +33,11 @@ class _CrashCapture {
     String? reason,
     List<String>? information,
   }) async {
-    calls.add(
-      (reason: reason, information: information, error: error.toString()),
-    );
+    calls.add((
+      reason: reason,
+      information: information,
+      error: error.toString(),
+    ));
   }
 }
 
@@ -58,29 +60,31 @@ void main() {
     when(
       () => mockAuthRepo.authStateStream,
     ).thenAnswer((_) => const Stream.empty());
-    when(() => mockAuthRepo.signOut())
-        .thenAnswer((_) async => const Result.success(null));
+    when(
+      () => mockAuthRepo.signOut(),
+    ).thenAnswer((_) async => const Result.success(null));
     when(mockFlags.clearAll).thenAnswer((_) async {});
 
-    container = ProviderContainer(
-      overrides: [
-        accountRepositoryProvider.overrideWithValue(mockAccountRepo),
-        authRepositoryProvider.overrideWithValue(mockAuthRepo),
-        localFlagServiceProvider.overrideWithValue(mockFlags),
-        analyticsProvider.overrideWithValue(fakeAnalytics),
-        // NIB-99: capturing recorder so payload (reason + information) is
-        // asserted alongside the failure path.
-        deleteAccountCrashRecorderProvider.overrideWithValue(
-          crashCapture.record,
-        ),
-      ],
-    )
-    // Hold the controller alive across awaits so state isn't lost to
-    // auto-dispose between assertions.
-    ..listen<DeleteAccountState>(
-      deleteAccountControllerProvider,
-      (_, __) {},
-    );
+    container =
+        ProviderContainer(
+            overrides: [
+              accountRepositoryProvider.overrideWithValue(mockAccountRepo),
+              authRepositoryProvider.overrideWithValue(mockAuthRepo),
+              localFlagServiceProvider.overrideWithValue(mockFlags),
+              analyticsProvider.overrideWithValue(fakeAnalytics),
+              // NIB-99: capturing recorder so payload (reason + information) is
+              // asserted alongside the failure path.
+              deleteAccountCrashRecorderProvider.overrideWithValue(
+                crashCapture.record,
+              ),
+            ],
+          )
+          // Hold the controller alive across awaits so state isn't lost to
+          // auto-dispose between assertions.
+          ..listen<DeleteAccountState>(
+            deleteAccountControllerProvider,
+            (_, __) {},
+          );
   });
 
   tearDown(() => container.dispose());
@@ -89,68 +93,59 @@ void main() {
       container.read(deleteAccountControllerProvider.notifier);
 
   group('DeleteAccountController.submit', () {
-    test(
-      'success: calls deleteAccount → clearAll → signOut, records '
-      'logAccountDeletionCompleted, returns true',
-      () async {
-        when(() => mockAccountRepo.requestAccountDeletion(any()))
-            .thenAnswer((_) async => const Result.success(null));
+    test('success: calls deleteAccount → clearAll → signOut, records '
+        'logAccountDeletionCompleted, returns true', () async {
+      when(
+        () => mockAccountRepo.requestAccountDeletion(any()),
+      ).thenAnswer((_) async => const Result.success(null));
 
-        final ok = await readController().submit('I achieved my goal already');
+      final ok = await readController().submit('I achieved my goal already');
 
-        // Drain pending fire-and-forget analytics microtasks.
-        await Future<void>.delayed(Duration.zero);
+      // Drain pending fire-and-forget analytics microtasks.
+      await Future<void>.delayed(Duration.zero);
 
-        expect(ok, isTrue);
-        verify(
-          () => mockAccountRepo.requestAccountDeletion(
-            'I achieved my goal already',
-          ),
-        ).called(1);
-        verify(mockFlags.clearAll).called(1);
-        verify(() => mockAuthRepo.signOut()).called(1);
+      expect(ok, isTrue);
+      verify(
+        () => mockAccountRepo.requestAccountDeletion(
+          'I achieved my goal already',
+        ),
+      ).called(1);
+      verify(mockFlags.clearAll).called(1);
+      verify(() => mockAuthRepo.signOut()).called(1);
 
-        expect(
-          fakeAnalytics.eventNames,
-          contains('account_deletion_completed'),
-        );
-        expect(crashCapture.calls, isEmpty);
-      },
-    );
+      expect(fakeAnalytics.eventNames, contains('account_deletion_completed'));
+      expect(crashCapture.calls, isEmpty);
+    });
 
-    test(
-      'failure: sets errorMessage, records crash with reason + '
-      'information=[reason=<reason>], returns false, does NOT clear flags '
-      'or sign out',
-      () async {
-        when(() => mockAccountRepo.requestAccountDeletion(any())).thenAnswer(
-          (_) async =>
-              const Result.failure(ServerException('deletion failed')),
-        );
+    test('failure: sets errorMessage, records crash with reason + '
+        'information=[reason=<reason>], returns false, does NOT clear flags '
+        'or sign out', () async {
+      when(() => mockAccountRepo.requestAccountDeletion(any())).thenAnswer(
+        (_) async => const Result.failure(ServerException('deletion failed')),
+      );
 
-        const reason = 'Other';
-        final ok = await readController().submit(reason);
+      const reason = 'Other';
+      final ok = await readController().submit(reason);
 
-        expect(ok, isFalse);
-        final state = container.read(deleteAccountControllerProvider);
-        expect(state.isSubmitting, isFalse);
-        expect(state.errorMessage, 'deletion failed');
-        verifyNever(mockFlags.clearAll);
-        verifyNever(() => mockAuthRepo.signOut());
+      expect(ok, isFalse);
+      final state = container.read(deleteAccountControllerProvider);
+      expect(state.isSubmitting, isFalse);
+      expect(state.errorMessage, 'deletion failed');
+      verifyNever(mockFlags.clearAll);
+      verifyNever(() => mockAuthRepo.signOut());
 
-        expect(crashCapture.calls, hasLength(1));
-        final crash = crashCapture.calls.single;
-        expect(crash.reason, 'profile_account_deletion_failure');
-        expect(crash.information, equals(['reason=$reason']));
-        expect(crash.error, contains('profile_account_deletion_failure'));
-        expect(crash.error, contains('deletion failed'));
+      expect(crashCapture.calls, hasLength(1));
+      final crash = crashCapture.calls.single;
+      expect(crash.reason, 'profile_account_deletion_failure');
+      expect(crash.information, equals(['reason=$reason']));
+      expect(crash.error, contains('profile_account_deletion_failure'));
+      expect(crash.error, contains('deletion failed'));
 
-        expect(
-          fakeAnalytics.eventNames,
-          isNot(contains('account_deletion_completed')),
-        );
-      },
-    );
+      expect(
+        fakeAnalytics.eventNames,
+        isNot(contains('account_deletion_completed')),
+      );
+    });
 
     test(
       'submit clears any prior errorMessage before calling the service',
@@ -168,8 +163,9 @@ void main() {
 
         // Retry succeeds — errorMessage must be cleared by the time we
         // reach the success branch.
-        when(() => mockAccountRepo.requestAccountDeletion(any()))
-            .thenAnswer((_) async => const Result.success(null));
+        when(
+          () => mockAccountRepo.requestAccountDeletion(any()),
+        ).thenAnswer((_) async => const Result.success(null));
 
         final ok = await readController().submit('Other');
 
@@ -187,8 +183,9 @@ void main() {
       'does NOT fire the destructive deleteAccount twice',
       () async {
         final gate = Completer<Result<void>>();
-        when(() => mockAccountRepo.requestAccountDeletion(any()))
-            .thenAnswer((_) => gate.future);
+        when(
+          () => mockAccountRepo.requestAccountDeletion(any()),
+        ).thenAnswer((_) => gate.future);
 
         final controller = readController();
         // First submit runs synchronously up to the deleteAccount await, so
@@ -203,9 +200,7 @@ void main() {
         expect(await first, isTrue);
 
         // Exactly one destructive RPC despite the double-tap.
-        verify(
-          () => mockAccountRepo.requestAccountDeletion('Other'),
-        ).called(1);
+        verify(() => mockAccountRepo.requestAccountDeletion('Other')).called(1);
       },
     );
   });

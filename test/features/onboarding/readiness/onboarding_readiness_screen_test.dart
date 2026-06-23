@@ -84,26 +84,22 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets(
-    'renders the "1 of 6 Questions" counter on first paint',
-    (tester) async {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
-      // Seed a baby name so question copy doesn't interpolate to the
-      // "your baby" fallback.
-      container.read(onboardingControllerProvider.notifier).updateName('Lily');
+  testWidgets('renders the "1 of 6 Questions" counter on first paint', (
+    tester,
+  ) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    // Seed a baby name so question copy doesn't interpolate to the
+    // "your baby" fallback.
+    container.read(onboardingControllerProvider.notifier).updateName('Lily');
 
-      await pumpReadiness(tester, container: container);
+    await pumpReadiness(tester, container: container);
 
-      expect(find.text('1 of 6 Questions'), findsOneWidget);
-      // Q1 is the pediatrician-approval gate (Figma 971:10293).
-      expect(find.text('Is Lily ready for solids?'), findsOneWidget);
-      expect(
-        find.text('Yes, our pediatrician approved it.'),
-        findsOneWidget,
-      );
-    },
-  );
+    expect(find.text('1 of 6 Questions'), findsOneWidget);
+    // Q1 is the pediatrician-approval gate (Figma 971:10293).
+    expect(find.text('Is Lily ready for solids?'), findsOneWidget);
+    expect(find.text('Yes, our pediatrician approved it.'), findsOneWidget);
+  });
 
   testWidgets(
     'tapping a card alone does NOT advance; Next CTA advances 1/6 -> 2/6',

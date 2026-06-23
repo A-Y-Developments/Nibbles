@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
+import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/features/home/home_controller.dart';
@@ -90,8 +91,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
       data: (babyId) {
         if (babyId == null) {
-          return Scaffold(
-            backgroundColor: AppColors.background,
+          return GradientScaffold(
             body: SafeArea(
               child: HomeEmptyStateFull(onCreateMealPlan: _onCreateFirstMeal),
             ),
@@ -149,8 +149,7 @@ class _HomeContent extends StatelessWidget {
     // there is no baby to greet. All three Figma variants below render the
     // header + greeting + stats.
     if (baby == null) {
-      return Scaffold(
-        backgroundColor: AppColors.background,
+      return GradientScaffold(
         body: SafeArea(
           child: HomeEmptyStateFull(onCreateMealPlan: onCreateFirstMeal),
         ),
@@ -171,8 +170,7 @@ class _HomeContent extends StatelessWidget {
     // scroll content carries the top safe inset itself to clear the notch.
     final topInset = MediaQuery.of(context).padding.top;
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return GradientScaffold(
       body: SafeArea(
         top: false,
         child: RefreshIndicator(
@@ -198,7 +196,12 @@ class _HomeContent extends StatelessWidget {
                       top: -(AppSizes.pagePaddingV + topInset),
                       left: -AppSizes.pagePaddingH,
                       right: -AppSizes.pagePaddingH,
-                      bottom: -AppSizes.md,
+                      // The lime backs only the header + greeting + stat card.
+                      // Its bottom curve sits at ≈80% of the hero box, so this
+                      // extension is tuned to drop the curve just past the stat
+                      // card — long enough to clear it, short enough that the
+                      // date label + content below sit on the plain scaffold.
+                      bottom: -(AppSizes.xxl + AppSizes.lg),
                       child: const HomeHero(),
                     ),
                     Column(
@@ -225,15 +228,15 @@ class _HomeContent extends StatelessWidget {
                           todayMealCount: state.todayMealCount,
                           todayMealTarget: 2,
                           hasIronRichRecipes: hasIronRichRecipes,
-                          onAllergenTap: () => context.pushNamed(
-                            AppRoute.allergenTracker.name,
-                          ),
+                          onAllergenTap: () =>
+                              context.pushNamed(AppRoute.allergenTracker.name),
                         ),
                       ],
                     ),
                   ],
                 ),
-                const SizedBox(height: AppSizes.md),
+                // 36px breathing room below the lime hero section.
+                const SizedBox(height: AppSizes.sp40),
                 ..._middleSection(
                   state: state,
                   babyName: baby.name,
@@ -337,8 +340,7 @@ class _HomeLoadingScaffold extends StatelessWidget {
   const _HomeLoadingScaffold();
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    backgroundColor: AppColors.background,
+  Widget build(BuildContext context) => GradientScaffold(
     body: Center(
       child: Semantics(
         label: 'Loading home dashboard',
@@ -357,8 +359,7 @@ class _HomeErrorScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return GradientScaffold(
       body: SafeArea(
         child: Center(
           child: Padding(

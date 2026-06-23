@@ -130,7 +130,7 @@ class ProfileEditController extends _$ProfileEditController {
         // Reason is a stable enum string — no email value, no PII.
         await ref.read(profileEditCrashRecorderProvider)(
           'profile_email_update_failure: '
-              '${emailResult.errorOrNull?.message ?? 'unknown'}',
+          '${emailResult.errorOrNull?.message ?? 'unknown'}',
           StackTrace.current,
           reason: 'profile_email_update_failure',
         );
@@ -151,10 +151,7 @@ class ProfileEditController extends _$ProfileEditController {
           .read(analyticsProvider)
           .logProfileEditSaved(emailChanged: emailChanged),
     );
-    return ProfileEditSaveResult(
-      success: true,
-      emailChanged: emailChanged,
-    );
+    return ProfileEditSaveResult(success: true, emailChanged: emailChanged);
   }
 }
 

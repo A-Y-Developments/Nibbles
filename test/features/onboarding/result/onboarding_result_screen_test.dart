@@ -9,11 +9,13 @@ import 'package:nibbles/src/routing/route_enums.dart';
 /// NIB-91 — widget tests for `OnboardingResultScreen`.
 ///
 /// Pins the soft-warn UX (Next routes forward to `/onboarding/consent` in
-/// BOTH variants) and the Figma-aligned visuals:
-///   - ready variant (signsMet>=3): "New Journey Unlock!" eyebrow + ready
-///     headline + all 5 rows positive + X/Y chip reflects actual score.
-///   - not-ready variant (signsMet<3): no eyebrow, not-ready headline, per-
-///     answer check/cross icons on each row.
+/// BOTH variants) and the Figma-aligned visuals. The result reflects all six
+/// questions (pediatrician gate + Q2-Q6) and is "ready" only when every sign
+/// is met:
+///   - ready variant (all 6 met): "New Journey Unlock!" eyebrow + ready
+///     headline + all 6 rows positive + X/6 chip reflects actual score.
+///   - not-ready variant (<6 met): no eyebrow, not-ready headline, per-answer
+///     check/cross icons on each row.
 GoRouter _routerFor(Widget screen) => GoRouter(
   initialLocation: AppRoute.onboardingResult.path,
   routes: [
@@ -34,13 +36,17 @@ GoRouter _routerFor(Widget screen) => GoRouter(
 Future<void> _pumpResult(
   WidgetTester tester, {
   required List<bool?> answers,
+  bool? pediatricianApproved,
   String babyName = 'Lily',
 }) async {
   final container = ProviderContainer();
   addTearDown(container.dispose);
-  container.read(onboardingControllerProvider.notifier)
+  final notifier = container.read(onboardingControllerProvider.notifier)
     ..updateName(babyName)
     ..setReadinessAnswers(answers);
+  if (pediatricianApproved != null) {
+    notifier.setPediatricianApproved(approved: pediatricianApproved);
+  }
 
   await tester.pumpWidget(
     UncontrolledProviderScope(
@@ -55,11 +61,12 @@ Future<void> _pumpResult(
 
 void main() {
   testWidgets(
-    'ready variant (signsMet=5) shows the "New Journey Unlock!" eyebrow, the '
-    'ready headline and the 5/5 score chip',
+    'ready variant (all 6 met) shows the "New Journey Unlock!" eyebrow, the '
+    'ready headline and the 6/6 score chip',
     (tester) async {
       await _pumpResult(
         tester,
+        pediatricianApproved: true,
         answers: const <bool?>[true, true, true, true, true],
       );
 
@@ -69,19 +76,20 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('Readiness Signs'), findsOneWidget);
-      expect(find.text('5/5'), findsOneWidget);
-      // Ready variant renders all rows positive — 5 checks, 0 crosses.
-      expect(find.byIcon(Icons.check_rounded), findsNWidgets(5));
-      expect(find.byIcon(Icons.close_rounded), findsNothing);
+      expect(find.text('6/6'), findsOneWidget);
+      // Ready variant renders all rows positive — 6 checks, 0 crosses.
+      expect(find.byIcon(Icons.check_circle_outline), findsNWidgets(6));
+      expect(find.byIcon(Icons.cancel_outlined), findsNothing);
     },
   );
 
   testWidgets(
-    'not-ready variant (signsMet=1) drops the eyebrow, shows the not-ready '
-    'headline, the 1/5 chip and per-answer check/cross icons',
+    'not-ready variant (1 of 6) drops the eyebrow, shows the not-ready '
+    'headline, the 1/6 chip and per-answer check/cross icons',
     (tester) async {
       await _pumpResult(
         tester,
+        pediatricianApproved: false,
         answers: const <bool?>[true, false, false, false, false],
       );
 
@@ -91,35 +99,40 @@ void main() {
         find.text('Lily is not ready for solids at this time'),
         findsOneWidget,
       );
-      expect(find.text('1/5'), findsOneWidget);
+      expect(find.text('1/6'), findsOneWidget);
 
-      // 4 not-met -> 4 cross marks; 1 met -> 1 check mark.
-      expect(find.byIcon(Icons.close_rounded), findsNWidgets(4));
-      expect(find.byIcon(Icons.check_rounded), findsOneWidget);
+      // 5 not-met (pediatrician + 4 signs) -> 5 crosses; 1 met -> 1 check.
+      expect(find.byIcon(Icons.cancel_outlined), findsNWidgets(5));
+      expect(find.byIcon(Icons.check_circle_outline), findsOneWidget);
     },
   );
 
-  testWidgets(
-    'boundary (signsMet=3) is the ready variant (NIB-120 majority gate)',
-    (tester) async {
-      await _pumpResult(
-        tester,
-        answers: const <bool?>[true, true, true, false, false],
-      );
-
-      expect(find.text('New Journey Unlock!'), findsOneWidget);
-      // Ready variant renders all rows positive regardless of per-answer
-      // values (verbatim from `OnboardingResultScreen`'s `isPositive` rule):
-      //   final isPositive = ready || (answers[i] ?? false);
-      expect(find.byIcon(Icons.close_rounded), findsNothing);
-      expect(find.text('3/5'), findsOneWidget);
-    },
-  );
-
-  testWidgets('Next routes to /onboarding/consent in the READY variant',
-      (tester) async {
+  testWidgets('all-required gate: 5 of 6 (pediatrician missing) is NOT ready', (
+    tester,
+  ) async {
     await _pumpResult(
       tester,
+      pediatricianApproved: false,
+      answers: const <bool?>[true, true, true, true, true],
+    );
+
+    expect(find.text('New Journey Unlock!'), findsNothing);
+    expect(
+      find.text('Lily is not ready for solids at this time'),
+      findsOneWidget,
+    );
+    expect(find.text('5/6'), findsOneWidget);
+    // 5 developmental signs met -> 5 checks; pediatrician missing -> 1 cross.
+    expect(find.byIcon(Icons.check_circle_outline), findsNWidgets(5));
+    expect(find.byIcon(Icons.cancel_outlined), findsNWidgets(1));
+  });
+
+  testWidgets('Next routes to /onboarding/consent in the READY variant', (
+    tester,
+  ) async {
+    await _pumpResult(
+      tester,
+      pediatricianApproved: true,
       answers: const <bool?>[true, true, true, true, true],
     );
     await tester.tap(find.byKey(const Key('onboarding_result_next')));
@@ -127,32 +140,29 @@ void main() {
     expect(find.text('CONSENT_STUB'), findsOneWidget);
   });
 
-  testWidgets(
-    'Next routes to /onboarding/consent in the NOT-READY variant too '
-    '(soft-warn UX)',
-    (tester) async {
-      await _pumpResult(
-        tester,
-        answers: const <bool?>[false, false, false, false, false],
-      );
-      await tester.tap(find.byKey(const Key('onboarding_result_next')));
-      await tester.pumpAndSettle();
-      expect(find.text('CONSENT_STUB'), findsOneWidget);
-    },
-  );
+  testWidgets('Next routes to /onboarding/consent in the NOT-READY variant too '
+      '(soft-warn UX)', (tester) async {
+    await _pumpResult(
+      tester,
+      answers: const <bool?>[false, false, false, false, false],
+    );
+    await tester.tap(find.byKey(const Key('onboarding_result_next')));
+    await tester.pumpAndSettle();
+    expect(find.text('CONSENT_STUB'), findsOneWidget);
+  });
 
-  testWidgets(
-    'baby name not captured -> headline falls back to "your baby"',
-    (tester) async {
-      await _pumpResult(
-        tester,
-        answers: const <bool?>[true, true, true, true, true],
-        babyName: '',
-      );
-      expect(
-        find.text('your baby is ready for solids at this time'),
-        findsOneWidget,
-      );
-    },
-  );
+  testWidgets('baby name not captured -> headline falls back to "your baby"', (
+    tester,
+  ) async {
+    await _pumpResult(
+      tester,
+      pediatricianApproved: true,
+      answers: const <bool?>[true, true, true, true, true],
+      babyName: '',
+    );
+    expect(
+      find.text('your baby is ready for solids at this time'),
+      findsOneWidget,
+    );
+  });
 }

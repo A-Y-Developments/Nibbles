@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
+import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
-import 'package:nibbles/src/common/domain/entities/ingredient.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/features/recipe/detail/recipe_detail_controller.dart';
 import 'package:nibbles/src/features/recipe/detail/recipe_detail_state.dart';
@@ -13,12 +13,10 @@ import 'package:nibbles/src/features/recipe/detail/widgets/add_to_meal_plan_cta.
 import 'package:nibbles/src/features/recipe/detail/widgets/add_to_meal_plan_sheet.dart';
 import 'package:nibbles/src/features/recipe/detail/widgets/add_to_shopping_list_sheet.dart';
 import 'package:nibbles/src/features/recipe/detail/widgets/contains_allergens_card.dart';
-import 'package:nibbles/src/features/recipe/detail/widgets/icon_section.dart';
-import 'package:nibbles/src/features/recipe/detail/widgets/recipe_banner_card.dart';
-import 'package:nibbles/src/features/recipe/detail/widgets/recipe_detail_header.dart';
-import 'package:nibbles/src/features/recipe/detail/widgets/recipe_hero.dart';
+import 'package:nibbles/src/features/recipe/detail/widgets/recipe_hero_banner.dart';
+import 'package:nibbles/src/features/recipe/detail/widgets/recipe_steps_card.dart';
+import 'package:nibbles/src/features/recipe/detail/widgets/recipe_storage_row.dart';
 import 'package:nibbles/src/features/recipe/detail/widgets/recipe_tip_card.dart';
-import 'package:nibbles/src/features/recipe/detail/widgets/storage_card_row.dart';
 import 'package:nibbles/src/logging/analytics.dart';
 
 /// How long the success-toast stays on screen before auto-dismissing.
@@ -49,15 +47,13 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
     final babyIdAsync = ref.watch(currentBabyIdProvider);
 
     return babyIdAsync.when(
-      loading: () => const Scaffold(
-        backgroundColor: AppColors.background,
+      loading: () => const GradientScaffold(
         body: Center(
           child: CircularProgressIndicator(semanticsLabel: 'Loading recipe'),
         ),
       ),
-      error: (_, __) => Scaffold(
-        backgroundColor: AppColors.background,
-        appBar: AppBar(backgroundColor: AppColors.background),
+      error: (_, __) => GradientScaffold(
+        appBar: AppBar(backgroundColor: Colors.transparent),
         body: Semantics(
           liveRegion: true,
           container: true,
@@ -66,9 +62,8 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
       ),
       data: (babyId) {
         if (babyId == null) {
-          return Scaffold(
-            backgroundColor: AppColors.background,
-            appBar: AppBar(backgroundColor: AppColors.background),
+          return GradientScaffold(
+            appBar: AppBar(backgroundColor: Colors.transparent),
             body: Semantics(
               liveRegion: true,
               container: true,
@@ -94,8 +89,7 @@ class _RecipeDetailBody extends ConsumerWidget {
       recipeDetailControllerProvider(babyId, recipeId),
     );
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return GradientScaffold(
       body: detailAsync.when(
         loading: () => const Center(
           child: CircularProgressIndicator(semanticsLabel: 'Loading recipe'),
@@ -273,279 +267,141 @@ class _RecipeContentState extends ConsumerState<_RecipeContent> {
   Widget build(BuildContext context) {
     final state = widget.state;
     final recipe = state.recipe;
+    final hasStorage = state.storageNote != null || state.freezerNote != null;
 
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: Column(
+    return SafeArea(
+      child: Stack(
+        children: [
+          Column(
             children: [
-              RecipeDetailHeader(
+              _TopBar(
                 onBack: () => Navigator.of(context).maybePop(),
                 onOverflow: _handleOverflow,
               ),
               Expanded(
-                child: CustomScrollView(
-                  slivers: [
-                    SliverToBoxAdapter(
-                      child: RecipeHero(imageUrl: recipe.thumbnailUrl),
-                    ),
-                    SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppSizes.pagePaddingH,
-                        AppSizes.md,
-                        AppSizes.pagePaddingH,
-                        AppSizes.buttonHeight + AppSizes.xxl,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.only(
+                    bottom: AppSizes.buttonHeight + AppSizes.xxl,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      RecipeHeroBanner(
+                        imageUrl: recipe.thumbnailUrl,
+                        title: recipe.title,
+                        ageRange: recipe.ageRange,
+                        nutritionTags: recipe.nutritionTags,
+                        makes: recipe.makes,
                       ),
-                      sliver: SliverList(
-                        delegate: SliverChildListDelegate.fixed([
-                          RecipeBannerCard(
-                            title: recipe.title,
-                            ageRange: recipe.ageRange,
-                            nutritionTags: recipe.nutritionTags,
-                            category: recipe.category,
-                          ),
-                          if (recipe.allergenTags.isNotEmpty) ...[
-                            const SizedBox(height: AppSizes.md),
-                            ContainsAllergensCard(
-                              allergenTags: recipe.allergenTags,
-                              statuses: state.allergenStatuses,
-                            ),
-                          ],
-                          if (recipe.ingredients.isNotEmpty) ...[
-                            const SizedBox(height: AppSizes.md),
-                            IconSection(
-                              icon: Icons.shopping_basket_outlined,
-                              title: 'Ingredients',
-                              child: _IngredientsList(
-                                ingredients: recipe.ingredients,
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSizes.md,
+                          AppSizes.md,
+                          AppSizes.md,
+                          0,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            if (recipe.allergenTags.isNotEmpty) ...[
+                              ContainsAllergensCard(
+                                allergenTags: recipe.allergenTags,
                               ),
+                              const SizedBox(height: AppSizes.md),
+                            ],
+                            RecipeStepsCard(
+                              ingredients: recipe.ingredients,
+                              steps: recipe.steps,
+                              utensils: state.utensils ?? const [],
                             ),
-                          ],
-                          if (recipe.steps.isNotEmpty) ...[
-                            const SizedBox(height: AppSizes.lg),
-                            IconSection(
-                              icon: Icons.format_list_numbered,
-                              title: 'Method',
-                              child: _StepsList(steps: recipe.steps),
-                            ),
-                          ],
-                          if (state.utensils != null &&
-                              state.utensils!.isNotEmpty) ...[
-                            const SizedBox(height: AppSizes.lg),
-                            IconSection(
-                              icon: Icons.kitchen_outlined,
-                              title: 'Utensils / appliances',
-                              child: _UtensilsList(utensils: state.utensils!),
-                            ),
-                          ],
-                          if (state.storageNote != null ||
-                              state.freezerNote != null) ...[
-                            const SizedBox(height: AppSizes.lg),
-                            StorageCardRow(
-                              storageNote: state.storageNote,
-                              freezerNote: state.freezerNote,
-                            ),
-                          ],
-                          if (state.textureTip != null) ...[
-                            const SizedBox(height: AppSizes.md),
-                            RecipeTipCard(
-                              kind: RecipeTipKind.textureTip,
-                              body: state.textureTip,
-                            ),
-                          ],
-                          if (state.whyThisMeal != null) ...[
-                            const SizedBox(height: AppSizes.md),
-                            RecipeTipCard(
-                              kind: RecipeTipKind.whyThisMeal,
-                              body: state.whyThisMeal,
-                            ),
-                          ],
-                          if (recipe.notes != null &&
-                              recipe.notes!.isNotEmpty) ...[
-                            const SizedBox(height: AppSizes.lg),
-                            IconSection(
-                              icon: Icons.sticky_note_2_outlined,
-                              title: 'Notes',
-                              child: Text(
-                                recipe.notes!,
-                                style: Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(color: AppColors.fgDefault),
+                            if (hasStorage) ...[
+                              const SizedBox(height: AppSizes.md),
+                              RecipeStorageRow(
+                                storageNote: state.storageNote,
+                                freezerNote: state.freezerNote,
                               ),
-                            ),
+                            ],
+                            if (state.textureTip != null) ...[
+                              const SizedBox(height: AppSizes.md),
+                              RecipeTipCard(
+                                kind: RecipeTipKind.textureTip,
+                                body: state.textureTip,
+                              ),
+                            ],
+                            if (state.whyThisMeal != null) ...[
+                              const SizedBox(height: AppSizes.md),
+                              RecipeTipCard(
+                                kind: RecipeTipKind.whyThisMeal,
+                                body: state.whyThisMeal,
+                              ),
+                            ],
                           ],
-                        ]),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ],
           ),
-        ),
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 0,
-          child: AddToMealPlanCta(
-            isAdding: state.isAddingToMealPlan,
-            onPressed: _handleAddToMealPlan,
-          ),
-        ),
-        if (_showSuccessBanner)
           Positioned(
-            top: MediaQuery.of(context).padding.top + AppSizes.xxl,
-            left: 0,
-            right: 0,
-            child: const AddToMealPlanSuccessBanner(
-              message: 'Successfully added to meal plan',
+            left: AppSizes.md,
+            bottom: AppSizes.md,
+            child: AppPillButton(
+              label: 'Add to Meal Plan',
+              expand: false,
+              onPressed: state.isAddingToMealPlan ? null : _handleAddToMealPlan,
+              identifier: 'recipe_detail_add_to_meal_plan',
             ),
           ),
-      ],
+          if (_showSuccessBanner)
+            const Positioned(
+              top: AppSizes.md,
+              left: 0,
+              right: 0,
+              child: AddToMealPlanSuccessBanner(
+                message: 'Successfully added to meal plan',
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
 
 enum _OverflowAction { addToShoppingList }
 
-class _IngredientsList extends StatelessWidget {
-  const _IngredientsList({required this.ingredients});
+class _TopBar extends StatelessWidget {
+  const _TopBar({required this.onBack, required this.onOverflow});
 
-  final List<Ingredient> ingredients;
+  final VoidCallback onBack;
+  final VoidCallback onOverflow;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        for (int i = 0; i < ingredients.length; i++)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: AppSizes.xs),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _NumberDot(label: '${i + 1}'),
-                const SizedBox(width: AppSizes.sm),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: AppSizes.xs),
-                    child: Text(
-                      '${ingredients[i].quantity}  ${ingredients[i].name}',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: AppColors.fgDefault,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSizes.sm),
+      child: Row(
+        children: [
+          IconButton(
+            onPressed: onBack,
+            icon: const Icon(Icons.arrow_back, color: AppColors.fgStrong),
+            tooltip: 'Back',
           ),
-      ],
-    );
-  }
-}
-
-class _StepsList extends StatelessWidget {
-  const _StepsList({required this.steps});
-
-  final List<String> steps;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Column(
-      children: [
-        for (int i = 0; i < steps.length; i++)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: AppSizes.xs),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _NumberDot(label: '${i + 1}'),
-                const SizedBox(width: AppSizes.sm),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: AppSizes.xs),
-                    child: Text(
-                      steps[i],
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: AppColors.fgDefault,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          const SizedBox(width: AppSizes.xs),
+          Text(
+            'Recipe Detail',
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(color: AppColors.fgStrong),
           ),
-      ],
-    );
-  }
-}
-
-class _UtensilsList extends StatelessWidget {
-  const _UtensilsList({required this.utensils});
-
-  final List<String> utensils;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        for (int i = 0; i < utensils.length; i++)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: AppSizes.xs),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _NumberDot(label: '${i + 1}'),
-                const SizedBox(width: AppSizes.sm),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: AppSizes.xs),
-                    child: Text(
-                      utensils[i],
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: AppColors.fgDefault,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          const Spacer(),
+          IconButton(
+            onPressed: onOverflow,
+            icon: const Icon(Icons.more_horiz, color: AppColors.fgStrong),
+            tooltip: 'More options',
           ),
-      ],
-    );
-  }
-}
-
-class _NumberDot extends StatelessWidget {
-  const _NumberDot({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      width: AppSizes.tipGlyph,
-      height: AppSizes.tipGlyph,
-      alignment: Alignment.center,
-      decoration: const BoxDecoration(
-        color: AppColors.greenDeep,
-        shape: BoxShape.circle,
-      ),
-      child: Text(
-        label,
-        style: theme.textTheme.labelMedium?.copyWith(
-          color: AppColors.cream,
-          fontWeight: FontWeight.w700,
-        ),
+        ],
       ),
     );
   }

@@ -23,6 +23,7 @@ mixin _$Baby {
   DateTime get dateOfBirth => throw _privateConstructorUsedError;
   Gender get gender => throw _privateConstructorUsedError;
   bool get onboardingCompleted => throw _privateConstructorUsedError;
+  List<bool> get readinessSigns => throw _privateConstructorUsedError;
 
   /// Create a copy of Baby
   /// with the given fields replaced by the non-null parameter values.
@@ -42,6 +43,7 @@ abstract class $BabyCopyWith<$Res> {
     DateTime dateOfBirth,
     Gender gender,
     bool onboardingCompleted,
+    List<bool> readinessSigns,
   });
 }
 
@@ -66,6 +68,7 @@ class _$BabyCopyWithImpl<$Res, $Val extends Baby>
     Object? dateOfBirth = null,
     Object? gender = null,
     Object? onboardingCompleted = null,
+    Object? readinessSigns = null,
   }) {
     return _then(
       _value.copyWith(
@@ -93,6 +96,10 @@ class _$BabyCopyWithImpl<$Res, $Val extends Baby>
                 ? _value.onboardingCompleted
                 : onboardingCompleted // ignore: cast_nullable_to_non_nullable
                       as bool,
+            readinessSigns: null == readinessSigns
+                ? _value.readinessSigns
+                : readinessSigns // ignore: cast_nullable_to_non_nullable
+                      as List<bool>,
           )
           as $Val,
     );
@@ -114,6 +121,7 @@ abstract class _$$BabyImplCopyWith<$Res> implements $BabyCopyWith<$Res> {
     DateTime dateOfBirth,
     Gender gender,
     bool onboardingCompleted,
+    List<bool> readinessSigns,
   });
 }
 
@@ -135,6 +143,7 @@ class __$$BabyImplCopyWithImpl<$Res>
     Object? dateOfBirth = null,
     Object? gender = null,
     Object? onboardingCompleted = null,
+    Object? readinessSigns = null,
   }) {
     return _then(
       _$BabyImpl(
@@ -162,6 +171,10 @@ class __$$BabyImplCopyWithImpl<$Res>
             ? _value.onboardingCompleted
             : onboardingCompleted // ignore: cast_nullable_to_non_nullable
                   as bool,
+        readinessSigns: null == readinessSigns
+            ? _value._readinessSigns
+            : readinessSigns // ignore: cast_nullable_to_non_nullable
+                  as List<bool>,
       ),
     );
   }
@@ -177,7 +190,8 @@ class _$BabyImpl implements _Baby {
     required this.dateOfBirth,
     required this.gender,
     required this.onboardingCompleted,
-  });
+    final List<bool> readinessSigns = const <bool>[],
+  }) : _readinessSigns = readinessSigns;
 
   @override
   final String id;
@@ -191,10 +205,18 @@ class _$BabyImpl implements _Baby {
   final Gender gender;
   @override
   final bool onboardingCompleted;
+  final List<bool> _readinessSigns;
+  @override
+  @JsonKey()
+  List<bool> get readinessSigns {
+    if (_readinessSigns is EqualUnmodifiableListView) return _readinessSigns;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_readinessSigns);
+  }
 
   @override
   String toString() {
-    return 'Baby(id: $id, userId: $userId, name: $name, dateOfBirth: $dateOfBirth, gender: $gender, onboardingCompleted: $onboardingCompleted)';
+    return 'Baby(id: $id, userId: $userId, name: $name, dateOfBirth: $dateOfBirth, gender: $gender, onboardingCompleted: $onboardingCompleted, readinessSigns: $readinessSigns)';
   }
 
   @override
@@ -209,7 +231,11 @@ class _$BabyImpl implements _Baby {
                 other.dateOfBirth == dateOfBirth) &&
             (identical(other.gender, gender) || other.gender == gender) &&
             (identical(other.onboardingCompleted, onboardingCompleted) ||
-                other.onboardingCompleted == onboardingCompleted));
+                other.onboardingCompleted == onboardingCompleted) &&
+            const DeepCollectionEquality().equals(
+              other._readinessSigns,
+              _readinessSigns,
+            ));
   }
 
   @override
@@ -221,6 +247,7 @@ class _$BabyImpl implements _Baby {
     dateOfBirth,
     gender,
     onboardingCompleted,
+    const DeepCollectionEquality().hash(_readinessSigns),
   );
 
   /// Create a copy of Baby
@@ -240,6 +267,7 @@ abstract class _Baby implements Baby {
     required final DateTime dateOfBirth,
     required final Gender gender,
     required final bool onboardingCompleted,
+    final List<bool> readinessSigns,
   }) = _$BabyImpl;
 
   @override
@@ -254,6 +282,8 @@ abstract class _Baby implements Baby {
   Gender get gender;
   @override
   bool get onboardingCompleted;
+  @override
+  List<bool> get readinessSigns;
 
   /// Create a copy of Baby
   /// with the given fields replaced by the non-null parameter values.

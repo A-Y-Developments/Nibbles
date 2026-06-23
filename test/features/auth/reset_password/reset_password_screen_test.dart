@@ -60,58 +60,54 @@ void main() {
     analyticsProvider.overrideWithValue(fakeAnalytics),
   ];
 
-  testWidgets(
-    'renders 2 obscured password fields and a Confirm CTA',
-    (tester) async {
-      await tester.pumpWidget(
-        _wrap(const ResetPasswordScreen(), buildOverrides()),
-      );
-      await tester.pumpAndSettle();
+  testWidgets('renders 2 obscured password fields and a Confirm CTA', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrap(const ResetPasswordScreen(), buildOverrides()),
+    );
+    await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key('reset_password_new_field')), findsOneWidget);
-      expect(
-        find.byKey(const Key('reset_password_confirm_field')),
-        findsOneWidget,
-      );
-      expect(
-        find.byKey(const Key('reset_password_submit_button')),
-        findsOneWidget,
-      );
-      final pill = tester.widget<AppPillButton>(
-        find.byKey(const Key('reset_password_submit_button')),
-      );
-      expect(pill.label, 'Confirm');
+    expect(find.byKey(const Key('reset_password_new_field')), findsOneWidget);
+    expect(
+      find.byKey(const Key('reset_password_confirm_field')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('reset_password_submit_button')),
+      findsOneWidget,
+    );
+    final pill = tester.widget<AppPillButton>(
+      find.byKey(const Key('reset_password_submit_button')),
+    );
+    expect(pill.label, 'Confirm');
 
-      // Both visible TextField inputs are obscured (production has no
-      // visibility toggle here — see PR body NOTE for spec deviation).
-      final textFields = tester.widgetList<TextField>(
-        find.descendant(
-          of: find.byKey(const Key('reset_password_new_field')),
-          matching: find.byType(TextField),
-        ),
-      );
-      expect(textFields, isNotEmpty);
-      for (final tf in textFields) {
-        expect(tf.obscureText, isTrue);
-      }
-    },
-  );
+    // Both visible TextField inputs are obscured (production has no
+    // visibility toggle here — see PR body NOTE for spec deviation).
+    final textFields = tester.widgetList<TextField>(
+      find.descendant(
+        of: find.byKey(const Key('reset_password_new_field')),
+        matching: find.byType(TextField),
+      ),
+    );
+    expect(textFields, isNotEmpty);
+    for (final tf in textFields) {
+      expect(tf.obscureText, isTrue);
+    }
+  });
 
-  testWidgets(
-    'shows guidance helper under both fields in the initial state '
-    '(Figma 971:10136)',
-    (tester) async {
-      await tester.pumpWidget(
-        _wrap(const ResetPasswordScreen(), buildOverrides()),
-      );
-      await tester.pumpAndSettle();
+  testWidgets('shows guidance helper under both fields in the initial state '
+      '(Figma 971:10136)', (tester) async {
+    await tester.pumpWidget(
+      _wrap(const ResetPasswordScreen(), buildOverrides()),
+    );
+    await tester.pumpAndSettle();
 
-      expect(
-        find.text('Password must be at least 8 characters'),
-        findsNWidgets(3),
-      );
-    },
-  );
+    expect(
+      find.text('Password must be at least 8 characters'),
+      findsNWidgets(3),
+    );
+  });
 
   testWidgets(
     'shows "Password is too short" under both fields when password is short '
@@ -159,34 +155,29 @@ void main() {
     },
   );
 
-  testWidgets(
-    'success on submit redirects to the login route',
-    (tester) async {
-      when(
-        () => mockRepo.updatePassword(any()),
-      ).thenAnswer((_) async => const Result.success(null));
+  testWidgets('success on submit redirects to the login route', (tester) async {
+    when(
+      () => mockRepo.updatePassword(any()),
+    ).thenAnswer((_) async => const Result.success(null));
 
-      await tester.pumpWidget(
-        _wrap(const ResetPasswordScreen(), buildOverrides()),
-      );
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(
+      _wrap(const ResetPasswordScreen(), buildOverrides()),
+    );
+    await tester.pumpAndSettle();
 
-      await tester.enterText(
-        find.byKey(const Key('reset_password_new_field')),
-        'password123',
-      );
-      await tester.enterText(
-        find.byKey(const Key('reset_password_confirm_field')),
-        'password123',
-      );
-      await tester.pump();
+    await tester.enterText(
+      find.byKey(const Key('reset_password_new_field')),
+      'password123',
+    );
+    await tester.enterText(
+      find.byKey(const Key('reset_password_confirm_field')),
+      'password123',
+    );
+    await tester.pump();
 
-      await tester.tap(
-        find.byKey(const Key('reset_password_submit_button')),
-      );
-      await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('reset_password_submit_button')));
+    await tester.pumpAndSettle();
 
-      expect(find.text('Login stub'), findsOneWidget);
-    },
-  );
+    expect(find.text('Login stub'), findsOneWidget);
+  });
 }

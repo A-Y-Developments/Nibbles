@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/features/subscription/paywall/paywall_sheet.dart';
 
 /// NIB-55 — paywall page (`/subscription/paywall`).
@@ -14,8 +14,7 @@ class PaywallScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: AppColors.cream,
+    return const GradientScaffold(
       body: SafeArea(child: PaywallSheet(key: Key('paywall_screen_sheet'))),
     );
   }

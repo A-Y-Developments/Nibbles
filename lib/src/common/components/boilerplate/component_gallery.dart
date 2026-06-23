@@ -19,7 +19,6 @@ class _ComponentGalleryState extends State<ComponentGallery> {
   bool _switchOn = true;
   bool _checked = true;
   int _radioIndex = 0;
-  int _navIndex = 0;
   int _dayIndex = 0;
   bool _shopBought = false;
 
@@ -105,7 +104,8 @@ class _ComponentGalleryState extends State<ComponentGallery> {
             const SizedBox(height: AppSizes.sm),
             const TipCard(
               title: 'Getting Started Tips',
-              body: 'Start with single-ingredient purees and introduce one new '
+              body:
+                  'Start with single-ingredient purees and introduce one new '
                   'food every 3-5 days.',
             ),
           ]),
@@ -246,19 +246,8 @@ class _ComponentGalleryState extends State<ComponentGallery> {
               onCtaPressed: () {},
             ),
           ]),
-          _section('Brand', [
-            const Center(child: Quatrefoil(size: 120)),
-          ]),
+          _section('Brand', [const Center(child: Quatrefoil(size: 120))]),
         ],
-      ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSizes.md),
-          child: AppBottomNav(
-            currentIndex: _navIndex,
-            onTap: (i) => setState(() => _navIndex = i),
-          ),
-        ),
       ),
     );
   }
@@ -291,11 +280,7 @@ class _ComponentGalleryState extends State<ComponentGallery> {
       } else {
         state = DayChipState.idle;
       }
-      return WeekDay(
-        dayOfWeek: labels[i],
-        date: '${18 + i} Apr',
-        state: state,
-      );
+      return WeekDay(dayOfWeek: labels[i], date: '${18 + i} Apr', state: state);
     });
   }
 }

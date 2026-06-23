@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
-import 'package:nibbles/src/common/components/brand/quatrefoil.dart';
+import 'package:nibbles/src/common/components/brand/brand_flower.dart';
 import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
 
 /// Shows the DS clear-week confirm bottom-sheet (Figma 971:8090).
@@ -49,7 +49,7 @@ class _ClearConfirmSheet extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSizes.lg),
-            const Quatrefoil(size: AppSizes.avatarLg),
+            const BrandFlower(size: AppSizes.avatarLg),
             const SizedBox(height: AppSizes.lg),
             Row(
               children: [

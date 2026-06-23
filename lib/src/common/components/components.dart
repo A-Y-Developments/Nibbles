@@ -2,6 +2,9 @@
 /// every redesigned feature. See NIB-49.
 library;
 
+export 'avatar/baby_avatar.dart';
+export 'brand/brand_flower.dart';
+export 'brand/brand_flower_loader.dart';
 export 'brand/brand_logo.dart';
 export 'brand/petal_blob.dart';
 export 'brand/quatrefoil.dart';
@@ -18,11 +21,12 @@ export 'controls/app_checkbox.dart';
 export 'controls/app_segmented_control.dart';
 export 'controls/app_switch.dart';
 export 'controls/radio_pill.dart';
+export 'feedback/animated_ellipsis_text.dart';
 export 'feedback/empty_state.dart';
 export 'feedback/loading_confirmation.dart';
 export 'inputs/app_search_field.dart';
 export 'inputs/app_text_field.dart';
-export 'navigation/app_bottom_nav.dart';
+export 'layout/gradient_scaffold.dart';
 export 'navigation/app_header.dart';
 export 'progress/app_linear_progress.dart';
 export 'progress/app_progress_ring.dart';

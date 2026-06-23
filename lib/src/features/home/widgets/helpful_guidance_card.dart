@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nibbles/gen/assets.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
@@ -19,17 +20,14 @@ class HelpfulGuidanceCard extends StatelessWidget {
 
   static const List<_TipContent> _tips = [
     _TipContent(
-      emoji: '🍎',
       title: 'No fruit yet today ',
       body: 'Dinner is a good chance for ...',
     ),
     _TipContent(
-      emoji: '💧',
       title: 'Offer water with each meal',
       body: 'Small sips in an open cup from 6 months',
     ),
     _TipContent(
-      emoji: '🍼',
       title: 'Milk feeds still the priority',
       body: 'Breastmilk or formula remains the main nutrition at 8 months',
     ),
@@ -49,11 +47,12 @@ class HelpfulGuidanceCard extends StatelessWidget {
           );
         }),
         const SizedBox(height: AppSizes.sm + 2),
-        const TipCard(
+        TipCard(
           title: 'Important Health Disclaimer',
           body:
               'Our recommendations are intended for educational purposes '
               'only and should not be considered medical advice.',
+          leading: Assets.images.home.tipBulb.svg(width: 38, height: 37),
         ),
       ],
     );
@@ -61,13 +60,8 @@ class HelpfulGuidanceCard extends StatelessWidget {
 }
 
 class _TipContent {
-  const _TipContent({
-    required this.emoji,
-    required this.title,
-    required this.body,
-  });
+  const _TipContent({required this.title, required this.body});
 
-  final String emoji;
   final String title;
   final String body;
 }
@@ -92,19 +86,7 @@ class _GuidanceTipCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: const BoxDecoration(
-              color: AppColors.butter,
-              shape: BoxShape.circle,
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              content.emoji,
-              style: const TextStyle(fontSize: 16, height: 1),
-            ),
-          ),
+          Assets.images.home.guidanceBaby.svg(width: 38, height: 37),
           const SizedBox(width: AppSizes.sp12),
           Expanded(
             child: Column(

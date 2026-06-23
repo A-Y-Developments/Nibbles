@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:nibbles/gen/assets.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
-import 'package:nibbles/src/common/components/brand/petal_blob.dart';
 
 /// Large square choice card used in the NIB-83 readiness questionnaire.
 ///
-/// A cream square with forest stroke, the centered brand Nibble mascot
-/// (butter petals + green nibble center, shared with the consent screen),
-/// and a centered label below.
+/// A cream square with forest stroke, a centered yes/no scallop badge
+/// (check for the affirmative card, cross for the unsure card), and a
+/// centered label below.
 ///
 /// PRIVATE to the readiness feature — composes theme tokens only, NOT a
 /// shared DS component. See spec: do not promote to lib/src/common/components.
@@ -16,6 +16,7 @@ class ReadinessChoiceCard extends StatelessWidget {
   const ReadinessChoiceCard({
     required this.label,
     required this.selected,
+    required this.affirmative,
     required this.onTap,
     required this.identifier,
     super.key,
@@ -31,6 +32,9 @@ class ReadinessChoiceCard extends StatelessWidget {
   /// butter + thicker forest stroke; unselected uses cream surface + muted
   /// stroke. (Figma does not capture selected state, kit-derived treatment.)
   final bool selected;
+
+  /// Whether this is the "yes" card (check badge) vs the "unsure" card (cross).
+  final bool affirmative;
 
   final VoidCallback onTap;
 
@@ -68,7 +72,7 @@ class ReadinessChoiceCard extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const _NibbleIcon(),
+                  _ChoiceBadge(affirmative: affirmative),
                   const SizedBox(height: AppSizes.sm),
                   Flexible(
                     child: Text(
@@ -90,13 +94,38 @@ class ReadinessChoiceCard extends StatelessWidget {
   }
 }
 
-/// Brand Nibble mascot — butter petals with a green nibble center, matching
-/// the consent screen's [PetalBlob] mark.
-class _NibbleIcon extends StatelessWidget {
-  const _NibbleIcon();
+/// Yes/no scallop badge — butter scallop background with a centered Material
+/// glyph (check for the affirmative card, cross for the unsure card). Mirrors
+/// the result screen's per-sign badge.
+class _ChoiceBadge extends StatelessWidget {
+  const _ChoiceBadge({required this.affirmative});
+
+  final bool affirmative;
+
+  static const double _size = 56;
 
   @override
   Widget build(BuildContext context) {
-    return const PetalBlob(size: AppSizes.xxl);
+    final glyph = affirmative
+        ? Icons.check_circle_outline
+        : Icons.cancel_outlined;
+    return SizedBox(
+      width: _size,
+      height: _size,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Assets.images.onboarding.readinessSignBadge.svg(
+            width: _size,
+            height: _size,
+            colorFilter: const ColorFilter.mode(
+              AppColors.butter,
+              BlendMode.srcIn,
+            ),
+          ),
+          Icon(glyph, size: AppSizes.iconLg, color: AppColors.greenDeep),
+        ],
+      ),
+    );
   }
 }

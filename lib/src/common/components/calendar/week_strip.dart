@@ -19,11 +19,7 @@ class WeekDay {
 /// referenced by the spec — NOT table_calendar (month grid is themed
 /// separately for meal-plan).
 class WeekStrip extends StatelessWidget {
-  const WeekStrip({
-    required this.days,
-    this.onDaySelected,
-    super.key,
-  });
+  const WeekStrip({required this.days, this.onDaySelected, super.key});
 
   final List<WeekDay> days;
   final ValueChanged<int>? onDaySelected;

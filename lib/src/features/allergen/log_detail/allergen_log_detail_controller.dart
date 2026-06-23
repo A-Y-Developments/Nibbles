@@ -17,10 +17,7 @@ part 'allergen_log_detail_controller.g.dart';
 @riverpod
 class AllergenLogDetailController extends _$AllergenLogDetailController {
   @override
-  Future<AllergenLogDetailState> build(
-    String allergenKey,
-    String logId,
-  ) async {
+  Future<AllergenLogDetailState> build(String allergenKey, String logId) async {
     final baby = await ref.read(babyProfileServiceProvider).getBaby();
     if (baby == null) {
       throw StateError('No baby profile found.');
@@ -34,10 +31,7 @@ class AllergenLogDetailController extends _$AllergenLogDetailController {
       orElse: () => throw StateError('Allergen "$allergenKey" not found.'),
     );
 
-    final logsResult = await service.getLogs(
-      baby.id,
-      allergenKey: allergenKey,
-    );
+    final logsResult = await service.getLogs(baby.id, allergenKey: allergenKey);
     _throwIfFailure(logsResult);
     final logs = logsResult.dataOrNull!;
 

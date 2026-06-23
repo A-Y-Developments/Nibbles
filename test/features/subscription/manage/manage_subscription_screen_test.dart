@@ -43,88 +43,86 @@ const _paywallStubKey = Key('stub_paywall');
 const _profileStubKey = Key('stub_profile');
 
 GoRouter _router() => GoRouter(
-      initialLocation: AppRoute.manageSubscription.path,
-      routes: [
-        GoRoute(
-          path: AppRoute.manageSubscription.path,
-          name: AppRoute.manageSubscription.name,
-          builder: (_, __) => const ManageSubscriptionScreen(),
-        ),
-        GoRoute(
-          path: AppRoute.paywall.path,
-          name: AppRoute.paywall.name,
-          builder: (_, __) => const Scaffold(
-            key: _paywallStubKey,
-            body: Center(child: Text('PAYWALL STUB')),
-          ),
-        ),
-        GoRoute(
-          path: AppRoute.profile.path,
-          name: AppRoute.profile.name,
-          builder: (_, __) => const Scaffold(
-            key: _profileStubKey,
-            body: Center(child: Text('PROFILE STUB')),
-          ),
-        ),
-      ],
-    );
+  initialLocation: AppRoute.manageSubscription.path,
+  routes: [
+    GoRoute(
+      path: AppRoute.manageSubscription.path,
+      name: AppRoute.manageSubscription.name,
+      builder: (_, __) => const ManageSubscriptionScreen(),
+    ),
+    GoRoute(
+      path: AppRoute.paywall.path,
+      name: AppRoute.paywall.name,
+      builder: (_, __) => const Scaffold(
+        key: _paywallStubKey,
+        body: Center(child: Text('PAYWALL STUB')),
+      ),
+    ),
+    GoRoute(
+      path: AppRoute.profile.path,
+      name: AppRoute.profile.name,
+      builder: (_, __) => const Scaffold(
+        key: _profileStubKey,
+        body: Center(child: Text('PROFILE STUB')),
+      ),
+    ),
+  ],
+);
 
 Widget _wrap(List<Override> overrides) => ProviderScope(
-      overrides: overrides,
-      child: MaterialApp.router(routerConfig: _router()),
-    );
+  overrides: overrides,
+  child: MaterialApp.router(routerConfig: _router()),
+);
 
 List<Override> _overrides(AsyncValue<ManageSubscriptionState> state) => [
-      analyticsProvider.overrideWithValue(FakeAnalytics()),
-      manageSubscriptionControllerProvider
-          .overrideWith(() => _FakeManageSubscriptionController(state)),
-    ];
+  analyticsProvider.overrideWithValue(FakeAnalytics()),
+  manageSubscriptionControllerProvider.overrideWith(
+    () => _FakeManageSubscriptionController(state),
+  ),
+];
 
 void main() {
   // ---------------------------------------------------------------------------
   // Not-subscribed branch
   // ---------------------------------------------------------------------------
 
-  testWidgets(
-    'not-subscribed: renders verbatim copy + "Go Premium" CTA',
-    (tester) async {
-      await tester.binding.setSurfaceSize(const Size(400, 900));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
+  testWidgets('not-subscribed: renders verbatim copy + "Go Premium" CTA', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(400, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
 
-      await tester.pumpWidget(
-        _wrap(
-          _overrides(
-            const AsyncData(
-              ManageSubscriptionState(
-                info: SubscriptionInfo(isActive: false),
-              ),
-            ),
+    await tester.pumpWidget(
+      _wrap(
+        _overrides(
+          const AsyncData(
+            ManageSubscriptionState(info: SubscriptionInfo(isActive: false)),
           ),
         ),
-      );
-      await tester.pumpAndSettle();
+      ),
+    );
+    await tester.pumpAndSettle();
 
-      expect(find.text('Manage Subscription'), findsOneWidget);
-      expect(find.text('You are not subscribed'), findsOneWidget);
-      expect(
-        find.text(
-          'You have a free Nibbles account. You can purchase a Premium '
-          'subscription to access our full recipe, content and features.',
-        ),
-        findsOneWidget,
-      );
-      expect(
-        find.byKey(const Key('manage_subscription_go_premium_cta')),
-        findsOneWidget,
-      );
-      expect(find.text('Go Premium'), findsOneWidget);
-      // Cancel CTA is hidden in the not-subscribed branch.
-      expect(
-        find.byKey(const Key('manage_subscription_cancel_cta')),
-        findsNothing,
-      );
-    },
-  );
+    expect(find.text('Manage Subscription'), findsOneWidget);
+    expect(find.text('You are not subscribed'), findsOneWidget);
+    expect(
+      find.text(
+        'You have a free Nibbles account. You can purchase a Premium '
+        'subscription to access our full recipe, content and features.',
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('manage_subscription_go_premium_cta')),
+      findsOneWidget,
+    );
+    expect(find.text('Go Premium'), findsOneWidget);
+    // Cancel CTA is hidden in the not-subscribed branch.
+    expect(
+      find.byKey(const Key('manage_subscription_cancel_cta')),
+      findsNothing,
+    );
+  });
 
   testWidgets(
     'not-subscribed: tapping "Go Premium" pushes /subscription/paywall',
@@ -136,17 +134,16 @@ void main() {
         _wrap(
           _overrides(
             const AsyncData(
-              ManageSubscriptionState(
-                info: SubscriptionInfo(isActive: false),
-              ),
+              ManageSubscriptionState(info: SubscriptionInfo(isActive: false)),
             ),
           ),
         ),
       );
       await tester.pumpAndSettle();
 
-      await tester
-          .tap(find.byKey(const Key('manage_subscription_go_premium_cta')));
+      await tester.tap(
+        find.byKey(const Key('manage_subscription_go_premium_cta')),
+      );
       await tester.pumpAndSettle();
 
       expect(find.byKey(_paywallStubKey), findsOneWidget);
@@ -248,8 +245,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester
-          .tap(find.byKey(const Key('manage_subscription_cancel_cta')));
+      await tester.tap(find.byKey(const Key('manage_subscription_cancel_cta')));
       await tester.pumpAndSettle();
 
       // Verbatim sheet heading from Figma 1216:12029 (U+2019 apostrophe).
@@ -265,49 +261,41 @@ void main() {
   // Loading + error branches
   // ---------------------------------------------------------------------------
 
-  testWidgets(
-    'loading: renders the spinner placeholder',
-    (tester) async {
-      await tester.pumpWidget(
-        _wrap(_overrides(const AsyncLoading())),
-      );
-      // Single pump — spinner animates indefinitely so pumpAndSettle would
-      // block.
-      await tester.pump();
+  testWidgets('loading: renders the spinner placeholder', (tester) async {
+    await tester.pumpWidget(_wrap(_overrides(const AsyncLoading())));
+    // Single pump — spinner animates indefinitely so pumpAndSettle would
+    // block.
+    await tester.pump();
 
-      expect(
-        find.byKey(const Key('manage_subscription_loading')),
-        findsOneWidget,
-      );
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    },
-  );
+    expect(
+      find.byKey(const Key('manage_subscription_loading')),
+      findsOneWidget,
+    );
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+  });
 
-  testWidgets(
-    'error: renders error message + retry CTA',
-    (tester) async {
-      await tester.pumpWidget(
-        _wrap(
-          _overrides(
-            const AsyncError<ManageSubscriptionState>(
-              ServerException('boom'),
-              StackTrace.empty,
-            ),
+  testWidgets('error: renders error message + retry CTA', (tester) async {
+    await tester.pumpWidget(
+      _wrap(
+        _overrides(
+          const AsyncError<ManageSubscriptionState>(
+            ServerException('boom'),
+            StackTrace.empty,
           ),
         ),
-      );
-      await tester.pumpAndSettle();
+      ),
+    );
+    await tester.pumpAndSettle();
 
-      expect(
-        find.byKey(const Key('manage_subscription_error_message')),
-        findsOneWidget,
-      );
-      expect(find.text('boom'), findsOneWidget);
-      expect(
-        find.byKey(const Key('manage_subscription_retry_button')),
-        findsOneWidget,
-      );
-      expect(find.text('Try Again'), findsOneWidget);
-    },
-  );
+    expect(
+      find.byKey(const Key('manage_subscription_error_message')),
+      findsOneWidget,
+    );
+    expect(find.text('boom'), findsOneWidget);
+    expect(
+      find.byKey(const Key('manage_subscription_retry_button')),
+      findsOneWidget,
+    );
+    expect(find.text('Try Again'), findsOneWidget);
+  });
 }

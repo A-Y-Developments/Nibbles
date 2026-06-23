@@ -166,6 +166,7 @@ class RecipeRepositoryImpl implements RecipeRepository {
       ingredients: rawIngredients.map(Ingredient.fromJson).toList(),
       steps: (row['steps'] as List<dynamic>).cast<String>(),
       howToServe: row['serving_guidance'] as String,
+      makes: row['makes'] as String?,
       notes: row['notes'] as String?,
       thumbnailUrl: row['thumbnail_url'] as String?,
       nutritionTags:

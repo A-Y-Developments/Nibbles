@@ -95,9 +95,7 @@ void main() {
 
         when(() => mockSupabase.auth).thenReturn(mockAuth);
         when(() => mockAuth.currentUser).thenReturn(_FakeUser());
-        when(
-          () => mockSupabase.from('feedback'),
-        ).thenAnswer((_) => builder);
+        when(() => mockSupabase.from('feedback')).thenAnswer((_) => builder);
 
         final sut = FeedbackRepositoryImpl(supabaseClient: mockSupabase);
         final result = await sut.submit('  hello there  ');
@@ -119,9 +117,7 @@ void main() {
 
       when(() => mockSupabase.auth).thenReturn(mockAuth);
       when(() => mockAuth.currentUser).thenReturn(_FakeUser());
-      when(
-        () => mockSupabase.from('feedback'),
-      ).thenAnswer((_) => builder);
+      when(() => mockSupabase.from('feedback')).thenAnswer((_) => builder);
 
       final sut = FeedbackRepositoryImpl(supabaseClient: mockSupabase);
       final result = await sut.submit('anything');
@@ -132,8 +128,7 @@ void main() {
       expect(failure.error.message, 'rls denied');
     });
 
-    test('maps any other thrown Object to Failure(UnknownException)',
-        () async {
+    test('maps any other thrown Object to Failure(UnknownException)', () async {
       final mockSupabase = _MockSupabaseClient();
       final mockAuth = _MockGoTrueClient();
       final builder = _CapturingQueryBuilder(() {
@@ -142,9 +137,7 @@ void main() {
 
       when(() => mockSupabase.auth).thenReturn(mockAuth);
       when(() => mockAuth.currentUser).thenReturn(_FakeUser());
-      when(
-        () => mockSupabase.from('feedback'),
-      ).thenAnswer((_) => builder);
+      when(() => mockSupabase.from('feedback')).thenAnswer((_) => builder);
 
       final sut = FeedbackRepositoryImpl(supabaseClient: mockSupabase);
       final result = await sut.submit('boom-message');

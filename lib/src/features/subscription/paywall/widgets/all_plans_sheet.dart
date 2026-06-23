@@ -55,10 +55,7 @@ Future<SubscriptionPlan?> showAllPlansSheet(
         top: Radius.circular(AppSizes.radius3xl),
       ),
     ),
-    builder: (_) => AllPlansSheet(
-      plans: plans,
-      initialPlanId: initialPlanId,
-    ),
+    builder: (_) => AllPlansSheet(plans: plans, initialPlanId: initialPlanId),
   );
 }
 
@@ -66,11 +63,7 @@ Future<SubscriptionPlan?> showAllPlansSheet(
 /// without a parent overlay/route.
 @visibleForTesting
 class AllPlansSheet extends StatefulWidget {
-  const AllPlansSheet({
-    required this.plans,
-    this.initialPlanId,
-    super.key,
-  });
+  const AllPlansSheet({required this.plans, this.initialPlanId, super.key});
 
   final List<SubscriptionPlan> plans;
   final String? initialPlanId;
@@ -242,9 +235,9 @@ class _SinglePlanRow extends StatelessWidget {
           const SizedBox(height: AppSizes.xs),
           Text(
             plan.priceLabel,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: AppColors.text,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(color: AppColors.text),
           ),
         ],
       ),
@@ -265,11 +258,12 @@ class _PlanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final borderColor =
-        isSelected ? AppColors.greenDeep : AppColors.borderMuted;
-    final priceStyle = Theme.of(context).textTheme.bodyLarge?.copyWith(
-          color: AppColors.text,
-        );
+    final borderColor = isSelected
+        ? AppColors.greenDeep
+        : AppColors.borderMuted;
+    final priceStyle = Theme.of(
+      context,
+    ).textTheme.bodyLarge?.copyWith(color: AppColors.text);
     // The "Recomended" badge overlaps the top edge of the Annual card; using
     // Stack + clipBehavior:none lets it spill ~22px above the card boundary
     // without altering layout flow (matches Figma absolute positioning).
@@ -340,9 +334,9 @@ class _RecommendedBadge extends StatelessWidget {
         child: Text(
           'Recomended',
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: AppColors.surface,
-                fontWeight: FontWeight.w400,
-              ),
+            color: AppColors.surface,
+            fontWeight: FontWeight.w400,
+          ),
         ),
       ),
     );

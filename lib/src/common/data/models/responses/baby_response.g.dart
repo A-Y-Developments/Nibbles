@@ -14,6 +14,11 @@ _$BabyResponseImpl _$$BabyResponseImplFromJson(Map<String, dynamic> json) =>
       dateOfBirth: json['date_of_birth'] as String,
       gender: json['gender'] as String,
       onboardingCompleted: json['onboarding_completed'] as bool,
+      readinessSigns:
+          (json['readiness_signs'] as List<dynamic>?)
+              ?.map((e) => e as bool)
+              .toList() ??
+          const <bool>[],
     );
 
 Map<String, dynamic> _$$BabyResponseImplToJson(_$BabyResponseImpl instance) =>
@@ -24,4 +29,5 @@ Map<String, dynamic> _$$BabyResponseImplToJson(_$BabyResponseImpl instance) =>
       'date_of_birth': instance.dateOfBirth,
       'gender': instance.gender,
       'onboarding_completed': instance.onboardingCompleted,
+      'readiness_signs': instance.readinessSigns,
     };

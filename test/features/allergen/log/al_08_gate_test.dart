@@ -82,9 +82,9 @@ Map<String, AllergenStatus> _allSafe() => {
   for (final key in kAllergenKeys) key: AllergenStatus.safe,
 };
 
-Map<String, AllergenStatus> _mixed() => {
-  for (final key in kAllergenKeys) key: AllergenStatus.notStarted,
-}..['peanut'] = AllergenStatus.inProgress;
+Map<String, AllergenStatus> _mixed() =>
+    {for (final key in kAllergenKeys) key: AllergenStatus.notStarted}
+      ..['peanut'] = AllergenStatus.inProgress;
 
 /// Records the most-recent named go/push so tests can assert the gate routed.
 class _NavRecorder {
@@ -134,9 +134,8 @@ void main() {
         GoRoute(
           path: AppRoute.allergenLogCreate.path,
           name: AppRoute.allergenLogCreate.name,
-          builder: (_, __) => const AllergenLogScreen(
-            allergenKey: _allergenKey,
-          ),
+          builder: (_, __) =>
+              const AllergenLogScreen(allergenKey: _allergenKey),
         ),
         GoRoute(
           path: AppRoute.allergenComplete.path,
@@ -182,40 +181,33 @@ void main() {
   }
 
   group('AL-08 reachability gate (NIB-128)', () {
-    testWidgets(
-      'all-safe + flag unset → markProgramCompletionShown + '
-      'goNamed(allergenComplete)',
-      (tester) async {
-        when(
-          () => mockFlags.isProgramCompletionShown(any()),
-        ).thenReturn(false);
-        when(
-          () => mockFlags.markProgramCompletionShown(any()),
-        ).thenAnswer((_) async {});
-        when(
-          () => mockService.getAllergenStatuses(any()),
-        ).thenAnswer((_) async => Result.success(_allSafe()));
+    testWidgets('all-safe + flag unset → markProgramCompletionShown + '
+        'goNamed(allergenComplete)', (tester) async {
+      when(() => mockFlags.isProgramCompletionShown(any())).thenReturn(false);
+      when(
+        () => mockFlags.markProgramCompletionShown(any()),
+      ).thenAnswer((_) async {});
+      when(
+        () => mockService.getAllergenStatuses(any()),
+      ).thenAnswer((_) async => Result.success(_allSafe()));
 
-        final recorder = _NavRecorder();
-        final controller = await mountAndPushToLog(tester, recorder);
+      final recorder = _NavRecorder();
+      final controller = await mountAndPushToLog(tester, recorder);
 
-        controller.flipSaved();
-        await tester.pumpAndSettle();
+      controller.flipSaved();
+      await tester.pumpAndSettle();
 
-        // Routed to AL-08.
-        expect(find.text('AL08_STUB'), findsOneWidget);
-        expect(recorder.lastName, AppRoute.allergenComplete.name);
-        verify(() => mockFlags.markProgramCompletionShown(_babyId)).called(1);
-      },
-    );
+      // Routed to AL-08.
+      expect(find.text('AL08_STUB'), findsOneWidget);
+      expect(recorder.lastName, AppRoute.allergenComplete.name);
+      verify(() => mockFlags.markProgramCompletionShown(_babyId)).called(1);
+    });
 
     testWidgets(
       'all-safe + flag ALREADY set → context.pop(true), NO route to AL-08, '
       'NO second markProgramCompletionShown call',
       (tester) async {
-        when(
-          () => mockFlags.isProgramCompletionShown(any()),
-        ).thenReturn(true);
+        when(() => mockFlags.isProgramCompletionShown(any())).thenReturn(true);
         when(
           () => mockService.getAllergenStatuses(any()),
         ).thenAnswer((_) async => Result.success(_allSafe()));
@@ -240,9 +232,7 @@ void main() {
       'getAllergenStatuses fails → fall-through to context.pop(true), '
       'no AL-08 navigation, no flag flip',
       (tester) async {
-        when(
-          () => mockFlags.isProgramCompletionShown(any()),
-        ).thenReturn(false);
+        when(() => mockFlags.isProgramCompletionShown(any())).thenReturn(false);
         when(() => mockService.getAllergenStatuses(any())).thenAnswer(
           (_) async => const Result.failure(ServerException('boom')),
         );
@@ -259,26 +249,23 @@ void main() {
       },
     );
 
-    testWidgets(
-      'mixed statuses (not all safe) → context.pop(true), no AL-08',
-      (tester) async {
-        when(
-          () => mockFlags.isProgramCompletionShown(any()),
-        ).thenReturn(false);
-        when(
-          () => mockService.getAllergenStatuses(any()),
-        ).thenAnswer((_) async => Result.success(_mixed()));
+    testWidgets('mixed statuses (not all safe) → context.pop(true), no AL-08', (
+      tester,
+    ) async {
+      when(() => mockFlags.isProgramCompletionShown(any())).thenReturn(false);
+      when(
+        () => mockService.getAllergenStatuses(any()),
+      ).thenAnswer((_) async => Result.success(_mixed()));
 
-        final recorder = _NavRecorder();
-        final controller = await mountAndPushToLog(tester, recorder);
+      final recorder = _NavRecorder();
+      final controller = await mountAndPushToLog(tester, recorder);
 
-        controller.flipSaved();
-        await tester.pumpAndSettle();
+      controller.flipSaved();
+      await tester.pumpAndSettle();
 
-        expect(find.text('AL08_STUB'), findsNothing);
-        expect(find.text('GO_LOG'), findsOneWidget);
-        verifyNever(() => mockFlags.markProgramCompletionShown(any()));
-      },
-    );
+      expect(find.text('AL08_STUB'), findsNothing);
+      expect(find.text('GO_LOG'), findsOneWidget);
+      verifyNever(() => mockFlags.markProgramCompletionShown(any()));
+    });
   });
 }

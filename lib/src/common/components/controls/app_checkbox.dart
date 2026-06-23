@@ -6,11 +6,7 @@ import 'package:nibbles/src/app/themes/app_sizes.dart';
 /// greenDeep fill + cream check when on. (NOT the shopping-list `.shop-row__cb`
 /// which is 22/radius6 — that is a separate widget.)
 class AppCheckbox extends StatelessWidget {
-  const AppCheckbox({
-    required this.value,
-    required this.onChanged,
-    super.key,
-  });
+  const AppCheckbox({required this.value, required this.onChanged, super.key});
 
   final bool value;
   final ValueChanged<bool>? onChanged;

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
+import 'package:nibbles/src/common/domain/entities/recipe.dart';
 import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
 import 'package:nibbles/src/common/services/allergen_service.dart';
 import 'package:nibbles/src/common/services/helpers/derive_allergen_status.dart';
@@ -11,6 +12,18 @@ import 'package:nibbles/src/logging/analytics.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'recipe_library_controller.g.dart';
+
+/// Canonical display order for the RC-01 category sections, matching the
+/// "Baby's First Nibbles" e-book sequence. Categories not listed here render
+/// after these, in the order Supabase returned them.
+const List<String> kRecipeCategoryOrder = [
+  'Iron-Rich Purées',
+  'Whipped Bone Marrow',
+  'Iron-Rich Finger Foods',
+  'Stool-Softening Meals',
+  '10-Minute Meals (Minimal Prep)',
+  'High-Energy Meals for Small Appetites',
+];
 
 /// Controller for the Recipe Library screen (RC-01, NIB-53 reskin).
 ///
@@ -38,9 +51,9 @@ class RecipeLibraryController extends _$RecipeLibraryController {
     if (statusesResult.isFailure) throw statusesResult.errorOrNull!;
     if (flaggedResult.isFailure) throw flaggedResult.errorOrNull!;
 
-    final recipesByCategory = categoriesResult.dataOrNull!;
     final statuses = statusesResult.dataOrNull!;
     final flagged = flaggedResult.dataOrNull!;
+    final recipesByCategory = _orderByCanonical(categoriesResult.dataOrNull!);
 
     // First allergen in canonical order with status == inProgress (or null).
     String? ongoingAllergenKey;
@@ -57,6 +70,20 @@ class RecipeLibraryController extends _$RecipeLibraryController {
       flaggedAllergenKeys: flagged,
       isStartingGuideSeen: flags.isStartingGuideSeen(),
     );
+  }
+
+  Map<String, List<Recipe>> _orderByCanonical(
+    Map<String, List<Recipe>> byCategory,
+  ) {
+    final ordered = <String, List<Recipe>>{};
+    for (final key in kRecipeCategoryOrder) {
+      final recipes = byCategory[key];
+      if (recipes != null && recipes.isNotEmpty) ordered[key] = recipes;
+    }
+    for (final entry in byCategory.entries) {
+      ordered.putIfAbsent(entry.key, () => entry.value);
+    }
+    return ordered;
   }
 
   Future<void> refresh() async {

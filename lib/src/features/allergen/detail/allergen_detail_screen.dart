@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
+import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/domain/entities/allergen_log.dart';
 import 'package:nibbles/src/features/allergen/detail/allergen_detail_controller.dart';
@@ -25,14 +26,12 @@ class AllergenDetailScreen extends ConsumerWidget {
     final asyncState = ref.watch(allergenDetailControllerProvider(allergenKey));
 
     return asyncState.when(
-      loading: () => Scaffold(
-        backgroundColor: AppColors.background,
-        appBar: AppBar(backgroundColor: AppColors.background, elevation: 0),
+      loading: () => GradientScaffold(
+        appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
         body: const Center(child: CircularProgressIndicator()),
       ),
-      error: (err, _) => Scaffold(
-        backgroundColor: AppColors.background,
-        appBar: AppBar(backgroundColor: AppColors.background, elevation: 0),
+      error: (err, _) => GradientScaffold(
+        appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(AppSizes.pagePaddingH),
@@ -97,10 +96,9 @@ class _AllergenDetailView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final hasLogs = state.logs.isNotEmpty;
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return GradientScaffold(
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(state.allergen.name),
       ),

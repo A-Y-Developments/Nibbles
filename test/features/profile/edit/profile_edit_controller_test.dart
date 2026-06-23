@@ -34,11 +34,7 @@ final _fakeBaby = Baby(
 class _CrashCapture {
   final List<({String? reason, String error})> calls = [];
 
-  Future<void> record(
-    Object error,
-    StackTrace stack, {
-    String? reason,
-  }) async {
+  Future<void> record(Object error, StackTrace stack, {String? reason}) async {
     calls.add((reason: reason, error: error.toString()));
   }
 }
@@ -71,19 +67,22 @@ void main() {
     when(() => mockAuthRepo.currentUserEmail).thenReturn('lily@example.com');
     when(() => mockBabyService.getBaby()).thenAnswer((_) async => _fakeBaby);
 
-    container = ProviderContainer(
-      overrides: [
-        babyProfileServiceProvider.overrideWithValue(mockBabyService),
-        authRepositoryProvider.overrideWithValue(mockAuthRepo),
-        analyticsProvider.overrideWithValue(fakeAnalytics),
-        profileEditCrashRecorderProvider.overrideWithValue(crashCapture.record),
-      ],
-    )
-    // Hold the AsyncNotifier alive across awaits.
-    ..listen<AsyncValue<ProfileEditState>>(
-      profileEditControllerProvider(_babyId),
-      (_, __) {},
-    );
+    container =
+        ProviderContainer(
+            overrides: [
+              babyProfileServiceProvider.overrideWithValue(mockBabyService),
+              authRepositoryProvider.overrideWithValue(mockAuthRepo),
+              analyticsProvider.overrideWithValue(fakeAnalytics),
+              profileEditCrashRecorderProvider.overrideWithValue(
+                crashCapture.record,
+              ),
+            ],
+          )
+          // Hold the AsyncNotifier alive across awaits.
+          ..listen<AsyncValue<ProfileEditState>>(
+            profileEditControllerProvider(_babyId),
+            (_, __) {},
+          );
   });
 
   tearDown(() => container.dispose());
@@ -95,30 +94,34 @@ void main() {
   }
 
   group('ProfileEditController.build', () {
-    test('seeds firstName/lastName from baby.name split and email from auth',
-        () async {
-      await container.read(profileEditControllerProvider(_babyId).future);
-      final state =
-          container.read(profileEditControllerProvider(_babyId)).requireValue;
+    test(
+      'seeds firstName/lastName from baby.name split and email from auth',
+      () async {
+        await container.read(profileEditControllerProvider(_babyId).future);
+        final state = container
+            .read(profileEditControllerProvider(_babyId))
+            .requireValue;
 
-      expect(state.firstName, 'Lily');
-      expect(state.lastName, 'Park');
-      expect(state.email, 'lily@example.com');
-      expect(state.isLoading, isFalse);
-      expect(state.errorMessage, isNull);
-    });
+        expect(state.firstName, 'Lily');
+        expect(state.lastName, 'Park');
+        expect(state.email, 'lily@example.com');
+        expect(state.isLoading, isFalse);
+        expect(state.errorMessage, isNull);
+      },
+    );
 
     test('single-token name leaves lastName empty', () async {
       // Re-stub before the AsyncNotifier builds, then invalidate so the
       // listener-triggered build picks up the new stub.
-      when(() => mockBabyService.getBaby()).thenAnswer(
-        (_) async => _fakeBaby.copyWith(name: 'Lily'),
-      );
+      when(
+        () => mockBabyService.getBaby(),
+      ).thenAnswer((_) async => _fakeBaby.copyWith(name: 'Lily'));
       container.invalidate(profileEditControllerProvider(_babyId));
 
       await container.read(profileEditControllerProvider(_babyId).future);
-      final state =
-          container.read(profileEditControllerProvider(_babyId)).requireValue;
+      final state = container
+          .read(profileEditControllerProvider(_babyId))
+          .requireValue;
 
       expect(state.firstName, 'Lily');
       expect(state.lastName, '');
@@ -126,47 +129,43 @@ void main() {
   });
 
   group('ProfileEditController.save — name-only branch', () {
-    test(
-      'calls updateBaby, does NOT call updateEmail, records '
-      'logProfileEditSaved(emailChanged=false)',
-      () async {
-        when(
-          () => mockBabyService.updateBaby(any(), any(), any(), any()),
-        ).thenAnswer((_) async => Result.success(_fakeBaby));
+    test('calls updateBaby, does NOT call updateEmail, records '
+        'logProfileEditSaved(emailChanged=false)', () async {
+      when(
+        () => mockBabyService.updateBaby(any(), any(), any(), any()),
+      ).thenAnswer((_) async => Result.success(_fakeBaby));
 
-        final ctrl = await readController();
-        ctrl.updateFirstName('Lilyan');
-        final result = await ctrl.save();
+      final ctrl = await readController();
+      ctrl.updateFirstName('Lilyan');
+      final result = await ctrl.save();
 
-        await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
 
-        expect(result.success, isTrue);
-        expect(result.emailChanged, isFalse);
-        verify(
-          () => mockBabyService.updateBaby(
-            _babyId,
-            'Lilyan Park',
-            _fakeBaby.dateOfBirth,
-            _fakeBaby.gender,
-          ),
-        ).called(1);
-        verifyNever(() => mockAuthRepo.updateEmail(any()));
+      expect(result.success, isTrue);
+      expect(result.emailChanged, isFalse);
+      verify(
+        () => mockBabyService.updateBaby(
+          _babyId,
+          'Lilyan Park',
+          _fakeBaby.dateOfBirth,
+          _fakeBaby.gender,
+        ),
+      ).called(1);
+      verifyNever(() => mockAuthRepo.updateEmail(any()));
 
-        final state =
-            container.read(profileEditControllerProvider(_babyId)).requireValue;
-        expect(state.errorMessage, isNull);
-        expect(state.isLoading, isFalse);
+      final state = container
+          .read(profileEditControllerProvider(_babyId))
+          .requireValue;
+      expect(state.errorMessage, isNull);
+      expect(state.isLoading, isFalse);
 
-        expect(
-          fakeAnalytics.eventNames,
-          contains('profile_edit_saved'),
-        );
-        final evt = fakeAnalytics.calls
-            .firstWhere((c) => c.name == 'profile_edit_saved');
-        expect(evt.parameters['email_changed'], isFalse);
-        expect(crashCapture.calls, isEmpty);
-      },
-    );
+      expect(fakeAnalytics.eventNames, contains('profile_edit_saved'));
+      final evt = fakeAnalytics.calls.firstWhere(
+        (c) => c.name == 'profile_edit_saved',
+      );
+      expect(evt.parameters['email_changed'], isFalse);
+      expect(crashCapture.calls, isEmpty);
+    });
 
     test('emits empty lastName as single-token name', () async {
       when(
@@ -181,99 +180,82 @@ void main() {
 
       expect(result.success, isTrue);
       verify(
-        () => mockBabyService.updateBaby(
-          _babyId,
-          'Lily',
-          any(),
-          any(),
-        ),
+        () => mockBabyService.updateBaby(_babyId, 'Lily', any(), any()),
       ).called(1);
     });
   });
 
   group('ProfileEditController.save — email-change branch', () {
-    test(
-      'calls updateBaby AND updateEmail; records '
-      'logProfileEditSaved(emailChanged=true)',
-      () async {
-        when(
-          () => mockBabyService.updateBaby(any(), any(), any(), any()),
-        ).thenAnswer((_) async => Result.success(_fakeBaby));
-        when(
-          () => mockAuthRepo.updateEmail(any()),
-        ).thenAnswer((_) async => const Result.success(null));
+    test('calls updateBaby AND updateEmail; records '
+        'logProfileEditSaved(emailChanged=true)', () async {
+      when(
+        () => mockBabyService.updateBaby(any(), any(), any(), any()),
+      ).thenAnswer((_) async => Result.success(_fakeBaby));
+      when(
+        () => mockAuthRepo.updateEmail(any()),
+      ).thenAnswer((_) async => const Result.success(null));
 
-        final ctrl = await readController();
-        ctrl.updateEmail('lily.new@example.com');
-        final result = await ctrl.save();
+      final ctrl = await readController();
+      ctrl.updateEmail('lily.new@example.com');
+      final result = await ctrl.save();
 
-        await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
 
-        expect(result.success, isTrue);
-        expect(result.emailChanged, isTrue);
-        verify(() => mockBabyService.updateBaby(any(), any(), any(), any()))
-            .called(1);
-        verify(() => mockAuthRepo.updateEmail('lily.new@example.com'))
-            .called(1);
+      expect(result.success, isTrue);
+      expect(result.emailChanged, isTrue);
+      verify(
+        () => mockBabyService.updateBaby(any(), any(), any(), any()),
+      ).called(1);
+      verify(() => mockAuthRepo.updateEmail('lily.new@example.com')).called(1);
 
-        final evt = fakeAnalytics.calls
-            .firstWhere((c) => c.name == 'profile_edit_saved');
-        expect(evt.parameters['email_changed'], isTrue);
-        expect(crashCapture.calls, isEmpty);
-      },
-    );
+      final evt = fakeAnalytics.calls.firstWhere(
+        (c) => c.name == 'profile_edit_saved',
+      );
+      expect(evt.parameters['email_changed'], isTrue);
+      expect(crashCapture.calls, isEmpty);
+    });
   });
 
   group('ProfileEditController.save — failure branches', () {
-    test(
-      'updateEmail failure: sets errorMessage; records crash recorder; '
-      'analytics success NOT fired',
-      () async {
-        when(
-          () => mockBabyService.updateBaby(any(), any(), any(), any()),
-        ).thenAnswer((_) async => Result.success(_fakeBaby));
-        when(() => mockAuthRepo.updateEmail(any())).thenAnswer(
-          (_) async => const Result.failure(ServerException('email taken')),
-        );
+    test('updateEmail failure: sets errorMessage; records crash recorder; '
+        'analytics success NOT fired', () async {
+      when(
+        () => mockBabyService.updateBaby(any(), any(), any(), any()),
+      ).thenAnswer((_) async => Result.success(_fakeBaby));
+      when(() => mockAuthRepo.updateEmail(any())).thenAnswer(
+        (_) async => const Result.failure(ServerException('email taken')),
+      );
 
-        final ctrl = await readController();
-        ctrl.updateEmail('lily.new@example.com');
-        final result = await ctrl.save();
+      final ctrl = await readController();
+      ctrl.updateEmail('lily.new@example.com');
+      final result = await ctrl.save();
 
-        expect(result.success, isFalse);
-        expect(result.emailChanged, isFalse);
+      expect(result.success, isFalse);
+      expect(result.emailChanged, isFalse);
 
-        final state =
-            container.read(profileEditControllerProvider(_babyId)).requireValue;
-        expect(state.errorMessage, 'email taken');
-        expect(state.isLoading, isFalse);
+      final state = container
+          .read(profileEditControllerProvider(_babyId))
+          .requireValue;
+      expect(state.errorMessage, 'email taken');
+      expect(state.isLoading, isFalse);
 
-        expect(crashCapture.calls, hasLength(1));
-        expect(
-          crashCapture.calls.first.reason,
-          'profile_email_update_failure',
-        );
-        expect(
-          crashCapture.calls.first.error,
-          contains('profile_email_update_failure'),
-        );
-        expect(
-          crashCapture.calls.first.error,
-          contains('email taken'),
-        );
+      expect(crashCapture.calls, hasLength(1));
+      expect(crashCapture.calls.first.reason, 'profile_email_update_failure');
+      expect(
+        crashCapture.calls.first.error,
+        contains('profile_email_update_failure'),
+      );
+      expect(crashCapture.calls.first.error, contains('email taken'));
 
-        expect(
-          fakeAnalytics.eventNames,
-          isNot(contains('profile_edit_saved')),
-        );
-      },
-    );
+      expect(fakeAnalytics.eventNames, isNot(contains('profile_edit_saved')));
+    });
 
     test(
       'updateBaby failure: sets errorMessage; does NOT call updateEmail',
       () async {
-        when(() => mockBabyService.updateBaby(any(), any(), any(), any()))
-            .thenAnswer(
+        when(
+          () => mockBabyService.updateBaby(any(), any(), any(), any()),
+        ).thenAnswer(
           (_) async => const Result.failure(NetworkException('offline')),
         );
 
@@ -287,16 +269,14 @@ void main() {
         expect(result.success, isFalse);
         verifyNever(() => mockAuthRepo.updateEmail(any()));
 
-        final state =
-            container.read(profileEditControllerProvider(_babyId)).requireValue;
+        final state = container
+            .read(profileEditControllerProvider(_babyId))
+            .requireValue;
         expect(state.errorMessage, 'offline');
         expect(state.isLoading, isFalse);
 
         expect(crashCapture.calls, isEmpty);
-        expect(
-          fakeAnalytics.eventNames,
-          isNot(contains('profile_edit_saved')),
-        );
+        expect(fakeAnalytics.eventNames, isNot(contains('profile_edit_saved')));
       },
     );
 
@@ -304,15 +284,14 @@ void main() {
       'getBaby returns null during save: sets Baby-not-found errorMessage',
       () async {
         final ctrl = await readController();
-        when(
-          () => mockBabyService.getBaby(),
-        ).thenAnswer((_) async => null);
+        when(() => mockBabyService.getBaby()).thenAnswer((_) async => null);
 
         final result = await ctrl.save();
 
         expect(result.success, isFalse);
-        final state =
-            container.read(profileEditControllerProvider(_babyId)).requireValue;
+        final state = container
+            .read(profileEditControllerProvider(_babyId))
+            .requireValue;
         expect(state.errorMessage, 'Baby profile not found.');
         expect(state.isLoading, isFalse);
       },

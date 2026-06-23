@@ -47,18 +47,14 @@ void main() {
   setUp(() {
     mockBabyProfile = _MockBabyProfileService();
     mockAllergen = _MockAllergenService();
-    when(
-      () => mockBabyProfile.getBaby(),
-    ).thenAnswer((_) async => _baby);
+    when(() => mockBabyProfile.getBaby()).thenAnswer((_) async => _baby);
   });
 
   tearDown(resetMocktailState);
 
   group('AllergenDetailController.build error paths', () {
     test('throws when getAllergens returns failure', () async {
-      when(
-        () => mockAllergen.getAllergens(),
-      ).thenAnswer(
+      when(() => mockAllergen.getAllergens()).thenAnswer(
         (_) async =>
             const Result.failure(NetworkException('connection refused')),
       );
@@ -69,8 +65,7 @@ void main() {
       );
 
       await expectLater(
-        container
-            .read(allergenDetailControllerProvider(_allergenKey).future),
+        container.read(allergenDetailControllerProvider(_allergenKey).future),
         throwsA(isA<NetworkException>()),
       );
     });
@@ -78,9 +73,7 @@ void main() {
     test('throws when allergenKey not found in allergen list', () async {
       when(
         () => mockAllergen.getAllergens(),
-      ).thenAnswer(
-        (_) async => const Result.success(<Allergen>[]),
-      );
+      ).thenAnswer((_) async => const Result.success(<Allergen>[]));
 
       final container = _makeContainer(
         babyProfile: mockBabyProfile,
@@ -88,8 +81,7 @@ void main() {
       );
 
       await expectLater(
-        container
-            .read(allergenDetailControllerProvider(_allergenKey).future),
+        container.read(allergenDetailControllerProvider(_allergenKey).future),
         throwsA(isA<UnknownException>()),
       );
     });

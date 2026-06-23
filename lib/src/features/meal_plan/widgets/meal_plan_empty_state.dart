@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
-import 'package:nibbles/src/common/components/brand/quatrefoil.dart';
+import 'package:nibbles/src/common/components/brand/brand_flower.dart';
 import 'package:nibbles/src/features/meal_plan/widgets/meal_plan_date_range_form.dart';
 import 'package:nibbles/src/features/meal_plan/widgets/meal_plan_header.dart';
 
@@ -12,7 +12,7 @@ import 'package:nibbles/src/features/meal_plan/widgets/meal_plan_header.dart';
 /// 1. Butter-gradient [MealPlanHeader] (title + age subtitle + overflow).
 /// 2. White rounded form card hosting [MealPlanDateRangeForm] with the
 ///    'Create meal plan' CTA.
-/// 3. Brand [Quatrefoil] flower illustration.
+/// 3. Brand [BrandFlower] flower illustration.
 /// 4. Caption "Let's create a meal plan for {babyName}!" — the baby name
 ///    interpolates the runtime value.
 ///
@@ -63,7 +63,7 @@ class MealPlanEmptyState extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: AppSizes.xxl),
-                const Center(child: Quatrefoil()),
+                const Center(child: BrandFlower()),
                 const SizedBox(height: AppSizes.md),
                 Center(
                   child: Text(

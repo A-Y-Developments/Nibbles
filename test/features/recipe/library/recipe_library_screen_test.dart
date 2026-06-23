@@ -212,8 +212,8 @@ void main() {
         await pump(tester, state: state);
 
         expect(find.byType(ReadGuideBanner), findsOneWidget);
-        // 'Read Guide' CTA label is unique to the banner.
-        expect(find.text('Read Guide'), findsOneWidget);
+        // CTA is baked into the banner SVG; exposed via the Semantics label.
+        expect(find.bySemanticsLabel('Read Guide'), findsOneWidget);
       },
     );
 

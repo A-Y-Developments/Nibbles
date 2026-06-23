@@ -217,7 +217,8 @@ const List<GuideArticle> kStartingGuideArticles = [
     blocks: [
       HeroCardBlock(
         title: 'BABY’S FIRST NIBBLES',
-        body: 'What would I have wanted in my hands when I started this '
+        body:
+            'What would I have wanted in my hands when I started this '
             'journey?',
       ),
       ParagraphBlock(
@@ -249,14 +250,8 @@ const List<GuideArticle> kStartingGuideArticles = [
             heading: 'Help parents feel confident, not overwhelmed',
             body: '',
           ),
-          NumberedItem(
-            heading: 'To help your baby explore food',
-            body: '',
-          ),
-          NumberedItem(
-            heading: 'Develop feeding skills',
-            body: '',
-          ),
+          NumberedItem(heading: 'To help your baby explore food', body: ''),
+          NumberedItem(heading: 'Develop feeding skills', body: ''),
           NumberedItem(
             heading: 'Build a strong foundation for lifelong health',
             body: '',
@@ -277,83 +272,27 @@ const List<GuideArticle> kStartingGuideArticles = [
     ],
   ),
   // ── Introduction (Figma 971:8744) ────────────────────────────────────────
+  // Hub-card metadata only — the article body is rendered by the bespoke
+  // `IntroductionView` (special-cased on this slug in the article screen), not
+  // the generic block renderer, so `blocks` is intentionally empty.
   GuideArticle(
     slug: 'introduction',
     title: 'Introductions',
-    subtitle:
-        'Introducing solids is a major milestone in a baby’s development',
-    blocks: [
-      HeroCardBlock(
-        title: 'Introducing Solids',
-        body: 'Introducing solids is a major milestone in a baby’s '
-            'development',
-      ),
-      SectionHeadingBlock('The 6 Month Milestone'),
-      LabelChipBlock('Perfect time to grow'),
-      ParagraphBlock(
-        'Babies begin transitioning from an exclusively milk-based diet to a '
-        'combination of breast milk or formula and complementary foods.',
-      ),
-      SectionHeadingBlock('Essential Nutrients'),
-      IconTileGridBlock(['Iron', 'Minerals', 'Vitamins', 'Zinc']),
-      NumberedListCardBlock(
-        title: 'Feeding is Skill-Building',
-        body: 'Beyond nutrients, every meal is a sensory workout for your '
-            'little one.',
-        items: [
-          NumberedItem(
-            heading: 'Developing Coordination',
-            body: 'Hand-to-mouth movements and tongue control.',
-          ),
-          NumberedItem(
-            heading: 'Exploring Textures',
-            body: 'Learning to manipulate different mouthfeels.',
-          ),
-          NumberedItem(
-            heading: 'Learning to Eat',
-            body: 'Transitioning from sucking to chewing and swallowing.',
-          ),
-        ],
-      ),
-      InlineCtaPairBlock(
-        primary: GuideCta(
-          label: 'Explore Recipes',
-          routeName: 'recipe-library',
-        ),
-        secondary: GuideCta(
-          label: 'Get Free Weekly Baby Recipes',
-          routeName: 'starting-guide',
-          variant: GuideCtaVariant.secondary,
-        ),
-      ),
-      PhilosophyCardBlock(
-        title: 'Our Philosophy',
-        body: 'Simple, nutrient-dense meals that support both nutrition and '
-            'development, without overcomplicating the process.',
-        chips: ['Nurturing', 'Nurturing', 'Simple'],
-      ),
-      ReadyToStartCardBlock(
-        title: 'Ready to Start?',
-        body:
-            'Breast milk or formula remains primary, but let’s explore '
-            'those first bites together.',
-        cta: GuideCta(
-          label: 'Create First Meal',
-          routeName: 'meal-plan',
-        ),
-      ),
-    ],
+    subtitle: 'Introducing solids is a major milestone in a baby’s development',
+    blocks: [],
   ),
   // ── 5 Sign Readiness (Figma 1474:50031) ──────────────────────────────────
   GuideArticle(
     slug: 'readiness-signs',
     title: 'Signs Your Baby Is Ready for Solids',
-    subtitle: 'Every baby develops at their own pace, so these signs are '
+    subtitle:
+        'Every baby develops at their own pace, so these signs are '
         'generally more important than the calendar.',
     blocks: [
       HeroCardBlock(
         title: '5 Sign Readiness',
-        body: 'Every baby develops at their own pace, so these signs are '
+        body:
+            'Every baby develops at their own pace, so these signs are '
             'generally more important than the calendar.',
       ),
       SectionHeadingBlock('Asther readiness result'),
@@ -381,84 +320,16 @@ const List<GuideArticle> kStartingGuideArticles = [
     ],
   ),
   // ── Feeding Principles (Figma 1474:50514) ────────────────────────────────
+  // Hub-card metadata only — the article body is rendered by the bespoke
+  // `FeedingPrinciplesScreen` (special-cased on this slug in routing), not the
+  // generic block renderer, so `blocks` is intentionally empty.
   GuideArticle(
     slug: 'feeding-principles',
     title: 'Important Feeding Principles',
     subtitle:
         'Weaning is more than just calories; it’s a foundation for '
         'lifelong health',
-    blocks: [
-      HeroCardBlock(
-        title: 'Important Feeding Principles',
-        body: 'Weaning is more than just calories; it’s a foundation '
-            'for lifelong health',
-      ),
-      SectionHeadingBlock('Iron-Rich Essentials'),
-      LabelChipBlock('6+ Months'),
-      ParagraphBlock(
-        'Baby’s iron needs increase significantly at 6 months. Example '
-        'iron-rich foods :',
-      ),
-      IconTileGridBlock([
-        'Beef',
-        'Lamb',
-        'Chicken',
-        'Fish',
-        'Eggs',
-        'Lentils',
-        'Tofu',
-      ]),
-      SectionHeadingBlock('Common Allergen'),
-      ChipGridCardBlock(
-        title: 'The Big 11',
-        body: 'Introduce early and often within the first year.',
-        chips: [
-          'Almond',
-          'Cashew',
-          'Egg',
-          'Wheat',
-          'Fish',
-          'Peanut',
-          'Milk',
-          'Prawn',
-          'Wallnut',
-          'Soy',
-          'Sesame',
-        ],
-      ),
-      SectionHeadingBlock('Offering a Variety of Foods'),
-      ParagraphBlock(
-        'Repeated exposure to a wide range of foods can help babies develop '
-        'acceptance of different flavours and textures. It is normal for '
-        'babies to need several exposures to a new food before accepting it.',
-      ),
-      SectionHeadingBlock('Items to Avoid'),
-      NumberedListCardBlock(
-        title: 'Items to Avoid',
-        items: [
-          NumberedItem(
-            heading: 'No Added Salt or Sugar',
-            body: 'Foods prepared for infants should not contain added salt '
-                'or sugar. Babies’s kidneys are still developing, and '
-                'limiting salt intake is recommended.',
-          ),
-          NumberedItem(
-            heading: 'Avoid Honey Before 12 Months',
-            body: 'Honey should not be given to infants under 12 months of '
-                'age due to the risk of infant botulism.',
-          ),
-        ],
-      ),
-      ReadyToStartCardBlock(
-        title: 'Ready to Start Introduce Allergens?',
-        body: 'Introduce allergens with confidence using simple guidance and '
-            'easy tracking.',
-        cta: GuideCta(
-          label: 'Start Introducing Allergens',
-          routeName: 'allergen-tracker',
-        ),
-      ),
-    ],
+    blocks: [],
   ),
 ];
 

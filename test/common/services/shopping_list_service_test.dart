@@ -100,8 +100,10 @@ void main() {
             verify(() => mockRepo.addItems(captureAny())).captured.single
                 as List<ShoppingListItem>;
         expect(captured, hasLength(3));
-        expect(captured.map((i) => i.name).toList(),
-            equals(['Flour', 'Sugar', 'Butter']));
+        expect(
+          captured.map((i) => i.name).toList(),
+          equals(['Flour', 'Sugar', 'Butter']),
+        );
         for (final item in captured) {
           expect(item.source, ShoppingListSource.mealPlan);
           expect(item.isChecked, isFalse);

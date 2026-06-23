@@ -53,8 +53,7 @@ void main() {
   });
 
   group('LocalFlagService.account_deleted flag', () {
-    test('defaults to false and flips to true via setAccountDeleted',
-        () async {
+    test('defaults to false and flips to true via setAccountDeleted', () async {
       expect(sut.isAccountDeleted(), isFalse);
 
       await sut.setAccountDeleted();

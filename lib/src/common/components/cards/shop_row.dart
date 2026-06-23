@@ -58,10 +58,7 @@ class ShopRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          _ShopRowCheckbox(
-            value: isBought,
-            onTap: onToggle,
-          ),
+          _ShopRowCheckbox(value: isBought, onTap: onToggle),
           const SizedBox(width: AppSizes.sp12),
           Expanded(
             child: Text(
@@ -70,8 +67,9 @@ class ShopRow extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: theme.textTheme.bodyLarge?.copyWith(
                 color: isBought ? AppColors.fgFaint : AppColors.fgDefault,
-                decoration:
-                    isBought ? TextDecoration.lineThrough : TextDecoration.none,
+                decoration: isBought
+                    ? TextDecoration.lineThrough
+                    : TextDecoration.none,
                 decorationColor: AppColors.fgFaint,
               ),
             ),

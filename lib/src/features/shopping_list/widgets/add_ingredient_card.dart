@@ -9,6 +9,10 @@ import 'package:nibbles/src/app/themes/app_typography.dart';
 /// (Ingredients field + lime Add pill). The caller owns [controller] /
 /// [focusNode] and the addManual write via [onAdd]; this sheet is purely
 /// presentational.
+///
+/// Presented on the root navigator so the sheet + scrim sit OVER the bottom
+/// navigation bar (matching the Clear All confirm sheet) rather than inside
+/// the shell body.
 Future<void> showAddIngredientSheet(
   BuildContext context, {
   required TextEditingController controller,
@@ -17,14 +21,10 @@ Future<void> showAddIngredientSheet(
 }) {
   return showModalBottomSheet<void>(
     context: context,
-    backgroundColor: AppColors.surface,
+    useRootNavigator: true,
+    backgroundColor: Colors.transparent,
     barrierColor: Colors.black.withValues(alpha: 0.5),
     isScrollControlled: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(
-        top: Radius.circular(AppSizes.radius3xl),
-      ),
-    ),
     builder: (_) => _AddIngredientSheet(
       controller: controller,
       focusNode: focusNode,
@@ -46,39 +46,47 @@ class _AddIngredientSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
+    final keyboard = MediaQuery.of(context).viewInsets.bottom;
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: keyboard),
+      child: DecoratedBox(
+        decoration: const BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(AppSizes.radius3xl),
+          ),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: AppSizes.sm),
-            // Grab handle.
-            Container(
-              width: AppSizes.sp40,
-              height: AppSizes.xs,
-              decoration: BoxDecoration(
-                color: AppColors.borderSoft,
-                borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: AppSizes.sm),
+              // Grab handle.
+              Container(
+                width: AppSizes.sp40,
+                height: AppSizes.xs,
+                decoration: BoxDecoration(
+                  color: AppColors.borderSoft,
+                  borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+                ),
               ),
-            ),
-            const SizedBox(height: AppSizes.md),
-            Text(
-              'Add Ingredients',
-              style: AppTypography.textTheme.titleMedium?.copyWith(
-                color: AppColors.fgStrong,
+              const SizedBox(height: AppSizes.md),
+              Text(
+                'Add Ingredients',
+                style: AppTypography.textTheme.titleMedium?.copyWith(
+                  color: AppColors.fgStrong,
+                ),
               ),
-            ),
-            const SizedBox(height: AppSizes.sm),
-            AddIngredientCard(
-              controller: controller,
-              focusNode: focusNode,
-              onAdd: onAdd,
-            ),
-          ],
+              const SizedBox(height: AppSizes.sm),
+              AddIngredientCard(
+                controller: controller,
+                focusNode: focusNode,
+                onAdd: onAdd,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -90,8 +98,8 @@ class _AddIngredientSheet extends StatelessWidget {
 /// Bare borderless text field with "Ingredients" placeholder
 /// (Figtree Regular 15, color neutral-50 / fgFaint) + lime pill "Add"
 /// button (77x30, rounded-[24px], bg butter, label Parkinsans SemiBold 15
-/// in greenDeep) anchored top-right. Rendered inside the Add Ingredients
-/// bottom sheet — no card chrome of its own.
+/// in greenDeep) to the right of the field. Rendered inside the Add
+/// Ingredients bottom sheet — no card chrome of its own.
 class AddIngredientCard extends StatelessWidget {
   const AddIngredientCard({
     required this.controller,
@@ -112,30 +120,30 @@ class AddIngredientCard extends StatelessWidget {
         horizontal: AppSizes.lg,
         vertical: AppSizes.md,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.end,
+      child: Row(
         children: [
-          _AddPillButton(onTap: onAdd),
-          const SizedBox(height: AppSizes.md),
-          TextField(
-            controller: controller,
-            focusNode: focusNode,
-            autofocus: true,
-            onSubmitted: (_) => onAdd(),
-            textInputAction: TextInputAction.done,
-            // Figma body/regular — Figtree 15/22 (matches textTheme.bodyLarge).
-            style: AppTypography.textTheme.bodyLarge,
-            cursorColor: AppColors.greenDeep,
-            decoration: InputDecoration(
-              isCollapsed: true,
-              border: InputBorder.none,
-              hintText: 'Ingredients',
-              hintStyle: AppTypography.textTheme.bodyLarge?.copyWith(
-                color: AppColors.fgFaint,
+          Expanded(
+            child: TextField(
+              controller: controller,
+              focusNode: focusNode,
+              autofocus: true,
+              onSubmitted: (_) => onAdd(),
+              textInputAction: TextInputAction.done,
+              // Figma body/regular — Figtree 15/22 (matches textTheme.bodyLarge).
+              style: AppTypography.textTheme.bodyLarge,
+              cursorColor: AppColors.greenDeep,
+              decoration: InputDecoration(
+                isCollapsed: true,
+                border: InputBorder.none,
+                hintText: 'Ingredients',
+                hintStyle: AppTypography.textTheme.bodyLarge?.copyWith(
+                  color: AppColors.fgFaint,
+                ),
               ),
             ),
           ),
+          const SizedBox(width: AppSizes.md),
+          _AddPillButton(onTap: onAdd),
         ],
       ),
     );

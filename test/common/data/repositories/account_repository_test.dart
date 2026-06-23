@@ -20,7 +20,7 @@ class _SupabaseClientWithRpc extends _MockSupabaseClient {
   _SupabaseClientWithRpc(this._behaviour);
 
   final FutureOr<Object?> Function(String fn, Map<String, dynamic>? params)
-      _behaviour;
+  _behaviour;
 
   @override
   PostgrestFilterBuilder<T> rpc<T>(
@@ -49,20 +49,16 @@ class _FakeBuilder<T> implements PostgrestFilterBuilder<T> {
   }) => _future.then(onValue, onError: onError);
 
   @override
-  Future<T> catchError(
-    Function onError, {
-    bool Function(Object error)? test,
-  }) => _future.catchError(onError, test: test);
+  Future<T> catchError(Function onError, {bool Function(Object error)? test}) =>
+      _future.catchError(onError, test: test);
 
   @override
   Future<T> whenComplete(FutureOr<void> Function() action) =>
       _future.whenComplete(action);
 
   @override
-  Future<T> timeout(
-    Duration timeLimit, {
-    FutureOr<T> Function()? onTimeout,
-  }) => _future.timeout(timeLimit, onTimeout: onTimeout);
+  Future<T> timeout(Duration timeLimit, {FutureOr<T> Function()? onTimeout}) =>
+      _future.timeout(timeLimit, onTimeout: onTimeout);
 
   @override
   Stream<T> asStream() => _future.asStream();
@@ -73,8 +69,7 @@ class _FakeBuilder<T> implements PostgrestFilterBuilder<T> {
 
 void main() {
   group('AccountRepositoryImpl.requestAccountDeletion', () {
-    test(
-        'returns Result.success(null) on a clean rpc call '
+    test('returns Result.success(null) on a clean rpc call '
         'and forwards reason as p_reason', () async {
       String? capturedFn;
       Map<String, dynamic>? capturedParams;
@@ -106,8 +101,7 @@ void main() {
       expect(failure.error.message, 'rls denied');
     });
 
-    test('maps any other thrown Object to Failure(UnknownException)',
-        () async {
+    test('maps any other thrown Object to Failure(UnknownException)', () async {
       final client = _SupabaseClientWithRpc((_, __) {
         throw Exception('boom');
       });

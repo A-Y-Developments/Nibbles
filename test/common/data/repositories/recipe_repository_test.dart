@@ -172,15 +172,18 @@ void main() {
 
       when(() => mockHive.recipesBox).thenReturn(mockRecipesBox);
       when(() => mockRecipesBox.get(any<dynamic>())).thenReturn(null);
-      when(() => mockSupabase.from('recipes'))
-          .thenAnswer((_) => mockQb);
+      when(() => mockSupabase.from('recipes')).thenAnswer((_) => mockQb);
       when(mockQb.select).thenAnswer(
         (_) => _FakeChain<PostgrestList>(
-          payload: [_row(), _row(id: 'r2')],
+          payload: [
+            _row(),
+            _row(id: 'r2'),
+          ],
         ),
       );
-      when(() => mockRecipesBox.put(any<dynamic>(), any<String>()))
-          .thenAnswer((_) async {});
+      when(
+        () => mockRecipesBox.put(any<dynamic>(), any<String>()),
+      ).thenAnswer((_) async {});
 
       final sut = RecipeRepositoryImpl(
         supabaseClient: mockSupabase,
@@ -189,78 +192,57 @@ void main() {
       final result = await sut.getAllRecipes();
 
       expect(result, isA<Success<List<Recipe>>>());
-      expect(
-        (result as Success<List<Recipe>>).data.length,
-        2,
-      );
+      expect((result as Success<List<Recipe>>).data.length, 2);
     });
 
-    test(
-      'returns Failure(ServerException) on PostgrestException',
-      () async {
-        final mockSupabase = _MockSupabaseClient();
-        final mockHive = _MockHiveService();
-        final mockRecipesBox = _MockRecipesBox();
-        final mockQb = _MockQueryBuilder();
+    test('returns Failure(ServerException) on PostgrestException', () async {
+      final mockSupabase = _MockSupabaseClient();
+      final mockHive = _MockHiveService();
+      final mockRecipesBox = _MockRecipesBox();
+      final mockQb = _MockQueryBuilder();
 
-        when(() => mockHive.recipesBox).thenReturn(mockRecipesBox);
-        when(() => mockRecipesBox.get(any<dynamic>())).thenReturn(null);
-        when(() => mockSupabase.from('recipes'))
-            .thenAnswer((_) => mockQb);
-        when(mockQb.select).thenAnswer(
-          (_) => _FakeChain<PostgrestList>(
-            error: const PostgrestException(
-              message: 'fetch failed',
-            ),
-          ),
-        );
+      when(() => mockHive.recipesBox).thenReturn(mockRecipesBox);
+      when(() => mockRecipesBox.get(any<dynamic>())).thenReturn(null);
+      when(() => mockSupabase.from('recipes')).thenAnswer((_) => mockQb);
+      when(mockQb.select).thenAnswer(
+        (_) => _FakeChain<PostgrestList>(
+          error: const PostgrestException(message: 'fetch failed'),
+        ),
+      );
 
-        final sut = RecipeRepositoryImpl(
-          supabaseClient: mockSupabase,
-          hiveService: mockHive,
-        );
-        final result = await sut.getAllRecipes();
+      final sut = RecipeRepositoryImpl(
+        supabaseClient: mockSupabase,
+        hiveService: mockHive,
+      );
+      final result = await sut.getAllRecipes();
 
-        expect(result, isA<Failure<List<Recipe>>>());
-        expect(
-          (result as Failure<List<Recipe>>).error,
-          isA<ServerException>(),
-        );
-        expect(result.error.message, 'fetch failed');
-      },
-    );
+      expect(result, isA<Failure<List<Recipe>>>());
+      expect((result as Failure<List<Recipe>>).error, isA<ServerException>());
+      expect(result.error.message, 'fetch failed');
+    });
 
-    test(
-      'returns Failure(UnknownException) on unexpected error',
-      () async {
-        final mockSupabase = _MockSupabaseClient();
-        final mockHive = _MockHiveService();
-        final mockRecipesBox = _MockRecipesBox();
-        final mockQb = _MockQueryBuilder();
+    test('returns Failure(UnknownException) on unexpected error', () async {
+      final mockSupabase = _MockSupabaseClient();
+      final mockHive = _MockHiveService();
+      final mockRecipesBox = _MockRecipesBox();
+      final mockQb = _MockQueryBuilder();
 
-        when(() => mockHive.recipesBox).thenReturn(mockRecipesBox);
-        when(() => mockRecipesBox.get(any<dynamic>())).thenReturn(null);
-        when(() => mockSupabase.from('recipes'))
-            .thenAnswer((_) => mockQb);
-        when(mockQb.select).thenAnswer(
-          (_) => _FakeChain<PostgrestList>(
-            error: Exception('network error'),
-          ),
-        );
+      when(() => mockHive.recipesBox).thenReturn(mockRecipesBox);
+      when(() => mockRecipesBox.get(any<dynamic>())).thenReturn(null);
+      when(() => mockSupabase.from('recipes')).thenAnswer((_) => mockQb);
+      when(mockQb.select).thenAnswer(
+        (_) => _FakeChain<PostgrestList>(error: Exception('network error')),
+      );
 
-        final sut = RecipeRepositoryImpl(
-          supabaseClient: mockSupabase,
-          hiveService: mockHive,
-        );
-        final result = await sut.getAllRecipes();
+      final sut = RecipeRepositoryImpl(
+        supabaseClient: mockSupabase,
+        hiveService: mockHive,
+      );
+      final result = await sut.getAllRecipes();
 
-        expect(result, isA<Failure<List<Recipe>>>());
-        expect(
-          (result as Failure<List<Recipe>>).error,
-          isA<UnknownException>(),
-        );
-      },
-    );
+      expect(result, isA<Failure<List<Recipe>>>());
+      expect((result as Failure<List<Recipe>>).error, isA<UnknownException>());
+    });
   });
 
   // ---------------------------------------------------------------------------
@@ -286,8 +268,7 @@ void main() {
       final cachedJson = jsonEncode([r.toJson()]);
 
       when(() => mockHive.recipesBox).thenReturn(mockRecipesBox);
-      when(() => mockRecipesBox.get(any<dynamic>()))
-          .thenReturn(cachedJson);
+      when(() => mockRecipesBox.get(any<dynamic>())).thenReturn(cachedJson);
 
       final sut = RecipeRepositoryImpl(
         supabaseClient: _MockSupabaseClient(),
@@ -296,60 +277,47 @@ void main() {
       final result = await sut.getAllRecipes();
 
       expect(result, isA<Success<List<Recipe>>>());
-      expect(
-        (result as Success<List<Recipe>>).data.first.id,
-        'r1',
-      );
+      expect((result as Success<List<Recipe>>).data.first.id, 'r1');
     });
 
-    test(
-      'cache hit triggers unawaited background refresh',
-      () async {
-        final mockSupabase = _MockSupabaseClient();
-        final mockHive = _MockHiveService();
-        final mockRecipesBox = _MockRecipesBox();
-        final mockQb = _MockQueryBuilder();
+    test('cache hit triggers unawaited background refresh', () async {
+      final mockSupabase = _MockSupabaseClient();
+      final mockHive = _MockHiveService();
+      final mockRecipesBox = _MockRecipesBox();
+      final mockQb = _MockQueryBuilder();
 
-        const r = Recipe(
-          id: 'r1',
-          title: 'Pea Puree',
-          ageRange: '6m+',
-          allergenTags: [],
-          ingredients: [],
-          steps: [],
-          howToServe: 'Serve.',
-        );
-        final cachedJson = jsonEncode([r.toJson()]);
+      const r = Recipe(
+        id: 'r1',
+        title: 'Pea Puree',
+        ageRange: '6m+',
+        allergenTags: [],
+        ingredients: [],
+        steps: [],
+        howToServe: 'Serve.',
+      );
+      final cachedJson = jsonEncode([r.toJson()]);
 
-        when(() => mockHive.recipesBox).thenReturn(mockRecipesBox);
-        when(() => mockRecipesBox.get(any<dynamic>()))
-            .thenReturn(cachedJson);
-        when(() => mockSupabase.from('recipes'))
-            .thenAnswer((_) => mockQb);
-        when(mockQb.select).thenAnswer(
-          (_) => _FakeChain<PostgrestList>(payload: [_row(id: 'r2')]),
-        );
-        when(
-          () => mockRecipesBox.put(
-            any<dynamic>(),
-            any<String>(),
-          ),
-        ).thenAnswer((_) async {});
+      when(() => mockHive.recipesBox).thenReturn(mockRecipesBox);
+      when(() => mockRecipesBox.get(any<dynamic>())).thenReturn(cachedJson);
+      when(() => mockSupabase.from('recipes')).thenAnswer((_) => mockQb);
+      when(
+        mockQb.select,
+      ).thenAnswer((_) => _FakeChain<PostgrestList>(payload: [_row(id: 'r2')]));
+      when(
+        () => mockRecipesBox.put(any<dynamic>(), any<String>()),
+      ).thenAnswer((_) async {});
 
-        final sut = RecipeRepositoryImpl(
-          supabaseClient: mockSupabase,
-          hiveService: mockHive,
-        );
-        await sut.getAllRecipes();
+      final sut = RecipeRepositoryImpl(
+        supabaseClient: mockSupabase,
+        hiveService: mockHive,
+      );
+      await sut.getAllRecipes();
 
-        await Future<void>.delayed(Duration.zero);
-        await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
 
-        verify(
-          () => mockRecipesBox.put(any<dynamic>(), any<String>()),
-        ).called(1);
-      },
-    );
+      verify(() => mockRecipesBox.put(any<dynamic>(), any<String>())).called(1);
+    });
   });
 
   // ---------------------------------------------------------------------------
@@ -367,22 +335,19 @@ void main() {
 
       when(() => mockHive.recipesBox).thenReturn(mockRecipesBox);
       when(() => mockRecipesBox.get(any<dynamic>())).thenReturn(null);
-      when(() => mockSupabase.from('recipes'))
-          .thenAnswer((_) => mockQb);
+      when(() => mockSupabase.from('recipes')).thenAnswer((_) => mockQb);
       when(mockQb.select).thenAnswer(
         (_) => _FakeChain<PostgrestList>(
           payload: [
             _row(allergenTags: const ['peanut']),
             _row(id: 'r2', allergenTags: const ['egg']),
-            _row(
-              id: 'r3',
-              allergenTags: const ['peanut', 'dairy'],
-            ),
+            _row(id: 'r3', allergenTags: const ['peanut', 'dairy']),
           ],
         ),
       );
-      when(() => mockRecipesBox.put(any<dynamic>(), any<String>()))
-          .thenAnswer((_) async {});
+      when(
+        () => mockRecipesBox.put(any<dynamic>(), any<String>()),
+      ).thenAnswer((_) async {});
 
       final sut = RecipeRepositoryImpl(
         supabaseClient: mockSupabase,
@@ -391,8 +356,7 @@ void main() {
       final result = await sut.getRecipesByAllergen('peanut');
 
       expect(result, isA<Success<List<Recipe>>>());
-      final ids = (result as Success<List<Recipe>>)
-          .data
+      final ids = (result as Success<List<Recipe>>).data
           .map((r) => r.id)
           .toList();
       expect(ids, containsAll(['r1', 'r3']));
@@ -408,8 +372,7 @@ void main() {
 
       when(() => mockHive.recipesBox).thenReturn(mockRecipesBox);
       when(() => mockRecipesBox.get(any<dynamic>())).thenReturn(null);
-      when(() => mockSupabase.from('recipes'))
-          .thenAnswer((_) => mockQb);
+      when(() => mockSupabase.from('recipes')).thenAnswer((_) => mockQb);
       when(mockQb.select).thenAnswer(
         (_) => _FakeChain<PostgrestList>(
           error: const PostgrestException(message: 'no data'),
@@ -423,10 +386,7 @@ void main() {
       final result = await sut.getRecipesByAllergen('peanut');
 
       expect(result, isA<Failure<List<Recipe>>>());
-      expect(
-        (result as Failure<List<Recipe>>).error,
-        isA<ServerException>(),
-      );
+      expect((result as Failure<List<Recipe>>).error, isA<ServerException>());
     });
   });
 
@@ -437,70 +397,54 @@ void main() {
   group('getRecipeById — error paths', () {
     tearDown(resetMocktailState);
 
-    test(
-      'returns Failure(ServerException) on PostgrestException',
-      () async {
-        final mockSupabase = _MockSupabaseClient();
-        final mockHive = _MockHiveService();
-        final mockRecipesBox = _MockRecipesBox();
-        final mockQb = _MockQueryBuilder();
+    test('returns Failure(ServerException) on PostgrestException', () async {
+      final mockSupabase = _MockSupabaseClient();
+      final mockHive = _MockHiveService();
+      final mockRecipesBox = _MockRecipesBox();
+      final mockQb = _MockQueryBuilder();
 
-        when(() => mockHive.recipesBox).thenReturn(mockRecipesBox);
-        when(() => mockRecipesBox.get(any<dynamic>())).thenReturn(null);
-        when(() => mockSupabase.from('recipes'))
-            .thenAnswer((_) => mockQb);
-        when(mockQb.select).thenAnswer(
-          (_) => _FakeChain<PostgrestList>(
-            error: const PostgrestException(message: 'not found'),
-          ),
-        );
+      when(() => mockHive.recipesBox).thenReturn(mockRecipesBox);
+      when(() => mockRecipesBox.get(any<dynamic>())).thenReturn(null);
+      when(() => mockSupabase.from('recipes')).thenAnswer((_) => mockQb);
+      when(mockQb.select).thenAnswer(
+        (_) => _FakeChain<PostgrestList>(
+          error: const PostgrestException(message: 'not found'),
+        ),
+      );
 
-        final sut = RecipeRepositoryImpl(
-          supabaseClient: mockSupabase,
-          hiveService: mockHive,
-        );
-        final result = await sut.getRecipeById('r1');
+      final sut = RecipeRepositoryImpl(
+        supabaseClient: mockSupabase,
+        hiveService: mockHive,
+      );
+      final result = await sut.getRecipeById('r1');
 
-        expect(result, isA<Failure<Recipe>>());
-        expect(
-          (result as Failure<Recipe>).error,
-          isA<ServerException>(),
-        );
-        expect(result.error.message, 'not found');
-      },
-    );
+      expect(result, isA<Failure<Recipe>>());
+      expect((result as Failure<Recipe>).error, isA<ServerException>());
+      expect(result.error.message, 'not found');
+    });
 
-    test(
-      'returns Failure(UnknownException) on unexpected error',
-      () async {
-        final mockSupabase = _MockSupabaseClient();
-        final mockHive = _MockHiveService();
-        final mockRecipesBox = _MockRecipesBox();
-        final mockQb = _MockQueryBuilder();
+    test('returns Failure(UnknownException) on unexpected error', () async {
+      final mockSupabase = _MockSupabaseClient();
+      final mockHive = _MockHiveService();
+      final mockRecipesBox = _MockRecipesBox();
+      final mockQb = _MockQueryBuilder();
 
-        when(() => mockHive.recipesBox).thenReturn(mockRecipesBox);
-        when(() => mockRecipesBox.get(any<dynamic>())).thenReturn(null);
-        when(() => mockSupabase.from('recipes'))
-            .thenAnswer((_) => mockQb);
-        when(mockQb.select).thenAnswer(
-          (_) => _FakeChain<PostgrestList>(
-            error: Exception('network error'),
-          ),
-        );
+      when(() => mockHive.recipesBox).thenReturn(mockRecipesBox);
+      when(() => mockRecipesBox.get(any<dynamic>())).thenReturn(null);
+      when(() => mockSupabase.from('recipes')).thenAnswer((_) => mockQb);
+      when(mockQb.select).thenAnswer(
+        (_) => _FakeChain<PostgrestList>(error: Exception('network error')),
+      );
 
-        final sut = RecipeRepositoryImpl(
-          supabaseClient: mockSupabase,
-          hiveService: mockHive,
-        );
-        final result = await sut.getRecipeById('r1');
+      final sut = RecipeRepositoryImpl(
+        supabaseClient: mockSupabase,
+        hiveService: mockHive,
+      );
+      final result = await sut.getRecipeById('r1');
 
-        expect(result, isA<Failure<Recipe>>());
-        expect(
-          (result as Failure<Recipe>).error,
-          isA<UnknownException>(),
-        );
-      },
-    );
+      expect(result, isA<Failure<Recipe>>());
+      expect((result as Failure<Recipe>).error, isA<UnknownException>());
+    });
   });
 
   // ---------------------------------------------------------------------------
@@ -526,8 +470,7 @@ void main() {
       final cachedJson = jsonEncode([r.toJson()]);
 
       when(() => mockHive.recipesBox).thenReturn(mockRecipesBox);
-      when(() => mockRecipesBox.get(any<dynamic>()))
-          .thenReturn(cachedJson);
+      when(() => mockRecipesBox.get(any<dynamic>())).thenReturn(cachedJson);
 
       final sut = RecipeRepositoryImpl(
         supabaseClient: _MockSupabaseClient(),
@@ -652,15 +595,14 @@ void main() {
 /// (getRecipeById record fetch). Payload/error controlled at construction.
 class _FakeChain<T> implements PostgrestFilterBuilder<T> {
   _FakeChain({Object? payload, Object? error})
-      : _payload = payload,
-        _error = error;
+    : _payload = payload,
+      _error = error;
 
   final Object? _payload;
   final Object? _error;
 
-  Future<T> get _future => _error != null
-      ? Future<T>.error(_error)
-      : Future<T>.value(_payload as T);
+  Future<T> get _future =>
+      _error != null ? Future<T>.error(_error) : Future<T>.value(_payload as T);
 
   @override
   PostgrestFilterBuilder<T> eq(String column, Object value) => this;
@@ -671,8 +613,7 @@ class _FakeChain<T> implements PostgrestFilterBuilder<T> {
     bool ascending = false,
     bool nullsFirst = false,
     String? referencedTable,
-  }) =>
-      _FakeChain<T>(payload: _payload, error: _error);
+  }) => _FakeChain<T>(payload: _payload, error: _error);
 
   @override
   PostgrestTransformBuilder<Map<String, dynamic>> single() =>
@@ -682,14 +623,10 @@ class _FakeChain<T> implements PostgrestFilterBuilder<T> {
   Future<R> then<R>(
     FutureOr<R> Function(T value) onValue, {
     Function? onError,
-  }) =>
-      _future.then(onValue, onError: onError);
+  }) => _future.then(onValue, onError: onError);
 
   @override
-  Future<T> catchError(
-    Function onError, {
-    bool Function(Object error)? test,
-  }) =>
+  Future<T> catchError(Function onError, {bool Function(Object error)? test}) =>
       _future.catchError(onError, test: test);
 
   @override
@@ -697,10 +634,7 @@ class _FakeChain<T> implements PostgrestFilterBuilder<T> {
       _future.whenComplete(action);
 
   @override
-  Future<T> timeout(
-    Duration timeLimit, {
-    FutureOr<T> Function()? onTimeout,
-  }) =>
+  Future<T> timeout(Duration timeLimit, {FutureOr<T> Function()? onTimeout}) =>
       _future.timeout(timeLimit, onTimeout: onTimeout);
 
   @override

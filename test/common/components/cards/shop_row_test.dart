@@ -79,8 +79,9 @@ void main() {
       expect(deleted, 1);
     });
 
-    testWidgets('bought state shows check glyph and strikethrough label',
-        (tester) async {
+    testWidgets('bought state shows check glyph and strikethrough label', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _wrap(
           label: 'Whole-wheat pasta',

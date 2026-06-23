@@ -124,14 +124,10 @@ void main() {
           matching: find.byType(FilledButton),
         ),
       );
-      expect(
-        toggleBtn.style?.backgroundColor?.resolve({}),
-        AppColors.butter,
-      );
+      expect(toggleBtn.style?.backgroundColor?.resolve({}), AppColors.butter);
       // Range fetch invoked with the range bounds.
       verify(
-        () =>
-            mealPlanService.getRangeIngredientNames(_babyId, _start, _end),
+        () => mealPlanService.getRangeIngredientNames(_babyId, _start, _end),
       ).called(1);
     },
   );
@@ -172,37 +168,37 @@ void main() {
     },
   );
 
-  testWidgets(
-    'Select All re-selects every pill and CTA shows full count',
-    (tester) async {
-      when(
-        () => mealPlanService.getRangeIngredientNames(any(), any(), any()),
-      ).thenAnswer((_) async => const Result.success(_ingredients));
+  testWidgets('Select All re-selects every pill and CTA shows full count', (
+    tester,
+  ) async {
+    when(
+      () => mealPlanService.getRangeIngredientNames(any(), any(), any()),
+    ).thenAnswer((_) async => const Result.success(_ingredients));
 
-      await _pumpSheet(
-        tester,
-        mealPlanService: mealPlanService,
-        shoppingListService: shoppingListService,
-      );
-      await tester.pump();
+    await _pumpSheet(
+      tester,
+      mealPlanService: mealPlanService,
+      shoppingListService: shoppingListService,
+    );
+    await tester.pump();
 
-      // Clear → re-select.
-      await tester.tap(find.text('Unselect All'));
-      await tester.pump();
-      await tester.tap(find.text('Select All'));
-      await tester.pump();
+    // Clear → re-select.
+    await tester.tap(find.text('Unselect All'));
+    await tester.pump();
+    await tester.tap(find.text('Select All'));
+    await tester.pump();
 
-      expect(find.text('Unselect All'), findsOneWidget);
-      expect(find.text('Add (${_ingredients.length})'), findsOneWidget);
-    },
-  );
+    expect(find.text('Unselect All'), findsOneWidget);
+    expect(find.text('Add (${_ingredients.length})'), findsOneWidget);
+  });
 
   // ---------------------------------------------------------------------------
   // Pill tap toggles selection — count updates dynamically
   // ---------------------------------------------------------------------------
 
-  testWidgets('tapping a pill toggles its selection + decrements Add (N)',
-      (tester) async {
+  testWidgets('tapping a pill toggles its selection + decrements Add (N)', (
+    tester,
+  ) async {
     when(
       () => mealPlanService.getRangeIngredientNames(any(), any(), any()),
     ).thenAnswer((_) async => const Result.success(_ingredients));
@@ -228,8 +224,9 @@ void main() {
   // Submit success — pops sheet + shows P2 toast
   // ---------------------------------------------------------------------------
 
-  testWidgets('submit success → calls addFromMealPlan, pops, shows P2 toast',
-      (tester) async {
+  testWidgets('submit success → calls addFromMealPlan, pops, shows P2 toast', (
+    tester,
+  ) async {
     when(
       () => mealPlanService.getRangeIngredientNames(any(), any(), any()),
     ).thenAnswer((_) async => const Result.success(_ingredients));
@@ -249,9 +246,10 @@ void main() {
     await tester.pump(const Duration(milliseconds: 350));
 
     final captured =
-        verify(() => shoppingListService.addFromMealPlan(_babyId, captureAny()))
-            .captured
-            .single as List<String>;
+        verify(
+              () => shoppingListService.addFromMealPlan(_babyId, captureAny()),
+            ).captured.single
+            as List<String>;
     expect(captured, equals(_ingredients));
     expect(find.text('Added to shopping list.'), findsOneWidget);
     expect(find.text('Add to Shoplist'), findsNothing);
@@ -261,14 +259,13 @@ void main() {
   // Submit failure — sheet stays open, P2 error toast
   // ---------------------------------------------------------------------------
 
-  testWidgets('submit failure → sheet stays open + shows error toast',
-      (tester) async {
+  testWidgets('submit failure → sheet stays open + shows error toast', (
+    tester,
+  ) async {
     when(
       () => mealPlanService.getRangeIngredientNames(any(), any(), any()),
     ).thenAnswer((_) async => const Result.success(_ingredients));
-    when(
-      () => shoppingListService.addFromMealPlan(any(), any()),
-    ).thenAnswer(
+    when(() => shoppingListService.addFromMealPlan(any(), any())).thenAnswer(
       (_) async => const Result.failure(ServerException('DB error')),
     );
 
@@ -292,13 +289,12 @@ void main() {
   // Load failure — error inline + Add hidden
   // ---------------------------------------------------------------------------
 
-  testWidgets('load failure → shows inline error and hides bottom actions',
-      (tester) async {
+  testWidgets('load failure → shows inline error and hides bottom actions', (
+    tester,
+  ) async {
     when(
       () => mealPlanService.getRangeIngredientNames(any(), any(), any()),
-    ).thenAnswer(
-      (_) async => const Result.failure(ServerException('boom')),
-    );
+    ).thenAnswer((_) async => const Result.failure(ServerException('boom')));
 
     await _pumpSheet(
       tester,

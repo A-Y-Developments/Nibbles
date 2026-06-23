@@ -53,10 +53,12 @@ class LoginController extends _$LoginController {
       failure: (error) {
         state = state.copyWith(isLoading: false, errorMessage: error.message);
         _fireAndForget(
-          ref.read(analyticsProvider).logLoginFailure(
-            method: AuthMethod.email,
-            errorCode: authErrorCode(error),
-          ),
+          ref
+              .read(analyticsProvider)
+              .logLoginFailure(
+                method: AuthMethod.email,
+                errorCode: authErrorCode(error),
+              ),
         );
       },
     );
@@ -108,10 +110,9 @@ class LoginController extends _$LoginController {
       failure: (error) {
         state = state.copyWith(isLoading: false, errorMessage: error.message);
         _fireAndForget(
-          ref.read(analyticsProvider).logLoginFailure(
-            method: method,
-            errorCode: authErrorCode(error),
-          ),
+          ref
+              .read(analyticsProvider)
+              .logLoginFailure(method: method, errorCode: authErrorCode(error)),
         );
       },
     );

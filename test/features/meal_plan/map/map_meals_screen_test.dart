@@ -55,10 +55,10 @@ const _recipeB = Recipe(
 );
 
 MapMealsArgs _makeArgs() => MapMealsArgs(
-      pickedRecipes: const [_recipeA, _recipeB],
-      startDate: DateTime(2026, 5, 30),
-      endDate: DateTime(2026, 6, 5),
-    );
+  pickedRecipes: const [_recipeA, _recipeB],
+  startDate: DateTime(2026, 5, 30),
+  endDate: DateTime(2026, 6, 5),
+);
 
 void main() {
   late _MockBabyProfileService mockBabyService;
@@ -143,8 +143,9 @@ void main() {
       },
     );
 
-    testWidgets('tapping a picked recipe assigns it to the selected day',
-        (tester) async {
+    testWidgets('tapping a picked recipe assigns it to the selected day', (
+      tester,
+    ) async {
       await pumpMap(tester);
 
       // Tap the first picked recipe to assign it to the (currently) selected
@@ -167,10 +168,7 @@ void main() {
         // 1 of 2 assigned → "Add (1)".
         await tester.tap(find.text(_recipeA.title));
         await tester.pumpAndSettle();
-        expect(
-          find.widgetWithText(FilledButton, 'Add (1)'),
-          findsOneWidget,
-        );
+        expect(find.widgetWithText(FilledButton, 'Add (1)'), findsOneWidget);
 
         // 2 of 2 assigned → "Complete Mapping".
         await tester.tap(find.text(_recipeB.title));
@@ -224,8 +222,7 @@ void main() {
               body: Center(
                 child: ElevatedButton(
                   onPressed: () async {
-                    popResult =
-                        await router.push<dynamic>('/map');
+                    popResult = await router.push<dynamic>('/map');
                   },
                   child: const Text('Push'),
                 ),
@@ -259,82 +256,74 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text(_recipeB.title));
       await tester.pumpAndSettle();
-      await tester.tap(
-        find.widgetWithText(FilledButton, 'Complete Mapping'),
-      );
+      await tester.tap(find.widgetWithText(FilledButton, 'Complete Mapping'));
       await tester.pumpAndSettle();
 
       expect(popResult, isTrue);
     });
 
-    testWidgets(
-      'commit failure shows a blocking AlertDialog with Retry that '
-      're-calls commit',
-      (tester) async {
-        var callCount = 0;
-        when(
-          () => mockMealPlanService.appendMealsToRange(
-            babyId: any(named: 'babyId'),
-            startDate: any(named: 'startDate'),
-            endDate: any(named: 'endDate'),
-            assignments: any(named: 'assignments'),
-          ),
-        ).thenAnswer((_) async {
-          callCount++;
-          return const Result.failure(ServerException('boom'));
-        });
+    testWidgets('commit failure shows a blocking AlertDialog with Retry that '
+        're-calls commit', (tester) async {
+      var callCount = 0;
+      when(
+        () => mockMealPlanService.appendMealsToRange(
+          babyId: any(named: 'babyId'),
+          startDate: any(named: 'startDate'),
+          endDate: any(named: 'endDate'),
+          assignments: any(named: 'assignments'),
+        ),
+      ).thenAnswer((_) async {
+        callCount++;
+        return const Result.failure(ServerException('boom'));
+      });
 
-        await pumpMap(tester);
+      await pumpMap(tester);
 
-        await tester.tap(find.text(_recipeA.title));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text(_recipeB.title));
-        await tester.pumpAndSettle();
-        await tester.tap(
-          find.widgetWithText(FilledButton, 'Complete Mapping'),
-        );
-        await tester.pumpAndSettle();
+      await tester.tap(find.text(_recipeA.title));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(_recipeB.title));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Complete Mapping'));
+      await tester.pumpAndSettle();
 
-        // Blocking AlertDialog with Retry button.
-        expect(find.byType(AlertDialog), findsOneWidget);
-        expect(find.text("Couldn't save your plan"), findsOneWidget);
-        expect(find.widgetWithText(FilledButton, 'Retry'), findsOneWidget);
-        expect(callCount, 1);
+      // Blocking AlertDialog with Retry button.
+      expect(find.byType(AlertDialog), findsOneWidget);
+      expect(find.text("Couldn't save your plan"), findsOneWidget);
+      expect(find.widgetWithText(FilledButton, 'Retry'), findsOneWidget);
+      expect(callCount, 1);
 
-        await tester.tap(find.widgetWithText(FilledButton, 'Retry'));
-        await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Retry'));
+      await tester.pumpAndSettle();
 
-        // Retry re-invokes commit (which fires the service again).
-        expect(callCount, 2);
-      },
-    );
+      // Retry re-invokes commit (which fires the service again).
+      expect(callCount, 2);
+    });
 
-    testWidgets(
-      'commit failure surfaces the failure message in the dialog',
-      (tester) async {
-        when(
-          () => mockMealPlanService.appendMealsToRange(
-            babyId: any(named: 'babyId'),
-            startDate: any(named: 'startDate'),
-            endDate: any(named: 'endDate'),
-            assignments: any(named: 'assignments'),
-          ),
-        ).thenAnswer((_) async => const Result.failure(NetworkException()));
+    testWidgets('commit failure surfaces the failure message in the dialog', (
+      tester,
+    ) async {
+      when(
+        () => mockMealPlanService.appendMealsToRange(
+          babyId: any(named: 'babyId'),
+          startDate: any(named: 'startDate'),
+          endDate: any(named: 'endDate'),
+          assignments: any(named: 'assignments'),
+        ),
+      ).thenAnswer((_) async => const Result.failure(NetworkException()));
 
-        await pumpMap(tester);
+      await pumpMap(tester);
 
-        await tester.tap(find.text(_recipeA.title));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text(_recipeB.title));
-        await tester.pumpAndSettle();
-        await tester.tap(find.widgetWithText(FilledButton, 'Complete Mapping'));
-        await tester.pumpAndSettle();
+      await tester.tap(find.text(_recipeA.title));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(_recipeB.title));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Complete Mapping'));
+      await tester.pumpAndSettle();
 
-        // The dialog now shows the controller's real failure message (the P1
-        // connectivity string) instead of a generic hardcoded line.
-        expect(find.text('No internet connection.'), findsOneWidget);
-      },
-    );
+      // The dialog now shows the controller's real failure message (the P1
+      // connectivity string) instead of a generic hardcoded line.
+      expect(find.text('No internet connection.'), findsOneWidget);
+    });
   });
 }
 

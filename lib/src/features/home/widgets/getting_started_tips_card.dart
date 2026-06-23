@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nibbles/gen/assets.gen.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/cards/tip_card.dart';
@@ -15,16 +16,17 @@ class GettingStartedTipsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Column(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Helpful Guidance', style: AppTypography.sectionTitle),
-        SizedBox(height: AppSizes.sp12),
+        const Text('Helpful Guidance', style: AppTypography.sectionTitle),
+        const SizedBox(height: AppSizes.sp12),
         TipCard(
           title: 'Getting Started Tips',
           body:
               'Start with single-ingredient purees and introduce one new '
               'food every 3-5 days to monitor for reactions.',
+          leading: Assets.images.home.tipInfo.svg(width: 38, height: 37),
         ),
       ],
     );

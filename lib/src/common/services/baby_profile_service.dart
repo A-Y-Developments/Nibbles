@@ -21,11 +21,15 @@ class BabyProfileService {
   ///
   /// Gender is optional — the redesigned onboarding (NIB-120) drops the
   /// selector. Defaults to [Gender.preferNotToSay] when omitted.
+  ///
+  /// [readinessSigns] persists the onboarding readiness result for the
+  /// 5 Sign Readiness guide page (index 0 = pediatrician gate, 1-5 = signs).
   Future<Result<Baby>> createBaby(
     String name,
     DateTime dob, [
     Gender gender = Gender.preferNotToSay,
-  ]) => _repo.createBaby(name, dob, gender);
+    List<bool> readinessSigns = const [],
+  ]) => _repo.createBaby(name, dob, gender, readinessSigns);
 
   Future<Baby?> getBaby() => _repo.getBaby();
 
@@ -52,3 +56,8 @@ Future<String?> currentBabyId(Ref ref) async {
   final baby = await ref.watch(babyProfileServiceProvider).getBaby();
   return baby?.id;
 }
+
+/// Fetches the current baby entity. Returns null if no baby exists yet.
+@riverpod
+Future<Baby?> currentBaby(Ref ref) =>
+    ref.watch(babyProfileServiceProvider).getBaby();

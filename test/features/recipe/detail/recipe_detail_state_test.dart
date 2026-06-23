@@ -47,10 +47,10 @@ void main() {
     });
 
     test('populated utensils → passes list through', () {
-      expect(
-        _state(_recipe(utensils: const ['Spoon', 'Bowl'])).utensils,
-        ['Spoon', 'Bowl'],
-      );
+      expect(_state(_recipe(utensils: const ['Spoon', 'Bowl'])).utensils, [
+        'Spoon',
+        'Bowl',
+      ]);
     });
   });
 

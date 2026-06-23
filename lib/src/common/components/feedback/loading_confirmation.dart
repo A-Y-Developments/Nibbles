@@ -9,10 +9,7 @@ import 'package:nibbles/src/common/components/brand/petal_blob.dart';
 /// `loading` — petal blob + faint uppercase "Loading" caption.
 /// `success` — petal blob + bold success label; the caption stays mounted at
 /// low opacity so the cross-fade does not shift the layout.
-enum LoadingConfirmationPhase {
-  loading,
-  success,
-}
+enum LoadingConfirmationPhase { loading, success }
 
 /// NIB-131 — reusable loading -> confirmation composite.
 ///

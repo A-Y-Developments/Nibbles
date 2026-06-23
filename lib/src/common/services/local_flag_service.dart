@@ -90,8 +90,7 @@ class LocalFlagService {
 
   /// Marks the Starting Guide as seen. Awaited so the banner stays dismissed
   /// across the same frame's rebuild.
-  Future<void> markStartingGuideSeen() =>
-      _box.put('starting_guide_seen', true);
+  Future<void> markStartingGuideSeen() => _box.put('starting_guide_seen', true);
 
   // ---------------------------------------------------------------------------
   // Account deletion (NIB-85 / NIB-120)

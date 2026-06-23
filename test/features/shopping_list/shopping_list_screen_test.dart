@@ -1,10 +1,10 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
-import 'package:nibbles/src/common/components/controls/app_segmented_control.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/domain/entities/shopping_list_item.dart';
@@ -73,7 +73,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Shopping List'), findsOneWidget);
-      expect(find.byType(AppSegmentedControl), findsOneWidget);
+      expect(
+        find.byType(CupertinoSlidingSegmentedControl<int>),
+        findsOneWidget,
+      );
       expect(find.text('List'), findsOneWidget);
       expect(find.text('Bought'), findsOneWidget);
     });
@@ -90,7 +93,7 @@ void main() {
       await tester.pumpWidget(_buildSut(mockService));
       await tester.pumpAndSettle();
 
-      expect(find.text('No items in your list yet'), findsOneWidget);
+      expect(find.text('You don’t have any list yet'), findsOneWidget);
       // No browse-recipes CTA in this frame.
       expect(find.text('Browse recipes to get started'), findsNothing);
     });
@@ -262,7 +265,7 @@ void main() {
       await tester.pumpAndSettle();
 
       verify(() => mockService.clearAll(_babyId)).called(1);
-      expect(find.text('No items in your list yet'), findsOneWidget);
+      expect(find.text('You don’t have any list yet'), findsOneWidget);
     });
 
     testWidgets('tapping Cancel dismisses the sheet without clearing', (

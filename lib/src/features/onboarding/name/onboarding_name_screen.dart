@@ -101,8 +101,7 @@ class _OnboardingNameScreenState extends ConsumerState<OnboardingNameScreen> {
     final errorText = _firstErrorText;
     final canPop = Navigator.of(context).canPop();
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return GradientScaffold(
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(
@@ -136,7 +135,6 @@ class _OnboardingNameScreenState extends ConsumerState<OnboardingNameScreen> {
                 textInputAction: TextInputAction.next,
                 onChanged: _onFirstChanged,
                 errorText: errorText,
-                // Figma state-2 token: Nibble-primary-Burgundy ≈ destructive.
                 errorColor: AppColors.destructive,
               ),
               const SizedBox(height: AppSizes.md),

@@ -5,11 +5,7 @@ import 'package:nibbles/src/app/themes/app_sizes.dart';
 /// On/off switch. Mirrors kit components-controls `.switch`: 44x24 track,
 /// butter-on / grey-off, greenDeep 20px thumb with shadowSwitch.
 class AppSwitch extends StatelessWidget {
-  const AppSwitch({
-    required this.value,
-    required this.onChanged,
-    super.key,
-  });
+  const AppSwitch({required this.value, required this.onChanged, super.key});
 
   final bool value;
   final ValueChanged<bool>? onChanged;
@@ -34,8 +30,7 @@ class AppSwitch extends StatelessWidget {
             children: [
               AnimatedAlign(
                 duration: const Duration(milliseconds: 150),
-                alignment:
-                    value ? Alignment.centerRight : Alignment.centerLeft,
+                alignment: value ? Alignment.centerRight : Alignment.centerLeft,
                 child: Container(
                   margin: const EdgeInsets.symmetric(horizontal: inset),
                   width: AppSizes.switchThumb,

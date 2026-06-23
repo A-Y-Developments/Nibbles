@@ -395,17 +395,16 @@ void main() {
       },
     );
 
-    testWidgets(
-      "no iron-rich recipe today -> no '✓ Iron Rich' chip",
-      (tester) async {
-        await _pump(
-          tester,
-          overrides: _overridesFor(babyId: _babyId, state: _populatedState()),
-        );
+    testWidgets("no iron-rich recipe today -> no '✓ Iron Rich' chip", (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        overrides: _overridesFor(babyId: _babyId, state: _populatedState()),
+      );
 
-        expect(find.text('✓ Iron Rich'), findsNothing);
-      },
-    );
+      expect(find.text('✓ Iron Rich'), findsNothing);
+    });
   });
 
   group('HomeScreen — readyToStartEmpty variant (baby + no activity)', () {

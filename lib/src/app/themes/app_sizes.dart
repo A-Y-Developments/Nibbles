@@ -10,6 +10,7 @@ abstract final class AppSizes {
   static const double sp20 = 20;
   static const double lg = 24;
   static const double xl = 32;
+  static const double sp36 = 36;
   static const double sp40 = 40;
   static const double xxl = 48;
   static const double xxxl = 64;
@@ -38,7 +39,7 @@ abstract final class AppSizes {
   static const double listItemPaddingV = 12;
 
   // Component-specific
-  static const double buttonHeight = 52;
+  static const double buttonHeight = 38;
   static const double buttonHeightSm = 40;
   static const double roundButton = 44;
   static const double roundButtonSm = 32;
@@ -72,24 +73,12 @@ abstract final class AppSizes {
 
   // Shadow tokens (offsets + blur from kit colors_and_type.css)
   static const List<BoxShadow> shadowCard = [
-    BoxShadow(
-      color: Color(0x0F272727),
-      offset: Offset(0, 2),
-      blurRadius: 8,
-    ),
+    BoxShadow(color: Color(0x0F272727), offset: Offset(0, 2), blurRadius: 8),
   ];
   static const List<BoxShadow> shadowCardLifted = [
-    BoxShadow(
-      color: Color(0x1A272727),
-      offset: Offset(0, 6),
-      blurRadius: 24,
-    ),
+    BoxShadow(color: Color(0x1A272727), offset: Offset(0, 6), blurRadius: 24),
   ];
   static const List<BoxShadow> shadowSwitch = [
-    BoxShadow(
-      color: Color(0x1A272727),
-      offset: Offset(0, 2),
-      blurRadius: 4,
-    ),
+    BoxShadow(color: Color(0x1A272727), offset: Offset(0, 2), blurRadius: 4),
   ];
 }

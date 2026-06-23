@@ -16,9 +16,10 @@ import 'package:nibbles/src/utils/age_in_months.dart';
 ///
 /// Composition (top → bottom):
 ///   - Title `Before we start, some housekeeping`
-///   - Brand `PetalBlob` (shared with baby-setup-loading)
+///   - Flower cluster (`consent_flower.svg`) centered in the free space
 ///   - Age-gated checkbox list (2 boxes when baby >= 6mo, 3 when younger —
-///     extra row carries the "full responsibility" early-solids clause)
+///     extra row carries the "full responsibility" early-solids clause),
+///     pinned to the bottom with the CTA row
 ///   - Bottom row: butter `AppRoundButton` (back) + primary CTA
 ///     `Check confirmation` (disabled) → `Yes, I Understand` (enabled)
 ///
@@ -102,87 +103,74 @@ class _OnboardingConsentScreenState
       // Block system back and hardware back while submit is in-flight to
       // prevent racing the createBaby call with orphaned baby rows.
       canPop: !isSubmitting,
-      child: Scaffold(
-        // Grad-1 wash — every onboarding screen carries it.
-        body: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [AppColors.butterSoft, Color(0xFFF5F5F5)],
+      child: GradientScaffold(
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSizes.pagePaddingH,
+              vertical: AppSizes.pagePaddingV,
             ),
-          ),
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSizes.pagePaddingH,
-                vertical: AppSizes.pagePaddingV,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    'Before we start, some housekeeping',
-                    textAlign: TextAlign.center,
-                    // Figma Title 1/Bold 22 (sibling onboarding titles also 22).
-                    style: textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: AppSizes.lg),
-                  // Figma cluster is 220x220; rendered at 180 so the 3-box
-                  // <6mo variant fits without scrolling on ~5.5" devices.
-                  const Center(child: PetalBlob(size: 180)),
-                  const SizedBox(height: AppSizes.xl),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          for (var i = 0; i < _checks.length; i++) ...[
-                            _ConsentCheckboxRow(
-                              key: Key('onboarding_consent_checkbox_$i'),
-                              identifier: 'onboarding_consent_checkbox_$i',
-                              label: _labelFor(i),
-                              value: _checks[i],
-                              onChanged: (v) => _toggle(i, value: v),
-                            ),
-                            if (i < _checks.length - 1)
-                              const SizedBox(height: AppSizes.sm),
-                          ],
-                          if (errorMessage != null) ...[
-                            const SizedBox(height: AppSizes.md),
-                            _InlineError(
-                              key: const Key('onboarding_consent_error'),
-                              message: errorMessage,
-                              onRetry: canConfirm ? _onConfirm : null,
-                            ),
-                          ],
-                        ],
-                      ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Before we start, some housekeeping',
+                  textAlign: TextAlign.center,
+                  // Figma Title 1/Bold 22 (sibling onboarding titles also 22).
+                  style: textTheme.titleLarge,
+                ),
+                // Figma 971:10229 — flower cluster fills the gap between the
+                // title and the bottom-pinned checklist; scaleDown keeps the
+                // 220 cluster crisp but shrinks it on short screens.
+                const Expanded(
+                  child: Center(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: BrandFlower(size: 440),
                     ),
                   ),
+                ),
+                for (var i = 0; i < _checks.length; i++) ...[
+                  _ConsentCheckboxRow(
+                    key: Key('onboarding_consent_checkbox_$i'),
+                    identifier: 'onboarding_consent_checkbox_$i',
+                    label: _labelFor(i),
+                    value: _checks[i],
+                    onChanged: (v) => _toggle(i, value: v),
+                  ),
+                  if (i < _checks.length - 1)
+                    const SizedBox(height: AppSizes.sm),
+                ],
+                if (errorMessage != null) ...[
                   const SizedBox(height: AppSizes.md),
-                  Row(
-                    children: [
-                      AppRoundButton(
-                        key: const Key('onboarding_consent_back'),
-                        icon: const Icon(Icons.arrow_back_rounded),
-                        tone: AppRoundButtonTone.butter,
-                        semanticLabel: 'Back',
-                        // Gate back during submit to prevent orphan-baby race.
-                        onPressed: isSubmitting ? null : _onBack,
-                      ),
-                      const SizedBox(width: AppSizes.sp12),
-                      Expanded(
-                        child: AppPillButton(
-                          key: const Key('onboarding_consent_submit'),
-                          label: ctaLabel,
-                          onPressed: canConfirm ? _onConfirm : null,
-                        ),
-                      ),
-                    ],
+                  _InlineError(
+                    key: const Key('onboarding_consent_error'),
+                    message: errorMessage,
+                    onRetry: canConfirm ? _onConfirm : null,
                   ),
                 ],
-              ),
+                const SizedBox(height: AppSizes.md),
+                Row(
+                  children: [
+                    AppRoundButton(
+                      key: const Key('onboarding_consent_back'),
+                      icon: const Icon(Icons.arrow_back_rounded),
+                      tone: AppRoundButtonTone.butter,
+                      semanticLabel: 'Back',
+                      // Gate back during submit to prevent orphan-baby race.
+                      onPressed: isSubmitting ? null : _onBack,
+                    ),
+                    const SizedBox(width: AppSizes.sp12),
+                    Expanded(
+                      child: AppPillButton(
+                        key: const Key('onboarding_consent_submit'),
+                        label: ctaLabel,
+                        onPressed: canConfirm ? _onConfirm : null,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ),

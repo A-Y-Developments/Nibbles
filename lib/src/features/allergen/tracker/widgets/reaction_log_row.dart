@@ -117,10 +117,7 @@ class ReactionLogRow extends StatelessWidget {
                 Row(
                   children: [
                     Expanded(
-                      child: Text(
-                        'Log $logIndex',
-                        style: textTheme.labelLarge,
-                      ),
+                      child: Text('Log $logIndex', style: textTheme.labelLarge),
                     ),
                     statusChip,
                   ],

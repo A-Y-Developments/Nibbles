@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nibbles/gen/assets.gen.dart';
 import 'package:nibbles/gen/fonts.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/features/home/home_controller.dart';
 import 'package:nibbles/src/features/meal_plan/meal_plan_controller.dart';
@@ -70,30 +72,43 @@ class _HomeShellScreenState extends ConsumerState<HomeShellScreen> {
           }),
         ),
         child: NavigationBar(
+          height: AppSizes.bottomNavHeight,
           selectedIndex: widget.navigationShell.currentIndex,
           onDestinationSelected: (index) => widget.navigationShell.goBranch(
             index,
             initialLocation: index == widget.navigationShell.currentIndex,
           ),
-          destinations: const [
+          destinations: [
             NavigationDestination(
-              icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home),
+              icon: _navIcon(Assets.icons.nav.navHome, AppColors.fgFaint),
+              selectedIcon: _navIcon(
+                Assets.icons.nav.navHome,
+                AppColors.greenDeep,
+              ),
               label: 'Home',
             ),
             NavigationDestination(
-              icon: Icon(Icons.restaurant_menu_outlined),
-              selectedIcon: Icon(Icons.restaurant_menu),
+              icon: _navIcon(Assets.icons.nav.navMeal, AppColors.fgFaint),
+              selectedIcon: _navIcon(
+                Assets.icons.nav.navMeal,
+                AppColors.greenDeep,
+              ),
               label: 'Meals',
             ),
             NavigationDestination(
-              icon: Icon(Icons.shopping_cart_outlined),
-              selectedIcon: Icon(Icons.shopping_cart),
+              icon: _navIcon(Assets.icons.nav.navGrocery, AppColors.fgFaint),
+              selectedIcon: _navIcon(
+                Assets.icons.nav.navGrocery,
+                AppColors.greenDeep,
+              ),
               label: 'Grocery',
             ),
             NavigationDestination(
-              icon: Icon(Icons.menu_book_outlined),
-              selectedIcon: Icon(Icons.menu_book),
+              icon: _navIcon(Assets.icons.nav.navRecipe, AppColors.fgFaint),
+              selectedIcon: _navIcon(
+                Assets.icons.nav.navRecipe,
+                AppColors.greenDeep,
+              ),
               label: 'Recipes',
             ),
           ],
@@ -101,4 +116,10 @@ class _HomeShellScreenState extends ConsumerState<HomeShellScreen> {
       ),
     );
   }
+
+  Widget _navIcon(SvgGenImage icon, Color color) => icon.svg(
+    width: 24,
+    height: 24,
+    colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+  );
 }

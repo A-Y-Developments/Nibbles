@@ -53,13 +53,15 @@ void main() {
       }
     });
 
-    test('helper styles split by role: sectionTitle Parkinsans, body Figtree',
-        () {
-      expect(AppTypography.sectionTitle.fontFamily, FontFamily.parkinsans);
-      expect(AppTypography.caption.fontFamily, contains('Figtree'));
-      expect(AppTypography.button.fontFamily, contains('Figtree'));
-      expect(AppTypography.bodyBold.fontFamily, contains('Figtree'));
-    });
+    test(
+      'helper styles split by role: sectionTitle Parkinsans, body Figtree',
+      () {
+        expect(AppTypography.sectionTitle.fontFamily, FontFamily.parkinsans);
+        expect(AppTypography.caption.fontFamily, contains('Figtree'));
+        expect(AppTypography.button.fontFamily, contains('Figtree'));
+        expect(AppTypography.bodyBold.fontFamily, contains('Figtree'));
+      },
+    );
 
     test('ramp metrics preserved on swapped body slots', () {
       expect(textTheme.bodyLarge?.fontSize, 15);

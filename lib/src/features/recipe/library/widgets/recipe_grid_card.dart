@@ -12,7 +12,7 @@ import 'package:nibbles/src/common/domain/entities/recipe.dart';
 /// Visual target is a 158x220 tile per Figma 971:8661 — image-top (117 high,
 /// white surface) + 12px-padded content column. The content column fills the
 /// remaining card height and uses space-between to pin the 2-line title to
-/// the top and the salmon-ghost chip row (bolt 'Iron Rich' chip + a `+N`
+/// the top and the salmon-ghost chip row ('Iron Rich' label chip + a `+N`
 /// overflow chip) to the bottom. Flagged-allergen recipes show a
 /// [AppChipTone.flag] 'Not safe' chip overlaid on the image and dim the card.
 ///
@@ -122,6 +122,8 @@ class _CardThumbnail extends StatelessWidget {
                 size: AppSizes.iconLg,
               ),
             )
+          else if (url!.startsWith('assets/'))
+            Image.asset(url!, fit: BoxFit.cover)
           else
             CachedNetworkImage(
               imageUrl: url!,
@@ -156,7 +158,7 @@ class _CardThumbnail extends StatelessWidget {
   }
 }
 
-/// First nutrition tag as a salmon-ghost chip (Figma 'Iron Rich' bolt label)
+/// First nutrition tag as a salmon-ghost chip (Figma 'Iron Rich' label)
 /// + a `+N` overflow chip for the rest. The label chip is [Flexible] and
 /// ellipsizes so a long tag never overflows the ~134px content width; the
 /// `+N` chip is non-shrinking. When there are no tags, renders a fixed-
@@ -186,7 +188,7 @@ class _NutritionChipRow extends StatelessWidget {
 }
 
 /// Card-local salmon-ghost nutrition chip (Figma 'LabelContain', node
-/// 1082:7250). bg coralSoft / fg coralDeep, Figtree Regular 10/16, h24,
+/// 1082:7250). bg coralSoft / fg coralDeep, Figtree Bold 10/16, h24,
 /// radius 30. Deliberately NOT the shared [AppChip] (Parkinsans 11/700):
 /// this chip needs the Figtree caption token and a flexible, ellipsizing
 /// label so the row stays overflow-safe on the narrow card.
@@ -207,7 +209,7 @@ class _NutritionChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final textStyle = GoogleFonts.figtree(
       fontSize: 10,
-      fontWeight: FontWeight.w400,
+      fontWeight: FontWeight.w700,
       height: 16 / 10,
       color: AppColors.coralDeep,
     );
@@ -222,15 +224,15 @@ class _NutritionChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            isOverflow ? Icons.add : Icons.bolt,
-            size: AppSizes.iconSm,
-            color: AppColors.coralDeep,
-          ),
-          SizedBox(width: isOverflow ? AppSizes.xs : AppSizes.sm),
-          if (isOverflow)
-            Text('${count ?? 0}', style: textStyle)
-          else
+          if (isOverflow) ...[
+            const Icon(
+              Icons.add,
+              size: AppSizes.iconSm,
+              color: AppColors.coralDeep,
+            ),
+            const SizedBox(width: AppSizes.xs),
+            Text('${count ?? 0}', style: textStyle),
+          ] else
             Flexible(
               child: Text(
                 label,

@@ -30,6 +30,14 @@ class RegisterController extends _$RegisterController {
     state = state.copyWith(obscure: !state.obscure);
   }
 
+  void updateConfirmPassword(String value) {
+    state = state.copyWith(confirmPassword: value, errorMessage: null);
+  }
+
+  void toggleObscureConfirm() {
+    state = state.copyWith(obscureConfirm: !state.obscureConfirm);
+  }
+
   Future<bool> submit() async {
     _fireAndForget(
       ref
@@ -56,10 +64,12 @@ class RegisterController extends _$RegisterController {
       failure: (error) {
         state = state.copyWith(isLoading: false, errorMessage: error.message);
         _fireAndForget(
-          ref.read(analyticsProvider).logSignUpFailure(
-            method: AuthMethod.email,
-            errorCode: authErrorCode(error),
-          ),
+          ref
+              .read(analyticsProvider)
+              .logSignUpFailure(
+                method: AuthMethod.email,
+                errorCode: authErrorCode(error),
+              ),
         );
         return false;
       },
@@ -114,10 +124,12 @@ class RegisterController extends _$RegisterController {
       failure: (error) {
         state = state.copyWith(isLoading: false, errorMessage: error.message);
         _fireAndForget(
-          ref.read(analyticsProvider).logSignUpFailure(
-            method: method,
-            errorCode: authErrorCode(error),
-          ),
+          ref
+              .read(analyticsProvider)
+              .logSignUpFailure(
+                method: method,
+                errorCode: authErrorCode(error),
+              ),
         );
         return false;
       },

@@ -9,8 +9,9 @@ void main() {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
-      final state =
-          await container.read(startingGuideControllerProvider.future);
+      final state = await container.read(
+        startingGuideControllerProvider.future,
+      );
 
       expect(state.articles, kStartingGuideArticles);
     });
@@ -22,8 +23,9 @@ void main() {
       addTearDown(container.dispose);
       await container.read(startingGuideControllerProvider.future);
 
-      final controller =
-          container.read(startingGuideControllerProvider.notifier);
+      final controller = container.read(
+        startingGuideControllerProvider.notifier,
+      );
       final article = controller.articleFor('introduction');
 
       expect(article, isNotNull);
@@ -35,8 +37,9 @@ void main() {
       addTearDown(container.dispose);
       await container.read(startingGuideControllerProvider.future);
 
-      final controller =
-          container.read(startingGuideControllerProvider.notifier);
+      final controller = container.read(
+        startingGuideControllerProvider.notifier,
+      );
 
       expect(controller.articleFor('unknown-slug'), isNull);
     });
@@ -45,8 +48,9 @@ void main() {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
-      final controller =
-          container.read(startingGuideControllerProvider.notifier);
+      final controller = container.read(
+        startingGuideControllerProvider.notifier,
+      );
       final article = controller.articleFor('first-nibbles');
 
       expect(article, isNotNull);

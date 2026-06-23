@@ -31,16 +31,17 @@ void main() {
     ).thenAnswer((_) => const Stream.empty());
     when(mockFlags.isOnboardingBabySetupDone).thenReturn(true);
 
-    container = ProviderContainer(
-      overrides: [
-        authRepositoryProvider.overrideWithValue(mockRepo),
-        localFlagServiceProvider.overrideWithValue(mockFlags),
-        analyticsProvider.overrideWithValue(fakeAnalytics),
-      ],
-    )
-    // Hold the controller alive across awaits so state isn't lost to
-    // auto-dispose between assertions.
-    ..listen<LoginState>(loginControllerProvider, (_, __) {});
+    container =
+        ProviderContainer(
+            overrides: [
+              authRepositoryProvider.overrideWithValue(mockRepo),
+              localFlagServiceProvider.overrideWithValue(mockFlags),
+              analyticsProvider.overrideWithValue(fakeAnalytics),
+            ],
+          )
+          // Hold the controller alive across awaits so state isn't lost to
+          // auto-dispose between assertions.
+          ..listen<LoginState>(loginControllerProvider, (_, __) {});
   });
 
   tearDown(() => container.dispose());
@@ -63,18 +64,12 @@ void main() {
       // Drain pending fire-and-forget microtasks.
       await Future<void>.delayed(Duration.zero);
 
-      expect(
-        fakeAnalytics.eventNames,
-        ['login_method_selected', 'login_success'],
-      );
-      expect(
-        fakeAnalytics.calls[0].parameters,
-        {'method': 'email'},
-      );
-      expect(
-        fakeAnalytics.calls[1].parameters,
-        {'method': 'email'},
-      );
+      expect(fakeAnalytics.eventNames, [
+        'login_method_selected',
+        'login_success',
+      ]);
+      expect(fakeAnalytics.calls[0].parameters, {'method': 'email'});
+      expect(fakeAnalytics.calls[1].parameters, {'method': 'email'});
     });
 
     test('fires method_selected + failure on Failure', () async {
@@ -85,42 +80,42 @@ void main() {
       await readController().submit();
       await Future<void>.delayed(Duration.zero);
 
-      expect(
-        fakeAnalytics.eventNames,
-        ['login_method_selected', 'login_failure'],
-      );
-      expect(
-        fakeAnalytics.calls[1].parameters,
-        {'method': 'email', 'error_code': 'server_exception'},
-      );
+      expect(fakeAnalytics.eventNames, [
+        'login_method_selected',
+        'login_failure',
+      ]);
+      expect(fakeAnalytics.calls[1].parameters, {
+        'method': 'email',
+        'error_code': 'server_exception',
+      });
     });
 
     test('maps NetworkException to network error_code', () async {
-      when(() => mockRepo.signIn(any(), any())).thenAnswer(
-        (_) async => const Result.failure(NetworkException()),
-      );
+      when(
+        () => mockRepo.signIn(any(), any()),
+      ).thenAnswer((_) async => const Result.failure(NetworkException()));
 
       await readController().submit();
       await Future<void>.delayed(Duration.zero);
 
-      expect(
-        fakeAnalytics.calls.last.parameters,
-        {'method': 'email', 'error_code': 'network'},
-      );
+      expect(fakeAnalytics.calls.last.parameters, {
+        'method': 'email',
+        'error_code': 'network',
+      });
     });
 
     test('maps UnknownException to unknown error_code', () async {
-      when(() => mockRepo.signIn(any(), any())).thenAnswer(
-        (_) async => const Result.failure(UnknownException()),
-      );
+      when(
+        () => mockRepo.signIn(any(), any()),
+      ).thenAnswer((_) async => const Result.failure(UnknownException()));
 
       await readController().submit();
       await Future<void>.delayed(Duration.zero);
 
-      expect(
-        fakeAnalytics.calls.last.parameters,
-        {'method': 'email', 'error_code': 'unknown'},
-      );
+      expect(fakeAnalytics.calls.last.parameters, {
+        'method': 'email',
+        'error_code': 'unknown',
+      });
     });
   });
 
@@ -140,14 +135,11 @@ void main() {
       final state = container.read(loginControllerProvider);
       expect(state.isLoading, isFalse);
       expect(state.errorMessage, isNull);
-      expect(
-        fakeAnalytics.eventNames,
-        ['login_method_selected', 'login_success'],
-      );
-      expect(
-        fakeAnalytics.calls[0].parameters,
-        {'method': 'google'},
-      );
+      expect(fakeAnalytics.eventNames, [
+        'login_method_selected',
+        'login_success',
+      ]);
+      expect(fakeAnalytics.calls[0].parameters, {'method': 'google'});
     });
 
     test('clears loading + no error on Success(false) (cancel)', () async {
@@ -161,14 +153,11 @@ void main() {
       final state = container.read(loginControllerProvider);
       expect(state.isLoading, isFalse);
       expect(state.errorMessage, isNull);
-      expect(
-        fakeAnalytics.eventNames,
-        ['login_method_selected', 'social_login_cancelled'],
-      );
-      expect(
-        fakeAnalytics.calls.last.parameters,
-        {'provider': 'google'},
-      );
+      expect(fakeAnalytics.eventNames, [
+        'login_method_selected',
+        'social_login_cancelled',
+      ]);
+      expect(fakeAnalytics.calls.last.parameters, {'provider': 'google'});
     });
 
     test('sets errorMessage on Failure and fires login_failure', () async {
@@ -182,14 +171,14 @@ void main() {
       final state = container.read(loginControllerProvider);
       expect(state.isLoading, isFalse);
       expect(state.errorMessage, 'Google failed');
-      expect(
-        fakeAnalytics.eventNames,
-        ['login_method_selected', 'login_failure'],
-      );
-      expect(
-        fakeAnalytics.calls.last.parameters,
-        {'method': 'google', 'error_code': 'server_exception'},
-      );
+      expect(fakeAnalytics.eventNames, [
+        'login_method_selected',
+        'login_failure',
+      ]);
+      expect(fakeAnalytics.calls.last.parameters, {
+        'method': 'google',
+        'error_code': 'server_exception',
+      });
     });
   });
 
@@ -209,14 +198,11 @@ void main() {
       final state = container.read(loginControllerProvider);
       expect(state.isLoading, isFalse);
       expect(state.errorMessage, isNull);
-      expect(
-        fakeAnalytics.eventNames,
-        ['login_method_selected', 'login_success'],
-      );
-      expect(
-        fakeAnalytics.calls[0].parameters,
-        {'method': 'apple'},
-      );
+      expect(fakeAnalytics.eventNames, [
+        'login_method_selected',
+        'login_success',
+      ]);
+      expect(fakeAnalytics.calls[0].parameters, {'method': 'apple'});
     });
 
     test('clears loading + no error on Success(false) (cancel)', () async {
@@ -230,14 +216,11 @@ void main() {
       final state = container.read(loginControllerProvider);
       expect(state.isLoading, isFalse);
       expect(state.errorMessage, isNull);
-      expect(
-        fakeAnalytics.eventNames,
-        ['login_method_selected', 'social_login_cancelled'],
-      );
-      expect(
-        fakeAnalytics.calls.last.parameters,
-        {'provider': 'apple'},
-      );
+      expect(fakeAnalytics.eventNames, [
+        'login_method_selected',
+        'social_login_cancelled',
+      ]);
+      expect(fakeAnalytics.calls.last.parameters, {'provider': 'apple'});
     });
 
     test('sets errorMessage on Failure and fires login_failure', () async {
@@ -251,14 +234,14 @@ void main() {
       final state = container.read(loginControllerProvider);
       expect(state.isLoading, isFalse);
       expect(state.errorMessage, 'Apple failed');
-      expect(
-        fakeAnalytics.eventNames,
-        ['login_method_selected', 'login_failure'],
-      );
-      expect(
-        fakeAnalytics.calls.last.parameters,
-        {'method': 'apple', 'error_code': 'server_exception'},
-      );
+      expect(fakeAnalytics.eventNames, [
+        'login_method_selected',
+        'login_failure',
+      ]);
+      expect(fakeAnalytics.calls.last.parameters, {
+        'method': 'apple',
+        'error_code': 'server_exception',
+      });
     });
   });
 

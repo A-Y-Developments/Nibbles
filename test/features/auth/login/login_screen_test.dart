@@ -136,10 +136,7 @@ void main() {
       await tester.pump();
 
       expect(iconInPasswordField(Icons.visibility_outlined), findsOneWidget);
-      expect(
-        iconInPasswordField(Icons.visibility_off_outlined),
-        findsNothing,
-      );
+      expect(iconInPasswordField(Icons.visibility_off_outlined), findsNothing);
     },
   );
 
@@ -174,8 +171,9 @@ void main() {
       await tester.tap(find.byKey(const Key('login_submit_button')));
       await tester.pumpAndSettle();
 
-      verify(() => mockRepo.signIn('jane@example.com', 'badpassword'))
-          .called(1);
+      verify(
+        () => mockRepo.signIn('jane@example.com', 'badpassword'),
+      ).called(1);
 
       // Error caption renders once, under the password field.
       expect(find.text('Invalid login credentials.'), findsOneWidget);
@@ -210,59 +208,54 @@ void main() {
     },
   );
 
-  testWidgets(
-    'Apple tap calls controller.signInWithApple and logs analytics',
-    (tester) async {
-      when(
-        () => mockRepo.signInWithApple(),
-      ).thenAnswer((_) async => const Result.success(true));
+  testWidgets('Apple tap calls controller.signInWithApple and logs analytics', (
+    tester,
+  ) async {
+    when(
+      () => mockRepo.signInWithApple(),
+    ).thenAnswer((_) async => const Result.success(true));
 
-      await tester.pumpWidget(_wrap(const LoginScreen(), buildOverrides()));
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(_wrap(const LoginScreen(), buildOverrides()));
+    await tester.pumpAndSettle();
 
-      final appleBtn = find.byKey(const Key('login_apple_button'));
-      await tester.ensureVisible(appleBtn);
-      await tester.pumpAndSettle();
-      await tester.tap(appleBtn);
-      await tester.pumpAndSettle();
+    final appleBtn = find.byKey(const Key('login_apple_button'));
+    await tester.ensureVisible(appleBtn);
+    await tester.pumpAndSettle();
+    await tester.tap(appleBtn);
+    await tester.pumpAndSettle();
 
-      verify(() => mockRepo.signInWithApple()).called(1);
-      expect(
-        fakeAnalytics.eventNames,
-        containsAllInOrder(['login_method_selected', 'login_success']),
-      );
-    },
-  );
+    verify(() => mockRepo.signInWithApple()).called(1);
+    expect(
+      fakeAnalytics.eventNames,
+      containsAllInOrder(['login_method_selected', 'login_success']),
+    );
+  });
 
-  testWidgets(
-    'cancel-OAuth (Success(false)) shows NO error caption',
-    (tester) async {
-      when(
-        () => mockRepo.signInWithGoogle(),
-      ).thenAnswer((_) async => const Result.success(false));
+  testWidgets('cancel-OAuth (Success(false)) shows NO error caption', (
+    tester,
+  ) async {
+    when(
+      () => mockRepo.signInWithGoogle(),
+    ).thenAnswer((_) async => const Result.success(false));
 
-      await tester.pumpWidget(_wrap(const LoginScreen(), buildOverrides()));
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(_wrap(const LoginScreen(), buildOverrides()));
+    await tester.pumpAndSettle();
 
-      final googleBtn = find.byKey(const Key('login_google_button'));
-      await tester.ensureVisible(googleBtn);
-      await tester.pumpAndSettle();
-      await tester.tap(googleBtn);
-      await tester.pumpAndSettle();
+    final googleBtn = find.byKey(const Key('login_google_button'));
+    await tester.ensureVisible(googleBtn);
+    await tester.pumpAndSettle();
+    await tester.tap(googleBtn);
+    await tester.pumpAndSettle();
 
-      // Nothing in the destructive caption slot — controller stays clean.
-      expect(find.textContaining('failed'), findsNothing);
-      expect(find.textContaining('cancel'), findsNothing);
-      // Cancellation logs the cancel event (no error UI).
-      expect(
-        fakeAnalytics.eventNames,
-        containsAllInOrder([
-          'login_method_selected',
-          'social_login_cancelled',
-        ]),
-      );
-    },
-  );
+    // Nothing in the destructive caption slot — controller stays clean.
+    expect(find.textContaining('failed'), findsNothing);
+    expect(find.textContaining('cancel'), findsNothing);
+    // Cancellation logs the cancel event (no error UI).
+    expect(
+      fakeAnalytics.eventNames,
+      containsAllInOrder(['login_method_selected', 'social_login_cancelled']),
+    );
+  });
 
   // -------------------------------------------------------------------------
   // Sign Up footer navigation

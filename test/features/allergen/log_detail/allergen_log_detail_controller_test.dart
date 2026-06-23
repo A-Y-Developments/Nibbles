@@ -72,41 +72,32 @@ void main() {
   tearDown(() => container.dispose());
 
   group('AllergenLogDetailController.build', () {
-    test(
-      'returns AllergenLogDetailState with the matching log + 1-based '
-      'logNumber for the position in the oldest-first sequence',
-      () async {
-        final logs = [
-          _makeLog(),
-          _makeLog(id: 'log-2'),
-          _makeLog(id: 'log-3'),
-        ];
-        when(
-          () => mockService.getAllergens(),
-        ).thenAnswer((_) async => const Result.success([_peanut]));
-        when(
-          () => mockService.getLogs(
-            any(),
-            allergenKey: any(named: 'allergenKey'),
-          ),
-        ).thenAnswer((_) async => Result.success(logs));
+    test('returns AllergenLogDetailState with the matching log + 1-based '
+        'logNumber for the position in the oldest-first sequence', () async {
+      final logs = [_makeLog(), _makeLog(id: 'log-2'), _makeLog(id: 'log-3')];
+      when(
+        () => mockService.getAllergens(),
+      ).thenAnswer((_) async => const Result.success([_peanut]));
+      when(
+        () =>
+            mockService.getLogs(any(), allergenKey: any(named: 'allergenKey')),
+      ).thenAnswer((_) async => Result.success(logs));
 
-        final state = await container.read(
-          allergenLogDetailControllerProvider(_allergenKey, 'log-2').future,
-        );
+      final state = await container.read(
+        allergenLogDetailControllerProvider(_allergenKey, 'log-2').future,
+      );
 
-        expect(state.log.id, 'log-2');
-        expect(state.allergen.key, 'peanut');
-        expect(state.babyId, _babyId);
-        // index 1 in oldest-first → 1-based logNumber == 2.
-        expect(state.logNumber, 2);
+      expect(state.log.id, 'log-2');
+      expect(state.allergen.key, 'peanut');
+      expect(state.babyId, _babyId);
+      // index 1 in oldest-first → 1-based logNumber == 2.
+      expect(state.logNumber, 2);
 
-        // Verifies the controller fetched logs filtered by allergenKey.
-        verify(
-          () => mockService.getLogs(_babyId, allergenKey: _allergenKey),
-        ).called(1);
-      },
-    );
+      // Verifies the controller fetched logs filtered by allergenKey.
+      verify(
+        () => mockService.getLogs(_babyId, allergenKey: _allergenKey),
+      ).called(1);
+    });
 
     test(
       'surfaces a Result.failure from getLogs as AsyncValue.error',
@@ -139,9 +130,7 @@ void main() {
     test(
       'surfaces a Result.failure from getAllergens as AsyncValue.error',
       () async {
-        when(
-          () => mockService.getAllergens(),
-        ).thenAnswer(
+        when(() => mockService.getAllergens()).thenAnswer(
           (_) async => const Result.failure(ServerException('boom')),
         );
         when(
@@ -163,35 +152,27 @@ void main() {
       },
     );
 
-    test(
-      'unknown logId throws and is surfaced as AsyncValue.error',
-      () async {
-        when(
-          () => mockService.getAllergens(),
-        ).thenAnswer((_) async => const Result.success([_peanut]));
-        when(
-          () => mockService.getLogs(
-            any(),
-            allergenKey: any(named: 'allergenKey'),
-          ),
-        ).thenAnswer((_) async => Result.success([_makeLog()]));
+    test('unknown logId throws and is surfaced as AsyncValue.error', () async {
+      when(
+        () => mockService.getAllergens(),
+      ).thenAnswer((_) async => const Result.success([_peanut]));
+      when(
+        () =>
+            mockService.getLogs(any(), allergenKey: any(named: 'allergenKey')),
+      ).thenAnswer((_) async => Result.success([_makeLog()]));
 
-        final notifier = container.read(
-          allergenLogDetailControllerProvider(_allergenKey, 'unknown').notifier,
-        );
-        await expectLater(notifier.future, throwsA(isA<StateError>()));
-      },
-    );
+      final notifier = container.read(
+        allergenLogDetailControllerProvider(_allergenKey, 'unknown').notifier,
+      );
+      await expectLater(notifier.future, throwsA(isA<StateError>()));
+    });
 
     test('throws StateError when getBaby returns null', () async {
-      when(
-        () => mockBabyService.getBaby(),
-      ).thenAnswer((_) async => null);
+      when(() => mockBabyService.getBaby()).thenAnswer((_) async => null);
 
       await expectLater(
         container.read(
-          allergenLogDetailControllerProvider(_allergenKey, 'log-1')
-              .future,
+          allergenLogDetailControllerProvider(_allergenKey, 'log-1').future,
         ),
         throwsA(isA<StateError>()),
       );
@@ -206,8 +187,7 @@ void main() {
 
         await expectLater(
           container.read(
-            allergenLogDetailControllerProvider(_allergenKey, 'log-1')
-                .future,
+            allergenLogDetailControllerProvider(_allergenKey, 'log-1').future,
           ),
           throwsA(isA<StateError>()),
         );
@@ -222,10 +202,8 @@ void main() {
         () => mockService.getAllergens(),
       ).thenAnswer((_) async => const Result.success([_peanut]));
       when(
-        () => mockService.getLogs(
-          any(),
-          allergenKey: any(named: 'allergenKey'),
-        ),
+        () =>
+            mockService.getLogs(any(), allergenKey: any(named: 'allergenKey')),
       ).thenAnswer((_) async => Result.success([log]));
 
       await container.read(
@@ -234,8 +212,7 @@ void main() {
 
       await container
           .read(
-            allergenLogDetailControllerProvider(_allergenKey, 'log-1')
-                .notifier,
+            allergenLogDetailControllerProvider(_allergenKey, 'log-1').notifier,
           )
           .refresh();
 

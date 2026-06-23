@@ -31,19 +31,20 @@ void main() {
     ).thenAnswer((_) => const Stream.empty());
     when(mockFlags.isOnboardingBabySetupDone).thenReturn(true);
 
-    container = ProviderContainer(
-      overrides: [
-        authRepositoryProvider.overrideWithValue(mockRepo),
-        localFlagServiceProvider.overrideWithValue(mockFlags),
-        analyticsProvider.overrideWithValue(fakeAnalytics),
-      ],
-    )
-    // Hold the controller alive across awaits so state isn't lost to
-    // auto-dispose between assertions.
-    ..listen<ForgotPasswordState>(
-      forgotPasswordControllerProvider,
-      (_, __) {},
-    );
+    container =
+        ProviderContainer(
+            overrides: [
+              authRepositoryProvider.overrideWithValue(mockRepo),
+              localFlagServiceProvider.overrideWithValue(mockFlags),
+              analyticsProvider.overrideWithValue(fakeAnalytics),
+            ],
+          )
+          // Hold the controller alive across awaits so state isn't lost to
+          // auto-dispose between assertions.
+          ..listen<ForgotPasswordState>(
+            forgotPasswordControllerProvider,
+            (_, __) {},
+          );
   });
 
   tearDown(() => container.dispose());

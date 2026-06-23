@@ -64,9 +64,7 @@ class _ShoppingListSheetState extends State<_ShoppingListSheet> {
   void initState() {
     super.initState();
     // Default: every row pre-selected (success-1 state).
-    _selected = <int>{
-      for (var i = 0; i < widget.ingredients.length; i++) i,
-    };
+    _selected = <int>{for (var i = 0; i < widget.ingredients.length; i++) i};
   }
 
   int get _remainingCount => widget.ingredients.length - _removed.length;
@@ -243,8 +241,7 @@ class _ShoppingListSheetState extends State<_ShoppingListSheet> {
                     child: AppPillButton(
                       label: toggleLabel,
                       variant: AppPillButtonVariant.ghost,
-                      onPressed:
-                          _remainingCount == 0 ? null : _toggleSelectAll,
+                      onPressed: _remainingCount == 0 ? null : _toggleSelectAll,
                     ),
                   ),
                   const SizedBox(width: AppSizes.sp12),
@@ -381,9 +378,7 @@ class _EmptyState extends StatelessWidget {
       child: Center(
         child: Text(
           'No ingredients left.',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: AppColors.fgFaint,
-          ),
+          style: theme.textTheme.bodyMedium?.copyWith(color: AppColors.fgFaint),
         ),
       ),
     );

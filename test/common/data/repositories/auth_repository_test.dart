@@ -490,8 +490,9 @@ void main() {
 
     test('maps AuthException to Failure(ServerException)', () async {
       final sut = buildSut();
-      when(() => mockAuth.signOut())
-          .thenThrow(const AuthException('session expired'));
+      when(
+        () => mockAuth.signOut(),
+      ).thenThrow(const AuthException('session expired'));
 
       final result = await sut.signOut();
 
@@ -574,8 +575,9 @@ void main() {
   group('updatePassword', () {
     test('returns Success', () async {
       final sut = buildSut();
-      when(() => mockAuth.updateUser(any()))
-          .thenAnswer((_) async => _FakeUserResponse());
+      when(
+        () => mockAuth.updateUser(any()),
+      ).thenAnswer((_) async => _FakeUserResponse());
 
       final result = await sut.updatePassword('newpassword123');
 
@@ -584,8 +586,9 @@ void main() {
 
     test('maps AuthException to Failure(ServerException)', () async {
       final sut = buildSut();
-      when(() => mockAuth.updateUser(any()))
-          .thenThrow(const AuthException('weak password'));
+      when(
+        () => mockAuth.updateUser(any()),
+      ).thenThrow(const AuthException('weak password'));
 
       final result = await sut.updatePassword('weak');
 
@@ -595,8 +598,9 @@ void main() {
 
     test('returns Failure(UnknownException) on unexpected error', () async {
       final sut = buildSut();
-      when(() => mockAuth.updateUser(any()))
-          .thenThrow(Exception('network error'));
+      when(
+        () => mockAuth.updateUser(any()),
+      ).thenThrow(Exception('network error'));
 
       final result = await sut.updatePassword('newpassword123');
 
@@ -612,8 +616,9 @@ void main() {
   group('updateEmail', () {
     test('returns Success', () async {
       final sut = buildSut();
-      when(() => mockAuth.updateUser(any()))
-          .thenAnswer((_) async => _FakeUserResponse());
+      when(
+        () => mockAuth.updateUser(any()),
+      ).thenAnswer((_) async => _FakeUserResponse());
 
       final result = await sut.updateEmail('new@example.com');
 
@@ -622,8 +627,9 @@ void main() {
 
     test('maps AuthException to Failure(ServerException)', () async {
       final sut = buildSut();
-      when(() => mockAuth.updateUser(any()))
-          .thenThrow(const AuthException('email already taken'));
+      when(
+        () => mockAuth.updateUser(any()),
+      ).thenThrow(const AuthException('email already taken'));
 
       final result = await sut.updateEmail('new@example.com');
 
@@ -633,8 +639,9 @@ void main() {
 
     test('returns Failure(UnknownException) on unexpected error', () async {
       final sut = buildSut();
-      when(() => mockAuth.updateUser(any()))
-          .thenThrow(Exception('network error'));
+      when(
+        () => mockAuth.updateUser(any()),
+      ).thenThrow(Exception('network error'));
 
       final result = await sut.updateEmail('new@example.com');
 
@@ -664,8 +671,9 @@ void main() {
 
     test('currentUserEmail returns email from current user', () {
       final sut = buildSut();
-      when(() => mockAuth.currentUser)
-          .thenReturn(_FakeUserWithEmail('user@example.com'));
+      when(
+        () => mockAuth.currentUser,
+      ).thenReturn(_FakeUserWithEmail('user@example.com'));
 
       expect(sut.currentUserEmail, 'user@example.com');
     });

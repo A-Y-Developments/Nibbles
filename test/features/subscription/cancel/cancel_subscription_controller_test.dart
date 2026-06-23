@@ -49,11 +49,11 @@ void main() {
     () async {
       final analytics = FakeAnalytics();
       final launcher = _LaunchRecorder();
-      final container =
-          _container(analytics: analytics, launcher: launcher);
+      final container = _container(analytics: analytics, launcher: launcher);
 
-      final controller =
-          container.read(cancelSubscriptionControllerProvider.notifier);
+      final controller = container.read(
+        cancelSubscriptionControllerProvider.notifier,
+      );
       final ok = await controller.submit(CancelReason.achievedGoal);
 
       expect(ok, isTrue);
@@ -65,8 +65,9 @@ void main() {
           'subscription_cancel_reason',
         ]),
       );
-      final started = analytics.calls
-          .firstWhere((c) => c.name == 'subscription_cancel_started');
+      final started = analytics.calls.firstWhere(
+        (c) => c.name == 'subscription_cancel_started',
+      );
       expect(started.parameters['reason'], 'achieved_goal');
       // Final state has isSubmitting reset.
       expect(
@@ -81,20 +82,17 @@ void main() {
     () async {
       final analytics = FakeAnalytics();
       final launcher = _LaunchRecorder()..result = false;
-      final container =
-          _container(analytics: analytics, launcher: launcher);
+      final container = _container(analytics: analytics, launcher: launcher);
 
-      final controller =
-          container.read(cancelSubscriptionControllerProvider.notifier);
+      final controller = container.read(
+        cancelSubscriptionControllerProvider.notifier,
+      );
       final ok = await controller.submit(CancelReason.other);
 
       expect(ok, isFalse);
       expect(launcher.calls, 1);
       // Intent events still fired BEFORE the launch attempt.
-      expect(
-        analytics.eventNames,
-        contains('subscription_cancel_started'),
-      );
+      expect(analytics.eventNames, contains('subscription_cancel_started'));
       // Final state resets the flag.
       expect(
         container.read(cancelSubscriptionControllerProvider).isSubmitting,
@@ -103,58 +101,55 @@ void main() {
     },
   );
 
-  test(
-    're-entrancy: a second submit while one is in-flight returns false and '
-    'does NOT launch or re-log the intent events twice',
-    () async {
-      final analytics = FakeAnalytics();
-      final gate = Completer<bool>();
-      var launchCalls = 0;
-      Future<bool> gatedLaunch(
-        Uri uri, {
-        LaunchMode mode = LaunchMode.platformDefault,
-      }) {
-        launchCalls += 1;
-        return gate.future;
-      }
+  test('re-entrancy: a second submit while one is in-flight returns false and '
+      'does NOT launch or re-log the intent events twice', () async {
+    final analytics = FakeAnalytics();
+    final gate = Completer<bool>();
+    var launchCalls = 0;
+    Future<bool> gatedLaunch(
+      Uri uri, {
+      LaunchMode mode = LaunchMode.platformDefault,
+    }) {
+      launchCalls += 1;
+      return gate.future;
+    }
 
-      final container = ProviderContainer(
-        overrides: [
-          analyticsProvider.overrideWithValue(analytics),
-          subscriptionLaunchUrlProvider.overrideWithValue(gatedLaunch),
-        ],
-      );
-      addTearDown(container.dispose);
+    final container = ProviderContainer(
+      overrides: [
+        analyticsProvider.overrideWithValue(analytics),
+        subscriptionLaunchUrlProvider.overrideWithValue(gatedLaunch),
+      ],
+    );
+    addTearDown(container.dispose);
 
-      final controller =
-          container.read(cancelSubscriptionControllerProvider.notifier);
-      // First submit runs synchronously up to the launch await, so
-      // isSubmitting is already true when the second (double-tap) lands.
-      final first = controller.submit(CancelReason.achievedGoal);
-      final second = await controller.submit(CancelReason.achievedGoal);
+    final controller = container.read(
+      cancelSubscriptionControllerProvider.notifier,
+    );
+    // First submit runs synchronously up to the launch await, so
+    // isSubmitting is already true when the second (double-tap) lands.
+    final first = controller.submit(CancelReason.achievedGoal);
+    final second = await controller.submit(CancelReason.achievedGoal);
 
-      // The in-flight guard rejects the second tap immediately.
-      expect(second, isFalse);
-      expect(launchCalls, 1);
+    // The in-flight guard rejects the second tap immediately.
+    expect(second, isFalse);
+    expect(launchCalls, 1);
 
-      gate.complete(true);
-      expect(await first, isTrue);
+    gate.complete(true);
+    expect(await first, isTrue);
 
-      // Exactly one set of intent events despite the double-tap.
-      expect(
-        analytics.calls
-            .where((c) => c.name == 'subscription_cancel_started')
-            .length,
-        1,
-      );
-    },
-  );
+    // Exactly one set of intent events despite the double-tap.
+    expect(
+      analytics.calls
+          .where((c) => c.name == 'subscription_cancel_started')
+          .length,
+      1,
+    );
+  });
 
   test(
     'all six CancelReason enum entries carry a unique snake_case analyticsKey',
     () {
-      final keys =
-          CancelReason.values.map((r) => r.analyticsKey).toSet();
+      final keys = CancelReason.values.map((r) => r.analyticsKey).toSet();
       expect(keys.length, CancelReason.values.length);
       for (final key in keys) {
         expect(key, matches(RegExp(r'^[a-z][a-z_]*$')));

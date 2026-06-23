@@ -27,8 +27,7 @@ GoRouter _routerFor(Widget screen) => GoRouter(
     GoRoute(
       path: AppRoute.onboardingDob.path,
       name: AppRoute.onboardingDob.name,
-      builder: (_, __) =>
-          const Scaffold(body: Center(child: Text('DOB_STUB'))),
+      builder: (_, __) => const Scaffold(body: Center(child: Text('DOB_STUB'))),
     ),
   ],
 );
@@ -40,8 +39,9 @@ Widget _wrap({required Widget screen, List<Override> overrides = const []}) =>
     );
 
 void main() {
-  testWidgets('renders both fields + disabled Next on first paint',
-      (tester) async {
+  testWidgets('renders both fields + disabled Next on first paint', (
+    tester,
+  ) async {
     await tester.pumpWidget(_wrap(screen: const OnboardingNameScreen()));
     await tester.pumpAndSettle();
 
@@ -49,10 +49,7 @@ void main() {
       find.byKey(const Key('onboarding_first_name_field')),
       findsOneWidget,
     );
-    expect(
-      find.byKey(const Key('onboarding_last_name_field')),
-      findsOneWidget,
-    );
+    expect(find.byKey(const Key('onboarding_last_name_field')), findsOneWidget);
 
     // Next CTA exists but is disabled — AppPillButton renders Material with no
     // onPressed; assert via the widget's `onPressed` rather than visual color

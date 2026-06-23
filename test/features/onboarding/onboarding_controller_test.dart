@@ -19,7 +19,7 @@ class _MockLocalFlagService extends Mock implements LocalFlagService {}
 
 /// Hand-rolled no-op repo — see consent screen test for the rationale; mixing
 /// a Mock'd ConsentService that uses NAMED matchers with the existing
-/// `babyProfile.createBaby(any(), any())` POSITIONAL matchers in this file
+/// `babyProfile.createBaby(...)` POSITIONAL matchers in this file
 /// would trip mocktail's matcher accounting. NIB-145's wiring behaviour is
 /// asserted in `onboarding_controller_consent_persistence_test.dart`.
 class _NoopConsentRepository implements ConsentRepository {
@@ -72,9 +72,7 @@ ProviderContainer _makeContainerWithFlags({
       consentServiceProvider.overrideWithValue(
         const ConsentService(_NoopConsentRepository()),
       ),
-      onboardingCrashRecorderProvider.overrideWithValue(
-        _noopCrashRecorder,
-      ),
+      onboardingCrashRecorderProvider.overrideWithValue(_noopCrashRecorder),
       localFlagServiceProvider.overrideWithValue(flags),
     ],
   );
@@ -83,6 +81,11 @@ ProviderContainer _makeContainerWithFlags({
 }
 
 void main() {
+  setUpAll(() {
+    registerFallbackValue(Gender.preferNotToSay);
+    registerFallbackValue(<bool>[]);
+  });
+
   group('OnboardingController.submit (P1 createBaby contract)', () {
     late _MockBabyProfileService babyProfile;
 
@@ -99,7 +102,7 @@ void main() {
       final ok = await controller.submit();
 
       expect(ok, isFalse);
-      verifyNever(() => babyProfile.createBaby(any(), any()));
+      verifyNever(() => babyProfile.createBaby(any(), any(), any(), any()));
       final state = container.read(onboardingControllerProvider);
       expect(state.submitErrorMessage, isNotNull);
       expect(state.submitErrorMessage, contains('name'));
@@ -107,7 +110,7 @@ void main() {
 
     test('success path returns true and clears error', () async {
       when(
-        () => babyProfile.createBaby(any(), any()),
+        () => babyProfile.createBaby(any(), any(), any(), any()),
       ).thenAnswer((_) async => Result.success(_fakeBaby));
 
       final container = _makeContainer(babyProfile);
@@ -126,7 +129,9 @@ void main() {
     test(
       'failure path returns false, populates inline error, resets isSubmitting',
       () async {
-        when(() => babyProfile.createBaby(any(), any())).thenAnswer(
+        when(
+          () => babyProfile.createBaby(any(), any(), any(), any()),
+        ).thenAnswer(
           (_) async => const Result.failure(NetworkException('offline')),
         );
 
@@ -159,9 +164,9 @@ void main() {
 
     test('setReadinessAnswers updates state', () {
       final container = _makeContainer(_MockBabyProfileService());
-      container
-          .read(onboardingControllerProvider.notifier)
-          .setReadinessAnswers(<bool?>[true, false, null]);
+      container.read(onboardingControllerProvider.notifier).setReadinessAnswers(
+        <bool?>[true, false, null],
+      );
 
       final state = container.read(onboardingControllerProvider);
       expect(state.readinessAnswers, [true, false, null]);
@@ -190,7 +195,6 @@ void main() {
         );
       },
     );
-
   });
 
   group('OnboardingController.completeReadiness', () {
@@ -201,9 +205,7 @@ void main() {
         flags: flags,
       );
 
-      container
-          .read(onboardingControllerProvider.notifier)
-          .completeReadiness();
+      container.read(onboardingControllerProvider.notifier).completeReadiness();
 
       verify(flags.setOnboardingReadinessDone).called(1);
     });

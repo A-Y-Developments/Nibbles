@@ -5,7 +5,6 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:nibbles/src/app/config/flavor_config.dart';
 import 'package:nibbles/src/app/runner.dart';
-import 'package:nibbles/src/common/components/components.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 Future<void> pumpUntilFound(
@@ -72,7 +71,7 @@ void main() {
 
     await pumpUntilFound(
       tester,
-      find.byType(AppBottomNav),
+      find.byType(NavigationBar),
       timeout: const Duration(seconds: 45),
     );
 

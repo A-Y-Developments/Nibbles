@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:nibbles/gen/fonts.gen.dart';
+import 'package:nibbles/gen/assets.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
@@ -9,25 +9,32 @@ import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/features/auth/register/register_controller.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 
-/// NIB-112 — Sign Up screen.
-///
-/// 2 state variants — initial / error — per Figma frames 1023:6996 (initial)
-/// and 1023:7060 (error). Mirrors the NIB-107 login redesign layout (Grad-1
-/// butter→cream gradient, quatrefoil mark, stacked full-width social pills,
-/// burgundy footer link).
-class RegisterScreen extends ConsumerWidget {
+class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
+}
+
+class _RegisterScreenState extends ConsumerState<RegisterScreen> {
+  final _emailFocus = FocusNode();
+  final _passwordFocus = FocusNode();
+  final _confirmFocus = FocusNode();
+
+  @override
+  void dispose() {
+    _emailFocus.dispose();
+    _passwordFocus.dispose();
+    _confirmFocus.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(registerControllerProvider);
     final controller = ref.read(registerControllerProvider.notifier);
     final textTheme = Theme.of(context).textTheme;
 
-    // Inline format hints — only surface when the user has typed an obviously
-    // invalid value (not while still empty). Server-side errors take
-    // precedence so the field shows the verbatim controller errorMessage
-    // exactly once.
     final emailFormatError =
         state.email.isNotValid && state.email.value.isNotEmpty
         ? 'Please enter a valid email.'
@@ -36,143 +43,160 @@ class RegisterScreen extends ConsumerWidget {
         state.password.isNotValid && state.password.value.isNotEmpty
         ? 'Password must be at least 8 characters.'
         : null;
+    final confirmError =
+        state.confirmPassword.isNotEmpty && !state.passwordsMatch
+        ? "Passwords don't match."
+        : null;
 
     final emailErrorText = state.errorMessage ?? emailFormatError;
-    final passwordErrorText = passwordFormatError;
 
-    return Scaffold(
-      // Grad-1 — butter→cream diagonal. Scaffold bg transparent so the
-      // gradient DecoratedBox underneath is visible.
-      backgroundColor: Colors.transparent,
-      body: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            stops: [0.19, 0.5],
-            colors: [AppColors.butterSoft, AppColors.background],
+    return GradientScaffold(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSizes.pagePaddingH,
+            vertical: AppSizes.pagePaddingV,
           ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSizes.pagePaddingH,
-              vertical: AppSizes.pagePaddingV,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: AppSizes.lg),
-                const Center(child: _SignUpLogoMark()),
-                const SizedBox(height: AppSizes.lg),
-                Text(
-                  'Start Your Journey',
-                  textAlign: TextAlign.center,
-                  style: textTheme.headlineSmall,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: AppSizes.lg),
+              const Center(child: _SignUpLogoMark()),
+              const SizedBox(height: AppSizes.lg),
+              Text(
+                'Start Your Journey',
+                textAlign: TextAlign.center,
+                style: textTheme.headlineSmall,
+              ),
+              const SizedBox(height: AppSizes.sm),
+              Text(
+                "Create an account to track your baby's\n"
+                'nutrition and feeding progress.',
+                textAlign: TextAlign.center,
+                style: textTheme.bodyLarge?.copyWith(color: AppColors.text),
+              ),
+              const SizedBox(height: AppSizes.xl),
+              AppTextField(
+                key: const Key('register_email_field'),
+                identifier: 'register_email_field',
+                label: 'Email address',
+                hintText: 'Email address',
+                keyboardType: TextInputType.emailAddress,
+                autocorrect: false,
+                enableSuggestions: false,
+                textInputAction: TextInputAction.next,
+                focusNode: _emailFocus,
+                onChanged: controller.updateEmail,
+                onSubmitted: (_) => _passwordFocus.requestFocus(),
+                errorText: emailErrorText,
+                errorColor: AppColors.burgundy,
+                suffixIcon: state.email.isValid
+                    ? const Icon(
+                        Icons.check_circle_rounded,
+                        color: AppColors.success,
+                        size: AppSizes.iconMd,
+                      )
+                    : null,
+              ),
+              const SizedBox(height: AppSizes.md),
+              AppTextField(
+                key: const Key('register_password_field'),
+                identifier: 'register_password_field',
+                label: 'Password',
+                hintText: 'Password',
+                obscureText: state.obscure,
+                textInputAction: TextInputAction.next,
+                focusNode: _passwordFocus,
+                onChanged: controller.updatePassword,
+                onSubmitted: (_) => _confirmFocus.requestFocus(),
+                errorText: passwordFormatError,
+                errorColor: AppColors.burgundy,
+                suffixIcon: _ObscureToggle(
+                  obscure: state.obscure,
+                  onTap: controller.toggleObscure,
                 ),
-                const SizedBox(height: AppSizes.sm),
-                Text(
-                  // Annotation: "Make sure the line same with design, make it 2
-                  // line and split word like this". Smart apostrophe per Figma.
-                  "Create an account to track your baby's\n"
-                  'nutrition and feeding progress.',
-                  textAlign: TextAlign.center,
-                  style: textTheme.bodyLarge?.copyWith(color: AppColors.text),
+              ),
+              const SizedBox(height: AppSizes.md),
+              AppTextField(
+                key: const Key('register_confirm_field'),
+                identifier: 'register_confirm_field',
+                label: 'Confirm Password',
+                hintText: 'Confirm password',
+                obscureText: state.obscureConfirm,
+                textInputAction: TextInputAction.done,
+                focusNode: _confirmFocus,
+                onChanged: controller.updateConfirmPassword,
+                onSubmitted: (_) {
+                  if (state.isValid && !state.isLoading) {
+                    _submit(controller, context);
+                  }
+                },
+                errorText: confirmError,
+                errorColor: AppColors.burgundy,
+                suffixIcon: _ObscureToggle(
+                  obscure: state.obscureConfirm,
+                  onTap: controller.toggleObscureConfirm,
                 ),
-                const SizedBox(height: AppSizes.xl),
-                AppTextField(
-                  key: const Key('register_email_field'),
-                  identifier: 'register_email_field',
-                  label: 'Email address',
-                  hintText: 'Email address',
-                  keyboardType: TextInputType.emailAddress,
-                  autocorrect: false,
-                  enableSuggestions: false,
-                  textInputAction: TextInputAction.next,
-                  onChanged: controller.updateEmail,
-                  errorText: emailErrorText,
-                  errorColor: AppColors.burgundy,
-                  suffixIcon: state.email.isValid
-                      ? const Icon(
-                          Icons.check_circle_rounded,
-                          color: AppColors.success,
-                          size: AppSizes.iconMd,
-                        )
-                      : null,
-                ),
-                const SizedBox(height: AppSizes.md),
-                AppTextField(
-                  key: const Key('register_password_field'),
-                  identifier: 'register_password_field',
-                  label: 'Password',
-                  hintText: 'Password',
-                  obscureText: state.obscure,
-                  textInputAction: TextInputAction.done,
-                  onChanged: controller.updatePassword,
-                  errorText: passwordErrorText,
-                  errorColor: AppColors.burgundy,
-                  suffixIcon: _ObscureToggle(
-                    obscure: state.obscure,
-                    onTap: controller.toggleObscure,
-                  ),
-                ),
-                const SizedBox(height: AppSizes.lg),
-                AppPillButton(
-                  key: const Key('register_submit_button'),
-                  identifier: 'register_submit_button',
-                  label: state.isLoading ? 'Signing up…' : 'Sign Up',
-                  onPressed: (!state.isValid || state.isLoading)
-                      ? null
-                      : () async {
-                          final ok = await controller.submit();
-                          if (ok && context.mounted) {
-                            context.goNamed(AppRoute.onboardingBabySetup.name);
-                          }
-                        },
-                ),
-                const SizedBox(height: AppSizes.lg),
-                const _OrDivider(),
-                const SizedBox(height: AppSizes.md),
-                SocialAuthButton(
-                  key: const Key('register_google_button'),
-                  identifier: 'register_google_button',
-                  provider: SocialAuthProvider.google,
-                  label: 'Sign up with Google',
-                  isLoading: state.isLoading,
-                  onPressed: () async {
-                    final ok = await controller.signInWithGoogle();
-                    if (ok && context.mounted) {
-                      context.goNamed(AppRoute.onboardingBabySetup.name);
-                    }
-                  },
-                ),
-                const SizedBox(height: AppSizes.md),
-                SocialAuthButton(
-                  key: const Key('register_apple_button'),
-                  identifier: 'register_apple_button',
-                  provider: SocialAuthProvider.apple,
-                  label: 'Sign up with Apple',
-                  isLoading: state.isLoading,
-                  onPressed: () async {
-                    final ok = await controller.signInWithApple();
-                    if (ok && context.mounted) {
-                      context.goNamed(AppRoute.onboardingBabySetup.name);
-                    }
-                  },
-                ),
-                const SizedBox(height: AppSizes.xl),
-                const _LoginFooter(),
-              ],
-            ),
+              ),
+              const SizedBox(height: AppSizes.lg),
+              AppPillButton(
+                key: const Key('register_submit_button'),
+                identifier: 'register_submit_button',
+                label: state.isLoading ? 'Signing up…' : 'Sign Up',
+                onPressed: (!state.isValid || state.isLoading)
+                    ? null
+                    : () => _submit(controller, context),
+              ),
+              const SizedBox(height: AppSizes.md),
+              const _OrDivider(),
+              const SizedBox(height: AppSizes.md),
+              SocialAuthButton(
+                key: const Key('register_google_button'),
+                identifier: 'register_google_button',
+                provider: SocialAuthProvider.google,
+                label: 'Sign up with Google',
+                isLoading: state.isLoading,
+                onPressed: () async {
+                  final ok = await controller.signInWithGoogle();
+                  if (ok && context.mounted) {
+                    context.goNamed(AppRoute.onboardingBabySetup.name);
+                  }
+                },
+              ),
+              const SizedBox(height: AppSizes.md),
+              SocialAuthButton(
+                key: const Key('register_apple_button'),
+                identifier: 'register_apple_button',
+                provider: SocialAuthProvider.apple,
+                label: 'Sign up with Apple',
+                isLoading: state.isLoading,
+                onPressed: () async {
+                  final ok = await controller.signInWithApple();
+                  if (ok && context.mounted) {
+                    context.goNamed(AppRoute.onboardingBabySetup.name);
+                  }
+                },
+              ),
+              const SizedBox(height: AppSizes.xl),
+              const _LoginFooter(),
+            ],
           ),
         ),
       ),
     );
   }
+
+  Future<void> _submit(
+    RegisterController controller,
+    BuildContext context,
+  ) async {
+    final ok = await controller.submit();
+    if (ok && context.mounted) {
+      context.goNamed(AppRoute.onboardingBabySetup.name);
+    }
+  }
 }
 
-/// Branded mark: butter quatrefoil with the green sage "n" glyph centered.
-/// Matches Figma node 1023:7000 (imgGroup75, 119x119).
 class _SignUpLogoMark extends StatelessWidget {
   const _SignUpLogoMark();
 
@@ -183,27 +207,8 @@ class _SignUpLogoMark extends StatelessWidget {
     return Semantics(
       label: 'Nibbles',
       image: true,
-      child: const ExcludeSemantics(
-        child: SizedBox(
-          width: _size,
-          height: _size,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Quatrefoil(size: _size, coreColor: AppColors.butter),
-              Text(
-                'n',
-                style: TextStyle(
-                  fontFamily: FontFamily.parkinsans,
-                  fontSize: 70,
-                  fontWeight: FontWeight.w800,
-                  height: 1,
-                  color: AppColors.greenDeep,
-                ),
-              ),
-            ],
-          ),
-        ),
+      child: ExcludeSemantics(
+        child: Assets.images.auth.nibblesLogo.svg(width: _size, height: _size),
       ),
     );
   }
@@ -269,26 +274,17 @@ class _LoginFooter extends StatelessWidget {
           'Already have an account?',
           style: textTheme.bodyLarge?.copyWith(color: AppColors.text),
         ),
-        const SizedBox(width: AppSizes.xs),
         Semantics(
           button: true,
           label: 'Login',
           identifier: 'register_login_link',
           excludeSemantics: true,
-          child: InkWell(
+          child: TextButton(
             key: const Key('register_login_link'),
-            onTap: () => context.goNamed(AppRoute.login.name),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSizes.xs,
-                vertical: AppSizes.xs,
-              ),
-              child: Text(
-                'Login',
-                style: AppTypography.headline.copyWith(
-                  color: AppColors.burgundy,
-                ),
-              ),
+            onPressed: () => context.goNamed(AppRoute.login.name),
+            child: Text(
+              'Login',
+              style: AppTypography.headline.copyWith(color: AppColors.burgundy),
             ),
           ),
         ),

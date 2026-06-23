@@ -8,11 +8,7 @@ import 'package:nibbles/src/features/starting_guide/widgets/baby_face_glyph.dart
 /// "SIMPLE AND PRACTICAL / EVIDENCE INFORMED / No Fluf" tiles on Baby's First
 /// Nibbles (Figma 971:8730).
 class GuideInfoCard extends StatelessWidget {
-  const GuideInfoCard({
-    required this.title,
-    required this.body,
-    super.key,
-  });
+  const GuideInfoCard({required this.title, required this.body, super.key});
 
   final String title;
   final String body;

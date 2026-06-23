@@ -63,6 +63,11 @@ ProviderContainer _makeContainer(BabyProfileService service) {
 /// the IN-FLIGHT shape (`isSubmitting` flips at the right edges) so the
 /// consent widget can safely gate its CTA on `state.isSubmitting`.
 void main() {
+  setUpAll(() {
+    registerFallbackValue(Gender.preferNotToSay);
+    registerFallbackValue(<bool>[]);
+  });
+
   late _MockBabyProfileService babyProfile;
 
   setUp(() {
@@ -74,7 +79,7 @@ void main() {
     () async {
       final completer = Completer<Result<Baby>>();
       when(
-        () => babyProfile.createBaby(any(), any()),
+        () => babyProfile.createBaby(any(), any(), any(), any()),
       ).thenAnswer((_) => completer.future);
 
       final container = _makeContainer(babyProfile);
@@ -91,10 +96,7 @@ void main() {
       final pending = controller.submit();
       // Mid-flight: the createBaby future has not resolved yet, isSubmitting
       // must be observable so the consent widget can disable its CTA.
-      expect(
-        container.read(onboardingControllerProvider).isSubmitting,
-        isTrue,
-      );
+      expect(container.read(onboardingControllerProvider).isSubmitting, isTrue);
 
       completer.complete(Result.success(_fakeBaby));
       await pending;
@@ -106,36 +108,35 @@ void main() {
     },
   );
 
-  test(
-    'submit flips isSubmitting back to false on failure (so the user can '
-    'retry from the inline P1 surface)',
-    () async {
-      when(() => babyProfile.createBaby(any(), any())).thenAnswer(
-        (_) async => const Result.failure(NetworkException('offline')),
-      );
+  test('submit flips isSubmitting back to false on failure (so the user can '
+      'retry from the inline P1 surface)', () async {
+    when(() => babyProfile.createBaby(any(), any(), any(), any())).thenAnswer(
+      (_) async => const Result.failure(NetworkException('offline')),
+    );
 
-      final container = _makeContainer(babyProfile);
-      final controller = container.read(onboardingControllerProvider.notifier)
-        ..updateName('Lily')
-        ..updateDob(DateTime(2025, 6));
+    final container = _makeContainer(babyProfile);
+    final controller = container.read(onboardingControllerProvider.notifier)
+      ..updateName('Lily')
+      ..updateDob(DateTime(2025, 6));
 
-      await controller.submit();
+    await controller.submit();
 
-      final state = container.read(onboardingControllerProvider);
-      expect(state.isSubmitting, isFalse);
-      expect(state.submitErrorMessage, 'offline');
-    },
-  );
+    final state = container.read(onboardingControllerProvider);
+    expect(state.isSubmitting, isFalse);
+    expect(state.submitErrorMessage, 'offline');
+  });
 
   test(
     'submit clears any prior submitErrorMessage on entry (retry path)',
     () async {
       var calls = 0;
-      when(() => babyProfile.createBaby(any(), any())).thenAnswer((_) async {
-        calls++;
-        if (calls == 1) return const Result.failure(NetworkException('boom'));
-        return Result.success(_fakeBaby);
-      });
+      when(() => babyProfile.createBaby(any(), any(), any(), any())).thenAnswer(
+        (_) async {
+          calls++;
+          if (calls == 1) return const Result.failure(NetworkException('boom'));
+          return Result.success(_fakeBaby);
+        },
+      );
 
       final container = _makeContainer(babyProfile);
       final controller = container.read(onboardingControllerProvider.notifier)
@@ -157,30 +158,27 @@ void main() {
     },
   );
 
-  test(
-    're-entrant submit while in-flight returns false and never calls '
-    'createBaby twice (no orphan baby rows)',
-    () async {
-      final completer = Completer<Result<Baby>>();
-      when(
-        () => babyProfile.createBaby(any(), any()),
-      ).thenAnswer((_) => completer.future);
+  test('re-entrant submit while in-flight returns false and never calls '
+      'createBaby twice (no orphan baby rows)', () async {
+    final completer = Completer<Result<Baby>>();
+    when(
+      () => babyProfile.createBaby(any(), any(), any(), any()),
+    ).thenAnswer((_) => completer.future);
 
-      final container = _makeContainer(babyProfile);
-      final controller = container.read(onboardingControllerProvider.notifier)
-        ..updateName('Lily')
-        ..updateDob(DateTime(2025, 6));
+    final container = _makeContainer(babyProfile);
+    final controller = container.read(onboardingControllerProvider.notifier)
+      ..updateName('Lily')
+      ..updateDob(DateTime(2025, 6));
 
-      // First call is in-flight (isSubmitting=true, awaiting createBaby).
-      final pending = controller.submit();
-      // Second call before the first resolves must be rejected by the guard.
-      final reentrant = await controller.submit();
-      expect(reentrant, isFalse);
+    // First call is in-flight (isSubmitting=true, awaiting createBaby).
+    final pending = controller.submit();
+    // Second call before the first resolves must be rejected by the guard.
+    final reentrant = await controller.submit();
+    expect(reentrant, isFalse);
 
-      completer.complete(Result.success(_fakeBaby));
-      await pending;
+    completer.complete(Result.success(_fakeBaby));
+    await pending;
 
-      verify(() => babyProfile.createBaby(any(), any())).called(1);
-    },
-  );
+    verify(() => babyProfile.createBaby(any(), any(), any(), any())).called(1);
+  });
 }

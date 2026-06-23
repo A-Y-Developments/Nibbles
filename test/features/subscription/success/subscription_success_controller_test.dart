@@ -37,9 +37,8 @@ ProviderContainer _makeContainer({bool startActive = false}) {
 /// Keeps the auto-dispose provider alive while fake timers advance.
 /// Without this, Riverpod's GC microtask disposes the provider (and cancels
 /// its timer) before async.elapse() can fire it.
-ProviderSubscription<SubscriptionSuccessPhase> _listen(
-  ProviderContainer c,
-) => c.listen(subscriptionSuccessControllerProvider, (_, __) {});
+ProviderSubscription<SubscriptionSuccessPhase> _listen(ProviderContainer c) =>
+    c.listen(subscriptionSuccessControllerProvider, (_, __) {});
 
 void main() {
   group('SubscriptionSuccessController — fast path (isActive=true)', () {

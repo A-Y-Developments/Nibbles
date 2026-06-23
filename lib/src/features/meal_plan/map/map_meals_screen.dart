@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
+import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
 import 'package:nibbles/src/common/services/meal_plan_service.dart'
     show MealPlanService;
@@ -91,68 +92,70 @@ class MapMealsScreen extends ConsumerWidget {
           Navigator.of(context).pop();
         }
       },
-      child: Scaffold(
-        backgroundColor: AppColors.cream,
+      child: GradientScaffold(
         appBar: _MapMealsAppBar(state: state),
         body: SafeArea(
-        top: false,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const SizedBox(height: AppSizes.md),
-            DayChipRow(
-              startDate: state.startDate,
-              endDate: state.endDate,
-              selectedDay: state.selectedDay,
-              filledDays: state.filledDays(),
-              onSelect: notifier.selectDay,
-            ),
-            const SizedBox(height: AppSizes.md),
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSizes.pagePaddingH,
-                ),
-                children: [
-                  _SelectedDayHeader(state: state, weekdayNames: _weekdayName),
-                  if (state.recipesForSelectedDay().isNotEmpty) ...[
-                    const SizedBox(height: AppSizes.xs),
-                    Text(
-                      'Drag & drop or click meals below to add them',
-                      style: AppTypography.caption.copyWith(
-                        color: AppColors.fgMuted,
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: AppSizes.sm),
-                  SelectedDaySlotList(
-                    recipes: state.recipesForSelectedDay(),
-                    onRemove: notifier.unassign,
-                  ),
-                  const SizedBox(height: AppSizes.lg),
-                  _MealsPickedHeader(totalCount: state.totalCount),
-                  const SizedBox(height: AppSizes.sm),
-                  for (var i = 0; i < state.pickedRecipes.length; i++) ...[
-                    if (i != 0) const SizedBox(height: AppSizes.sm),
-                    PickedRecipeRow(
-                      recipe: state.pickedRecipes[i],
-                      onTap: () => notifier.assignToSelectedDay(
-                        state.pickedRecipes[i].id,
-                      ),
-                      assignedLabel: _assignedLabelFor(
-                        state.pickedRecipes[i],
-                        state,
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: AppSizes.xl),
-                ],
+          top: false,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: AppSizes.md),
+              DayChipRow(
+                startDate: state.startDate,
+                endDate: state.endDate,
+                selectedDay: state.selectedDay,
+                filledDays: state.filledDays(),
+                onSelect: notifier.selectDay,
               ),
-            ),
-            _CommitBar(state: state, onCommit: () => _onCommit(context, ref)),
-          ],
+              const SizedBox(height: AppSizes.md),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSizes.pagePaddingH,
+                  ),
+                  children: [
+                    _SelectedDayHeader(
+                      state: state,
+                      weekdayNames: _weekdayName,
+                    ),
+                    if (state.recipesForSelectedDay().isNotEmpty) ...[
+                      const SizedBox(height: AppSizes.xs),
+                      Text(
+                        'Drag & drop or click meals below to add them',
+                        style: AppTypography.caption.copyWith(
+                          color: AppColors.fgMuted,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: AppSizes.sm),
+                    SelectedDaySlotList(
+                      recipes: state.recipesForSelectedDay(),
+                      onRemove: notifier.unassign,
+                    ),
+                    const SizedBox(height: AppSizes.lg),
+                    _MealsPickedHeader(totalCount: state.totalCount),
+                    const SizedBox(height: AppSizes.sm),
+                    for (var i = 0; i < state.pickedRecipes.length; i++) ...[
+                      if (i != 0) const SizedBox(height: AppSizes.sm),
+                      PickedRecipeRow(
+                        recipe: state.pickedRecipes[i],
+                        onTap: () => notifier.assignToSelectedDay(
+                          state.pickedRecipes[i].id,
+                        ),
+                        assignedLabel: _assignedLabelFor(
+                          state.pickedRecipes[i],
+                          state,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: AppSizes.xl),
+                  ],
+                ),
+              ),
+              _CommitBar(state: state, onCommit: () => _onCommit(context, ref)),
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
@@ -195,10 +198,7 @@ class MapMealsScreen extends ConsumerWidget {
             "Couldn't save your plan",
             style: AppTypography.sectionTitle,
           ),
-          content: Text(
-            message,
-            style: AppTypography.textTheme.bodyMedium,
-          ),
+          content: Text(message, style: AppTypography.textTheme.bodyMedium),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
@@ -236,8 +236,8 @@ class _MapMealsAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      backgroundColor: AppColors.cream,
-      surfaceTintColor: AppColors.cream,
+      backgroundColor: Colors.transparent,
+      surfaceTintColor: Colors.transparent,
       elevation: 0,
       scrolledUnderElevation: 0,
       leading: IconButton(

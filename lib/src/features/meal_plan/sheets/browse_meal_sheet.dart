@@ -228,9 +228,7 @@ class _BrowseMealSheetState extends ConsumerState<_BrowseMealSheet> {
     }
     if (_query.isEmpty) return filtered.toList();
     final q = _query.toLowerCase();
-    return filtered
-        .where((r) => r.title.toLowerCase().contains(q))
-        .toList();
+    return filtered.where((r) => r.title.toLowerCase().contains(q)).toList();
   }
 
   List<Recipe> _recommendationsFor(String allergenKey) {
@@ -323,9 +321,7 @@ class _BrowseMealSheetState extends ConsumerState<_BrowseMealSheet> {
         child: ConstrainedBox(
           constraints: BoxConstraints(maxHeight: maxHeight),
           child: Padding(
-            padding: EdgeInsets.only(
-              bottom: mediaQuery.viewInsets.bottom,
-            ),
+            padding: EdgeInsets.only(bottom: mediaQuery.viewInsets.bottom),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -339,11 +335,12 @@ class _BrowseMealSheetState extends ConsumerState<_BrowseMealSheet> {
                 ),
                 const SizedBox(height: AppSizes.md),
                 Expanded(child: _body()),
-                if (!_loading && _error == null) _StickyAddBar(
-                  count: _selectedRecipeIds.length,
-                  inReviewMode: _filter != BrowseMealSelectionFilter.none,
-                  onPressed: _selectedRecipeIds.isEmpty ? null : _confirm,
-                ),
+                if (!_loading && _error == null)
+                  _StickyAddBar(
+                    count: _selectedRecipeIds.length,
+                    inReviewMode: _filter != BrowseMealSelectionFilter.none,
+                    onPressed: _selectedRecipeIds.isEmpty ? null : _confirm,
+                  ),
               ],
             ),
           ),
@@ -366,9 +363,9 @@ class _BrowseMealSheetState extends ConsumerState<_BrowseMealSheet> {
           padding: const EdgeInsets.all(AppSizes.pagePaddingH),
           child: Text(
             'No recipes available.',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppColors.fgMuted,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppColors.fgMuted),
           ),
         ),
       );
@@ -399,7 +396,8 @@ class _BrowseMealSheetState extends ConsumerState<_BrowseMealSheet> {
                 const SizedBox(height: AppSizes.md),
                 if (ongoingKey != null && ongoingRecipes.isNotEmpty)
                   RecommendationCarouselSection(
-                    title: 'Recommendation for '
+                    title:
+                        'Recommendation for '
                         '${AllergenEmoji.get(ongoingKey)} '
                         '${_displayName(ongoingKey)}',
                     recipes: ongoingRecipes,
@@ -436,9 +434,9 @@ class _BrowseMealSheetState extends ConsumerState<_BrowseMealSheet> {
                 _query.isEmpty
                     ? 'No recipes available.'
                     : 'No results for "$_query".',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.fgMuted,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: AppColors.fgMuted),
               ),
             ),
           )
@@ -532,7 +530,8 @@ class _Header extends StatelessWidget {
   /// Figma spec format example: "Mon, 20 - Thu 23 April".
   /// Weekday short + day of month at both ends, full month name at the tail.
   String _formatRange() {
-    final sameDay = startDate.year == endDate.year &&
+    final sameDay =
+        startDate.year == endDate.year &&
         startDate.month == endDate.month &&
         startDate.day == endDate.day;
     final start = startDate;
@@ -635,17 +634,14 @@ class _StickyAddBar extends StatelessWidget {
   ///   * Review phase  → "Mapp Meal Plan" (verbatim Figma copy; PO has the
   ///     "Map" correction noted as an open question but the bracketed
   ///     verbatim spelling is required until clarified).
-  String get _label =>
-      inReviewMode ? 'Mapp Meal Plan' : 'Add ($count)';
+  String get _label => inReviewMode ? 'Mapp Meal Plan' : 'Add ($count)';
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.surface,
-        border: Border(
-          top: BorderSide(color: AppColors.borderSoft),
-        ),
+        border: Border(top: BorderSide(color: AppColors.borderSoft)),
       ),
       padding: const EdgeInsets.fromLTRB(
         AppSizes.pagePaddingH,
@@ -667,9 +663,7 @@ class _StickyAddBar extends StatelessWidget {
           ),
           child: Text(
             _label,
-            style: AppTypography.button.copyWith(
-              color: AppColors.onPrimary,
-            ),
+            style: AppTypography.button.copyWith(color: AppColors.onPrimary),
           ),
         ),
       ),

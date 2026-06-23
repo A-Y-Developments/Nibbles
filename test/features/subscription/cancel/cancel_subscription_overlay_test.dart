@@ -94,62 +94,51 @@ void main() {
   });
 
   List<Override> overrides() => [
-        analyticsProvider.overrideWithValue(fakeAnalytics),
-        subscriptionLaunchUrlProvider.overrideWithValue(launcher.call),
-      ];
+    analyticsProvider.overrideWithValue(fakeAnalytics),
+    subscriptionLaunchUrlProvider.overrideWithValue(launcher.call),
+  ];
 
-  testWidgets(
-    'renders verbatim heading + 6 reason chips on open',
-    (tester) async {
-      await _setTallSurface(tester);
-      await tester.pumpWidget(_wrap(overrides()));
-      await _openSheet(tester);
+  testWidgets('renders verbatim heading + 6 reason chips on open', (
+    tester,
+  ) async {
+    await _setTallSurface(tester);
+    await tester.pumpWidget(_wrap(overrides()));
+    await _openSheet(tester);
 
-      expect(find.text(_kHeading), findsOneWidget);
-      for (var i = 0; i < CancelReason.values.length; i++) {
-        expect(
-          find.byKey(Key('cancel_subscription_reason_$i')),
-          findsOneWidget,
-        );
-      }
-      // First reason label — verbatim from Figma.
-      expect(find.text(_kFirstReasonLabel), findsOneWidget);
-    },
-    timeout: _testTimeout,
-  );
+    expect(find.text(_kHeading), findsOneWidget);
+    for (var i = 0; i < CancelReason.values.length; i++) {
+      expect(find.byKey(Key('cancel_subscription_reason_$i')), findsOneWidget);
+    }
+    // First reason label — verbatim from Figma.
+    expect(find.text(_kFirstReasonLabel), findsOneWidget);
+  }, timeout: _testTimeout);
 
-  testWidgets(
-    'Continue is disabled when no reason is selected',
-    (tester) async {
-      await _setTallSurface(tester);
-      await tester.pumpWidget(_wrap(overrides()));
-      await _openSheet(tester);
+  testWidgets('Continue is disabled when no reason is selected', (
+    tester,
+  ) async {
+    await _setTallSurface(tester);
+    await tester.pumpWidget(_wrap(overrides()));
+    await _openSheet(tester);
 
-      final continueBtn = tester.widget<AppPillButton>(
-        find.byKey(const Key('cancel_subscription_continue_button')),
-      );
-      expect(continueBtn.onPressed, isNull);
-    },
-    timeout: _testTimeout,
-  );
+    final continueBtn = tester.widget<AppPillButton>(
+      find.byKey(const Key('cancel_subscription_continue_button')),
+    );
+    expect(continueBtn.onPressed, isNull);
+  }, timeout: _testTimeout);
 
-  testWidgets(
-    'tapping a reason chip enables Continue',
-    (tester) async {
-      await _setTallSurface(tester);
-      await tester.pumpWidget(_wrap(overrides()));
-      await _openSheet(tester);
+  testWidgets('tapping a reason chip enables Continue', (tester) async {
+    await _setTallSurface(tester);
+    await tester.pumpWidget(_wrap(overrides()));
+    await _openSheet(tester);
 
-      await tester.tap(find.byKey(const Key('cancel_subscription_reason_0')));
-      await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('cancel_subscription_reason_0')));
+    await tester.pumpAndSettle();
 
-      final continueBtn = tester.widget<AppPillButton>(
-        find.byKey(const Key('cancel_subscription_continue_button')),
-      );
-      expect(continueBtn.onPressed, isNotNull);
-    },
-    timeout: _testTimeout,
-  );
+    final continueBtn = tester.widget<AppPillButton>(
+      find.byKey(const Key('cancel_subscription_continue_button')),
+    );
+    expect(continueBtn.onPressed, isNotNull);
+  }, timeout: _testTimeout);
 
   testWidgets(
     'tapping Continue logs analytics with analyticsKey and launches URL',
@@ -179,11 +168,13 @@ void main() {
           'subscription_cancel_reason',
         ]),
       );
-      final startedEvt = fakeAnalytics.calls
-          .firstWhere((c) => c.name == 'subscription_cancel_started');
+      final startedEvt = fakeAnalytics.calls.firstWhere(
+        (c) => c.name == 'subscription_cancel_started',
+      );
       expect(startedEvt.parameters['reason'], _kFirstReasonAnalyticsKey);
-      final reasonEvt = fakeAnalytics.calls
-          .firstWhere((c) => c.name == 'subscription_cancel_reason');
+      final reasonEvt = fakeAnalytics.calls.firstWhere(
+        (c) => c.name == 'subscription_cancel_reason',
+      );
       expect(reasonEvt.parameters['reason'], _kFirstReasonAnalyticsKey);
 
       // Launcher hit exactly once, in externalApplication mode.
@@ -259,23 +250,19 @@ void main() {
     timeout: _testTimeout,
   );
 
-  testWidgets(
-    'close (X) pops the sheet without launching anything',
-    (tester) async {
-      await _setTallSurface(tester);
-      await tester.pumpWidget(_wrap(overrides()));
-      await _openSheet(tester);
+  testWidgets('close (X) pops the sheet without launching anything', (
+    tester,
+  ) async {
+    await _setTallSurface(tester);
+    await tester.pumpWidget(_wrap(overrides()));
+    await _openSheet(tester);
 
-      expect(find.text(_kHeading), findsOneWidget);
+    expect(find.text(_kHeading), findsOneWidget);
 
-      await tester.tap(
-        find.byKey(const Key('cancel_subscription_close_button')),
-      );
-      await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('cancel_subscription_close_button')));
+    await tester.pumpAndSettle();
 
-      expect(find.text(_kHeading), findsNothing);
-      expect(launcher.calls, 0);
-    },
-    timeout: _testTimeout,
-  );
+    expect(find.text(_kHeading), findsNothing);
+    expect(launcher.calls, 0);
+  }, timeout: _testTimeout);
 }

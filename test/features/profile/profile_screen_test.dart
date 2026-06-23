@@ -81,10 +81,8 @@ final _fakeBaby = Baby(
   onboardingCompleted: true,
 );
 
-ProfileState _populatedState() => ProfileState(
-      baby: _fakeBaby,
-      subscriptionLabel: 'No Subscription',
-    );
+ProfileState _populatedState() =>
+    ProfileState(baby: _fakeBaby, subscriptionLabel: 'No Subscription');
 
 // ---------------------------------------------------------------------------
 // Fake ProfileController — returns a fixed state so the test doesn't depend on
@@ -118,47 +116,47 @@ const _feedbackStubKey = Key('stub_profile_feedback');
 const _manageSubscriptionStubKey = Key('stub_manage_subscription');
 
 GoRouter _router() => GoRouter(
-      initialLocation: '/home/profile',
-      routes: [
-        GoRoute(
-          path: '/home/profile',
-          name: AppRoute.profile.name,
-          builder: (_, __) => const ProfileScreen(),
-        ),
-        // Stub destinations: keep nav assertable without booting the real
-        // ProfileEdit / Feedback / ManageSubscription subtrees (which would
-        // try to read providers we don't mock here).
-        GoRoute(
-          path: '/home/profile/edit',
-          name: AppRoute.profileEdit.name,
-          builder: (_, __) => const Scaffold(
-            key: _editStubKey,
-            body: Center(child: Text('EDIT STUB')),
-          ),
-        ),
-        GoRoute(
-          path: '/home/profile/feedback',
-          name: AppRoute.profileFeedback.name,
-          builder: (_, __) => const Scaffold(
-            key: _feedbackStubKey,
-            body: Center(child: Text('FEEDBACK STUB')),
-          ),
-        ),
-        GoRoute(
-          path: '/subscription/manage',
-          name: AppRoute.manageSubscription.name,
-          builder: (_, __) => const Scaffold(
-            key: _manageSubscriptionStubKey,
-            body: Center(child: Text('MANAGE SUBSCRIPTION STUB')),
-          ),
-        ),
-      ],
-    );
+  initialLocation: '/home/profile',
+  routes: [
+    GoRoute(
+      path: '/home/profile',
+      name: AppRoute.profile.name,
+      builder: (_, __) => const ProfileScreen(),
+    ),
+    // Stub destinations: keep nav assertable without booting the real
+    // ProfileEdit / Feedback / ManageSubscription subtrees (which would
+    // try to read providers we don't mock here).
+    GoRoute(
+      path: '/home/profile/edit',
+      name: AppRoute.profileEdit.name,
+      builder: (_, __) => const Scaffold(
+        key: _editStubKey,
+        body: Center(child: Text('EDIT STUB')),
+      ),
+    ),
+    GoRoute(
+      path: '/home/profile/feedback',
+      name: AppRoute.profileFeedback.name,
+      builder: (_, __) => const Scaffold(
+        key: _feedbackStubKey,
+        body: Center(child: Text('FEEDBACK STUB')),
+      ),
+    ),
+    GoRoute(
+      path: '/subscription/manage',
+      name: AppRoute.manageSubscription.name,
+      builder: (_, __) => const Scaffold(
+        key: _manageSubscriptionStubKey,
+        body: Center(child: Text('MANAGE SUBSCRIPTION STUB')),
+      ),
+    ),
+  ],
+);
 
 Widget _wrap(List<Override> overrides) => ProviderScope(
-      overrides: overrides,
-      child: MaterialApp.router(routerConfig: _router()),
-    );
+  overrides: overrides,
+  child: MaterialApp.router(routerConfig: _router()),
+);
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -185,33 +183,34 @@ void main() {
     when(
       () => mockAuthRepo.authStateStream,
     ).thenAnswer((_) => const Stream.empty());
-    when(() => mockAuthRepo.signOut())
-        .thenAnswer((_) async => const Result.success(null));
+    when(
+      () => mockAuthRepo.signOut(),
+    ).thenAnswer((_) async => const Result.success(null));
     when(mockFlags.clearAll).thenAnswer((_) async {});
     when(() => mockBabyService.getBaby()).thenAnswer((_) async => _fakeBaby);
   });
 
   List<Override> buildOverrides({
     required AsyncValue<ProfileState> profileState,
-  }) =>
-      [
-        babyProfileServiceProvider.overrideWithValue(mockBabyService),
-        authRepositoryProvider.overrideWithValue(mockAuthRepo),
-        authServiceProvider.overrideWith(() => fakeAuthService),
-        accountRepositoryProvider.overrideWithValue(mockAccountRepo),
-        localFlagServiceProvider.overrideWithValue(mockFlags),
-        analyticsProvider.overrideWithValue(fakeAnalytics),
-        // Bypass `Supabase.instance.client.auth.currentUser?.email` inside the
-        // real controller build().
-        currentBabyIdProvider.overrideWith((ref) async => _babyId),
-        profileControllerProvider(_babyId)
-            .overrideWith(() => _FakeProfileController(profileState)),
-        // Capturing recorder is not asserted here — controller tests own that
-        // coverage. Stub a no-op so the modal sheet's controller can boot.
-        deleteAccountCrashRecorderProvider.overrideWithValue(
-          (_, __, {String? reason, List<String>? information}) async {},
-        ),
-      ];
+  }) => [
+    babyProfileServiceProvider.overrideWithValue(mockBabyService),
+    authRepositoryProvider.overrideWithValue(mockAuthRepo),
+    authServiceProvider.overrideWith(() => fakeAuthService),
+    accountRepositoryProvider.overrideWithValue(mockAccountRepo),
+    localFlagServiceProvider.overrideWithValue(mockFlags),
+    analyticsProvider.overrideWithValue(fakeAnalytics),
+    // Bypass `Supabase.instance.client.auth.currentUser?.email` inside the
+    // real controller build().
+    currentBabyIdProvider.overrideWith((ref) async => _babyId),
+    profileControllerProvider(
+      _babyId,
+    ).overrideWith(() => _FakeProfileController(profileState)),
+    // Capturing recorder is not asserted here — controller tests own that
+    // coverage. Stub a no-op so the modal sheet's controller can boot.
+    deleteAccountCrashRecorderProvider.overrideWithValue(
+      (_, __, {String? reason, List<String>? information}) async {},
+    ),
+  ];
 
   // -------------------------------------------------------------------------
   // Populated state
@@ -246,89 +245,84 @@ void main() {
   // Loading state — never-resolving build()
   // -------------------------------------------------------------------------
 
-  testWidgets(
-    'loading state: renders CircularProgressIndicator spinner',
-    (tester) async {
-      await tester.pumpWidget(
-        _wrap(buildOverrides(profileState: const AsyncLoading())),
-      );
-      // Single pump — the spinner animates indefinitely so pumpAndSettle
-      // would block.
-      await tester.pump();
+  testWidgets('loading state: renders CircularProgressIndicator spinner', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrap(buildOverrides(profileState: const AsyncLoading())),
+    );
+    // Single pump — the spinner animates indefinitely so pumpAndSettle
+    // would block.
+    await tester.pump();
 
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    },
-  );
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+  });
 
   // -------------------------------------------------------------------------
   // Error state — error placeholder + retry CTA
   // -------------------------------------------------------------------------
 
-  testWidgets(
-    'error state: renders placeholder message + Try Again CTA',
-    (tester) async {
-      await tester.pumpWidget(
-        _wrap(
-          buildOverrides(
-            profileState: const AsyncError<ProfileState>(
-              ServerException('boom'),
-              StackTrace.empty,
-            ),
+  testWidgets('error state: renders placeholder message + Try Again CTA', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrap(
+        buildOverrides(
+          profileState: const AsyncError<ProfileState>(
+            ServerException('boom'),
+            StackTrace.empty,
           ),
         ),
-      );
-      await tester.pumpAndSettle();
+      ),
+    );
+    await tester.pumpAndSettle();
 
-      expect(find.text('boom'), findsOneWidget);
-      expect(find.text('Try Again'), findsOneWidget);
-    },
-  );
+    expect(find.text('boom'), findsOneWidget);
+    expect(find.text('Try Again'), findsOneWidget);
+  });
 
   // -------------------------------------------------------------------------
   // Row tap — Manage Subscription
   // -------------------------------------------------------------------------
 
-  testWidgets(
-    "tapping 'Manage Subscription' pushes /subscription/manage",
-    (tester) async {
-      await tester.binding.setSurfaceSize(const Size(400, 1200));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
+  testWidgets("tapping 'Manage Subscription' pushes /subscription/manage", (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(400, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
 
-      await tester.pumpWidget(
-        _wrap(buildOverrides(profileState: AsyncData(_populatedState()))),
-      );
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(
+      _wrap(buildOverrides(profileState: AsyncData(_populatedState()))),
+    );
+    await tester.pumpAndSettle();
 
-      await tester
-          .tap(find.byKey(const Key('profile_manage_subscription_row')));
-      await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('profile_manage_subscription_row')));
+    await tester.pumpAndSettle();
 
-      expect(find.byKey(_manageSubscriptionStubKey), findsOneWidget);
-      expect(find.text('MANAGE SUBSCRIPTION STUB'), findsOneWidget);
-    },
-  );
+    expect(find.byKey(_manageSubscriptionStubKey), findsOneWidget);
+    expect(find.text('MANAGE SUBSCRIPTION STUB'), findsOneWidget);
+  });
 
   // -------------------------------------------------------------------------
   // Row tap — Give Feedback
   // -------------------------------------------------------------------------
 
-  testWidgets(
-    "tapping 'Give Feedback' pushes /home/profile/feedback",
-    (tester) async {
-      await tester.binding.setSurfaceSize(const Size(400, 1200));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
+  testWidgets("tapping 'Give Feedback' pushes /home/profile/feedback", (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(400, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
 
-      await tester.pumpWidget(
-        _wrap(buildOverrides(profileState: AsyncData(_populatedState()))),
-      );
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(
+      _wrap(buildOverrides(profileState: AsyncData(_populatedState()))),
+    );
+    await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('profile_feedback_row')));
-      await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('profile_feedback_row')));
+    await tester.pumpAndSettle();
 
-      expect(find.byKey(_feedbackStubKey), findsOneWidget);
-    },
-  );
+    expect(find.byKey(_feedbackStubKey), findsOneWidget);
+  });
 
   // -------------------------------------------------------------------------
   // Row tap — Sign out (confirmation + signOut + analytics)
@@ -389,10 +383,7 @@ void main() {
 
       expect(fakeAuthService.signOutCalls, 0);
       expect(find.text('Are you sure you want to sign out?'), findsNothing);
-      expect(
-        find.byKey(const Key('profile_sign_out_button')),
-        findsOneWidget,
-      );
+      expect(find.byKey(const Key('profile_sign_out_button')), findsOneWidget);
     },
   );
 
@@ -400,26 +391,25 @@ void main() {
   // Row tap — Delete account (opens the overlay sheet)
   // -------------------------------------------------------------------------
 
-  testWidgets(
-    "tapping 'Delete account' opens the delete-account overlay",
-    (tester) async {
-      await tester.binding.setSurfaceSize(const Size(400, 2400));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
+  testWidgets("tapping 'Delete account' opens the delete-account overlay", (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(400, 2400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
 
-      await tester.pumpWidget(
-        _wrap(buildOverrides(profileState: AsyncData(_populatedState()))),
-      );
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(
+      _wrap(buildOverrides(profileState: AsyncData(_populatedState()))),
+    );
+    await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('profile_delete_account_row')));
-      await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('profile_delete_account_row')));
+    await tester.pumpAndSettle();
 
-      // Overlay rendered: heading + at least one reason row.
-      expect(
-        find.text('Tell us why you want to delete your account'),
-        findsOneWidget,
-      );
-      expect(find.byKey(const Key('delete_reason_0')), findsOneWidget);
-    },
-  );
+    // Overlay rendered: heading + at least one reason row.
+    expect(
+      find.text('Tell us why you want to delete your account'),
+      findsOneWidget,
+    );
+    expect(find.byKey(const Key('delete_reason_0')), findsOneWidget);
+  });
 }

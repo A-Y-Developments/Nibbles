@@ -321,23 +321,25 @@ void main() {
       expect(result.dataOrNull, equals(['Bread']));
     });
 
-    test('getEntriesInRange failure propagates without recipe fetches',
-        () async {
-      when(
-        () => mockMealPlanRepo.getEntriesInRange(any(), any(), any()),
-      ).thenAnswer(
-        (_) async => const Result.failure(ServerException('DB error')),
-      );
+    test(
+      'getEntriesInRange failure propagates without recipe fetches',
+      () async {
+        when(
+          () => mockMealPlanRepo.getEntriesInRange(any(), any(), any()),
+        ).thenAnswer(
+          (_) async => const Result.failure(ServerException('DB error')),
+        );
 
-      final result = await sut.getRangeIngredientNames(
-        _babyId,
-        rangeStart,
-        rangeEnd,
-      );
+        final result = await sut.getRangeIngredientNames(
+          _babyId,
+          rangeStart,
+          rangeEnd,
+        );
 
-      expect(result.isFailure, isTrue);
-      verifyNever(() => mockRecipeRepo.getRecipeById(any()));
-    });
+        expect(result.isFailure, isTrue);
+        verifyNever(() => mockRecipeRepo.getRecipeById(any()));
+      },
+    );
 
     test('empty range returns empty list', () async {
       when(
@@ -405,9 +407,9 @@ void main() {
       () async {
         final start = DateTime(2026, 5, 30);
         final end = start.add(const Duration(days: 6));
-        when(() => mockMealPlanRepo.appendBulk(any())).thenAnswer(
-          (_) async => const Result.success([]),
-        );
+        when(
+          () => mockMealPlanRepo.appendBulk(any()),
+        ).thenAnswer((_) async => const Result.success([]));
 
         final result = await sut.appendMealsToRange(
           babyId: _babyId,
@@ -421,9 +423,11 @@ void main() {
         );
 
         expect(result.isSuccess, isTrue);
-        final captured = verify(
-          () => mockMealPlanRepo.appendBulk(captureAny()),
-        ).captured.single as List<MealPlanEntryInsert>;
+        final captured =
+            verify(
+                  () => mockMealPlanRepo.appendBulk(captureAny()),
+                ).captured.single
+                as List<MealPlanEntryInsert>;
         expect(captured, hasLength(3));
         expect(captured[0].recipeId, 'r1');
         expect(captured[0].planDate, start);
@@ -554,15 +558,11 @@ void main() {
 
       expect(result.isSuccess, isTrue);
       expect(result.dataOrNull, containsAll(['Carrot', 'Peas']));
-      verify(
-        () => mockMealPlanRepo.getWeekMeals(_babyId, day, day),
-      ).called(1);
+      verify(() => mockMealPlanRepo.getWeekMeals(_babyId, day, day)).called(1);
     });
 
     test('deduplicates across multiple meals on the same day', () async {
-      when(
-        () => mockMealPlanRepo.getWeekMeals(any(), any(), any()),
-      ).thenAnswer(
+      when(() => mockMealPlanRepo.getWeekMeals(any(), any(), any())).thenAnswer(
         (_) async => Result.success([
           _makeEntry(),
           _makeEntry(id: 'e2', recipeId: 'r2'),
@@ -591,9 +591,7 @@ void main() {
     });
 
     test('skips failed recipe fetch (best-effort)', () async {
-      when(
-        () => mockMealPlanRepo.getWeekMeals(any(), any(), any()),
-      ).thenAnswer(
+      when(() => mockMealPlanRepo.getWeekMeals(any(), any(), any())).thenAnswer(
         (_) async => Result.success([
           _makeEntry(),
           _makeEntry(id: 'e2', recipeId: 'r2'),
@@ -618,9 +616,7 @@ void main() {
     });
 
     test('getWeekMeals failure propagates without recipe fetches', () async {
-      when(
-        () => mockMealPlanRepo.getWeekMeals(any(), any(), any()),
-      ).thenAnswer(
+      when(() => mockMealPlanRepo.getWeekMeals(any(), any(), any())).thenAnswer(
         (_) async => const Result.failure(ServerException('DB error')),
       );
 

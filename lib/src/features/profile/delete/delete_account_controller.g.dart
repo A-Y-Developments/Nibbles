@@ -30,7 +30,7 @@ final deleteAccountCrashRecorderProvider =
 typedef DeleteAccountCrashRecorderRef =
     ProviderRef<DeleteAccountCrashRecorderFn>;
 String _$deleteAccountControllerHash() =>
-    r'a051fe95d9ac3553ace7ccf275cd1e9b186d890b';
+    r'ee41096e3d70a4e8da28923aa272c47ade44a638';
 
 /// Drives the delete-account flow opened from Profile (NIB-78).
 ///

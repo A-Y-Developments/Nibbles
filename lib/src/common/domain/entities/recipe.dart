@@ -14,6 +14,7 @@ class Recipe with _$Recipe {
     required List<Ingredient> ingredients,
     required List<String> steps,
     required String howToServe,
+    String? makes,
     String? notes,
     String? thumbnailUrl,
     @Default(<String>[]) List<String> nutritionTags,

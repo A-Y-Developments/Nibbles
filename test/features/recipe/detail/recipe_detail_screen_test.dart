@@ -1,16 +1,14 @@
-// Widget tests for the redesigned Recipe Detail screen (NIB-68 reskin).
+// Widget tests for the rebuilt Recipe Detail screen.
 //
 // Renders the screen by overriding [recipeDetailControllerProvider] with a
 // canned [RecipeDetailState] and asserts:
-//   * the header bar (back chip + "Recipe Detail" title + overflow chip)
-//   * the hero + banner card + ingredients + method blocks are present
-//   * the allergen advisory card maps `safe` → AppChipTone.safe and
-//     `flagged` → AppChipTone.flag (never `.completed`), and shows the
-//     verbatim body line + advisory copy
+//   * the top bar (back icon + "Recipe Detail" title + overflow icon)
+//   * the hero banner + banner card + ingredients + method blocks
+//   * the allergen card shows the composed sentence + verbatim advisory copy
+//     (no per-allergen chips in this redesign)
 //   * the storage / freezer / tip cards are HIDDEN when every state getter is
-//     null (placeholder Recipe state), and render when the getters are
-//     overridden non-null via a `_FakeDetailState`
-//   * the sticky CTA tap opens the multi-day Add-to-Meal-Plan sheet
+//     null, and render when overridden non-null via a `_FakeDetailState`
+//   * the floating CTA tap opens the multi-day Add-to-Meal-Plan sheet
 //   * the success toast is reachable and shows verbatim Figma copy
 //
 // Firebase platform-interface packages are transitive deps; the public barrels
@@ -23,7 +21,6 @@ import 'package:firebase_core_platform_interface/test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nibbles/src/common/components/chips/app_chip.dart';
 import 'package:nibbles/src/common/domain/entities/ingredient.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
 import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
@@ -34,10 +31,9 @@ import 'package:nibbles/src/features/recipe/detail/recipe_detail_state.dart';
 import 'package:nibbles/src/features/recipe/detail/widgets/add_to_meal_plan_cta.dart';
 import 'package:nibbles/src/features/recipe/detail/widgets/contains_allergens_card.dart';
 import 'package:nibbles/src/features/recipe/detail/widgets/recipe_banner_card.dart';
-import 'package:nibbles/src/features/recipe/detail/widgets/recipe_detail_header.dart';
-import 'package:nibbles/src/features/recipe/detail/widgets/recipe_hero.dart';
+import 'package:nibbles/src/features/recipe/detail/widgets/recipe_hero_banner.dart';
+import 'package:nibbles/src/features/recipe/detail/widgets/recipe_storage_row.dart';
 import 'package:nibbles/src/features/recipe/detail/widgets/recipe_tip_card.dart';
-import 'package:nibbles/src/features/recipe/detail/widgets/storage_card_row.dart';
 
 const _babyId = 'baby-001';
 
@@ -192,49 +188,39 @@ void main() {
   });
 
   group('RecipeDetailScreen — base layout', () {
+    testWidgets('renders top bar + hero + banner + ingredients + method', (
+      tester,
+    ) async {
+      const state = RecipeDetailState(
+        recipe: _recipe,
+        currentAllergenKey: 'peanut',
+      );
+
+      await _pump(tester, state: state);
+
+      // Top bar.
+      expect(find.byIcon(Icons.arrow_back), findsOneWidget);
+      expect(find.byIcon(Icons.more_horiz), findsOneWidget);
+      expect(find.text('Recipe Detail'), findsOneWidget);
+      // Hero + banner.
+      expect(find.byType(RecipeHeroBanner), findsOneWidget);
+      expect(find.byType(RecipeBannerCard), findsOneWidget);
+      expect(find.text(_recipe.title), findsWidgets);
+      // "Best for $ageRange" subtitle line in banner card.
+      expect(find.text('Best for ${_recipe.ageRange}'), findsOneWidget);
+      // Ingredients + Method section headers.
+      expect(find.text('Ingredients'), findsOneWidget);
+      expect(find.text('Method'), findsOneWidget);
+      // Floating CTA at bottom.
+      expect(find.text('Add to Meal Plan'), findsOneWidget);
+    });
+
     testWidgets(
-      'renders header + hero + banner + ingredients + method + sticky CTA',
+      'ContainsAllergensCard renders title + composed sentence + advisory',
       (tester) async {
         const state = RecipeDetailState(
           recipe: _recipe,
           currentAllergenKey: 'peanut',
-          allergenStatuses: {
-            'peanut': AllergenStatus.safe,
-            'egg': AllergenStatus.flagged,
-          },
-        );
-
-        await _pump(tester, state: state);
-
-        // Header.
-        expect(find.byType(RecipeDetailHeader), findsOneWidget);
-        expect(find.text('Recipe Detail'), findsOneWidget);
-        // Hero + banner.
-        expect(find.byType(RecipeHero), findsOneWidget);
-        expect(find.byType(RecipeBannerCard), findsOneWidget);
-        expect(find.text(_recipe.title), findsWidgets);
-        // "Best for $ageRange" subtitle line in banner card.
-        expect(find.text('Best for ${_recipe.ageRange}'), findsOneWidget);
-        // Ingredients section header.
-        expect(find.text('Ingredients'), findsOneWidget);
-        // Method section header.
-        expect(find.text('Method'), findsOneWidget);
-        // Sticky CTA at bottom.
-        expect(find.byType(AddToMealPlanCta), findsOneWidget);
-        expect(find.text('Add to Meal Plan'), findsOneWidget);
-      },
-    );
-
-    testWidgets(
-      'ContainsAllergensCard renders title + body line + verbatim advisory',
-      (tester) async {
-        const state = RecipeDetailState(
-          recipe: _recipe,
-          currentAllergenKey: 'peanut',
-          allergenStatuses: {
-            'peanut': AllergenStatus.safe,
-            'egg': AllergenStatus.flagged,
-          },
         );
 
         await _pump(tester, state: state);
@@ -243,7 +229,8 @@ void main() {
         expect(find.text('Contains allergens'), findsOneWidget);
         expect(
           find.text(
-            'This recipe contains the following of the big 11 allergens',
+            'This recipe contains peanut and egg, which are included in '
+            'the Big 11 allergens.',
           ),
           findsOneWidget,
         );
@@ -272,43 +259,9 @@ void main() {
     });
   });
 
-  group('RecipeDetailScreen — allergen chip tones', () {
-    testWidgets(
-      'safe → AppChipTone.safe; flagged → AppChipTone.flag (never .completed)',
-      (tester) async {
-        const state = RecipeDetailState(
-          recipe: _recipe,
-          currentAllergenKey: 'peanut',
-          allergenStatuses: {
-            'peanut': AllergenStatus.safe,
-            'egg': AllergenStatus.flagged,
-          },
-        );
-
-        await _pump(tester, state: state);
-
-        final peanutChip = tester.widget<AppChip>(
-          find.descendant(
-            of: find.byType(ContainsAllergensCard),
-            matching: find.widgetWithText(AppChip, 'Peanut'),
-          ),
-        );
-        final eggChip = tester.widget<AppChip>(
-          find.descendant(
-            of: find.byType(ContainsAllergensCard),
-            matching: find.widgetWithText(AppChip, 'Egg'),
-          ),
-        );
-
-        expect(peanutChip.tone, AppChipTone.safe);
-        expect(eggChip.tone, AppChipTone.flag);
-      },
-    );
-  });
-
   group('RecipeDetailScreen — storage / freezer / tip card branches', () {
     testWidgets(
-      'all-null getters → StorageCardRow + RecipeTipCard branches HIDDEN',
+      'all-null getters → RecipeStorageRow + RecipeTipCard branches HIDDEN',
       (tester) async {
         // Default RecipeDetailState getters all return null. Placeholder state.
         const state = RecipeDetailState(
@@ -318,21 +271,32 @@ void main() {
 
         await _pump(tester, state: state);
 
-        expect(find.byType(StorageCardRow), findsNothing);
+        expect(find.byType(RecipeStorageRow), findsNothing);
         expect(find.byType(RecipeTipCard), findsNothing);
         // Utensils section is also gated; header should not render.
         expect(find.text('Utensils / appliances'), findsNothing);
       },
     );
 
-    // NOTE: a 'non-null storage + freezer → StorageCardRow renders' assertion
-    // is intentionally omitted. `StorageCardRow`'s top-level
-    // `Row(crossAxisAlignment: stretch)` triggers a "BoxConstraints forces an
-    // infinite height" RenderFlex assertion when laid out inside the sliver
-    // list — the production getters are hardcoded to `=> null` in
-    // `recipe_detail_state.dart`, so this branch is currently unreachable
-    // in-app. Fixing the layout requires modifying `storage_card_row.dart`,
-    // which is out of scope for this redesign-only ticket.
+    testWidgets(
+      'non-null storage + freezer → RecipeStorageRow renders both notes',
+      (tester) async {
+        const state = _FakeDetailState(
+          recipe: _emptyRecipe,
+          currentAllergenKey: 'peanut',
+          storage: 'Fridge up to 24 hours',
+          freezer: 'Freeze up to 2 months',
+        );
+
+        await _pump(tester, state: state);
+
+        expect(find.byType(RecipeStorageRow), findsOneWidget);
+        expect(find.text('Storage'), findsOneWidget);
+        expect(find.text('Fridge up to 24 hours'), findsOneWidget);
+        expect(find.text('Freezer'), findsOneWidget);
+        expect(find.text('Freeze up to 2 months'), findsOneWidget);
+      },
+    );
 
     testWidgets(
       'non-null textureTip and whyThisMeal → RecipeTipCard renders for each',
@@ -367,17 +331,13 @@ void main() {
     });
   });
 
-  group('RecipeDetailScreen — sticky CTA flow', () {
+  group('RecipeDetailScreen — floating CTA flow', () {
     testWidgets('tap on Add to Meal Plan CTA opens the multi-day sheet', (
       tester,
     ) async {
       const state = RecipeDetailState(
         recipe: _recipe,
         currentAllergenKey: 'peanut',
-        allergenStatuses: {
-          'peanut': AllergenStatus.safe,
-          'egg': AllergenStatus.flagged,
-        },
       );
 
       await _pump(tester, state: state);

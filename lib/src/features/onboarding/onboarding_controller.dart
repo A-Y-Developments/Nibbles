@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/domain/enums/consent_type.dart';
+import 'package:nibbles/src/common/domain/enums/gender.dart';
 import 'package:nibbles/src/common/domain/formz/baby_name_input.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/common/services/consent_service.dart';
@@ -85,9 +86,7 @@ class OnboardingController extends _$OnboardingController {
   }
 
   void setReadinessAnswers(List<bool?> answers) {
-    state = state.copyWith(
-      readinessAnswers: List<bool?>.unmodifiable(answers),
-    );
+    state = state.copyWith(readinessAnswers: List<bool?>.unmodifiable(answers));
   }
 
   /// Records a single answer in-place. The screen owns the active question
@@ -129,7 +128,8 @@ class OnboardingController extends _$OnboardingController {
 
     if (state.dob == null || !state.babyName.isValid) {
       state = state.copyWith(
-        submitErrorMessage: "We're missing your baby's name or date of birth. "
+        submitErrorMessage:
+            "We're missing your baby's name or date of birth. "
             'Please go back and complete those steps.',
       );
       return false;
@@ -137,9 +137,17 @@ class OnboardingController extends _$OnboardingController {
 
     state = state.copyWith(isSubmitting: true, submitErrorMessage: null);
 
-    final result = await ref
-        .read(babyProfileServiceProvider)
-        .createBaby(state.babyName.value, state.dob!);
+    final result = await ref.read(babyProfileServiceProvider).createBaby(
+      state.babyName.value,
+      state.dob!,
+      Gender.preferNotToSay,
+      // Index 0 = Q1 pediatrician gate, 1-5 = the Q2-Q6 developmental signs
+      // (matches kReadinessSignLabels). Unanswered → false.
+      [
+        state.pediatricianApproved ?? false,
+        ...state.readinessAnswers.map((a) => a ?? false),
+      ],
+    );
 
     return result.when(
       success: (baby) async {

@@ -15,9 +15,7 @@ void main() {
           home: Scaffold(
             body: SizedBox(
               width: 400,
-              child: Wrap(
-                children: [AppChip(label: 'Iron Rich')],
-              ),
+              child: Wrap(children: [AppChip(label: 'Iron Rich')]),
             ),
           ),
         ),

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
-import 'package:nibbles/src/common/components/brand/quatrefoil.dart';
+import 'package:nibbles/src/common/components/brand/brand_flower.dart';
 
 /// Generic 'no results' empty state for the Recipe Library search
 /// (Figma 971:8813 / 971:8828).
 ///
-/// Centered butter-flower-glyph ([Quatrefoil], 136 per Figma Group74 box) +
+/// Centered butter-flower-glyph ([BrandFlower], 136 per Figma Group74 box) +
 /// 16/700 title. Verbatim copy per Figma — smart apostrophe (U+2019), no
 /// subtitle. Search query is NOT interpolated into the message.
 ///
@@ -28,7 +28,7 @@ class RecipeSearchEmpty extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Quatrefoil(size: 136),
+            BrandFlower(size: 136),
             SizedBox(height: AppSizes.sm + 2),
             Text(
               'We couldn’t find any recipes',

@@ -25,10 +25,10 @@ part 'baby_setup_loading_controller.g.dart';
 /// success screen's 1500ms floor.
 @riverpod
 class BabySetupLoadingController extends _$BabySetupLoadingController {
-  /// Floor on the loading frame so the petal animation reads as intentional
-  /// transition rather than a flash. Verbatim per ticket acceptance:
-  /// "Minimum 1.5s display".
-  static const Duration minDwell = Duration(milliseconds: 1600);
+  /// Floor on the loading frame so the petal + orbiting-dot animation reads as
+  /// an intentional transition rather than a flash. Held at 3s so the gold dot
+  /// completes at least one full revolution before the auto-route to /home.
+  static const Duration minDwell = Duration(seconds: 3);
 
   /// Hard timeout — surface the auto-route even if some future preload here
   /// stalls. Verbatim per ticket acceptance: "Maximum display duration: hard

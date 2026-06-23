@@ -139,18 +139,15 @@ class _AllergenLogScreenState extends ConsumerState<AllergenLogScreen> {
     final babyIdAsync = ref.watch(currentBabyIdProvider);
 
     return babyIdAsync.when(
-      loading: () => const Scaffold(
-        backgroundColor: AppColors.background,
+      loading: () => const GradientScaffold(
         body: Center(child: CircularProgressIndicator()),
       ),
-      error: (_, __) => const Scaffold(
-        backgroundColor: AppColors.background,
+      error: (_, __) => const GradientScaffold(
         body: Center(child: Text('Could not load baby profile.')),
       ),
       data: (babyId) {
         if (babyId == null) {
-          return const Scaffold(
-            backgroundColor: AppColors.background,
+          return const GradientScaffold(
             body: Center(child: Text('No baby profile found.')),
           );
         }
@@ -235,10 +232,9 @@ class _LogScreenBody extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final logDate = state.logDate;
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return GradientScaffold(
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           tooltip: 'Back',

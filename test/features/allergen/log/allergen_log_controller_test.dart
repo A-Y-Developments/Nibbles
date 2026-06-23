@@ -96,8 +96,7 @@ void main() {
 
   AllergenLogController readController() =>
       container.read(allergenLogControllerProvider.notifier);
-  AllergenLogState readState() =>
-      container.read(allergenLogControllerProvider);
+  AllergenLogState readState() => container.read(allergenLogControllerProvider);
 
   /// Runs [body] inside a guarded zone that swallows the unawaited
   /// [Analytics.logAllergenLog*] rejection. The production `Analytics` wrapper
@@ -153,9 +152,7 @@ void main() {
             logDate: any(named: 'logDate'),
             photo: any(named: 'photo'),
           ),
-        ).thenAnswer(
-          (_) async => Result.success(_makeLog()),
-        );
+        ).thenAnswer((_) async => Result.success(_makeLog()));
         when(
           () => mockService.getLogs(
             any(),
@@ -218,10 +215,7 @@ void main() {
         final state = readState();
         expect(state.isSaved, isFalse);
         expect(state.isLoading, isFalse);
-        expect(
-          state.errorMessage,
-          "Couldn't save your log. Please try again.",
-        );
+        expect(state.errorMessage, "Couldn't save your log. Please try again.");
       },
     );
 
@@ -244,9 +238,7 @@ void main() {
             logDate: any(named: 'logDate'),
             photo: any(named: 'photo'),
           ),
-        ).thenAnswer(
-          (_) async => Result.success(_makeLog(hadReaction: true)),
-        );
+        ).thenAnswer((_) async => Result.success(_makeLog(hadReaction: true)));
 
         await controller.submit(babyId: _babyId, allergenKey: _allergenKey);
 
@@ -267,44 +259,39 @@ void main() {
   // ---------------------------------------------------------------------------
 
   group('AllergenLogController EDIT', () {
-    test(
-      'hydrateForEdit populates state from the matching log',
-      () async {
-        final existing = _makeLog(
-          id: 'log-edit',
-          notes: 'first try',
-          taste: EmojiTaste.neutral,
-          photoUrl: 'baby/photo.jpg',
-          attachmentTitle: 'recipe',
-          attachmentDescription: 'desc',
-          logDate: DateTime(2026, 3, 20),
-        );
-        when(
-          () => mockService.getLogs(
-            any(),
-            allergenKey: any(named: 'allergenKey'),
-          ),
-        ).thenAnswer((_) async => Result.success([existing]));
+    test('hydrateForEdit populates state from the matching log', () async {
+      final existing = _makeLog(
+        id: 'log-edit',
+        notes: 'first try',
+        taste: EmojiTaste.neutral,
+        photoUrl: 'baby/photo.jpg',
+        attachmentTitle: 'recipe',
+        attachmentDescription: 'desc',
+        logDate: DateTime(2026, 3, 20),
+      );
+      when(
+        () =>
+            mockService.getLogs(any(), allergenKey: any(named: 'allergenKey')),
+      ).thenAnswer((_) async => Result.success([existing]));
 
-        await readController().hydrateForEdit(
-          babyId: _babyId,
-          allergenKey: _allergenKey,
-          logId: 'log-edit',
-        );
+      await readController().hydrateForEdit(
+        babyId: _babyId,
+        allergenKey: _allergenKey,
+        logId: 'log-edit',
+      );
 
-        final state = readState();
-        expect(state.logId, 'log-edit');
-        expect(state.taste, EmojiTaste.neutral);
-        expect(state.hadReaction, isFalse);
-        expect(state.notes, 'first try');
-        expect(state.attachmentTitle, 'recipe');
-        expect(state.attachmentDescription, 'desc');
-        expect(state.existingPhotoPath, 'baby/photo.jpg');
-        expect(state.logDate, DateTime(2026, 3, 20));
-        expect(state.hydrated, isTrue);
-        expect(state.errorMessage, isNull);
-      },
-    );
+      final state = readState();
+      expect(state.logId, 'log-edit');
+      expect(state.taste, EmojiTaste.neutral);
+      expect(state.hadReaction, isFalse);
+      expect(state.notes, 'first try');
+      expect(state.attachmentTitle, 'recipe');
+      expect(state.attachmentDescription, 'desc');
+      expect(state.existingPhotoPath, 'baby/photo.jpg');
+      expect(state.logDate, DateTime(2026, 3, 20));
+      expect(state.hydrated, isTrue);
+      expect(state.errorMessage, isNull);
+    });
 
     test(
       'submit routes to updateAllergenLog (not saveAllergenLog) and forwards '
@@ -405,10 +392,7 @@ void main() {
         );
 
         final state = readState();
-        expect(
-          state.errorMessage,
-          "Couldn't load this log. Please try again.",
-        );
+        expect(state.errorMessage, "Couldn't load this log. Please try again.");
         expect(state.isLoading, isFalse);
         expect(state.logId, isNull);
       },
@@ -490,16 +474,14 @@ void main() {
     });
 
     test('setAttachmentPhoto sets path and clears on null', () {
-      final controller = readController()
-        ..setAttachmentPhoto('/tmp/photo.jpg');
+      final controller = readController()..setAttachmentPhoto('/tmp/photo.jpg');
       expect(readState().photoPath, '/tmp/photo.jpg');
       controller.setAttachmentPhoto(null);
       expect(readState().photoPath, isNull);
     });
 
     test('removePhoto clears photoPath', () {
-      final controller = readController()
-        ..setAttachmentPhoto('/tmp/snap.jpg');
+      final controller = readController()..setAttachmentPhoto('/tmp/snap.jpg');
       expect(readState().photoPath, isNotNull);
       controller.removePhoto();
       expect(readState().photoPath, isNull);
@@ -528,10 +510,7 @@ void main() {
         );
 
         final state = readState();
-        expect(
-          state.errorMessage,
-          "Couldn't load this log. Please try again.",
-        );
+        expect(state.errorMessage, "Couldn't load this log. Please try again.");
         expect(state.isLoading, isFalse);
         expect(state.logId, isNull);
       },
@@ -543,47 +522,35 @@ void main() {
   // ---------------------------------------------------------------------------
 
   group('AllergenLogController EDIT submit failure', () {
-    test(
-      'sets errorMessage when updateAllergenLog returns failure',
-      () async {
-        final existing = _makeLog(id: 'log-edit', notes: 'note');
-        when(
-          () => mockService.getLogs(
-            any(),
-            allergenKey: any(named: 'allergenKey'),
-          ),
-        ).thenAnswer((_) async => Result.success([existing]));
-        when(
-          () => mockService.updateAllergenLog(
-            log: any(named: 'log'),
-            newPhotoLocalPath: any(named: 'newPhotoLocalPath'),
-            oldPhotoPath: any(named: 'oldPhotoPath'),
-          ),
-        ).thenAnswer(
-          (_) async =>
-              const Result.failure(ServerException('db error')),
-        );
+    test('sets errorMessage when updateAllergenLog returns failure', () async {
+      final existing = _makeLog(id: 'log-edit', notes: 'note');
+      when(
+        () =>
+            mockService.getLogs(any(), allergenKey: any(named: 'allergenKey')),
+      ).thenAnswer((_) async => Result.success([existing]));
+      when(
+        () => mockService.updateAllergenLog(
+          log: any(named: 'log'),
+          newPhotoLocalPath: any(named: 'newPhotoLocalPath'),
+          oldPhotoPath: any(named: 'oldPhotoPath'),
+        ),
+      ).thenAnswer(
+        (_) async => const Result.failure(ServerException('db error')),
+      );
 
-        final controller = readController();
-        await controller.hydrateForEdit(
-          babyId: _babyId,
-          allergenKey: _allergenKey,
-          logId: 'log-edit',
-        );
-        await controller.submit(
-          babyId: _babyId,
-          allergenKey: _allergenKey,
-        );
+      final controller = readController();
+      await controller.hydrateForEdit(
+        babyId: _babyId,
+        allergenKey: _allergenKey,
+        logId: 'log-edit',
+      );
+      await controller.submit(babyId: _babyId, allergenKey: _allergenKey);
 
-        final state = readState();
-        expect(state.isSaved, isFalse);
-        expect(state.isLoading, isFalse);
-        expect(
-          state.errorMessage,
-          "Couldn't save your log. Please try again.",
-        );
-      },
-    );
+      final state = readState();
+      expect(state.isSaved, isFalse);
+      expect(state.isLoading, isFalse);
+      expect(state.errorMessage, "Couldn't save your log. Please try again.");
+    });
   });
 
   // ---------------------------------------------------------------------------
@@ -614,8 +581,7 @@ void main() {
             allergenKey: any(named: 'allergenKey'),
           ),
         ).thenAnswer(
-          (_) async =>
-              Result.success([savedLog, savedLog, savedLog]),
+          (_) async => Result.success([savedLog, savedLog, savedLog]),
         );
         when(
           () => mockService.deriveStatus(any()),
@@ -629,9 +595,7 @@ void main() {
           allergenKey: _allergenKey,
         );
 
-        verify(
-          () => mockService.advanceToNextAllergen(_babyId),
-        ).called(1);
+        verify(() => mockService.advanceToNextAllergen(_babyId)).called(1);
         expect(readState().isSaved, isTrue);
       }),
     );
@@ -671,10 +635,7 @@ void main() {
 
         final controller = readController()
           ..setAttachmentPhoto('/tmp/photo.jpg');
-        await controller.submit(
-          babyId: _babyId,
-          allergenKey: _allergenKey,
-        );
+        await controller.submit(babyId: _babyId, allergenKey: _allergenKey);
         expect(readState().isSaved, isTrue);
       }),
     );
@@ -706,12 +667,8 @@ void main() {
           () => mockService.deriveStatus(any()),
         ).thenAnswer((_) => AllergenStatus.inProgress);
 
-        final controller = readController()
-          ..setAttachmentTitle('title');
-        await controller.submit(
-          babyId: _babyId,
-          allergenKey: _allergenKey,
-        );
+        final controller = readController()..setAttachmentTitle('title');
+        await controller.submit(babyId: _babyId, allergenKey: _allergenKey);
         expect(readState().isSaved, isTrue);
       }),
     );
@@ -743,12 +700,8 @@ void main() {
           () => mockService.deriveStatus(any()),
         ).thenAnswer((_) => AllergenStatus.inProgress);
 
-        final controller = readController()
-          ..setAttachmentDescription('desc');
-        await controller.submit(
-          babyId: _babyId,
-          allergenKey: _allergenKey,
-        );
+        final controller = readController()..setAttachmentDescription('desc');
+        await controller.submit(babyId: _babyId, allergenKey: _allergenKey);
         expect(readState().isSaved, isTrue);
       }),
     );

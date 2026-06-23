@@ -60,13 +60,10 @@ class _SubscriptionSuccessScreenState
 
   void _scheduleRoute() {
     _routeTimer?.cancel();
-    _routeTimer = Timer(
-      SubscriptionSuccessController.successDwell,
-      () {
-        if (!mounted) return;
-        context.goNamed(AppRoute.home.name);
-      },
-    );
+    _routeTimer = Timer(SubscriptionSuccessController.successDwell, () {
+      if (!mounted) return;
+      context.goNamed(AppRoute.home.name);
+    });
   }
 
   @override

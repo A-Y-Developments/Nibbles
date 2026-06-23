@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:nibbles/gen/assets.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
-import 'package:nibbles/src/common/components/brand/quatrefoil.dart';
 import 'package:nibbles/src/features/starting_guide/constants/articles.dart';
 
 /// Article card rendered on the Starting Guide hub list.
 ///
-/// Cream fill, no shadow, title-only. Trailing Quatrefoil with forward arrow
-/// per Figma design spec.
+/// Cream fill, title on the left, butter quatrefoil 'next' blob on the right.
+/// The blob overflows the right padding and is clipped flush by the card's
+/// rounded corners — per Figma 971-8692.
 class ArticleCard extends StatelessWidget {
-  const ArticleCard({
-    required this.article,
-    required this.onTap,
-    super.key,
-  });
+  const ArticleCard({required this.article, required this.onTap, super.key});
+
+  static const double _blobWidth = 66;
+  static const double _blobHeight = 59;
+  static const double _blobBleed = 12;
 
   final GuideArticle article;
   final VoidCallback onTap;
@@ -25,49 +26,37 @@ class ArticleCard extends StatelessWidget {
       button: true,
       label: article.title,
       child: MergeSemantics(
-        child: Material(
-          color: AppColors.butterSoft,
+        child: ClipRRect(
           borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-            onTap: onTap,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSizes.sp12,
-                vertical: AppSizes.lg,
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      article.title,
-                      style: AppTypography.textTheme.titleSmall?.copyWith(
-                        color: AppColors.fgStrong,
+          child: Material(
+            color: AppColors.butterSoft,
+            child: InkWell(
+              onTap: onTap,
+              child: Padding(
+                padding: const EdgeInsets.only(left: AppSizes.sp12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        article.title,
+                        style: AppTypography.textTheme.titleSmall?.copyWith(
+                          fontSize: 15,
+                          color: AppColors.fgStrong,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: AppSizes.sm),
-                  const ExcludeSemantics(
-                    child: SizedBox(
-                      width: AppSizes.roundButton,
-                      height: AppSizes.roundButton,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Quatrefoil(
-                            size: AppSizes.roundButton,
-                            coreColor: AppColors.greenDeep,
-                          ),
-                          Icon(
-                            Icons.arrow_forward_rounded,
-                            color: AppColors.surface,
-                            size: AppSizes.iconMd,
-                          ),
-                        ],
+                    const SizedBox(width: AppSizes.sm),
+                    ExcludeSemantics(
+                      child: Transform.translate(
+                        offset: const Offset(_blobBleed, 0),
+                        child: Assets.icons.guideNextArrow.svg(
+                          width: _blobWidth,
+                          height: _blobHeight,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

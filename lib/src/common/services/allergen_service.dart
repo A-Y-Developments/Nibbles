@@ -213,10 +213,7 @@ class AllergenService {
     String? photoPath,
   }) async {
     if (photoPath != null && photoPath.isNotEmpty) {
-      await _deletePhotoBestEffort(
-        photoPath,
-        reason: 'allergen_delete_photo',
-      );
+      await _deletePhotoBestEffort(photoPath, reason: 'allergen_delete_photo');
     }
     return _repo.deleteLog(logId);
   }

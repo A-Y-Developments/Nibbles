@@ -104,9 +104,7 @@ void main() {
       );
 
       expect(result, isA<Success<void>>());
-      verify(
-        () => mockFileApi.remove(['baby-1/peanut_1.jpg']),
-      ).called(1);
+      verify(() => mockFileApi.remove(['baby-1/peanut_1.jpg'])).called(1);
     });
 
     test('returns Failure on StorageException', () async {
@@ -124,9 +122,7 @@ void main() {
     });
 
     test('returns Failure on unknown error', () async {
-      when(
-        () => mockFileApi.remove(any()),
-      ).thenThrow(Exception('boom'));
+      when(() => mockFileApi.remove(any())).thenThrow(Exception('boom'));
 
       final result = await sut.deleteFile(
         'allergen-photos',

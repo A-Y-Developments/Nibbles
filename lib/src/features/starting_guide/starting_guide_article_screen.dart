@@ -6,11 +6,10 @@ import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
-import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
-import 'package:nibbles/src/common/components/buttons/app_round_button.dart';
-import 'package:nibbles/src/common/components/chips/app_chip.dart';
-import 'package:nibbles/src/common/components/navigation/app_header.dart';
+import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/features/starting_guide/constants/articles.dart';
+import 'package:nibbles/src/features/starting_guide/introduction/introduction_view.dart';
+import 'package:nibbles/src/features/starting_guide/readiness_signs/readiness_signs_view.dart';
 import 'package:nibbles/src/features/starting_guide/starting_guide_controller.dart';
 import 'package:nibbles/src/features/starting_guide/widgets/guide_checklist_card.dart';
 import 'package:nibbles/src/features/starting_guide/widgets/guide_chip_grid_card.dart';
@@ -82,10 +81,25 @@ class _StartingGuideArticleScreenState
 
   @override
   Widget build(BuildContext context) {
+    // Introduction (Figma 971:8744) is bespoke — it bypasses the generic block
+    // renderer below. The other guide articles still use the data-driven path.
+    if (widget.slug == 'introduction') {
+      return GradientScaffold(
+        body: IntroductionView(onBack: () => _onBack(context)),
+      );
+    }
+
+    // 5 Sign Readiness (Figma 1474:50031) is bespoke — reflects the baby's
+    // persisted readiness result. Bypasses the generic block renderer.
+    if (widget.slug == 'readiness-signs') {
+      return GradientScaffold(
+        body: ReadinessSignsView(onBack: () => _onBack(context)),
+      );
+    }
+
     final guideAsync = ref.watch(startingGuideControllerProvider);
 
-    return Scaffold(
-      backgroundColor: AppColors.cream,
+    return GradientScaffold(
       body: guideAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, __) => _NotFound(onBack: () => _onBack(context)),
@@ -262,10 +276,7 @@ class _InlineCtaPair extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        AppPillButton(
-          label: primary.label,
-          onPressed: () => onCta(primary),
-        ),
+        AppPillButton(label: primary.label, onPressed: () => onCta(primary)),
         if (secondary != null) ...[
           const SizedBox(height: AppSizes.sp12),
           AppPillButton(
