@@ -31,6 +31,12 @@ final class NotFoundException extends AppException {
   ]);
 }
 
+/// Thrown when a client-side business rule blocks an action (e.g. starting a
+/// second allergen introduction while one is already active).
+final class ValidationException extends AppException {
+  const ValidationException([super.message = 'That action is not allowed.']);
+}
+
 /// Fallback for all other errors.
 final class UnknownException extends AppException {
   const UnknownException([super.message = 'An unexpected error occurred.']);

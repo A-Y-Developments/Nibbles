@@ -34,10 +34,12 @@ class HomeController extends _$HomeController {
   Future<HomeState> build(String babyId) async {
     final babyFut = ref.read(babyProfileServiceProvider).getBaby();
     final logsFut = ref.read(allergenServiceProvider).getLogs(babyId);
+    final stateFut = ref.read(allergenServiceProvider).getProgramState(babyId);
     final mealsFut = ref.read(mealPlanServiceProvider).getRolling7(babyId);
 
     final baby = await babyFut;
     final logsResult = await logsFut;
+    final stateResult = await stateFut;
     final mealsResult = await mealsFut;
 
     if (baby == null) {
@@ -57,10 +59,13 @@ class HomeController extends _$HomeController {
       (logsByKey[log.allergenKey] ??= <AllergenLog>[]).add(log);
     }
 
-    final statuses = {
-      for (final key in kAllergenKeys)
-        key: deriveStatusForLogs(logsByKey[key] ?? const <AllergenLog>[]),
-    };
+    // Mirrors the tracker: the actively-introduced allergen ("Start
+    // Introduce") shows as inProgress before any log exists. A failed
+    // program-state read degrades to no overlay.
+    final statuses = deriveStatusesWithSelection(
+      logsByKey: logsByKey,
+      selectedAllergenKey: stateResult.dataOrNull?.selectedAllergenKey,
+    );
 
     // Clean-log counts feed the ongoing card "X/3 times" + segment fill.
     // Reactions never advance the count — they flip the allergen to flagged

@@ -313,12 +313,45 @@ class AllergenService {
       (byKey[log.allergenKey] ??= <AllergenLog>[]).add(log);
     }
 
-    final statuses = <String, AllergenStatus>{
-      for (final key in kAllergenKeys)
-        key: deriveStatusForLogs(byKey[key] ?? const <AllergenLog>[]),
-    };
+    // The actively-introduced allergen ("Start Introduce") shows as inProgress
+    // before any log exists. A failed program-state read degrades gracefully —
+    // the overlay is dropped, never the whole status map.
+    final stateResult = await _repo.getProgramState(babyId);
+    final selectedKey = stateResult.dataOrNull?.selectedAllergenKey;
+
+    final statuses = deriveStatusesWithSelection(
+      logsByKey: byKey,
+      selectedAllergenKey: selectedKey,
+    );
 
     return Result.success(statuses);
+  }
+
+  /// Marks [allergenKey] as the actively-introduced allergen ("Start
+  /// Introduce") — no log is created. Enforces the single-active rule: fails
+  /// with a [ValidationException] if a different allergen is currently
+  /// inProgress (the lock releases once that one becomes safe or flagged).
+  Future<Result<void>> startIntroducingAllergen({
+    required String babyId,
+    required String allergenKey,
+  }) async {
+    final statusesResult = await getAllergenStatuses(babyId);
+    if (statusesResult.isFailure) {
+      return Result.failure(statusesResult.errorOrNull!);
+    }
+
+    final activeExists = statusesResult.dataOrNull!.entries.any(
+      (e) => e.key != allergenKey && e.value == AllergenStatus.inProgress,
+    );
+    if (activeExists) {
+      return const Result.failure(
+        ValidationException(
+          'Finish the current allergen before starting another.',
+        ),
+      );
+    }
+
+    return _repo.setSelectedAllergen(babyId, allergenKey);
   }
 
   /// Returns all 9 allergens ordered by sequence_order.

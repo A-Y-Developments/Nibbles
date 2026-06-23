@@ -62,6 +62,11 @@ abstract interface class AllergenRepository {
 
   /// ALLRG-09: Fetch reaction_details for a given log.
   Future<Result<ReactionDetail?>> getReactionDetail(String logId);
+
+  /// Sets the actively-introduced allergen ("Start Introduce"). Pass null to
+  /// clear the selection. Independent of [advanceProgramState]'s legacy
+  /// sequence pointer.
+  Future<Result<void>> setSelectedAllergen(String babyId, String? allergenKey);
 }
 
 class AllergenRepositoryImpl implements AllergenRepository {
@@ -278,6 +283,25 @@ class AllergenRepositoryImpl implements AllergenRepository {
   }
 
   @override
+  Future<Result<void>> setSelectedAllergen(
+    String babyId,
+    String? allergenKey,
+  ) async {
+    try {
+      await _supabase
+          .from('allergen_program_state')
+          .update({'selected_allergen_key': allergenKey})
+          .eq('baby_id', babyId);
+
+      return const Result.success(null);
+    } on PostgrestException catch (e) {
+      return Result.failure(ServerException(e.message));
+    } on Object {
+      return const Result.failure(UnknownException());
+    }
+  }
+
+  @override
   Future<Result<void>> completeProgramState(String babyId) async {
     try {
       await _supabase
@@ -349,6 +373,7 @@ class AllergenRepositoryImpl implements AllergenRepository {
         babyId: row['baby_id'] as String,
         currentAllergenKey: row['current_allergen_key'] as String,
         currentSequenceOrder: row['current_sequence_order'] as int,
+        selectedAllergenKey: row['selected_allergen_key'] as String?,
         status: AllergenProgramStatusX.fromJson(row['status'] as String),
         createdAt: DateTime.parse(row['created_at'] as String),
         updatedAt: DateTime.parse(row['updated_at'] as String),

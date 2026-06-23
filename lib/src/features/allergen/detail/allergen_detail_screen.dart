@@ -5,7 +5,6 @@ import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
-import 'package:nibbles/src/common/domain/entities/allergen_log.dart';
 import 'package:nibbles/src/features/allergen/detail/allergen_detail_controller.dart';
 import 'package:nibbles/src/features/allergen/detail/allergen_detail_state.dart';
 import 'package:nibbles/src/features/allergen/detail/widgets/detail_contextual_banner.dart';
@@ -75,12 +74,7 @@ class _AllergenDetailView extends ConsumerWidget {
   final AllergenDetailState state;
   final String allergenKey;
 
-  int get _cleanCount =>
-      state.logs.where((AllergenLog l) => !l.hadReaction).length;
-
-  String get _babyInitial => state.babyName.isEmpty
-      ? '?'
-      : state.babyName.characters.first.toUpperCase();
+  int get _introducedCount => state.logs.length;
 
   Future<void> _onAddPressed(BuildContext context, WidgetRef ref) async {
     final saved = await context.pushNamed<bool>(
@@ -111,7 +105,7 @@ class _AllergenDetailView extends ConsumerWidget {
           DetailHeaderCard(
             emoji: state.allergen.emoji,
             name: state.allergen.name,
-            cleanCount: _cleanCount,
+            introducedCount: _introducedCount,
             status: state.status,
           ),
 
@@ -124,7 +118,7 @@ class _AllergenDetailView extends ConsumerWidget {
           ],
 
           const SizedBox(height: AppSizes.lg),
-          DetailSegmentBar(cleanCount: _cleanCount, status: state.status),
+          DetailSegmentBar(introducedCount: _introducedCount),
 
           const SizedBox(height: AppSizes.lg),
           DetailContextualBanner(
@@ -142,7 +136,6 @@ class _AllergenDetailView extends ConsumerWidget {
                 key: ValueKey(e.value.id),
                 log: e.value,
                 logNumber: e.key + 1,
-                babyInitial: _babyInitial,
                 onTap: () => context.pushNamed(
                   AppRoute.allergenLogDetail.name,
                   pathParameters: {

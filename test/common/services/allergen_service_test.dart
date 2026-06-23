@@ -64,11 +64,13 @@ AllergenLog _makeLog({
 AllergenProgramState _makeProgramState({
   String currentAllergenKey = _peanutKey,
   int currentSequenceOrder = 1,
+  String? selectedAllergenKey,
 }) => AllergenProgramState(
   id: 'ps-1',
   babyId: _babyId,
   currentAllergenKey: currentAllergenKey,
   currentSequenceOrder: currentSequenceOrder,
+  selectedAllergenKey: selectedAllergenKey,
   status: AllergenProgramStatus.inProgress,
   createdAt: _now,
   updatedAt: _now,
@@ -98,6 +100,13 @@ void main() {
     mockRepo = MockAllergenRepository();
     mockStorage = MockStorageRepository();
     sut = AllergenService(mockRepo, mockStorage);
+
+    // getAllergenStatuses reads program state for the "Start Introduce"
+    // overlay. Default: no allergen selected (null) so derived statuses are
+    // unaffected; specific tests override this stub.
+    when(
+      () => mockRepo.getProgramState(any()),
+    ).thenAnswer((_) async => Result.success(_makeProgramState()));
   });
 
   // ---------------------------------------------------------------------------
@@ -323,9 +332,10 @@ void main() {
       // Untouched allergens default to notStarted.
       expect(statuses['shellfish'], AllergenStatus.notStarted);
       expect(statuses['fish'], AllergenStatus.notStarted);
-      // Only the bare-minimum repo call is used (no Supabase, no state read).
+      // Reads logs + program state (the latter powers the "Start Introduce"
+      // selection overlay; here no allergen is selected so it's a no-op).
       verify(() => mockRepo.getLogs(_babyId)).called(1);
-      verifyNever(() => mockRepo.getProgramState(any()));
+      verify(() => mockRepo.getProgramState(_babyId)).called(1);
     });
 
     test('propagates repository failure', () async {
@@ -336,6 +346,99 @@ void main() {
       final result = await sut.getAllergenStatuses(_babyId);
 
       expect(result.isFailure, isTrue);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // startIntroducingAllergen (single-active rule)
+  // ---------------------------------------------------------------------------
+
+  group('AllergenService.startIntroducingAllergen', () {
+    test('persists the selection when no allergen is in progress', () async {
+      when(
+        () => mockRepo.getLogs(any()),
+      ).thenAnswer((_) async => const Result.success(<AllergenLog>[]));
+      when(
+        () => mockRepo.setSelectedAllergen(any(), any()),
+      ).thenAnswer((_) async => const Result.success(null));
+
+      final result = await sut.startIntroducingAllergen(
+        babyId: _babyId,
+        allergenKey: 'egg',
+      );
+
+      expect(result.isSuccess, isTrue);
+      verify(() => mockRepo.setSelectedAllergen(_babyId, 'egg')).called(1);
+    });
+
+    test('blocks with ValidationException when another allergen is in '
+        'progress', () async {
+      // dairy has 1 clean log → inProgress, so a new introduction is blocked.
+      when(() => mockRepo.getLogs(any())).thenAnswer(
+        (_) async => Result.success([_makeLog(id: 'd1', allergenKey: 'dairy')]),
+      );
+
+      final result = await sut.startIntroducingAllergen(
+        babyId: _babyId,
+        allergenKey: 'egg',
+      );
+
+      expect(result.isFailure, isTrue);
+      expect(result.errorOrNull, isA<ValidationException>());
+      verifyNever(() => mockRepo.setSelectedAllergen(any(), any()));
+    });
+
+    test('re-selecting the allergen already in progress is allowed', () async {
+      // egg itself inProgress must not block re-affirming egg.
+      when(() => mockRepo.getLogs(any())).thenAnswer(
+        (_) async => Result.success([_makeLog(id: 'e1', allergenKey: 'egg')]),
+      );
+      when(
+        () => mockRepo.setSelectedAllergen(any(), any()),
+      ).thenAnswer((_) async => const Result.success(null));
+
+      final result = await sut.startIntroducingAllergen(
+        babyId: _babyId,
+        allergenKey: 'egg',
+      );
+
+      expect(result.isSuccess, isTrue);
+      verify(() => mockRepo.setSelectedAllergen(_babyId, 'egg')).called(1);
+    });
+  });
+
+  group('AllergenService.getAllergenStatuses — selection overlay', () {
+    test('selected allergen with no logs surfaces as inProgress', () async {
+      when(
+        () => mockRepo.getLogs(any()),
+      ).thenAnswer((_) async => const Result.success(<AllergenLog>[]));
+      when(() => mockRepo.getProgramState(any())).thenAnswer(
+        (_) async =>
+            Result.success(_makeProgramState(selectedAllergenKey: 'egg')),
+      );
+
+      final result = await sut.getAllergenStatuses(_babyId);
+
+      expect(result.dataOrNull!['egg'], AllergenStatus.inProgress);
+      expect(result.dataOrNull!['peanut'], AllergenStatus.notStarted);
+    });
+
+    test('logs win over selection (3 clean → safe even if selected)', () async {
+      when(() => mockRepo.getLogs(any())).thenAnswer(
+        (_) async => Result.success([
+          _makeLog(id: 'e1', allergenKey: 'egg'),
+          _makeLog(id: 'e2', allergenKey: 'egg'),
+          _makeLog(id: 'e3', allergenKey: 'egg'),
+        ]),
+      );
+      when(() => mockRepo.getProgramState(any())).thenAnswer(
+        (_) async =>
+            Result.success(_makeProgramState(selectedAllergenKey: 'egg')),
+      );
+
+      final result = await sut.getAllergenStatuses(_babyId);
+
+      expect(result.dataOrNull!['egg'], AllergenStatus.safe);
     });
   });
 

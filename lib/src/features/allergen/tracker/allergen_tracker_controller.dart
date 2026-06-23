@@ -52,4 +52,25 @@ class AllergenTrackerController extends _$AllergenTrackerController {
       logs: logs,
     );
   }
+
+  /// Marks [allergenKey] as the actively-introduced allergen ("Start
+  /// Introduce"). No navigation, no log — just persists the selection and
+  /// refreshes. Fails with a validation error if another allergen is already
+  /// in progress (enforced in the service; the UI also disables the CTA).
+  Future<Result<void>> startIntroduce(String allergenKey) async {
+    final result = await ref
+        .read(allergenServiceProvider)
+        .startIntroducingAllergen(babyId: babyId, allergenKey: allergenKey);
+
+    if (result.isSuccess) {
+      ref.invalidateSelf();
+      try {
+        await future;
+      } on Exception catch (_) {
+        // Write already succeeded; a refetch failure reconciles on next load.
+      }
+    }
+
+    return result;
+  }
 }

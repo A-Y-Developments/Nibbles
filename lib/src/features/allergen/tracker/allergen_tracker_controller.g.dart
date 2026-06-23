@@ -7,7 +7,7 @@ part of 'allergen_tracker_controller.dart';
 // **************************************************************************
 
 String _$allergenTrackerControllerHash() =>
-    r'1500b3df0eba3539b564a0212d62f6eeb0d6ade4';
+    r'fe7a8581437107383b5af2af0f2a6ff550f0e76b';
 
 /// Copied from Dart SDK
 class _SystemHash {

@@ -294,13 +294,20 @@ void main() {
       },
     );
 
-    testWidgets('Tapping Start Introduce navigates to allergen-log-create '
-        'with the tapped allergen key', (tester) async {
+    testWidgets('Tapping Start Introduce marks the allergen active via the '
+        'service WITHOUT navigating', (tester) async {
       stubReads(
         statuses: {
           for (final a in _allergens) a.key: AllergenStatus.notStarted,
         },
       );
+      when(
+        () => mockService.startIntroducingAllergen(
+          babyId: any(named: 'babyId'),
+          allergenKey: any(named: 'allergenKey'),
+        ),
+      ).thenAnswer((_) async => const Result.success(null));
+
       final recorder = _PushRecorder();
       await tester.pumpWidget(buildSubject(recorder));
       await tester.pumpAndSettle();
@@ -315,10 +322,55 @@ void main() {
       await tester.tap(firstStart);
       await tester.pumpAndSettle();
 
-      expect(recorder.lastName, AppRoute.allergenLogCreate.name);
-      // First alphabetically-displayed allergen in sequence order is peanut.
-      expect(recorder.lastPathParams?['allergenKey'], 'peanut');
+      // No navigation occurred — the selection is persisted in place.
+      expect(recorder.lastName, isNull);
+      // First allergen in sequence order is peanut.
+      verify(
+        () => mockService.startIntroducingAllergen(
+          babyId: _babyId,
+          allergenKey: 'peanut',
+        ),
+      ).called(1);
     });
+
+    testWidgets(
+      'Start Introduce is disabled while another allergen is in progress',
+      (tester) async {
+        // egg is mid-introduction → single-active lock engaged.
+        stubReads(
+          statuses: {
+            'egg': AllergenStatus.inProgress,
+            for (final a in _allergens.where((a) => a.key != 'egg'))
+              a.key: AllergenStatus.notStarted,
+          },
+          logs: [_makeLog(id: 'e1', allergenKey: 'egg')],
+        );
+        when(
+          () => mockService.startIntroducingAllergen(
+            babyId: any(named: 'babyId'),
+            allergenKey: any(named: 'allergenKey'),
+          ),
+        ).thenAnswer((_) async => const Result.success(null));
+
+        await tester.pumpWidget(buildSubject(_PushRecorder()));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Big 11'));
+        await tester.pumpAndSettle();
+
+        final firstStart = find.text('Start Introduce').first;
+        await tester.ensureVisible(firstStart);
+        await tester.tap(firstStart);
+        await tester.pumpAndSettle();
+
+        // Locked: the CTA is disabled, so the service is never called.
+        verifyNever(
+          () => mockService.startIntroducingAllergen(
+            babyId: any(named: 'babyId'),
+            allergenKey: any(named: 'allergenKey'),
+          ),
+        );
+      },
+    );
 
     testWidgets(
       'See All link on Ongoing tab switches segment to Big 11 (no nav)',

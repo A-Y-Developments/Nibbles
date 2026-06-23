@@ -1,7 +1,5 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:nibbles/gen/fonts.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
@@ -229,7 +227,8 @@ class _ShoppingListBodyState extends ConsumerState<_ShoppingListBody> {
                     },
                   ),
                   const SizedBox(height: AppSizes.sp12),
-                  _ListBoughtTabs(
+                  AppSlidingSegmentedControl(
+                    segments: const ['List', 'Bought'],
                     selectedIndex: _selectedTab,
                     onChanged: (i) => setState(() => _selectedTab = i),
                   ),
@@ -400,85 +399,6 @@ class _OverflowChip extends StatelessWidget {
         color: AppColors.onGreen,
         size: AppSizes.iconMd,
         semanticLabel: '',
-      ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// List / Bought tabs — native CupertinoSlidingSegmentedControl (Figma 962:6668)
-//   Track borderSoft, forest thumb, Parkinsans SemiBold 15/22 labels.
-//   LayoutBuilder + per-segment SizedBox forces the control to span full width
-//   (the native control otherwise hugs its content).
-// ---------------------------------------------------------------------------
-
-class _ListBoughtTabs extends StatelessWidget {
-  const _ListBoughtTabs({required this.selectedIndex, required this.onChanged});
-
-  final int selectedIndex;
-  final ValueChanged<int> onChanged;
-
-  static const double _trackPadding = 3;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final segmentWidth = (constraints.maxWidth - _trackPadding * 2) / 2;
-        return CupertinoSlidingSegmentedControl<int>(
-          groupValue: selectedIndex,
-          backgroundColor: AppColors.borderSoft,
-          thumbColor: AppColors.green,
-          padding: const EdgeInsets.all(_trackPadding),
-          onValueChanged: (value) {
-            if (value != null) onChanged(value);
-          },
-          children: {
-            0: _SegmentLabel(
-              label: 'List',
-              active: selectedIndex == 0,
-              width: segmentWidth,
-            ),
-            1: _SegmentLabel(
-              label: 'Bought',
-              active: selectedIndex == 1,
-              width: segmentWidth,
-            ),
-          },
-        );
-      },
-    );
-  }
-}
-
-class _SegmentLabel extends StatelessWidget {
-  const _SegmentLabel({
-    required this.label,
-    required this.active,
-    required this.width,
-  });
-
-  final String label;
-  final bool active;
-  final double width;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: width,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSizes.sm),
-        child: Text(
-          label,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontFamily: FontFamily.parkinsans,
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            height: 22 / 15,
-            color: active ? AppColors.onGreen : AppColors.green,
-          ),
-        ),
       ),
     );
   }

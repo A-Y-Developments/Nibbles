@@ -68,6 +68,13 @@ ProviderContainer _makeContainer({
   required _MockMealPlanService mealPlan,
   required _MockRecipeService recipe,
 }) {
+  // HomeController reads program state for the "Start Introduce" selection
+  // overlay. Default to no active selection (failure → null) so derived
+  // statuses are unaffected; tests can override before reading the provider.
+  when(
+    () => allergen.getProgramState(any()),
+  ).thenAnswer((_) async => const Result.failure(UnknownException()));
+
   final container = ProviderContainer(
     overrides: [
       babyProfileServiceProvider.overrideWithValue(babyProfile),

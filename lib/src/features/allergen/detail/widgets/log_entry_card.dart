@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nibbles/gen/assets.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/cards/app_card.dart';
@@ -7,23 +8,21 @@ import 'package:nibbles/src/common/domain/entities/allergen_log.dart';
 
 /// Reaction-Log row card.
 ///
-/// Per spec 9 — baby avatar (initial in greenTint circle), 'Log N',
-/// Safe/Unsafe pill (from `hadReaction`), notes preview, optional
-/// attachment chip (from `attachmentTitle`), chevron.
+/// Per spec 9 — salmon baby icon, 'Log N', Safe/Unsafe pill (from
+/// `hadReaction`), notes preview, optional attachment chip (from
+/// `attachmentTitle`), chevron.
 ///
 /// Rows route to the read-only log detail via [onTap] (NIB-127).
 class LogEntryCard extends StatelessWidget {
   const LogEntryCard({
     required this.log,
     required this.logNumber,
-    required this.babyInitial,
     this.onTap,
     super.key,
   });
 
   final AllergenLog log;
   final int logNumber;
-  final String babyInitial;
   final VoidCallback? onTap;
 
   @override
@@ -40,7 +39,10 @@ class LogEntryCard extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _BabyAvatar(initial: babyInitial),
+            Assets.images.allergen.babyOrange.svg(
+              width: AppSizes.avatarMd,
+              height: AppSizes.avatarMd,
+            ),
             const SizedBox(width: AppSizes.sp12),
             Expanded(
               child: Column(
@@ -94,32 +96,6 @@ class LogEntryCard extends StatelessWidget {
               color: AppColors.fgFaint,
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _BabyAvatar extends StatelessWidget {
-  const _BabyAvatar({required this.initial});
-
-  final String initial;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: AppSizes.avatarSm,
-      height: AppSizes.avatarSm,
-      decoration: const BoxDecoration(
-        color: AppColors.greenTint,
-        shape: BoxShape.circle,
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        initial,
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-          color: AppColors.greenDeep,
-          fontWeight: FontWeight.w700,
         ),
       ),
     );

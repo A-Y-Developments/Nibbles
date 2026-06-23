@@ -40,6 +40,7 @@ String authErrorCode(AppException error) => switch (error) {
   ServerException() => 'server_exception',
   UnauthorizedException() => 'unauthorized',
   NotFoundException() => 'not_found',
+  ValidationException() => 'validation',
   UnknownException() => 'unknown',
 };
 

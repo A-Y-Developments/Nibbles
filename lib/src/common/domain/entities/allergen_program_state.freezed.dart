@@ -23,7 +23,10 @@ mixin _$AllergenProgramState {
   int get currentSequenceOrder => throw _privateConstructorUsedError;
   AllergenProgramStatus get status => throw _privateConstructorUsedError;
   DateTime get createdAt => throw _privateConstructorUsedError;
-  DateTime get updatedAt => throw _privateConstructorUsedError;
+  DateTime get updatedAt =>
+      throw _privateConstructorUsedError; // Allergen the user is actively introducing via "Start Introduce" — set
+  // before any log exists, null when no introduction is active.
+  String? get selectedAllergenKey => throw _privateConstructorUsedError;
 
   /// Create a copy of AllergenProgramState
   /// with the given fields replaced by the non-null parameter values.
@@ -47,6 +50,7 @@ abstract class $AllergenProgramStateCopyWith<$Res> {
     AllergenProgramStatus status,
     DateTime createdAt,
     DateTime updatedAt,
+    String? selectedAllergenKey,
   });
 }
 
@@ -75,6 +79,7 @@ class _$AllergenProgramStateCopyWithImpl<
     Object? status = null,
     Object? createdAt = null,
     Object? updatedAt = null,
+    Object? selectedAllergenKey = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -106,6 +111,10 @@ class _$AllergenProgramStateCopyWithImpl<
                 ? _value.updatedAt
                 : updatedAt // ignore: cast_nullable_to_non_nullable
                       as DateTime,
+            selectedAllergenKey: freezed == selectedAllergenKey
+                ? _value.selectedAllergenKey
+                : selectedAllergenKey // ignore: cast_nullable_to_non_nullable
+                      as String?,
           )
           as $Val,
     );
@@ -129,6 +138,7 @@ abstract class _$$AllergenProgramStateImplCopyWith<$Res>
     AllergenProgramStatus status,
     DateTime createdAt,
     DateTime updatedAt,
+    String? selectedAllergenKey,
   });
 }
 
@@ -153,6 +163,7 @@ class __$$AllergenProgramStateImplCopyWithImpl<$Res>
     Object? status = null,
     Object? createdAt = null,
     Object? updatedAt = null,
+    Object? selectedAllergenKey = freezed,
   }) {
     return _then(
       _$AllergenProgramStateImpl(
@@ -184,6 +195,10 @@ class __$$AllergenProgramStateImplCopyWithImpl<$Res>
             ? _value.updatedAt
             : updatedAt // ignore: cast_nullable_to_non_nullable
                   as DateTime,
+        selectedAllergenKey: freezed == selectedAllergenKey
+            ? _value.selectedAllergenKey
+            : selectedAllergenKey // ignore: cast_nullable_to_non_nullable
+                  as String?,
       ),
     );
   }
@@ -200,6 +215,7 @@ class _$AllergenProgramStateImpl implements _AllergenProgramState {
     required this.status,
     required this.createdAt,
     required this.updatedAt,
+    this.selectedAllergenKey,
   });
 
   @override
@@ -216,10 +232,14 @@ class _$AllergenProgramStateImpl implements _AllergenProgramState {
   final DateTime createdAt;
   @override
   final DateTime updatedAt;
+  // Allergen the user is actively introducing via "Start Introduce" — set
+  // before any log exists, null when no introduction is active.
+  @override
+  final String? selectedAllergenKey;
 
   @override
   String toString() {
-    return 'AllergenProgramState(id: $id, babyId: $babyId, currentAllergenKey: $currentAllergenKey, currentSequenceOrder: $currentSequenceOrder, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'AllergenProgramState(id: $id, babyId: $babyId, currentAllergenKey: $currentAllergenKey, currentSequenceOrder: $currentSequenceOrder, status: $status, createdAt: $createdAt, updatedAt: $updatedAt, selectedAllergenKey: $selectedAllergenKey)';
   }
 
   @override
@@ -237,7 +257,9 @@ class _$AllergenProgramStateImpl implements _AllergenProgramState {
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
             (identical(other.updatedAt, updatedAt) ||
-                other.updatedAt == updatedAt));
+                other.updatedAt == updatedAt) &&
+            (identical(other.selectedAllergenKey, selectedAllergenKey) ||
+                other.selectedAllergenKey == selectedAllergenKey));
   }
 
   @override
@@ -250,6 +272,7 @@ class _$AllergenProgramStateImpl implements _AllergenProgramState {
     status,
     createdAt,
     updatedAt,
+    selectedAllergenKey,
   );
 
   /// Create a copy of AllergenProgramState
@@ -274,6 +297,7 @@ abstract class _AllergenProgramState implements AllergenProgramState {
     required final AllergenProgramStatus status,
     required final DateTime createdAt,
     required final DateTime updatedAt,
+    final String? selectedAllergenKey,
   }) = _$AllergenProgramStateImpl;
 
   @override
@@ -289,7 +313,10 @@ abstract class _AllergenProgramState implements AllergenProgramState {
   @override
   DateTime get createdAt;
   @override
-  DateTime get updatedAt;
+  DateTime get updatedAt; // Allergen the user is actively introducing via "Start Introduce" — set
+  // before any log exists, null when no introduction is active.
+  @override
+  String? get selectedAllergenKey;
 
   /// Create a copy of AllergenProgramState
   /// with the given fields replaced by the non-null parameter values.

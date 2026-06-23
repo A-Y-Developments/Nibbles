@@ -9,24 +9,24 @@ import 'package:nibbles/src/features/allergen/detail/widgets/detail_status_pill.
 ///
 /// Layout: round coral-soft emoji tile + name + subtext + status pill.
 /// Subtext: literal 'Completed' when status == safe, else 'X/3 times'
-/// (where X is clean log count, capped at 3) per spec 5.
+/// (where X is total introductions, capped at 3) per spec 5.
 class DetailHeaderCard extends StatelessWidget {
   const DetailHeaderCard({
     required this.emoji,
     required this.name,
-    required this.cleanCount,
+    required this.introducedCount,
     required this.status,
     super.key,
   });
 
   final String emoji;
   final String name;
-  final int cleanCount;
+  final int introducedCount;
   final AllergenStatus status;
 
   String get _subtext {
     if (status == AllergenStatus.safe) return 'Completed';
-    final capped = cleanCount.clamp(0, 3);
+    final capped = introducedCount.clamp(0, 3);
     return '$capped/3 times';
   }
 

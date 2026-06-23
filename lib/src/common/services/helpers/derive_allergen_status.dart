@@ -32,3 +32,34 @@ AllergenStatus deriveStatusForLogs(Iterable<AllergenLog> logs) {
   if (list.length >= 3) return AllergenStatus.safe;
   return AllergenStatus.inProgress;
 }
+
+/// Builds the per-allergen status map for all [kAllergenKeys], applying the
+/// "Start Introduce" overlay: an allergen the user has selected to introduce
+/// ([selectedAllergenKey]) shows as [AllergenStatus.inProgress] even before any
+/// log exists. Logs always win — once the selected allergen has logs its status
+/// derives from them (so a reaction still flags it, 3 clean still marks safe).
+///
+/// [logsByKey] need not contain every key; missing keys are treated as no logs.
+Map<String, AllergenStatus> deriveStatusesWithSelection({
+  required Map<String, List<AllergenLog>> logsByKey,
+  required String? selectedAllergenKey,
+}) {
+  return <String, AllergenStatus>{
+    for (final key in kAllergenKeys)
+      key: _statusWithSelection(
+        logs: logsByKey[key] ?? const <AllergenLog>[],
+        isSelected: key == selectedAllergenKey,
+      ),
+  };
+}
+
+AllergenStatus _statusWithSelection({
+  required List<AllergenLog> logs,
+  required bool isSelected,
+}) {
+  final derived = deriveStatusForLogs(logs);
+  if (derived == AllergenStatus.notStarted && isSelected) {
+    return AllergenStatus.inProgress;
+  }
+  return derived;
+}

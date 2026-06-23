@@ -98,6 +98,7 @@ flutter:
     - assets/images/recipe/
     - assets/images/guide/
     - assets/images/home/
+    - assets/images/allergen/
     - assets/icons/
     - assets/icons/nav/
     - assets/jsons/

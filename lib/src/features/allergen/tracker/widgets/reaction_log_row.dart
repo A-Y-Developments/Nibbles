@@ -1,21 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:nibbles/gen/assets.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/common/domain/entities/allergen_log.dart';
-import 'package:nibbles/src/common/domain/enums/emoji_taste.dart';
 
 /// Single row in the Reaction Log list.
 ///
-/// Layout: baby-avatar circle · `Log N` headline · Safe / Unsafe chip ·
-/// notes preview · optional attachment chip. `emojiTaste` is nullable
-/// post-NIB-124 — falls back to [EmojiTaste.neutral] for the legacy badge
-/// display ONLY (no value is persisted from this widget).
+/// Layout (Figma 1089:17670 — "Baby" icon variant): salmon baby glyph ·
+/// `Log N` headline · Safe / Unsafe chip · notes preview · optional
+/// attachment chip.
 class ReactionLogRow extends StatelessWidget {
   const ReactionLogRow({
     required this.log,
     required this.logIndex,
-    required this.babyInitial,
     required this.onTap,
     super.key,
   });
@@ -26,23 +24,8 @@ class ReactionLogRow extends StatelessWidget {
   /// 1-based index used in the `Log N` headline.
   final int logIndex;
 
-  /// First letter of the baby's name. Used to draw the avatar glyph.
-  final String babyInitial;
-
   /// Row tap target. Routes to the read-only log detail (NIB-127).
   final VoidCallback? onTap;
-
-  String get _tasteGlyph {
-    final taste = log.emojiTaste ?? EmojiTaste.neutral;
-    switch (taste) {
-      case EmojiTaste.love:
-        return '😍';
-      case EmojiTaste.neutral:
-        return '😐';
-      case EmojiTaste.dislike:
-        return '😣';
-    }
-  }
 
   String get _attachmentLabel {
     final title = log.attachmentTitle;
@@ -68,45 +51,9 @@ class ReactionLogRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Baby avatar with the legacy taste badge as a corner glyph.
-          SizedBox(
+          Assets.images.allergen.babyOrange.svg(
             width: AppSizes.avatarMd,
             height: AppSizes.avatarMd,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Container(
-                  width: AppSizes.avatarMd,
-                  height: AppSizes.avatarMd,
-                  decoration: const BoxDecoration(
-                    color: AppColors.greenTint,
-                    shape: BoxShape.circle,
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    babyInitial,
-                    style: textTheme.titleSmall?.copyWith(
-                      color: AppColors.greenDeep,
-                    ),
-                  ),
-                ),
-                Positioned(
-                  right: -2,
-                  bottom: -2,
-                  child: Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: const BoxDecoration(
-                      color: AppColors.surface,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Text(
-                      _tasteGlyph,
-                      style: const TextStyle(fontSize: 12, height: 1),
-                    ),
-                  ),
-                ),
-              ],
-            ),
           ),
           const SizedBox(width: AppSizes.sp12),
           Expanded(

@@ -19,6 +19,7 @@ export 'cards/tip_card.dart';
 export 'chips/app_chip.dart';
 export 'controls/app_checkbox.dart';
 export 'controls/app_segmented_control.dart';
+export 'controls/app_sliding_segmented_control.dart';
 export 'controls/app_switch.dart';
 export 'controls/radio_pill.dart';
 export 'feedback/animated_ellipsis_text.dart';

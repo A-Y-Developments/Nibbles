@@ -6,9 +6,9 @@ import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/components.dart';
+import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/domain/entities/allergen.dart';
 import 'package:nibbles/src/common/domain/entities/allergen_log.dart';
-import 'package:nibbles/src/common/domain/entities/baby.dart';
 import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/features/allergen/tracker/allergen_tracker_controller.dart';
@@ -109,14 +109,24 @@ class _TrackerBodyState extends ConsumerState<_TrackerBody> {
     unawaited(
       Analytics.instance.logAllergenStartIntroduce(allergenKey: allergen.key),
     );
-    final logged = await context.pushNamed<bool>(
-      AppRoute.allergenLogCreate.name,
-      pathParameters: {'allergenKey': allergen.key},
-    );
+    // No navigation: marks the allergen as actively introduced and refreshes.
+    final result = await ref
+        .read(allergenTrackerControllerProvider(widget.babyId).notifier)
+        .startIntroduce(allergen.key);
 
-    if ((logged ?? false) && mounted) {
-      ref.invalidate(allergenTrackerControllerProvider(widget.babyId));
-    }
+    if (!mounted || result.isSuccess) return;
+    _showToast(
+      result.errorOrNull?.message ??
+          "Couldn't start introduction. Please try again.",
+    );
+  }
+
+  void _showToast(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(content: Text(message), duration: const Duration(seconds: 3)),
+      );
   }
 }
 
@@ -183,16 +193,6 @@ class _TrackerContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Baby is needed for the Reaction Log row avatar. The currentBabyIdProvider
-    // upstream already guarantees a baby exists; we read it again here for the
-    // initial. Falls back to a neutral glyph when the read is still in flight.
-    final babyAsync = ref.watch(_currentBabyProvider);
-    final babyInitial = babyAsync.maybeWhen(
-      data: (b) =>
-          (b?.name.isNotEmpty ?? false) ? b!.name[0].toUpperCase() : '?',
-      orElse: () => '?',
-    );
-
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(child: _TrackerAppBar(onBack: () => context.pop())),
@@ -218,9 +218,8 @@ class _TrackerContent extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(
               horizontal: AppSizes.pagePaddingH,
             ),
-            // Verbatim: "Ongoing " preserves the trailing space.
-            child: AppSegmentedControl(
-              segments: const ['Ongoing ', 'Big 11'],
+            child: AppSlidingSegmentedControl(
+              segments: const ['Ongoing', 'Big 11'],
               selectedIndex: segmentIndex,
               onChanged: onSegmentChanged,
             ),
@@ -238,8 +237,6 @@ class _TrackerContent extends ConsumerWidget {
           )
         else
           _OngoingList(
-            babyId: babyId,
-            babyInitial: babyInitial,
             allergens: state.allergens,
             statuses: state.statuses,
             logs: state.logs,
@@ -269,14 +266,6 @@ class _TrackerContent extends ConsumerWidget {
     }
   }
 }
-
-/// Local provider used to fetch the Baby for the Reaction Log avatar initial.
-/// Scoped here because the tracker is the only consumer that needs the full
-/// Baby object (the rest of the screen only needs the id).
-final _currentBabyProvider = FutureProvider.autoDispose<Baby?>((ref) async {
-  final service = ref.watch(babyProfileServiceProvider);
-  return service.getBaby();
-});
 
 class _TrackerAppBar extends StatelessWidget {
   const _TrackerAppBar({required this.onBack});
@@ -372,8 +361,6 @@ class _SeeAllLink extends StatelessWidget {
 
 class _OngoingList extends StatelessWidget {
   const _OngoingList({
-    required this.babyId,
-    required this.babyInitial,
     required this.allergens,
     required this.statuses,
     required this.logs,
@@ -381,8 +368,6 @@ class _OngoingList extends StatelessWidget {
     required this.onSeeAll,
   });
 
-  final String babyId;
-  final String babyInitial;
   final List<Allergen> allergens;
   final Map<String, AllergenStatus> statuses;
   final List<AllergenLog> logs;
@@ -437,7 +422,6 @@ class _OngoingList extends StatelessWidget {
                 builder: (context) => ReactionLogRow(
                   log: entry.log,
                   logIndex: entry.index,
-                  babyInitial: babyInitial,
                   onTap: () => context.pushNamed(
                     AppRoute.allergenLogDetail.name,
                     pathParameters: {
@@ -552,18 +536,26 @@ class _Big11Sections extends StatelessWidget {
     );
   }
 
-  StartIntroduceCard _notTriedCard(Allergen allergen) {
+  StartIntroduceCard _notTriedCard(Allergen allergen, {required bool enabled}) {
     return StartIntroduceCard(
       allergen: allergen,
+      enabled: enabled,
       onStartIntroduce: () => onStartIntroduce(allergen),
+      onTap: () => onAllergenTap(allergen),
     );
   }
+
+  /// Single-active rule: while any allergen is in progress, no new
+  /// introduction can start until that one becomes Safe or Flagged.
+  bool get _introductionLocked =>
+      statuses.values.any((s) => s == AllergenStatus.inProgress);
 
   @override
   Widget build(BuildContext context) {
     final tried = _alreadyTried;
     final ongoing = _ongoing;
     final notTried = _notTried;
+    final canStart = !_introductionLocked;
 
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: AppSizes.pagePaddingH),
@@ -588,7 +580,7 @@ class _Big11Sections extends StatelessWidget {
           if (notTried.isNotEmpty) ...[
             const _SectionHeader(title: 'Not Tried'),
             for (final a in notTried) ...[
-              _notTriedCard(a),
+              _notTriedCard(a, enabled: canStart),
               const SizedBox(height: AppSizes.sm),
             ],
           ],

@@ -13,5 +13,8 @@ class AllergenProgramState with _$AllergenProgramState {
     required AllergenProgramStatus status,
     required DateTime createdAt,
     required DateTime updatedAt,
+    // Allergen the user is actively introducing via "Start Introduce" — set
+    // before any log exists, null when no introduction is active.
+    String? selectedAllergenKey,
   }) = _AllergenProgramState;
 }

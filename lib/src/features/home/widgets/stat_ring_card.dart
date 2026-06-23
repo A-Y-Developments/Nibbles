@@ -67,14 +67,10 @@ class StatRingCard extends StatelessWidget {
         const AppChip(label: '✓ Active Program Allergens'),
     ];
 
-    return Container(
+    final card = Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSizes.md,
         vertical: AppSizes.md - 2,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.butterSoft,
-        borderRadius: BorderRadius.circular(AppSizes.radiusLg),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -92,24 +88,12 @@ class StatRingCard extends StatelessWidget {
               ),
               const SizedBox(width: AppSizes.sp12),
               Expanded(
-                child: Semantics(
-                  button: onAllergenTap != null,
-                  label:
-                      'Allergen progress, $safeCount of '
-                      '$_allergenTotal safe',
-                  excludeSemantics: true,
-                  onTap: onAllergenTap,
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: onAllergenTap,
-                    child: _StatRing(
-                      label: 'ALLERGEN',
-                      value: '$safeCount',
-                      max: '/$_allergenTotal',
-                      numerator: safeCount,
-                      denominator: _allergenTotal,
-                    ),
-                  ),
+                child: _StatRing(
+                  label: 'ALLERGEN',
+                  value: '$safeCount',
+                  max: '/$_allergenTotal',
+                  numerator: safeCount,
+                  denominator: _allergenTotal,
                 ),
               ),
             ],
@@ -124,6 +108,24 @@ class StatRingCard extends StatelessWidget {
           ],
         ],
       ),
+    );
+
+    final borderRadius = BorderRadius.circular(AppSizes.radiusLg);
+
+    // Whole card is the tap target into the Allergen Tracker (Figma summary
+    // card). When no handler is supplied it renders as a plain surface.
+    return Material(
+      color: AppColors.butterSoft,
+      borderRadius: borderRadius,
+      clipBehavior: Clip.antiAlias,
+      child: onAllergenTap == null
+          ? card
+          : Semantics(
+              button: true,
+              label: 'Allergen progress, $safeCount of $_allergenTotal safe',
+              excludeSemantics: true,
+              child: InkWell(onTap: onAllergenTap, child: card),
+            ),
     );
   }
 }

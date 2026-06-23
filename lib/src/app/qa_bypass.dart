@@ -169,6 +169,12 @@ class _QaAllergenRepository implements AllergenRepository {
       const Result.failure(UnknownException('QA bypass: no program state.'));
 
   @override
+  Future<Result<void>> setSelectedAllergen(
+    String babyId,
+    String? allergenKey,
+  ) async => const Result.success(null);
+
+  @override
   Future<Result<List<AllergenLog>>> getLogs(
     String babyId, {
     String? allergenKey,

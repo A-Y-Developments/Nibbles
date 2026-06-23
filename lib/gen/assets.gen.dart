@@ -39,6 +39,9 @@ class $AssetsImagesGen {
   /// File path: assets/images/.gitkeep
   String get aGitkeep => 'assets/images/.gitkeep';
 
+  /// Directory path: assets/images/allergen
+  $AssetsImagesAllergenGen get allergen => const $AssetsImagesAllergenGen();
+
   /// Directory path: assets/images/auth
   $AssetsImagesAuthGen get auth => const $AssetsImagesAuthGen();
 
@@ -112,6 +115,17 @@ class $AssetsIconsNavGen {
 
   /// List of all assets
   List<SvgGenImage> get values => [navGrocery, navHome, navMeal, navRecipe];
+}
+
+class $AssetsImagesAllergenGen {
+  const $AssetsImagesAllergenGen();
+
+  /// File path: assets/images/allergen/baby_orange.svg
+  SvgGenImage get babyOrange =>
+      const SvgGenImage('assets/images/allergen/baby_orange.svg');
+
+  /// List of all assets
+  List<SvgGenImage> get values => [babyOrange];
 }
 
 class $AssetsImagesAuthGen {
