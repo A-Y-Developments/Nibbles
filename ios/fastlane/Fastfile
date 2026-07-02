@@ -52,8 +52,17 @@ def write_export_options(signing_style)
   path
 end
 
+def run_outside_bundler(&block)
+  if defined?(Bundler) && Bundler.respond_to?(:with_unbundled_env)
+    Bundler.with_unbundled_env(&block)
+  else
+    yield
+  end
+end
+
 def build_prod_ipa(signing_style, build_number)
   write_export_options(signing_style)
+  FileUtils.rm_rf(File.join(PROJECT_ROOT, "build/native_assets"))
   args = [
     "flutter", "build", "ipa",
     "--release",
@@ -64,7 +73,7 @@ def build_prod_ipa(signing_style, build_number)
   args << "--build-number=#{build_number}" unless build_number.nil?
 
   Dir.chdir(PROJECT_ROOT) do
-    sh(*args)
+    run_outside_bundler { sh(*args) }
   end
 end
 
