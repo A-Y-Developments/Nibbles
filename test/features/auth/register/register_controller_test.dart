@@ -49,6 +49,81 @@ void main() {
   RegisterController readController() =>
       container.read(registerControllerProvider.notifier);
 
+  RegisterState readState() => container.read(registerControllerProvider);
+
+  // ---------------------------------------------------------------------------
+  // field mutations + derived validity
+  // ---------------------------------------------------------------------------
+
+  group('field mutations', () {
+    test('update* set their fields and clear any error', () {
+      readController()
+        ..updateEmail('jane@example.com')
+        ..updatePassword('password123')
+        ..updateConfirmPassword('password123');
+
+      final state = readState();
+      expect(state.email.value, 'jane@example.com');
+      expect(state.password.value, 'password123');
+      expect(state.confirmPassword, 'password123');
+      expect(state.errorMessage, isNull);
+    });
+
+    test('toggleObscure / toggleObscureConfirm flip independently', () {
+      expect(readState().obscure, isTrue);
+      expect(readState().obscureConfirm, isTrue);
+
+      readController().toggleObscure();
+      expect(readState().obscure, isFalse);
+      expect(readState().obscureConfirm, isTrue);
+
+      readController().toggleObscureConfirm();
+      expect(readState().obscureConfirm, isFalse);
+    });
+  });
+
+  group('derived validity', () {
+    test('passwordsMatch is false until confirm equals a non-empty password',
+        () {
+      final ctrl = readController()..updatePassword('password123');
+      expect(readState().passwordsMatch, isFalse);
+
+      ctrl.updateConfirmPassword('nope');
+      expect(readState().passwordsMatch, isFalse);
+
+      ctrl.updateConfirmPassword('password123');
+      expect(readState().passwordsMatch, isTrue);
+    });
+
+    test('isValid requires valid email + valid password + matching confirm',
+        () {
+      final ctrl = readController()
+        ..updateEmail('not-an-email')
+        ..updatePassword('short')
+        ..updateConfirmPassword('short');
+      expect(readState().isValid, isFalse);
+
+      ctrl
+        ..updateEmail('jane@example.com')
+        ..updatePassword('password123')
+        ..updateConfirmPassword('password123');
+      expect(readState().isValid, isTrue);
+    });
+
+    test('submit failure stores the backend message in errorMessage', () async {
+      when(() => mockRepo.signUp(any(), any())).thenAnswer(
+        (_) async =>
+            const Result.failure(ServerException('Email already in use.')),
+      );
+
+      final ok = await readController().submit();
+
+      expect(ok, isFalse);
+      expect(readState().errorMessage, 'Email already in use.');
+      expect(readState().isLoading, isFalse);
+    });
+  });
+
   // ---------------------------------------------------------------------------
   // submit() — email sign up
   // ---------------------------------------------------------------------------

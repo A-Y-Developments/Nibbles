@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
 import 'package:nibbles/src/common/data/repositories/auth_repository.dart';
+import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/services/local_flag_service.dart';
 import 'package:nibbles/src/features/auth/reset_password/reset_password_screen.dart';
@@ -12,6 +13,7 @@ import 'package:nibbles/src/logging/analytics.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 
 import '../../../support/fake_analytics.dart';
+import '../../../support/supabase_test_env.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
@@ -42,6 +44,11 @@ void main() {
   late MockAuthRepository mockRepo;
   late MockLocalFlagService mockFlags;
   late FakeAnalytics fakeAnalytics;
+
+  // The screen reads `Supabase.instance` directly to pick home vs login after
+  // a successful reset. Boot a no-persistence Supabase singleton so that read
+  // returns a null session (→ login route) instead of throwing.
+  setUpAll(ensureTestSupabaseInitialized);
 
   setUp(() {
     mockRepo = MockAuthRepository();
@@ -180,4 +187,37 @@ void main() {
 
     expect(find.text('Login stub'), findsOneWidget);
   });
+
+  testWidgets(
+    'backend failure (e.g. expired token) surfaces the error message inline '
+    '(P1) and stays on the reset screen',
+    (tester) async {
+      when(() => mockRepo.updatePassword(any())).thenAnswer(
+        (_) async =>
+            const Result.failure(ServerException('Reset link has expired.')),
+      );
+
+      await tester.pumpWidget(
+        _wrap(const ResetPasswordScreen(), buildOverrides()),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.byKey(const Key('reset_password_new_field')),
+        'password123',
+      );
+      await tester.enterText(
+        find.byKey(const Key('reset_password_confirm_field')),
+        'password123',
+      );
+      await tester.pump();
+
+      await tester.tap(find.byKey(const Key('reset_password_submit_button')));
+      await tester.pumpAndSettle();
+
+      // Backend message shown verbatim; no navigation away from the screen.
+      expect(find.text('Reset link has expired.'), findsOneWidget);
+      expect(find.text('Login stub'), findsNothing);
+    },
+  );
 }

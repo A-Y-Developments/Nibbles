@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -87,5 +89,44 @@ void main() {
 
     expect(container.read(forgotPasswordControllerProvider).sent, isFalse);
     expect(fakeAnalytics.calls, isEmpty);
+  });
+
+  test('updateEmail clears a prior backend errorMessage', () async {
+    when(() => mockRepo.resetPassword(any())).thenAnswer(
+      (_) async => const Result.failure(ServerException('rate-limited')),
+    );
+
+    readController().updateEmail('jane@example.com');
+    await readController().submit();
+    expect(
+      container.read(forgotPasswordControllerProvider).errorMessage,
+      'rate-limited',
+    );
+
+    readController().updateEmail('jane2@example.com');
+    expect(
+      container.read(forgotPasswordControllerProvider).errorMessage,
+      isNull,
+    );
+  });
+
+  test('concurrent submit while a request is in flight is a no-op (isLoading '
+      'guard) — the repository is hit exactly once', () async {
+    final completer = Completer<Result<void>>();
+    when(
+      () => mockRepo.resetPassword(any()),
+    ).thenAnswer((_) => completer.future);
+
+    readController().updateEmail('jane@example.com');
+
+    final first = readController().submit();
+    // Second call sees isLoading == true and returns before awaiting.
+    final second = readController().submit();
+
+    completer.complete(const Result.success(null));
+    await Future.wait([first, second]);
+    await Future<void>.delayed(Duration.zero);
+
+    verify(() => mockRepo.resetPassword('jane@example.com')).called(1);
   });
 }

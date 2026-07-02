@@ -49,6 +49,58 @@ void main() {
   LoginController readController() =>
       container.read(loginControllerProvider.notifier);
 
+  LoginState readState() => container.read(loginControllerProvider);
+
+  // ---------------------------------------------------------------------------
+  // field mutations
+  // ---------------------------------------------------------------------------
+
+  group('field mutations', () {
+    test('updateEmail marks the email dirty and clears any error', () {
+      readController()
+        ..updatePassword('x') // seed some state
+        ..updateEmail('jane@example.com');
+
+      final state = readState();
+      expect(state.email.value, 'jane@example.com');
+      expect(state.email.isValid, isTrue);
+      expect(state.errorMessage, isNull);
+    });
+
+    test('updatePassword marks the password dirty and clears any error', () {
+      readController().updatePassword('supersecret');
+
+      final state = readState();
+      expect(state.password.value, 'supersecret');
+      expect(state.password.isValid, isTrue);
+      expect(state.errorMessage, isNull);
+    });
+
+    test('toggleObscure flips the obscure flag (default true)', () {
+      expect(readState().obscure, isTrue);
+
+      readController().toggleObscure();
+      expect(readState().obscure, isFalse);
+
+      readController().toggleObscure();
+      expect(readState().obscure, isTrue);
+    });
+
+    test('submit failure stores the backend message in errorMessage and '
+        'clears loading', () async {
+      when(() => mockRepo.signIn(any(), any())).thenAnswer(
+        (_) async =>
+            const Result.failure(ServerException('Invalid login credentials.')),
+      );
+
+      await readController().submit();
+
+      final state = readState();
+      expect(state.errorMessage, 'Invalid login credentials.');
+      expect(state.isLoading, isFalse);
+    });
+  });
+
   // ---------------------------------------------------------------------------
   // submit() — email login
   // ---------------------------------------------------------------------------

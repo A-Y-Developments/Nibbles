@@ -67,14 +67,15 @@ void main() {
   ];
 
   testWidgets(
-    'renders Quatrefoil logo mark, email + password fields, and submit '
+    'renders Nibbles logo mark, email + password fields, and submit '
     '— NO name field',
     (tester) async {
       await tester.pumpWidget(_wrap(const RegisterScreen(), buildOverrides()));
       await tester.pumpAndSettle();
 
-      // NIB-112 redesign uses the quatrefoil-only mark (no wordmark BrandLogo).
-      expect(find.byType(Quatrefoil), findsOneWidget);
+      // First-nibbles rebuild renders the Nibbles logo SVG (Semantics label
+      // 'Nibbles') in place of the old quatrefoil-only mark.
+      expect(find.bySemanticsLabel('Nibbles'), findsOneWidget);
       expect(find.text('Start Your Journey'), findsOneWidget);
       expect(find.byKey(const Key('register_email_field')), findsOneWidget);
       expect(find.byKey(const Key('register_password_field')), findsOneWidget);
@@ -230,7 +231,97 @@ void main() {
     await tester.pumpWidget(_wrap(const RegisterScreen(), buildOverrides()));
     await tester.pumpAndSettle();
 
-    // Submit button is gated on isValid — enter a valid email + 8+ char pw.
+    // Submit button is gated on isValid — needs a valid email, an 8+ char
+    // password AND a matching confirm entry.
+    await tester.enterText(
+      find.byKey(const Key('register_email_field')),
+      'jane@example.com',
+    );
+    await tester.enterText(
+      find.byKey(const Key('register_password_field')),
+      'password123',
+    );
+    await tester.enterText(
+      find.byKey(const Key('register_confirm_field')),
+      'password123',
+    );
+    await tester.pump();
+
+    final submit = find.byKey(const Key('register_submit_button'));
+    await tester.ensureVisible(submit);
+    await tester.pumpAndSettle();
+    await tester.tap(submit);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Email already in use.'), findsOneWidget);
+  });
+
+  // -------------------------------------------------------------------------
+  // Inline validation captions + submit gating
+  // -------------------------------------------------------------------------
+
+  testWidgets('malformed email shows the email-format caption', (tester) async {
+    await tester.pumpWidget(_wrap(const RegisterScreen(), buildOverrides()));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.byKey(const Key('register_email_field')),
+      'not-an-email',
+    );
+    await tester.pump();
+
+    expect(find.text('Please enter a valid email.'), findsOneWidget);
+  });
+
+  testWidgets('short password shows the min-length caption', (tester) async {
+    await tester.pumpWidget(_wrap(const RegisterScreen(), buildOverrides()));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.byKey(const Key('register_password_field')),
+      'short',
+    );
+    await tester.pump();
+
+    expect(
+      find.text('Password must be at least 8 characters.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('non-matching confirm shows the mismatch caption', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_wrap(const RegisterScreen(), buildOverrides()));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.byKey(const Key('register_password_field')),
+      'password123',
+    );
+    await tester.enterText(
+      find.byKey(const Key('register_confirm_field')),
+      'password999',
+    );
+    await tester.pump();
+
+    expect(find.text("Passwords don't match."), findsOneWidget);
+  });
+
+  testWidgets('submit CTA is disabled until email + password + confirm valid', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_wrap(const RegisterScreen(), buildOverrides()));
+    await tester.pumpAndSettle();
+
+    AppPillButton submitButton() => tester.widget<AppPillButton>(
+      find.byKey(const Key('register_submit_button')),
+    );
+
+    // Empty — disabled.
+    expect(submitButton().onPressed, isNull);
+
+    // Email + password valid but confirm still empty — disabled.
     await tester.enterText(
       find.byKey(const Key('register_email_field')),
       'jane@example.com',
@@ -240,11 +331,28 @@ void main() {
       'password123',
     );
     await tester.pump();
+    expect(submitButton().onPressed, isNull);
 
-    await tester.tap(find.byKey(const Key('register_submit_button')));
+    // Matching confirm — enabled.
+    await tester.enterText(
+      find.byKey(const Key('register_confirm_field')),
+      'password123',
+    );
+    await tester.pump();
+    expect(submitButton().onPressed, isNotNull);
+  });
+
+  testWidgets('Login footer link navigates to the login route', (tester) async {
+    await tester.pumpWidget(_wrap(const RegisterScreen(), buildOverrides()));
     await tester.pumpAndSettle();
 
-    expect(find.text('Email already in use.'), findsOneWidget);
+    final link = find.byKey(const Key('register_login_link'));
+    await tester.ensureVisible(link);
+    await tester.pumpAndSettle();
+    await tester.tap(link);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Login stub'), findsOneWidget);
   });
 
   testWidgets(
