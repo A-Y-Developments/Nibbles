@@ -132,12 +132,12 @@ class _ShoppingListBodyState extends ConsumerState<_ShoppingListBody> {
       );
   }
 
-  Future<void> _delete(String itemId) async {
+  Future<void> _delete(String itemId, {required String via}) async {
     _swipeController.close();
     try {
       await ref
           .read(shoppingListControllerProvider(widget.babyId).notifier)
-          .delete(itemId);
+          .delete(itemId, via: via);
     } on Exception catch (_) {
       if (!mounted) return;
       _showToast("Couldn't delete item. Try again.");
@@ -419,7 +419,7 @@ class _ItemsList extends StatelessWidget {
   final List<ShoppingListItem> items;
   final SwipeRevealController swipeController;
   final ValueChanged<String> onToggle;
-  final ValueChanged<String> onDelete;
+  final void Function(String itemId, {required String via}) onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -441,11 +441,11 @@ class _ItemsList extends StatelessWidget {
           key: ValueKey(rowKey),
           rowId: rowKey,
           controller: swipeController,
-          onDelete: () => onDelete(item.id),
+          onDelete: () => onDelete(item.id, via: 'swipe'),
           child: _ShoppingItemRow(
             item: item,
             onToggle: () => onToggle(item.id),
-            onDelete: () => onDelete(item.id),
+            onDelete: () => onDelete(item.id, via: 'button'),
           ),
         );
       },

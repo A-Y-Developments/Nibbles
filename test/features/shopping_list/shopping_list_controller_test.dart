@@ -8,6 +8,9 @@ import 'package:nibbles/src/common/domain/entities/shopping_list_item.dart';
 import 'package:nibbles/src/common/domain/enums/shopping_list_source.dart';
 import 'package:nibbles/src/common/services/shopping_list_service.dart';
 import 'package:nibbles/src/features/shopping_list/shopping_list_controller.dart';
+import 'package:nibbles/src/logging/analytics.dart';
+
+import '../../support/fake_analytics.dart';
 
 class _MockShoppingListService extends Mock implements ShoppingListService {}
 
@@ -29,6 +32,7 @@ ShoppingListItem _item({
 
 void main() {
   late _MockShoppingListService svc;
+  late FakeAnalytics analytics;
 
   setUpAll(() {
     TestWidgetsFlutterBinding.ensureInitialized();
@@ -44,11 +48,15 @@ void main() {
 
   setUp(() {
     svc = _MockShoppingListService();
+    analytics = FakeAnalytics();
   });
 
   ProviderContainer makeContainer() {
     final c = ProviderContainer(
-      overrides: [shoppingListServiceProvider.overrideWithValue(svc)],
+      overrides: [
+        shoppingListServiceProvider.overrideWithValue(svc),
+        analyticsProvider.overrideWithValue(analytics),
+      ],
     );
     addTearDown(c.dispose);
     return c;
@@ -119,6 +127,33 @@ void main() {
 
       final state = c.read(shoppingListControllerProvider(_babyId)).valueOrNull;
       expect(state?.items, reloaded);
+      expect(analytics.eventNames, contains('shopping_item_added'));
+      expect(
+        analytics.calls
+            .firstWhere((e) => e.name == 'shopping_item_added')
+            .parameters['source'],
+        'manual',
+      );
+    });
+
+    test('does not fire analytics when add fails', () async {
+      final initial = [_item()];
+      when(
+        () => svc.getItems(any()),
+      ).thenAnswer((_) async => Result.success(initial));
+      when(() => svc.addManualItem(any(), any())).thenAnswer(
+        (_) async => const Result<void>.failure(NetworkException('fail')),
+      );
+
+      final c = makeContainer();
+      await c.read(shoppingListControllerProvider(_babyId).future);
+
+      await expectLater(
+        notifier(c).addManual('Bread'),
+        throwsA(isA<NetworkException>()),
+      );
+
+      expect(analytics.eventNames, isNot(contains('shopping_item_added')));
     });
 
     test('reverts optimistic insert on failure', () async {
@@ -159,6 +194,7 @@ void main() {
 
       final state = c.read(shoppingListControllerProvider(_babyId)).valueOrNull;
       expect(state?.items.first.isChecked, isTrue);
+      expect(analytics.eventNames, contains('shopping_item_checked'));
     });
 
     test('reverts on failure', () async {
@@ -180,6 +216,7 @@ void main() {
 
       final state = c.read(shoppingListControllerProvider(_babyId)).valueOrNull;
       expect(state?.items.first.isChecked, isFalse);
+      expect(analytics.eventNames, isNot(contains('shopping_item_checked')));
     });
   });
 
@@ -199,6 +236,7 @@ void main() {
 
       final state = c.read(shoppingListControllerProvider(_babyId)).valueOrNull;
       expect(state?.items.first.isChecked, isFalse);
+      expect(analytics.eventNames, contains('shopping_item_unchecked'));
     });
 
     test('reverts on failure', () async {
@@ -220,6 +258,7 @@ void main() {
 
       final state = c.read(shoppingListControllerProvider(_babyId)).valueOrNull;
       expect(state?.items.first.isChecked, isTrue);
+      expect(analytics.eventNames, isNot(contains('shopping_item_unchecked')));
     });
   });
 
@@ -239,6 +278,34 @@ void main() {
 
       final state = c.read(shoppingListControllerProvider(_babyId)).valueOrNull;
       expect(state?.items, isEmpty);
+      expect(analytics.eventNames, contains('shopping_item_deleted'));
+      expect(
+        analytics.calls
+            .firstWhere((e) => e.name == 'shopping_item_deleted')
+            .parameters['via'],
+        'button',
+      );
+    });
+
+    test('records via=swipe when supplied by the call site', () async {
+      final item = _item();
+      when(
+        () => svc.getItems(any()),
+      ).thenAnswer((_) async => Result.success([item]));
+      when(
+        () => svc.deleteItem(any()),
+      ).thenAnswer((_) async => const Result<void>.success(null));
+
+      final c = makeContainer();
+      await c.read(shoppingListControllerProvider(_babyId).future);
+      await notifier(c).delete('item-1', via: 'swipe');
+
+      expect(
+        analytics.calls
+            .firstWhere((e) => e.name == 'shopping_item_deleted')
+            .parameters['via'],
+        'swipe',
+      );
     });
 
     test('reverts removed item on failure', () async {
@@ -260,6 +327,7 @@ void main() {
 
       final state = c.read(shoppingListControllerProvider(_babyId)).valueOrNull;
       expect(state?.items, [item]);
+      expect(analytics.eventNames, isNot(contains('shopping_item_deleted')));
     });
   });
 
@@ -278,6 +346,7 @@ void main() {
 
       final state = c.read(shoppingListControllerProvider(_babyId)).valueOrNull;
       expect(state?.items, isEmpty);
+      expect(analytics.eventNames, contains('shopping_list_cleared'));
     });
 
     test('throws on failure', () async {
@@ -295,6 +364,8 @@ void main() {
         notifier(c).clearAll(),
         throwsA(isA<NetworkException>()),
       );
+
+      expect(analytics.eventNames, isNot(contains('shopping_list_cleared')));
     });
   });
 
@@ -310,6 +381,7 @@ void main() {
 
       final result = await notifier(c).copyToClipboard();
       expect(result, isTrue);
+      expect(analytics.eventNames, contains('shopping_list_copied'));
     });
 
     test('returns false when state is null', () async {
@@ -323,6 +395,7 @@ void main() {
 
       final result = await notifier(c).copyToClipboard();
       expect(result, isFalse);
+      expect(analytics.eventNames, isNot(contains('shopping_list_copied')));
     });
   });
 }

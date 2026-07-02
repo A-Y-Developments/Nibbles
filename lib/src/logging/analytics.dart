@@ -479,6 +479,37 @@ class Analytics {
   }
 
   // ---------------------------------------------------------------------------
+  // Shopping List (NIB-89) — non-PII only: stable enum-string params.
+  // NEVER log item names or baby IDs.
+  // ---------------------------------------------------------------------------
+
+  /// [source] is one of 'manual' / 'recipe' / 'mealPlan'.
+  Future<void> logShoppingItemAdded({required String source}) async {
+    await _logEvent('shopping_item_added', parameters: {'source': source});
+  }
+
+  Future<void> logShoppingItemChecked() async {
+    await _logEvent('shopping_item_checked');
+  }
+
+  Future<void> logShoppingItemUnchecked() async {
+    await _logEvent('shopping_item_unchecked');
+  }
+
+  /// [via] is one of 'swipe' / 'button'.
+  Future<void> logShoppingItemDeleted({required String via}) async {
+    await _logEvent('shopping_item_deleted', parameters: {'via': via});
+  }
+
+  Future<void> logShoppingListCleared() async {
+    await _logEvent('shopping_list_cleared');
+  }
+
+  Future<void> logShoppingListCopied() async {
+    await _logEvent('shopping_list_copied');
+  }
+
+  // ---------------------------------------------------------------------------
   // Screen tracking
   // ---------------------------------------------------------------------------
 

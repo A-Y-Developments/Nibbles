@@ -292,6 +292,29 @@ class FakeAnalytics implements Analytics {
       _record('account_deletion_completed');
 
   @override
+  Future<void> logShoppingItemAdded({required String source}) async =>
+      _record('shopping_item_added', {'source': source});
+
+  @override
+  Future<void> logShoppingItemChecked() async =>
+      _record('shopping_item_checked');
+
+  @override
+  Future<void> logShoppingItemUnchecked() async =>
+      _record('shopping_item_unchecked');
+
+  @override
+  Future<void> logShoppingItemDeleted({required String via}) async =>
+      _record('shopping_item_deleted', {'via': via});
+
+  @override
+  Future<void> logShoppingListCleared() async =>
+      _record('shopping_list_cleared');
+
+  @override
+  Future<void> logShoppingListCopied() async => _record('shopping_list_copied');
+
+  @override
   Future<void> logScreenView({required String screenName}) async =>
       _record('screen_view', {'screen_name': screenName});
 }

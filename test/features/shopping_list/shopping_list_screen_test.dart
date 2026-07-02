@@ -12,6 +12,9 @@ import 'package:nibbles/src/common/domain/enums/shopping_list_source.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/common/services/shopping_list_service.dart';
 import 'package:nibbles/src/features/shopping_list/shopping_list_screen.dart';
+import 'package:nibbles/src/logging/analytics.dart';
+
+import '../../support/fake_analytics.dart';
 
 class MockShoppingListService extends Mock implements ShoppingListService {}
 
@@ -35,6 +38,7 @@ Widget _buildSut(MockShoppingListService svc) => ProviderScope(
   overrides: [
     currentBabyIdProvider.overrideWith((ref) async => _babyId),
     shoppingListServiceProvider.overrideWithValue(svc),
+    analyticsProvider.overrideWithValue(FakeAnalytics()),
   ],
   child: const MaterialApp(home: ShoppingListScreen()),
 );
