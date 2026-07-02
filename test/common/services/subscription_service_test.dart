@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
@@ -154,6 +155,48 @@ void main() {
 
       expect(result, isA<Failure<void>>());
       expect((result as Failure<void>).error, isA<UnknownException>());
+    });
+  });
+
+  group('SubscriptionService.openManagementPage — platform URL', () {
+    tearDown(() => debugDefaultTargetPlatformOverride = null);
+
+    Future<Uri> capturedUri(TargetPlatform platform) async {
+      debugDefaultTargetPlatformOverride = platform;
+      late Uri launched;
+      final c = _makeContainer(
+        launchUrl: (uri, {mode = LaunchMode.platformDefault}) async {
+          launched = uri;
+          return true;
+        },
+      );
+      await c.read(subscriptionServiceProvider.notifier).openManagementPage();
+      return launched;
+    }
+
+    test('launches the App Store subscriptions URL on iOS', () async {
+      final uri = await capturedUri(TargetPlatform.iOS);
+      expect(uri.toString(), iosManagementUrl);
+    });
+
+    test('launches the Play Store subscriptions URL on Android', () async {
+      final uri = await capturedUri(TargetPlatform.android);
+      expect(uri.toString(), androidManagementUrl);
+    });
+
+    test('opens the management page externally, not in-app', () async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      late LaunchMode launchedMode;
+      final c = _makeContainer(
+        launchUrl: (uri, {mode = LaunchMode.platformDefault}) async {
+          launchedMode = mode;
+          return true;
+        },
+      );
+
+      await c.read(subscriptionServiceProvider.notifier).openManagementPage();
+
+      expect(launchedMode, LaunchMode.externalApplication);
     });
   });
 }
