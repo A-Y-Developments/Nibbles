@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/domain/entities/allergen_board_item.dart';
 import 'package:nibbles/src/common/domain/entities/allergen_program_state.dart';
@@ -20,13 +21,9 @@ class MealPlanController extends _$MealPlanController {
 
   static DateTime _dateOnly(DateTime dt) => DateTime(dt.year, dt.month, dt.day);
 
-  /// NIB-143: most-recent Monday on or before [dt] (local-date floor).
-  /// `DateTime.weekday` is 1 (Mon) through 7 (Sun), so subtracting
-  /// `weekday - 1` lands on Monday.
-  static DateTime _mondayOnOrBefore(DateTime dt) {
-    final dateOnly = _dateOnly(dt);
-    return dateOnly.subtract(Duration(days: dateOnly.weekday - 1));
-  }
+  /// Injectable clock so the window derivation is deterministic under test.
+  @visibleForTesting
+  static DateTime Function() nowBuilder = DateTime.now;
 
   /// Normalize an expand-map key to a UTC date-only [DateTime] so keys match
   /// regardless of the input's local TZ or sub-day precision.
@@ -37,9 +34,11 @@ class MealPlanController extends _$MealPlanController {
   Future<MealPlanState> build(String babyId) async {
     _babyId = babyId;
 
-    // NIB-143: anchor the 7-day window on the most-recent Monday
-    // on/before today so the planner always renders a Mon-Sun week.
-    final windowStart = _mondayOnOrBefore(DateTime.now());
+    // NIB-159: anchor the 7-day window on today (date-only), NOT on the
+    // most-recent Monday. Monday-snapping (NIB-143) made a plan created for
+    // e.g. Thu 11–Wed 17 render the Mon 8–Sun 14 calendar week instead, so
+    // selected days fell outside the window and unselected days appeared.
+    final windowStart = _dateOnly(nowBuilder());
     final windowEnd = windowStart.add(const Duration(days: 6));
 
     final mealPlanService = ref.read(mealPlanServiceProvider);

@@ -103,6 +103,10 @@ void main() {
     fakeAnalytics = FakeAnalytics();
   });
 
+  tearDown(() {
+    MealPlanController.nowBuilder = DateTime.now;
+  });
+
   ProviderContainer buildContainer() {
     final container = ProviderContainer(
       overrides: [
@@ -146,9 +150,8 @@ void main() {
   }
 
   group('MealPlanController.build', () {
-    test('NIB-143: windowStart is most-recent Monday on/before today, '
-        'windowEnd is windowStart + 6 (Sunday), populates entries + baby, '
-        'expanded starts empty', () async {
+    test('NIB-159: windowStart is today (date-only), windowEnd is today + 6, '
+        'populates entries + baby, expanded starts empty', () async {
       final entry = _makeEntry();
       stubHappy(entries: [entry]);
 
@@ -158,16 +161,11 @@ void main() {
       );
 
       final today = DateTime.now();
-      final todayDateOnly = DateTime(today.year, today.month, today.day);
-      final expectedStart = todayDateOnly.subtract(
-        Duration(days: todayDateOnly.weekday - 1),
-      );
+      final expectedStart = DateTime(today.year, today.month, today.day);
       final expectedEnd = expectedStart.add(const Duration(days: 6));
 
       expect(state.windowStart, expectedStart);
-      expect(state.windowStart.weekday, DateTime.monday);
       expect(state.windowEnd, expectedEnd);
-      expect(state.windowEnd.weekday, DateTime.sunday);
       expect(state.windowEnd.difference(state.windowStart).inDays, 6);
       expect(state.entries, hasLength(1));
       expect(state.entries.single.id, 'mp-1');
@@ -176,22 +174,68 @@ void main() {
       expect(state.recipes['recipe-001']?.title, 'Peanut Butter Toast');
     });
 
-    test('NIB-143: getRolling7 is invoked with the Monday windowStart, '
-        'not today', () async {
+    test('NIB-159: getRolling7 is invoked with today as windowStart, '
+        'not the Monday-snapped week start', () async {
       stubHappy();
       final container = buildContainer();
       await container.read(mealPlanControllerProvider(_babyId).future);
 
       final today = DateTime.now();
-      final todayDateOnly = DateTime(today.year, today.month, today.day);
-      final expectedStart = todayDateOnly.subtract(
-        Duration(days: todayDateOnly.weekday - 1),
-      );
+      final expectedStart = DateTime(today.year, today.month, today.day);
 
       verify(
         () => mockMealPlanService.getRolling7(_babyId, today: expectedStart),
       ).called(1);
     });
+
+    test(
+      'NIB-159 regression: a plan starting Thu 11 Jun renders exactly '
+      '11..17, not the Mon 8–Sun 14 calendar week',
+      () async {
+        // Fix "now" to Thu 11 Jun 2026 — the exact repro from the ticket.
+        MealPlanController.nowBuilder = () => DateTime(2026, 6, 11, 9, 30);
+        expect(DateTime(2026, 6, 11).weekday, DateTime.thursday);
+
+        // Entry on the last selected day (17th) — invisible under Monday-snap.
+        stubHappy(entries: [_makeEntry(planDate: DateTime(2026, 6, 17))]);
+
+        final container = buildContainer();
+        final state = await container.read(
+          mealPlanControllerProvider(_babyId).future,
+        );
+
+        expect(state.windowStart, DateTime(2026, 6, 11));
+        expect(state.windowEnd, DateTime(2026, 6, 17));
+
+        // The rendered day list (screen derives it from windowStart..windowEnd)
+        // must be exactly 11..17 inclusive.
+        final start = DateTime(
+          state.windowStart.year,
+          state.windowStart.month,
+          state.windowStart.day,
+        );
+        final count = state.windowEnd.difference(start).inDays + 1;
+        final days = [
+          for (var i = 0; i < count; i++) start.add(Duration(days: i)),
+        ];
+        expect(days, [
+          DateTime(2026, 6, 11),
+          DateTime(2026, 6, 12),
+          DateTime(2026, 6, 13),
+          DateTime(2026, 6, 14),
+          DateTime(2026, 6, 15),
+          DateTime(2026, 6, 16),
+          DateTime(2026, 6, 17),
+        ]);
+        // Monday-snap bug days must NOT appear; selected tail days must.
+        expect(days.contains(DateTime(2026, 6, 8)), isFalse);
+        expect(days.contains(DateTime(2026, 6, 9)), isFalse);
+        expect(days.contains(DateTime(2026, 6, 10)), isFalse);
+        expect(days.contains(DateTime(2026, 6, 15)), isTrue);
+        expect(days.contains(DateTime(2026, 6, 16)), isTrue);
+        expect(days.contains(DateTime(2026, 6, 17)), isTrue);
+      },
+    );
 
     test('build() with getRolling7 failure surfaces AsyncError', () async {
       when(() => mockBabyService.getBaby()).thenAnswer((_) async => _fakeBaby);
