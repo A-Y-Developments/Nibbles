@@ -4,7 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
-import 'package:nibbles/src/common/components/buttons/app_round_button.dart';
 import 'package:nibbles/src/common/data/repositories/auth_repository.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
@@ -70,18 +69,10 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Butter back pill — exactly one AppRoundButton with the back arrow.
-      final backButtonFinder = find.byType(AppRoundButton);
-      expect(backButtonFinder, findsOneWidget);
-      final backBtn = tester.widget<AppRoundButton>(backButtonFinder);
-      expect(backBtn.tone, AppRoundButtonTone.butter);
-      expect(
-        find.descendant(
-          of: backButtonFinder,
-          matching: find.byIcon(Icons.arrow_back_rounded),
-        ),
-        findsOneWidget,
-      );
+      // Back pill — the first-nibbles rebuild renders an InkWell pill with the
+      // back arrow + a 'Back' semantics label (no AppRoundButton).
+      expect(find.bySemanticsLabel('Back'), findsOneWidget);
+      expect(find.byIcon(Icons.arrow_back_rounded), findsOneWidget);
 
       // Email field present.
       expect(find.byKey(const Key('forgot_email_field')), findsOneWidget);
@@ -103,7 +94,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byType(AppRoundButton));
+    await tester.tap(find.byIcon(Icons.arrow_back_rounded));
     await tester.pumpAndSettle();
 
     // With no back-stack canPop is false, so the screen routes to login.

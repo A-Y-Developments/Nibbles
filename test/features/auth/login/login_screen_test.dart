@@ -31,6 +31,11 @@ GoRouter _routerFor(Widget screen) => GoRouter(
       name: AppRoute.register.name,
       builder: (_, __) => const Scaffold(body: Text('Register stub')),
     ),
+    GoRoute(
+      path: AppRoute.forgotPassword.path,
+      name: AppRoute.forgotPassword.name,
+      builder: (_, __) => const Scaffold(body: Text('Forgot stub')),
+    ),
   ],
 );
 
@@ -71,9 +76,9 @@ void main() {
       await tester.pumpWidget(_wrap(const LoginScreen(), buildOverrides()));
       await tester.pumpAndSettle();
 
-      // Brand mark is the Quatrefoil (NIB-107 swapped the lockup for the
-      // bare butter mark per Figma node 1015:13496).
-      expect(find.byType(Quatrefoil), findsOneWidget);
+      // Brand mark — the first-nibbles rebuild renders the Nibbles logo SVG
+      // (Semantics label 'Nibbles') in place of the old Quatrefoil lockup.
+      expect(find.bySemanticsLabel('Nibbles'), findsOneWidget);
 
       // Verbatim copy per Figma — smart apostrophes intentional.
       expect(find.text('Hi, Welcome!'), findsOneWidget);
@@ -85,8 +90,8 @@ void main() {
       expect(find.text('Password'), findsWidgets);
       expect(find.text('Login'), findsOneWidget);
       expect(find.text('Or login with'), findsOneWidget);
-      expect(find.text('Sign in with Google'), findsOneWidget);
-      expect(find.text('Sign in with Apple'), findsOneWidget);
+      expect(find.text('Login with Google'), findsOneWidget);
+      expect(find.text('Login with Apple'), findsOneWidget);
       expect(find.text('Don’t have an account?'), findsOneWidget);
       expect(find.text('Sign Up'), findsOneWidget);
 
@@ -272,5 +277,55 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Register stub'), findsOneWidget);
+  });
+
+  // -------------------------------------------------------------------------
+  // Submit gating (canSubmit)
+  // -------------------------------------------------------------------------
+
+  testWidgets(
+    'primary CTA is disabled until both email + password are valid',
+    (tester) async {
+      await tester.pumpWidget(_wrap(const LoginScreen(), buildOverrides()));
+      await tester.pumpAndSettle();
+
+      AppPillButton submitButton() => tester.widget<AppPillButton>(
+        find.byKey(const Key('login_submit_button')),
+      );
+
+      // Empty form — disabled (onPressed == null).
+      expect(submitButton().onPressed, isNull);
+
+      // Valid email but no password — still disabled.
+      await tester.enterText(
+        find.byKey(const Key('login_email_field')),
+        'jane@example.com',
+      );
+      await tester.pump();
+      expect(submitButton().onPressed, isNull);
+
+      // Both valid — enabled.
+      await tester.enterText(
+        find.byKey(const Key('login_password_field')),
+        'supersecret',
+      );
+      await tester.pump();
+      expect(submitButton().onPressed, isNotNull);
+    },
+  );
+
+  testWidgets('Forgot password link navigates to the forgot-password route', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_wrap(const LoginScreen(), buildOverrides()));
+    await tester.pumpAndSettle();
+
+    final link = find.text('Forgot password?');
+    await tester.ensureVisible(link);
+    await tester.pumpAndSettle();
+    await tester.tap(link);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Forgot stub'), findsOneWidget);
   });
 }

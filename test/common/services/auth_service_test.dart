@@ -320,6 +320,134 @@ void main() {
     });
   });
 
+  group('AuthService.updateEmail', () {
+    test('delegates to repository and returns its Result', () async {
+      when(
+        () => mockRepo.updateEmail(any()),
+      ).thenAnswer((_) async => const Result.success(null));
+
+      final result = await sut.updateEmail('new@example.com');
+
+      expect(result.isSuccess, isTrue);
+      verify(() => mockRepo.updateEmail('new@example.com')).called(1);
+    });
+
+    test('surfaces the repository failure message', () async {
+      when(() => mockRepo.updateEmail(any())).thenAnswer(
+        (_) async => const Result.failure(ServerException('Email in use.')),
+      );
+
+      final result = await sut.updateEmail('new@example.com');
+
+      expect(result.isFailure, isTrue);
+      expect(result.errorOrNull!.message, 'Email in use.');
+    });
+  });
+
+  group('AuthService.currentUserEmail', () {
+    test('passes through the repository value', () {
+      when(() => mockRepo.currentUserEmail).thenReturn('jane@example.com');
+
+      expect(sut.currentUserEmail, 'jane@example.com');
+    });
+
+    test('is null when the repository has no session', () {
+      when(() => mockRepo.currentUserEmail).thenReturn(null);
+
+      expect(sut.currentUserEmail, isNull);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // NIB-119: backfill gap coverage — remote-profile-not-completed + social
+  // ---------------------------------------------------------------------------
+
+  group('AuthService backfill edge cases', () {
+    test('remote profile NOT completed — queries baby repo but sets no flags',
+        () async {
+      final mockFlagsBackfill = MockLocalFlagService();
+      when(mockFlagsBackfill.isOnboardingBabySetupDone).thenReturn(false);
+
+      final mockBabyRepo = MockBabyProfileRepository();
+      when(mockBabyRepo.isOnboardingCompleted).thenAnswer((_) async => false);
+
+      when(
+        () => mockRepo.signIn(any(), any()),
+      ).thenAnswer((_) async => const Result.success(null));
+
+      final localContainer = ProviderContainer(
+        overrides: [
+          authRepositoryProvider.overrideWithValue(mockRepo),
+          localFlagServiceProvider.overrideWithValue(mockFlagsBackfill),
+          babyProfileRepositoryProvider.overrideWithValue(mockBabyRepo),
+        ],
+      );
+      addTearDown(localContainer.dispose);
+
+      await localContainer
+          .read(authServiceProvider.notifier)
+          .signIn('alice@example.com', 'password123');
+
+      verify(mockBabyRepo.isOnboardingCompleted).called(1);
+      verifyNever(mockFlagsBackfill.setOnboardingReadinessDone);
+      verifyNever(mockFlagsBackfill.setOnboardingBabySetupDone);
+    });
+
+    test('signInWithGoogle Success(true) also runs the backfill', () async {
+      final mockFlagsBackfill = MockLocalFlagService();
+      when(mockFlagsBackfill.isOnboardingBabySetupDone).thenReturn(false);
+      when(mockFlagsBackfill.setOnboardingReadinessDone).thenAnswer((_) {});
+      when(mockFlagsBackfill.setOnboardingBabySetupDone).thenAnswer((_) {});
+
+      final mockBabyRepo = MockBabyProfileRepository();
+      when(mockBabyRepo.isOnboardingCompleted).thenAnswer((_) async => true);
+
+      when(
+        () => mockRepo.signInWithGoogle(),
+      ).thenAnswer((_) async => const Result.success(true));
+
+      final localContainer = ProviderContainer(
+        overrides: [
+          authRepositoryProvider.overrideWithValue(mockRepo),
+          localFlagServiceProvider.overrideWithValue(mockFlagsBackfill),
+          babyProfileRepositoryProvider.overrideWithValue(mockBabyRepo),
+        ],
+      );
+      addTearDown(localContainer.dispose);
+
+      await localContainer
+          .read(authServiceProvider.notifier)
+          .signInWithGoogle();
+
+      verify(mockBabyRepo.isOnboardingCompleted).called(1);
+      verify(mockFlagsBackfill.setOnboardingBabySetupDone).called(1);
+    });
+
+    test('signInWithGoogle Success(false) (cancel) does NOT run the backfill',
+        () async {
+      final mockBabyRepo = MockBabyProfileRepository();
+
+      when(
+        () => mockRepo.signInWithGoogle(),
+      ).thenAnswer((_) async => const Result.success(false));
+
+      final localContainer = ProviderContainer(
+        overrides: [
+          authRepositoryProvider.overrideWithValue(mockRepo),
+          localFlagServiceProvider.overrideWithValue(mockFlags),
+          babyProfileRepositoryProvider.overrideWithValue(mockBabyRepo),
+        ],
+      );
+      addTearDown(localContainer.dispose);
+
+      await localContainer
+          .read(authServiceProvider.notifier)
+          .signInWithGoogle();
+
+      verifyNever(mockBabyRepo.isOnboardingCompleted);
+    });
+  });
+
   group('AuthService computed properties', () {
     test('isLoggedIn returns current auth state', () {
       expect(sut.isLoggedIn, isFalse);
