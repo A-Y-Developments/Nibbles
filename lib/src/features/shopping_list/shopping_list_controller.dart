@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/services.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/domain/entities/shopping_list_item.dart';
 import 'package:nibbles/src/common/domain/enums/shopping_list_source.dart';
 import 'package:nibbles/src/common/services/shopping_list_service.dart';
 import 'package:nibbles/src/features/shopping_list/shopping_list_state.dart';
+import 'package:nibbles/src/logging/analytics.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'shopping_list_controller.g.dart';
@@ -49,6 +52,10 @@ class ShoppingListController extends _$ShoppingListController {
       throw result.errorOrNull!;
     }
 
+    _fireAndForget(
+      ref.read(analyticsProvider).logShoppingItemAdded(source: 'manual'),
+    );
+
     // Reload to swap the placeholder id for the server-assigned id. The write
     // already succeeded, so a refetch read-failure is P3 (background) — don't
     // let it re-enter the add path and surface a false P2 "add failed" toast.
@@ -81,6 +88,8 @@ class ShoppingListController extends _$ShoppingListController {
       if (current != null) state = AsyncData(current);
       throw result.errorOrNull!;
     }
+
+    _fireAndForget(ref.read(analyticsProvider).logShoppingItemChecked());
   }
 
   Future<void> uncheck(String itemId) async {
@@ -103,9 +112,13 @@ class ShoppingListController extends _$ShoppingListController {
       if (current != null) state = AsyncData(current);
       throw result.errorOrNull!;
     }
+
+    _fireAndForget(ref.read(analyticsProvider).logShoppingItemUnchecked());
   }
 
-  Future<void> delete(String itemId) async {
+  /// [via] identifies the delete affordance the user tapped: 'swipe' for the
+  /// swipe-to-reveal Delete pill, 'button' for the per-row cancel chip.
+  Future<void> delete(String itemId, {String via = 'button'}) async {
     final current = state.valueOrNull;
     if (current != null) {
       state = AsyncData(
@@ -122,12 +135,18 @@ class ShoppingListController extends _$ShoppingListController {
       if (current != null) state = AsyncData(current);
       throw result.errorOrNull!;
     }
+
+    _fireAndForget(
+      ref.read(analyticsProvider).logShoppingItemDeleted(via: via),
+    );
   }
 
   Future<void> clearAll() async {
     final result = await ref.read(shoppingListServiceProvider).clearAll(babyId);
     if (result.isFailure) throw result.errorOrNull!;
     state = const AsyncData(ShoppingListState(items: []));
+
+    _fireAndForget(ref.read(analyticsProvider).logShoppingListCleared());
   }
 
   /// Returns true if clipboard write succeeded, false otherwise.
@@ -140,9 +159,16 @@ class ShoppingListController extends _$ShoppingListController {
           .read(shoppingListServiceProvider)
           .copyToClipboard(current.listItems);
       await Clipboard.setData(ClipboardData(text: text));
+      _fireAndForget(ref.read(analyticsProvider).logShoppingListCopied());
       return true;
     } on Exception catch (_) {
       return false;
     }
+  }
+
+  /// Analytics is best-effort. Swallow any rejected future so it never blocks
+  /// the write path or escalates to the root zone.
+  void _fireAndForget(Future<void> future) {
+    unawaited(future.catchError((Object _) {}));
   }
 }
