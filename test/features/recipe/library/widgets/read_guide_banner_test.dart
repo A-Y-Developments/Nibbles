@@ -3,8 +3,8 @@
 // labelled button that activates the handler.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nibbles/src/common/components/brand/quatrefoil.dart';
 import 'package:nibbles/src/features/recipe/library/widgets/read_guide_banner.dart';
 
 Widget _wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
@@ -28,14 +28,14 @@ void main() {
   });
 
   testWidgets(
-    'renders the decorative brand quatrefoil blobs (Figma 1015:6820)',
+    'renders the baked banner SVG asset at the design aspect ratio',
     (tester) async {
       await tester.pumpWidget(_wrap(ReadGuideBanner(onTap: () {})));
       await tester.pump();
 
-      // Two clipped sage blobs sit in the banner's top-right per the design.
-      expect(find.byType(Quatrefoil), findsNWidgets(2));
-      expect(find.byType(ClipRRect), findsWidgets);
+      // The whole banner (green card, blobs, title, CTA) is one baked SVG.
+      expect(find.byType(SvgPicture), findsOneWidget);
+      expect(find.byType(AspectRatio), findsOneWidget);
     },
   );
 }

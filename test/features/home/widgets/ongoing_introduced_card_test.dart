@@ -11,6 +11,7 @@ import 'package:firebase_analytics_platform_interface/firebase_analytics_platfor
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_core_platform_interface/test.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
@@ -98,8 +99,8 @@ void main() {
       expect(find.text('Peanut'), findsOneWidget);
       // Verbatim audit subhead (trailing space preserved): "2/3 times ".
       expect(find.text('2/3 times '), findsOneWidget);
-      // Peanut emoji is in the AllergenEmoji constant — renders inside thumb.
-      expect(find.text('🥜'), findsOneWidget);
+      // Thumb is now an allergen-specific SVG icon (design), not an emoji.
+      expect(find.byType(SvgPicture), findsWidgets);
     },
   );
 

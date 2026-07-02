@@ -62,6 +62,8 @@ Future<void> _pumpScreen(
   WidgetTester tester, {
   required ProviderContainer container,
 }) async {
+  await tester.binding.setSurfaceSize(const Size(390, 844));
+  addTearDown(() => tester.binding.setSurfaceSize(null));
   await tester.pumpWidget(
     UncontrolledProviderScope(
       container: container,
