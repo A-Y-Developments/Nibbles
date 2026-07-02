@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:nibbles/gen/assets.gen.dart';
 import 'package:nibbles/gen/fonts.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
@@ -114,14 +115,7 @@ class _CardThumbnail extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           if (url == null || url!.isEmpty)
-            const ColoredBox(
-              color: AppColors.tan20,
-              child: Icon(
-                Icons.restaurant_outlined,
-                color: AppColors.tan60,
-                size: AppSizes.iconLg,
-              ),
-            )
+            _fallback()
           else if (url!.startsWith('assets/'))
             Image.asset(url!, fit: BoxFit.cover)
           else
@@ -133,14 +127,7 @@ class _CardThumbnail extends StatelessWidget {
               memCacheHeight: (117 * MediaQuery.devicePixelRatioOf(context))
                   .round(),
               placeholder: (_, __) => const ColoredBox(color: AppColors.tan20),
-              errorWidget: (_, __, ___) => const ColoredBox(
-                color: AppColors.tan20,
-                child: Icon(
-                  Icons.restaurant_outlined,
-                  color: AppColors.tan60,
-                  size: AppSizes.iconLg,
-                ),
-              ),
+              errorWidget: (_, __, ___) => _fallback(),
             ),
           if (isUnsafe)
             const Positioned(
@@ -156,6 +143,9 @@ class _CardThumbnail extends StatelessWidget {
       ),
     );
   }
+
+  Widget _fallback() =>
+      Assets.images.recipe.mockRecipe.image(fit: BoxFit.cover);
 }
 
 /// First nutrition tag as a salmon-ghost chip (Figma 'Iron Rich' label)
