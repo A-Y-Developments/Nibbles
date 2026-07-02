@@ -229,21 +229,10 @@ void main() {
       }
     });
 
-    testWidgets("'feeding-principles' renders 'The Big 11' allergen chips", (
-      tester,
-    ) async {
-      await _pump(tester, slug: 'feeding-principles');
-
-      // Sample a few chips from The Big 11. 'Egg' is also in the iron-rich
-      // grid as 'Eggs' (plural) — checking distinct labels avoids overlap.
-      for (final label in ['Almond', 'Cashew', 'Wallnut', 'Sesame']) {
-        expect(
-          find.text(label),
-          findsWidgets,
-          reason: 'allergen chip "$label" missing',
-        );
-      }
-    });
+    // NOTE: the 'feeding-principles' slug is special-cased in routing to the
+    // dedicated FeedingPrinciplesScreen (which owns the Big 11 chips), not the
+    // generic article screen — so that coverage belongs in a dedicated
+    // FeedingPrinciplesScreen test, not here.
 
     testWidgets(
       "'readiness-signs' renders the bespoke signs card (no baby -> 0/6)",
