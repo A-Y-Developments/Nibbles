@@ -371,10 +371,9 @@ void main() {
         final startDate = captured[0] as DateTime;
         final endDate = captured[1] as DateTime;
         expect(startDate, endDate, reason: 'single-day range');
-        // NIB-143: first day card is Monday of the current week, which is the
-        // most-recent Monday on/before today.
-        final monday = today.subtract(Duration(days: today.weekday - 1));
-        expect(startDate, monday);
+        // NIB-159: window is today-anchored, so the first day card is today
+        // itself — not the most-recent Monday.
+        expect(startDate, today);
         final assignments = captured[2] as List<dynamic>;
         expect(assignments, hasLength(1));
       },
