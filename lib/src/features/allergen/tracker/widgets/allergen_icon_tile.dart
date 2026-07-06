@@ -12,12 +12,17 @@ class AllergenIconTile extends StatelessWidget {
   const AllergenIconTile({
     this.size = 56,
     this.backing,
+    this.borderColor,
     this.greyscale = false,
     super.key,
   });
 
   final double size;
   final Color? backing;
+
+  /// Optional hairline border around the backing tile (Figma outlines the
+  /// rounded-square on the burgundy hero / detail header).
+  final Color? borderColor;
   final bool greyscale;
 
   static const List<double> _greyMatrix = <double>[
@@ -66,6 +71,7 @@ class AllergenIconTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: backing,
         borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+        border: borderColor != null ? Border.all(color: borderColor!) : null,
       ),
       alignment: Alignment.center,
       child: Padding(padding: const EdgeInsets.all(AppSizes.xs), child: glyph),

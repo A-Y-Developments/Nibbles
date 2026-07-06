@@ -108,6 +108,9 @@ abstract final class AppColors {
   static const Color safeFg = Color(0xFF1F6E47);
   static const Color warnFg = Color(0xFF8A5E14);
   static const Color flagFg = Color(0xFFB92020);
+  // Nibble-Danger tokens (Figma vars) — unsafe/flagged status pills.
+  static const Color dangerFg = Color(0xFFFF474A);
+  static const Color dangerBg = Color(0xFFFFD5D6);
 
   // ── Control / progress tokens ─────────────────────────────────
   // Switch off-track grey (controls preview .switch).

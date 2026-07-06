@@ -237,6 +237,7 @@ class _TrackerContent extends ConsumerWidget {
             allergens: state.allergens,
             statuses: state.statuses,
             logs: state.logs,
+            selectedAllergenKey: state.selectedAllergenKey,
             onAllergenTap: (a) =>
                 unawaited(_openAllergenDetail(context, ref, a.key)),
             onAddReaction: onAddReaction,
@@ -280,11 +281,10 @@ class _TrackerAppBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          AppRoundButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          IconButton(
             onPressed: onBack,
-            tone: AppRoundButtonTone.ghost,
-            semanticLabel: 'Back',
+            icon: const Icon(Icons.arrow_back, color: AppColors.fgStrong),
+            tooltip: 'Back',
           ),
           Expanded(
             child: Text(
@@ -369,6 +369,7 @@ class _OngoingList extends StatelessWidget {
     required this.allergens,
     required this.statuses,
     required this.logs,
+    required this.selectedAllergenKey,
     required this.onAllergenTap,
     required this.onAddReaction,
   });
@@ -376,22 +377,44 @@ class _OngoingList extends StatelessWidget {
   final List<Allergen> allergens;
   final Map<String, AllergenStatus> statuses;
   final List<AllergenLog> logs;
+  final String? selectedAllergenKey;
   final void Function(Allergen) onAllergenTap;
   final void Function(String allergenKey) onAddReaction;
 
-  Allergen? get _ongoing {
+  /// The allergen shown in the "Allergen Exposure" hero + Reaction Log feed.
+  ///
+  /// Priority:
+  ///  1. the actively-selected ("Start Introduce") allergen — which persists
+  ///     here even after it flags / goes safe, until a new one is started;
+  ///  2. an allergen currently `inProgress` from its logs (1–2 clean);
+  ///  3. the most-recently logged allergen — so logging an unsafe reaction
+  ///     never clears the feed; it stays until a new introduction replaces it.
+  Allergen? get _displayAllergen {
+    Allergen? byKey(String? key) {
+      if (key == null) return null;
+      for (final a in allergens) {
+        if (a.key == key) return a;
+      }
+      return null;
+    }
+
+    final selected = byKey(selectedAllergenKey);
+    if (selected != null) return selected;
+
     for (final a in allergens) {
       if ((statuses[a.key] ?? AllergenStatus.notStarted) ==
           AllergenStatus.inProgress) {
         return a;
       }
     }
+
+    if (logs.isNotEmpty) return byKey(logs.last.allergenKey);
     return null;
   }
 
   @override
   Widget build(BuildContext context) {
-    final ongoing = _ongoing;
+    final ongoing = _displayAllergen;
     final ongoingLogs = ongoing == null
         ? const <AllergenLog>[]
         : logs.where((l) => l.allergenKey == ongoing.key).toList();
@@ -421,7 +444,13 @@ class _OngoingList extends StatelessWidget {
                   ),
           ),
           if (ongoingLogs.isEmpty)
-            const _SectionPlaceholder(text: 'No reactions logged yet')
+            const Padding(
+              padding: EdgeInsets.only(top: AppSizes.xl),
+              child: EmptyState(
+                title: 'No reactions logged yet',
+                subtitle: 'Tap + to log your first introduction.',
+              ),
+            )
           else
             for (final entry in _reverseIndexed(ongoingLogs)) ...[
               Builder(
@@ -538,11 +567,12 @@ class _Big11Sections extends StatelessWidget {
   }
 
   StartIntroduceCard _notTriedCard(Allergen allergen, {required bool enabled}) {
+    // notStarted allergens have no detail to show — only the "Start Introduce"
+    // CTA acts. The card body is intentionally not tappable (no onTap).
     return StartIntroduceCard(
       allergen: allergen,
       enabled: enabled,
       onStartIntroduce: () => onStartIntroduce(allergen),
-      onTap: () => onAllergenTap(allergen),
     );
   }
 

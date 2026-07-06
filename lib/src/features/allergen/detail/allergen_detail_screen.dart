@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nibbles/gen/assets.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/components.dart';
@@ -102,39 +103,44 @@ class _AllergenDetailView extends ConsumerWidget {
             onBack: () => context.pop(),
           ),
           Expanded(
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(
-                AppSizes.pagePaddingH,
-                AppSizes.lg,
-                AppSizes.pagePaddingH,
-                AppSizes.xxl,
-              ),
+            child: Stack(
               children: [
-                ReactionLogHeader(
-                  onAddPressed: () => _onAddPressed(context, ref),
-                ),
-                const SizedBox(height: AppSizes.sm),
-                if (hasLogs)
-                  ...state.logs.asMap().entries.map(
-                    (e) => LogEntryCard(
-                      key: ValueKey(e.value.id),
-                      log: e.value,
-                      logNumber: e.key + 1,
-                      onTap: () => context.pushNamed(
-                        AppRoute.allergenLogDetail.name,
-                        pathParameters: {
-                          'allergenKey': allergenKey,
-                          'logId': e.value.id,
-                        },
-                      ),
+                const _BodyBackdrop(),
+                ListView(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSizes.pagePaddingH,
+                    AppSizes.lg,
+                    AppSizes.pagePaddingH,
+                    AppSizes.xxl,
+                  ),
+                  children: [
+                    ReactionLogHeader(
+                      onAddPressed: () => _onAddPressed(context, ref),
                     ),
-                  )
-                else
-                  const _EmptyLogsHint(),
-                const SizedBox(height: AppSizes.lg),
-                DetailContextualBanner(
-                  status: state.status,
-                  allergenName: state.allergen.name,
+                    const SizedBox(height: AppSizes.sm),
+                    if (hasLogs)
+                      ...state.logs.asMap().entries.map(
+                        (e) => LogEntryCard(
+                          key: ValueKey(e.value.id),
+                          log: e.value,
+                          logNumber: e.key + 1,
+                          onTap: () => context.pushNamed(
+                            AppRoute.allergenLogDetail.name,
+                            pathParameters: {
+                              'allergenKey': allergenKey,
+                              'logId': e.value.id,
+                            },
+                          ),
+                        ),
+                      )
+                    else
+                      const _EmptyLogsHint(),
+                    const SizedBox(height: AppSizes.lg),
+                    DetailContextualBanner(
+                      status: state.status,
+                      allergenName: state.allergen.name,
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -143,6 +149,43 @@ class _AllergenDetailView extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Soft cream blob decoration behind the detail body — same organic shape as
+/// the Home hero background, recoloured to a pale butter tone over the cream
+/// body. Non-interactive (taps pass through to the list).
+class _BodyBackdrop extends StatelessWidget {
+  const _BodyBackdrop();
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: IgnorePointer(
+        child: ClipRect(
+          child: Stack(
+            children: [
+              Positioned(top: -40, right: -60, child: _blob(220)),
+              Positioned(top: 150, left: -70, child: _blob(170)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _blob(double size) => Opacity(
+    opacity: 0.6,
+    child: ColorFiltered(
+      colorFilter: const ColorFilter.mode(
+        AppColors.butterSoft,
+        BlendMode.srcIn,
+      ),
+      child: Assets.images.allergen.allergenBlob.image(
+        width: size,
+        fit: BoxFit.contain,
+      ),
+    ),
+  );
 }
 
 class _EmptyLogsHint extends StatelessWidget {

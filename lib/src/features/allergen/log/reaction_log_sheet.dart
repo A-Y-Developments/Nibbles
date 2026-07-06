@@ -124,8 +124,8 @@ class _ReactionLogSheetState extends ConsumerState<_ReactionLogSheet> {
     DateTime? current,
   ) async {
     final now = DateTime.now();
-    final picked = await showDatePicker(
-      context: context,
+    final picked = await showCalendarDatePickerSheet(
+      context,
       initialDate: current ?? now,
       firstDate: DateTime(now.year - 2),
       lastDate: now,
@@ -414,12 +414,12 @@ class _DateField extends StatelessWidget {
         child: InkWell(
           key: const Key('reaction_log_date_field'),
           onTap: onTap,
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+          borderRadius: BorderRadius.circular(AppSizes.radiusFull),
           child: Container(
             height: AppSizes.fieldHeight,
             decoration: BoxDecoration(
               color: AppColors.bgInput,
-              borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+              borderRadius: BorderRadius.circular(AppSizes.radiusFull),
               border: Border.all(color: AppColors.borderSoft),
             ),
             padding: const EdgeInsets.symmetric(
@@ -455,7 +455,7 @@ class _NotesField extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.bgInput,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+        borderRadius: BorderRadius.circular(AppSizes.radiusFull),
         border: Border.all(color: AppColors.borderSoft),
       ),
       padding: const EdgeInsets.symmetric(
@@ -466,7 +466,7 @@ class _NotesField extends StatelessWidget {
         key: const Key('reaction_log_notes_field'),
         controller: controller,
         minLines: 1,
-        maxLines: 4,
+        maxLines: 3,
         onChanged: onChanged,
         cursorColor: AppColors.greenDeep,
         style: AppTypography.textTheme.bodyLarge?.copyWith(

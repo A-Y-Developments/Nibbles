@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/domain/entities/allergen.dart';
 import 'package:nibbles/src/common/domain/entities/allergen_log.dart';
@@ -126,6 +127,12 @@ void main() {
     when(
       () => mockService.getLogs(any()),
     ).thenAnswer((_) async => Result.success(logs));
+    // Program-state read backs the "Start Introduce" selection overlay; a
+    // failure degrades gracefully (no selected allergen). The board falls back
+    // to the inProgress-status / most-recent-log display allergen.
+    when(
+      () => mockService.getProgramState(any()),
+    ).thenAnswer((_) async => const Result.failure(UnknownException()));
   }
 
   Widget buildSubject(_PushRecorder recorder) {
@@ -287,6 +294,36 @@ void main() {
         expect(
           find.text('No reactions logged yet', skipOffstage: false),
           findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'Ongoing tab keeps the exposure hero + logs after an unsafe reaction '
+      'flags the allergen (feed does not vanish)',
+      (tester) async {
+        // milk had an unsafe reaction → status flagged, no other inProgress
+        // allergen and no active selection. The board must still surface milk
+        // and its log via the most-recent-log fallback.
+        stubReads(
+          statuses: {
+            'milk': AllergenStatus.flagged,
+            for (final a in _allergens.where((a) => a.key != 'milk'))
+              a.key: AllergenStatus.notStarted,
+          },
+          logs: [_makeLog(id: 'm1', allergenKey: 'milk', hadReaction: true)],
+        );
+
+        await tester.pumpWidget(buildSubject(_PushRecorder()));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(AllergenExposureCard), findsOneWidget);
+        expect(find.text('Milk'), findsOneWidget);
+        // The unsafe log row is present — not the empty placeholder.
+        expect(find.text('Unsafe'), findsWidgets);
+        expect(
+          find.text('No reactions logged yet', skipOffstage: false),
+          findsNothing,
         );
       },
     );

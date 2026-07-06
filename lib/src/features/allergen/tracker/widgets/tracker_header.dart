@@ -67,21 +67,32 @@ class _StatRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
           child: _StatColumn(value: safeCount, label: 'Safe foods'),
         ),
+        const _StatDivider(),
         Expanded(
           child: _StatColumn(value: flaggedCount, label: 'Not Safe'),
         ),
-        if (showNotTried)
+        if (showNotTried) ...[
+          const _StatDivider(),
           Expanded(
             child: _StatColumn(value: notTriedCount, label: 'Not Tried'),
           ),
+        ],
       ],
     );
+  }
+}
+
+/// Centered hairline divider between stat columns (Figma 1089:17373).
+class _StatDivider extends StatelessWidget {
+  const _StatDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(width: 1, height: 40, color: AppColors.borderSoft);
   }
 }
 
