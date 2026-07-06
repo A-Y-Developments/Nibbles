@@ -4,8 +4,10 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/domain/entities/allergen_log.dart';
+import 'package:nibbles/src/common/domain/entities/reaction_detail.dart';
 import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
 import 'package:nibbles/src/common/domain/enums/emoji_taste.dart';
+import 'package:nibbles/src/common/domain/enums/reaction_severity.dart';
 import 'package:nibbles/src/common/services/allergen_service.dart';
 import 'package:nibbles/src/features/allergen/log/allergen_log_state.dart';
 import 'package:nibbles/src/logging/analytics.dart';
@@ -34,6 +36,19 @@ class AllergenLogController extends _$AllergenLogController {
     hadReaction: !state.hadReaction,
     errorMessage: null,
   );
+
+  /// Toggles a symptom preset in/out of the checked set (order preserved).
+  void toggleSymptom(String symptom) {
+    final next = List<String>.from(state.symptoms);
+    if (next.remove(symptom)) {
+      state = state.copyWith(symptoms: next, errorMessage: null);
+      return;
+    }
+    state = state.copyWith(symptoms: [...next, symptom], errorMessage: null);
+  }
+
+  void setSeverity(ReactionSeverity severity) =>
+      state = state.copyWith(severity: severity, errorMessage: null);
 
   void setNotes(String value) =>
       state = state.copyWith(notes: value.isEmpty ? null : value);
@@ -127,6 +142,46 @@ class AllergenLogController extends _$AllergenLogController {
     );
   }
 
+  /// Hydrates the controller directly from an [AllergenLog] the caller already
+  /// holds (EDIT mode entry from the reaction sheet). When the log records a
+  /// reaction its `reaction_details` row is fetched to seed `symptoms` +
+  /// `severity`. Idempotent for the same log id (clears a stale `isSaved`).
+  Future<void> hydrateFromLog(AllergenLog log) async {
+    if (state.hydrated && state.logId == log.id) {
+      if (state.isSaved) state = state.copyWith(isSaved: false);
+      return;
+    }
+
+    state = state.copyWith(isLoading: true);
+
+    var symptoms = const <String>[];
+    ReactionSeverity? severity;
+    if (log.hadReaction) {
+      final detailResult = await ref
+          .read(allergenServiceProvider)
+          .getReactionDetail(log.id);
+      final detail = detailResult.dataOrNull;
+      if (detail != null) {
+        symptoms = detail.symptoms;
+        severity = detail.severity;
+      }
+    }
+
+    state = AllergenLogState(
+      logId: log.id,
+      hydrated: true,
+      taste: log.emojiTaste,
+      hadReaction: log.hadReaction,
+      symptoms: symptoms,
+      severity: severity,
+      notes: log.notes,
+      attachmentTitle: log.attachmentTitle,
+      attachmentDescription: log.attachmentDescription,
+      existingPhotoPath: log.photoUrl,
+      logDate: log.logDate,
+    );
+  }
+
   /// Saves or updates the log, then flips [AllergenLogState.isSaved] when the
   /// screen should pop. CREATE mode also auto-advances the program once the
   /// allergen reaches `safe`.
@@ -162,6 +217,7 @@ class AllergenLogController extends _$AllergenLogController {
         log: hydrated,
         newPhotoLocalPath: state.photoPath,
         oldPhotoPath: state.existingPhotoPath,
+        reactionDetail: _buildReactionDetail(),
       );
 
       if (result.isFailure) {
@@ -179,6 +235,7 @@ class AllergenLogController extends _$AllergenLogController {
           hasAttachment: _hasAttachment(),
         ),
       );
+      _logReactionIfAny(allergenKey);
       return;
     }
 
@@ -192,6 +249,7 @@ class AllergenLogController extends _$AllergenLogController {
       attachmentDescription: state.attachmentDescription,
       logDate: state.logDate,
       hadReaction: state.hadReaction,
+      reactionDetail: _buildReactionDetail(),
       photo: state.photoPath != null ? File(state.photoPath!) : null,
     );
 
@@ -229,6 +287,33 @@ class AllergenLogController extends _$AllergenLogController {
       Analytics.instance.logAllergenLogCreated(
         allergenKey: allergenKey,
         hasAttachment: _hasAttachment(),
+      ),
+    );
+    _logReactionIfAny(allergenKey);
+  }
+
+  /// Builds the `reaction_details` payload from the captured symptoms +
+  /// severity when a reaction is recorded; null when `hadReaction` is off (so
+  /// the service clears any existing row on edit). `id` / `logId` are filled
+  /// by the service after the parent log is written.
+  ReactionDetail? _buildReactionDetail() {
+    if (!state.hadReaction || state.severity == null) return null;
+    return ReactionDetail(
+      id: '',
+      logId: '',
+      severity: state.severity!,
+      symptoms: state.symptoms,
+      createdAt: DateTime.now(),
+      notes: state.notes,
+    );
+  }
+
+  void _logReactionIfAny(String allergenKey) {
+    if (!state.hadReaction || state.severity == null) return;
+    unawaited(
+      Analytics.instance.logReactionLogged(
+        allergenKey: allergenKey,
+        severity: state.severity!.toJson(),
       ),
     );
   }

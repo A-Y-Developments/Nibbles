@@ -15,9 +15,10 @@ import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
 import 'package:nibbles/src/common/services/allergen_service.dart';
 import 'package:nibbles/src/common/services/local_flag_service.dart';
 import 'package:nibbles/src/features/allergen/detail/allergen_detail_controller.dart';
+import 'package:nibbles/src/features/allergen/log/reaction_log_sheet.dart';
 import 'package:nibbles/src/features/allergen/log_detail/allergen_log_detail_controller.dart';
 import 'package:nibbles/src/features/allergen/log_detail/allergen_log_detail_state.dart';
-import 'package:nibbles/src/features/allergen/log_detail/widgets/delete_log_confirmation_dialog.dart';
+import 'package:nibbles/src/features/allergen/log_detail/widgets/delete_log_confirmation_sheet.dart';
 import 'package:nibbles/src/features/allergen/log_detail/widgets/log_actions_menu.dart';
 import 'package:nibbles/src/features/allergen/tracker/allergen_tracker_controller.dart';
 import 'package:nibbles/src/logging/analytics.dart';
@@ -146,9 +147,10 @@ class _LogDetailViewState extends ConsumerState<_LogDetailView> {
     if (!mounted || choice == null) return;
     switch (choice) {
       case LogActionMenuChoice.edit:
-        await context.pushNamed(
-          AppRoute.allergenLogEdit.name,
-          pathParameters: {'allergenKey': _allergenKey, 'logId': _logId},
+        await showReactionLogSheet(
+          context,
+          allergenKey: _allergenKey,
+          existingLog: _state.log,
         );
         if (!mounted) return;
         ref
@@ -163,7 +165,7 @@ class _LogDetailViewState extends ConsumerState<_LogDetailView> {
   }
 
   Future<void> _confirmAndDelete() async {
-    final confirmed = await showDeleteLogConfirmationDialog(context);
+    final confirmed = await showDeleteLogConfirmationSheet(context);
 
     if (confirmed != true || !mounted) return;
 
@@ -223,9 +225,10 @@ class _LogDetailViewState extends ConsumerState<_LogDetailView> {
   }
 
   Future<void> _onChangePicturePressed() async {
-    await context.pushNamed(
-      AppRoute.allergenLogEdit.name,
-      pathParameters: {'allergenKey': _allergenKey, 'logId': _logId},
+    await showReactionLogSheet(
+      context,
+      allergenKey: _allergenKey,
+      existingLog: _state.log,
     );
     if (!mounted) return;
     ref
@@ -426,58 +429,31 @@ class _AttachmentBlock extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final title = log.attachmentTitle;
-    final description = log.attachmentDescription;
     final photoPath = log.photoUrl;
+    final hasPhoto = photoPath != null && photoPath.isNotEmpty;
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (photoPath != null && photoPath.isNotEmpty)
+        if (hasPhoto) ...[
           _PhotoPreview(photoPath: photoPath),
-        if (photoPath != null && photoPath.isNotEmpty) ...[
           const SizedBox(height: AppSizes.sp12),
-          AppPillButton(
-            key: const Key('log_detail_change_picture'),
-            label: 'Change Picture',
-            onPressed: onChangePicturePressed,
-            variant: AppPillButtonVariant.ghost,
-          ),
         ],
-        if ((title != null && title.isNotEmpty) ||
-            (description != null && description.isNotEmpty)) ...[
-          const SizedBox(height: AppSizes.md),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (title != null && title.isNotEmpty)
-                      Text(title, style: AppTypography.headline),
-                    if (description != null && description.isNotEmpty) ...[
-                      if (title != null && title.isNotEmpty)
-                        const SizedBox(height: AppSizes.sp2),
-                      Text(
-                        description,
-                        style: GoogleFonts.figtree(
-                          fontSize: 15,
-                          height: 22 / 15,
-                          color: AppColors.fgFaint,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
+        Row(
+          children: [
+            Expanded(
+              child: AppPillButton(
+                key: const Key('log_detail_change_picture'),
+                label: 'Change Picture',
+                onPressed: onChangePicturePressed,
+                variant: AppPillButtonVariant.ghost,
               ),
-              const SizedBox(width: AppSizes.sm),
-              const _DownloadChip(),
-            ],
-          ),
-        ],
+            ),
+            const SizedBox(width: AppSizes.sm),
+            const _DownloadChip(),
+          ],
+        ),
       ],
     );
   }
