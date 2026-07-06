@@ -105,7 +105,7 @@ void main() {
 
   group('AllergenDetailScreen', () {
     testWidgets(
-      'status=safe → header card subtext is "Completed" + butter-wash '
+      'status=safe → header card subtext is "3/3 times" + cream-wash '
       'contextual banner',
       (tester) async {
         // 3 clean logs + status=safe.
@@ -118,15 +118,19 @@ void main() {
         await tester.pumpWidget(buildSubject(_PushRecorder()));
         await tester.pumpAndSettle();
 
-        // Header subtext.
-        expect(find.text('Completed'), findsOneWidget);
+        // Header subtext: 3 clean logs → "3/3 times".
+        expect(find.text('3/3 times'), findsOneWidget);
         // Status pill "Safe" renders (text rebuilds during layout
         // animation/animation-pumping can produce duplicate Text widgets
         // — assert presence, not exact count).
         expect(find.text('Safe'), findsWidgets);
-        // Contextual banner is the butter-wash safe variant (verbatim Figma).
+        // Contextual banner is the safe variant (verbatim Figma copy). It
+        // sits at the bottom of the scroll view, below the 3 log cards.
         expect(
-          find.textContaining("You've already introduced this allergen!"),
+          find.textContaining(
+            'This allergen has already been introduced',
+            skipOffstage: false,
+          ),
           findsOneWidget,
         );
       },
@@ -149,7 +153,7 @@ void main() {
       );
       // No safe banner.
       expect(
-        find.textContaining("You've already introduced this allergen!"),
+        find.textContaining('This allergen has already been introduced'),
         findsNothing,
       );
     });
@@ -172,9 +176,11 @@ void main() {
         // The DetailSegmentBar widget renders; visual fill is derived from
         // clean count internally — assertion verifies the widget mounts.
         expect(find.byType(DetailSegmentBar), findsOneWidget);
-        // Banner copy: the inProgress variant — give the SAME allergen again
-        // (NIB-156, per-allergen advancement).
-        expect(find.text('Give Peanut again tomorrow'), findsOneWidget);
+        // Banner copy: the inProgress variant (verbatim Figma).
+        expect(
+          find.textContaining('This allergen introduction is in progress'),
+          findsOneWidget,
+        );
       },
     );
 
@@ -188,7 +194,7 @@ void main() {
       // The banner renders SizedBox.shrink when notStarted.
       expect(find.byType(DetailContextualBanner), findsOneWidget);
       expect(
-        find.textContaining("You've already introduced this allergen!"),
+        find.textContaining('This allergen has already been introduced'),
         findsNothing,
       );
       expect(find.text('Not started'), findsOneWidget);

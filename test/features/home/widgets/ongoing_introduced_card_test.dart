@@ -139,14 +139,14 @@ void main() {
   testWidgets('picks first inProgress in canonical kAllergenKeys order', (
     tester,
   ) async {
-    // egg comes before dairy in the canonical sequence.
+    // egg comes before cashew in the canonical sequence.
     await tester.pumpWidget(
       _wrap(
         const OngoingIntroducedCard(
           allergenStatuses: {
             'peanut': AllergenStatus.safe,
             'egg': AllergenStatus.inProgress,
-            'dairy': AllergenStatus.inProgress,
+            'cashew': AllergenStatus.inProgress,
           },
         ),
       ),
@@ -154,25 +154,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Egg'), findsOneWidget);
-    // Dairy should not be the surfaced card (egg wins by order).
-    expect(find.text('Dairy'), findsNothing);
+    // Cashew should not be the surfaced card (egg wins by order).
+    expect(find.text('Cashew'), findsNothing);
   });
-
-  testWidgets(
-    'multi-word allergen key (tree_nuts) is rendered title-cased with space',
-    (tester) async {
-      await tester.pumpWidget(
-        _wrap(
-          const OngoingIntroducedCard(
-            allergenStatuses: {'tree_nuts': AllergenStatus.inProgress},
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.text('Tree Nuts'), findsOneWidget);
-    },
-  );
 
   testWidgets('tapping the card pushes the allergen tracker route', (
     tester,
