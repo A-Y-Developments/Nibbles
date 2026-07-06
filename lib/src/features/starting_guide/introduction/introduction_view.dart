@@ -10,7 +10,8 @@ import 'package:nibbles/src/common/domain/entities/baby.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 
-const double _cardRadius = AppSizes.radiusFull;
+/// Figma cards on Introduction use a 12px corner radius (no exact token).
+const double _cardRadius = 12;
 
 /// Skill-card decorative quatrefoil — natural render size of the cropped
 /// `blob_hero.svg` window, nudged off the top-right corner so only the inner
