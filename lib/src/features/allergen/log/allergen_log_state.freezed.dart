@@ -20,7 +20,7 @@ mixin _$AllergenLogState {
   EmojiTaste? get taste => throw _privateConstructorUsedError;
   bool get hadReaction => throw _privateConstructorUsedError;
 
-  /// Checked symptom presets (subset of [SymptomPresets.all]). Only
+  /// Checked symptom presets (subset of `SymptomPresets.all`). Only
   /// persisted when [hadReaction] is on; optional (may be empty).
   List<String> get symptoms => throw _privateConstructorUsedError;
 
@@ -348,11 +348,11 @@ class _$AllergenLogStateImpl implements _AllergenLogState {
   @JsonKey()
   final bool hadReaction;
 
-  /// Checked symptom presets (subset of [SymptomPresets.all]). Only
+  /// Checked symptom presets (subset of `SymptomPresets.all`). Only
   /// persisted when [hadReaction] is on; optional (may be empty).
   final List<String> _symptoms;
 
-  /// Checked symptom presets (subset of [SymptomPresets.all]). Only
+  /// Checked symptom presets (subset of `SymptomPresets.all`). Only
   /// persisted when [hadReaction] is on; optional (may be empty).
   @override
   @JsonKey()
@@ -502,7 +502,7 @@ abstract class _AllergenLogState implements AllergenLogState {
   @override
   bool get hadReaction;
 
-  /// Checked symptom presets (subset of [SymptomPresets.all]). Only
+  /// Checked symptom presets (subset of `SymptomPresets.all`). Only
   /// persisted when [hadReaction] is on; optional (may be empty).
   @override
   List<String> get symptoms;

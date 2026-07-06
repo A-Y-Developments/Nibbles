@@ -3,6 +3,7 @@ import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/common/domain/entities/allergen.dart';
+import 'package:nibbles/src/features/allergen/tracker/widgets/allergen_icon_tile.dart';
 
 /// Card for an allergen that hasn't been logged yet (status `notStarted`).
 ///
@@ -51,19 +52,7 @@ class StartIntroduceCard extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Container(
-                width: AppSizes.avatarMd,
-                height: AppSizes.avatarMd,
-                decoration: const BoxDecoration(
-                  color: AppColors.borderMuted,
-                  shape: BoxShape.circle,
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  allergen.emoji,
-                  style: const TextStyle(fontSize: 24, height: 1),
-                ),
-              ),
+              const AllergenIconTile(size: 52, greyscale: true),
               const SizedBox(width: AppSizes.sp12),
               Expanded(
                 child: Column(

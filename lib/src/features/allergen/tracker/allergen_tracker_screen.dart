@@ -6,30 +6,29 @@ import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/components.dart';
-import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/domain/entities/allergen.dart';
 import 'package:nibbles/src/common/domain/entities/allergen_log.dart';
 import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
+import 'package:nibbles/src/features/allergen/log/reaction_log_sheet.dart';
 import 'package:nibbles/src/features/allergen/tracker/allergen_tracker_controller.dart';
 import 'package:nibbles/src/features/allergen/tracker/allergen_tracker_state.dart';
+import 'package:nibbles/src/features/allergen/tracker/widgets/allergen_exposure_card.dart';
 import 'package:nibbles/src/features/allergen/tracker/widgets/allergen_progress_card.dart';
+import 'package:nibbles/src/features/allergen/tracker/widgets/confetti_celebration.dart';
 import 'package:nibbles/src/features/allergen/tracker/widgets/reaction_log_row.dart';
 import 'package:nibbles/src/features/allergen/tracker/widgets/start_introduce_card.dart';
+import 'package:nibbles/src/features/allergen/tracker/widgets/start_introduce_sheet.dart';
 import 'package:nibbles/src/features/allergen/tracker/widgets/tracker_header.dart';
 import 'package:nibbles/src/logging/analytics.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 
 /// Redesigned Allergen Tracker board (NIB-79).
 ///
-/// Figma frames 1089:17373 (Ongoing tab) / 1116:18287 (Big 11 tab):
-///  - Butter→grey gradient background (Grad-1)
-///  - "Allergen Trackers" title (verbatim — plural)
-///  - Coral progress ring (introduced / 9) + horizontal stat columns
-///  - Segmented control "Ongoing " | "Big 11" (no nav transition)
-///  - Ongoing tab → "Allergen Exposure" section (See All → Big 11)
-///                 + "Reaction Log" feed of recent rows
-///  - Big 11 tab → grouped sections "Already Tried" / "Ongoing" / "Not Tried"
+/// Ongoing tab (Figma 1089:17373): burgundy "Allergen Exposure" hero for the
+/// currently-ongoing allergen + a Reaction Log feed of its logs.
+/// Big 11 tab (Figma 2780:13178): grouped "Already Tried" / "Ongoing" /
+/// "Not Tried" sections; "Not Tried" opens the pre-introduce sheet.
 class AllergenTrackerScreen extends ConsumerWidget {
   const AllergenTrackerScreen({super.key});
 
@@ -90,8 +89,8 @@ class _TrackerBodyState extends ConsumerState<_TrackerBody> {
             state: state,
             segmentIndex: _segmentIndex,
             onSegmentChanged: _onSegmentChanged,
-            onSeeAll: () => _onSegmentChanged(1),
             onStartIntroduce: _startIntroduce,
+            onAddReaction: _addReaction,
           ),
         ),
       ),
@@ -105,28 +104,26 @@ class _TrackerBodyState extends ConsumerState<_TrackerBody> {
     unawaited(Analytics.instance.logAllergenSegmentChanged(segment: segment));
   }
 
+  Future<void> _addReaction(String allergenKey) async {
+    final saved = await showReactionLogSheet(context, allergenKey: allergenKey);
+    if (!mounted || !(saved ?? false)) return;
+    ref.invalidate(allergenTrackerControllerProvider(widget.babyId));
+  }
+
   Future<void> _startIntroduce(Allergen allergen) async {
+    final started = await showStartIntroduceSheet(
+      context,
+      allergen: allergen,
+      babyId: widget.babyId,
+    );
+    if (!mounted || !started) return;
+
     unawaited(
       Analytics.instance.logAllergenStartIntroduce(allergenKey: allergen.key),
     );
-    // No navigation: marks the allergen as actively introduced and refreshes.
-    final result = await ref
-        .read(allergenTrackerControllerProvider(widget.babyId).notifier)
-        .startIntroduce(allergen.key);
-
-    if (!mounted || result.isSuccess) return;
-    _showToast(
-      result.errorOrNull?.message ??
-          "Couldn't start introduction. Please try again.",
-    );
-  }
-
-  void _showToast(String message) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(content: Text(message), duration: const Duration(seconds: 3)),
-      );
+    setState(() => _segmentIndex = 0);
+    ref.invalidate(allergenTrackerControllerProvider(widget.babyId));
+    await showConfettiCelebration(context);
   }
 }
 
@@ -165,16 +162,16 @@ class _TrackerContent extends ConsumerWidget {
     required this.state,
     required this.segmentIndex,
     required this.onSegmentChanged,
-    required this.onSeeAll,
     required this.onStartIntroduce,
+    required this.onAddReaction,
   });
 
   final String babyId;
   final AllergenTrackerState state;
   final int segmentIndex;
   final ValueChanged<int> onSegmentChanged;
-  final VoidCallback onSeeAll;
   final void Function(Allergen allergen) onStartIntroduce;
+  final void Function(String allergenKey) onAddReaction;
 
   int get _safeCount =>
       state.statuses.values.where((s) => s == AllergenStatus.safe).length;
@@ -242,7 +239,7 @@ class _TrackerContent extends ConsumerWidget {
             logs: state.logs,
             onAllergenTap: (a) =>
                 unawaited(_openAllergenDetail(context, ref, a.key)),
-            onSeeAll: onSeeAll,
+            onAddReaction: onAddReaction,
           ),
         const SliverToBoxAdapter(child: SizedBox(height: AppSizes.xl)),
       ],
@@ -332,23 +329,31 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-class _SeeAllLink extends StatelessWidget {
-  const _SeeAllLink({required this.onPressed});
+class _AddReactionButton extends StatelessWidget {
+  const _AddReactionButton({required this.onPressed});
 
   final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
     return Semantics(
       button: true,
-      label: 'See All',
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onPressed,
-        child: Text(
-          'See All',
-          style: textTheme.bodyMedium?.copyWith(color: AppColors.fgFaint),
+      label: 'Add reaction log',
+      child: Material(
+        color: AppColors.greenDeep,
+        shape: const CircleBorder(),
+        child: InkWell(
+          onTap: onPressed,
+          customBorder: const CircleBorder(),
+          child: const SizedBox(
+            width: AppSizes.roundButton,
+            height: AppSizes.roundButton,
+            child: Icon(
+              Icons.add_rounded,
+              size: AppSizes.iconMd,
+              color: AppColors.cream,
+            ),
+          ),
         ),
       ),
     );
@@ -356,7 +361,7 @@ class _SeeAllLink extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Ongoing tab — "Allergen Exposure" + Reaction Log feed.
+// Ongoing tab — burgundy "Allergen Exposure" hero + Reaction Log feed.
 // ---------------------------------------------------------------------------
 
 class _OngoingList extends StatelessWidget {
@@ -365,59 +370,60 @@ class _OngoingList extends StatelessWidget {
     required this.statuses,
     required this.logs,
     required this.onAllergenTap,
-    required this.onSeeAll,
+    required this.onAddReaction,
   });
 
   final List<Allergen> allergens;
   final Map<String, AllergenStatus> statuses;
   final List<AllergenLog> logs;
   final void Function(Allergen) onAllergenTap;
-  final VoidCallback onSeeAll;
+  final void Function(String allergenKey) onAddReaction;
 
-  List<Allergen> get _exposed => allergens
-      .where(
-        (a) =>
-            (statuses[a.key] ?? AllergenStatus.notStarted) !=
-            AllergenStatus.notStarted,
-      )
-      .toList(growable: false);
+  Allergen? get _ongoing {
+    for (final a in allergens) {
+      if ((statuses[a.key] ?? AllergenStatus.notStarted) ==
+          AllergenStatus.inProgress) {
+        return a;
+      }
+    }
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
-    final exposed = _exposed;
+    final ongoing = _ongoing;
+    final ongoingLogs = ongoing == null
+        ? const <AllergenLog>[]
+        : logs.where((l) => l.allergenKey == ongoing.key).toList();
 
-    // Section scaffolding ALWAYS renders (Figma 1089:17373). Empty data
-    // is shown as a per-section placeholder INSIDE the section, never as a
-    // full-screen flower illustration.
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: AppSizes.pagePaddingH),
       sliver: SliverList(
         delegate: SliverChildListDelegate(<Widget>[
-          _SectionHeader(
-            title: 'Allergen Exposure',
-            trailing: _SeeAllLink(onPressed: onSeeAll),
-          ),
-          if (exposed.isEmpty)
-            const _SectionPlaceholder(text: 'No exposures yet')
+          const _SectionHeader(title: 'Allergen Exposure'),
+          if (ongoing == null)
+            const _SectionPlaceholder(
+              text: 'No allergen is being introduced right now.',
+            )
           else
-            for (final a in exposed) ...[
-              AllergenProgressCard(
-                allergen: a,
-                status: statuses[a.key] ?? AllergenStatus.notStarted,
-                cleanLogCount: logs
-                    .where((l) => l.allergenKey == a.key && !l.hadReaction)
-                    .length,
-                totalLogCount: logs.where((l) => l.allergenKey == a.key).length,
-                onTap: () => onAllergenTap(a),
-              ),
-              const SizedBox(height: AppSizes.sm),
-            ],
+            AllergenExposureCard(
+              allergen: ongoing,
+              cleanLogCount: ongoingLogs.where((l) => !l.hadReaction).length,
+              onTap: () => onAllergenTap(ongoing),
+            ),
           const SizedBox(height: AppSizes.md),
-          const _SectionHeader(title: 'Reaction Log'),
-          if (logs.isEmpty)
+          _SectionHeader(
+            title: 'Reaction Log',
+            trailing: ongoing == null
+                ? null
+                : _AddReactionButton(
+                    onPressed: () => onAddReaction(ongoing.key),
+                  ),
+          ),
+          if (ongoingLogs.isEmpty)
             const _SectionPlaceholder(text: 'No reactions logged yet')
           else
-            for (final entry in _reverseIndexed(logs)) ...[
+            for (final entry in _reverseIndexed(ongoingLogs)) ...[
               Builder(
                 builder: (context) => ReactionLogRow(
                   log: entry.log,
@@ -438,9 +444,8 @@ class _OngoingList extends StatelessWidget {
     );
   }
 
-  /// Returns logs newest-first while keeping a deterministic 1-based "Log N"
-  /// numbering. N is the position in the original (oldest-first) sequence,
-  /// so newer logs show higher numbers regardless of display order.
+  /// Newest-first with a stable 1-based "Log N" numbering (N = position in the
+  /// original oldest-first sequence).
   Iterable<_IndexedLog> _reverseIndexed(List<AllergenLog> sorted) sync* {
     for (var i = sorted.length - 1; i >= 0; i--) {
       yield _IndexedLog(log: sorted[i], index: i + 1);
@@ -454,9 +459,7 @@ class _IndexedLog {
   final int index;
 }
 
-/// Lightweight per-section empty placeholder. Sits inside a section card slot
-/// without the full-screen Quatrefoil mark — section scaffolding (header)
-/// stays visible above it. Matches Figma's section-level empty treatment.
+/// Per-section empty placeholder — header stays visible above it.
 class _SectionPlaceholder extends StatelessWidget {
   const _SectionPlaceholder({required this.text});
 
@@ -496,10 +499,8 @@ class _Big11Sections extends StatelessWidget {
   final void Function(Allergen) onStartIntroduce;
   final void Function(Allergen) onAllergenTap;
 
-  /// "Already Tried" = safe or flagged (introduction concluded one way or
-  /// another). Matches Figma 1116:18287 which groups completed-Safe under
-  /// this header (no separate "Flagged" group; flagged still surfaces a
-  /// Flagged chip on the card).
+  static const int _total = 11;
+
   List<Allergen> get _alreadyTried => allergens
       .where((a) {
         final s = statuses[a.key] ?? AllergenStatus.notStarted;
@@ -562,7 +563,12 @@ class _Big11Sections extends StatelessWidget {
       sliver: SliverList(
         delegate: SliverChildListDelegate(<Widget>[
           if (tried.isNotEmpty) ...[
-            const _SectionHeader(title: 'Already Tried'),
+            _Big11SectionHeader(
+              title: 'Already Tried',
+              count: tried.length,
+              total: _total,
+              dotColor: AppColors.greenDeep,
+            ),
             for (final a in tried) ...[
               _progressCard(a),
               const SizedBox(height: AppSizes.sm),
@@ -570,7 +576,12 @@ class _Big11Sections extends StatelessWidget {
             const SizedBox(height: AppSizes.sm),
           ],
           if (ongoing.isNotEmpty) ...[
-            const _SectionHeader(title: 'Ongoing'),
+            _Big11SectionHeader(
+              title: 'Ongoing',
+              count: ongoing.length,
+              total: _total,
+              dotColor: AppColors.coral,
+            ),
             for (final a in ongoing) ...[
               _progressCard(a),
               const SizedBox(height: AppSizes.sm),
@@ -578,13 +589,60 @@ class _Big11Sections extends StatelessWidget {
             const SizedBox(height: AppSizes.sm),
           ],
           if (notTried.isNotEmpty) ...[
-            const _SectionHeader(title: 'Not Tried'),
+            _Big11SectionHeader(
+              title: 'Not Tried',
+              count: notTried.length,
+              total: _total,
+              dotColor: AppColors.borderMuted,
+            ),
             for (final a in notTried) ...[
               _notTriedCard(a, enabled: canStart),
               const SizedBox(height: AppSizes.sm),
             ],
           ],
         ]),
+      ),
+    );
+  }
+}
+
+class _Big11SectionHeader extends StatelessWidget {
+  const _Big11SectionHeader({
+    required this.title,
+    required this.count,
+    required this.total,
+    required this.dotColor,
+  });
+
+  final String title;
+  final int count;
+  final int total;
+  final Color dotColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSizes.sm),
+      child: Row(
+        children: [
+          Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: AppSizes.sm),
+          Expanded(
+            child: Text(
+              title,
+              style: textTheme.titleSmall?.copyWith(color: AppColors.fgStrong),
+            ),
+          ),
+          Text(
+            '$count/$total',
+            style: textTheme.bodyMedium?.copyWith(color: AppColors.fgFaint),
+          ),
+        ],
       ),
     );
   }

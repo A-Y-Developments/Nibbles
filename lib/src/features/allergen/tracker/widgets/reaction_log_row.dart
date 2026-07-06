@@ -5,11 +5,10 @@ import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/common/domain/entities/allergen_log.dart';
 
-/// Single row in the Reaction Log list.
+/// Single row in the Reaction Log list (Figma 1089:17373).
 ///
-/// Layout (Figma 1089:17670 — "Baby" icon variant): salmon baby glyph ·
-/// `Log N` headline · Safe / Unsafe chip · notes preview · optional
-/// attachment chip.
+/// Baby glyph · `Log N` headline · Safe/Unsafe chip · notes preview · optional
+/// butter "Attachment" chip · chevron into the read-only log detail.
 class ReactionLogRow extends StatelessWidget {
   const ReactionLogRow({
     required this.log,
@@ -27,12 +26,6 @@ class ReactionLogRow extends StatelessWidget {
   /// Row tap target. Routes to the read-only log detail (NIB-127).
   final VoidCallback? onTap;
 
-  String get _attachmentLabel {
-    final title = log.attachmentTitle;
-    if (title != null && title.isNotEmpty) return title;
-    return 'Photo';
-  }
-
   bool get _hasAttachment =>
       (log.photoUrl != null && log.photoUrl!.isNotEmpty) ||
       (log.attachmentTitle != null && log.attachmentTitle!.isNotEmpty);
@@ -49,12 +42,8 @@ class ReactionLogRow extends StatelessWidget {
     return AppCard(
       onTap: onTap,
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Assets.images.allergen.babyOrange.svg(
-            width: AppSizes.avatarMd,
-            height: AppSizes.avatarMd,
-          ),
+          Assets.images.allergen.babyOrange.svg(width: 52, height: 52),
           const SizedBox(width: AppSizes.sp12),
           Expanded(
             child: Column(
@@ -82,17 +71,22 @@ class ReactionLogRow extends StatelessWidget {
                 ],
                 if (_hasAttachment) ...[
                   const SizedBox(height: AppSizes.sm),
-                  Align(
+                  const Align(
                     alignment: Alignment.centerLeft,
                     child: AppChip(
-                      label: _attachmentLabel,
-                      tone: AppChipTone.mute,
-                      emoji: '📎',
+                      label: 'Attachment',
+                      tone: AppChipTone.butter,
                     ),
                   ),
                 ],
               ],
             ),
+          ),
+          const SizedBox(width: AppSizes.sm),
+          const Icon(
+            Icons.chevron_right_rounded,
+            size: AppSizes.iconMd,
+            color: AppColors.fgFaint,
           ),
         ],
       ),
