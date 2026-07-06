@@ -84,7 +84,7 @@ class BrowseMealSearchField extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: AppSizes.pagePaddingH),
       child: AppSearchField(
         controller: controller,
-        hintText: 'Search recipes',
+        hintText: 'Search recipe',
         onChanged: onChanged,
         onSubmitted: (_) => FocusScope.of(context).unfocus(),
       ),

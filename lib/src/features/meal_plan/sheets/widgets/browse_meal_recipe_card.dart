@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:nibbles/src/app/constants/allergen_emoji.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
+import 'package:nibbles/src/common/components/chips/app_chip.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
 
 /// Vertical recipe card used inside the recommendation carousels of the
@@ -93,6 +94,10 @@ class BrowseMealRecipeCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: AppSizes.xs),
+                      if (recipe.nutritionTags.isNotEmpty) ...[
+                        _NutritionChips(tags: recipe.nutritionTags),
+                        const SizedBox(height: AppSizes.xs),
+                      ],
                       Text(
                         recipe.ageRange,
                         style: textTheme.bodySmall?.copyWith(
@@ -109,6 +114,29 @@ class BrowseMealRecipeCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// First nutrition tag (e.g. "Iron-Rich") as a coral chip, plus a "+N" mute
+/// chip when the recipe carries more. Single row — the 160px card can't fit
+/// a wrap without pushing the age line off.
+class _NutritionChips extends StatelessWidget {
+  const _NutritionChips({required this.tags});
+
+  final List<String> tags;
+
+  @override
+  Widget build(BuildContext context) {
+    final extra = tags.length - 1;
+    return Row(
+      children: [
+        Flexible(child: AppChip(label: tags.first)),
+        if (extra > 0) ...[
+          const SizedBox(width: AppSizes.xs),
+          AppChip(label: '+$extra', tone: AppChipTone.mute),
+        ],
+      ],
     );
   }
 }

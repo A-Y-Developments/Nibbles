@@ -70,6 +70,8 @@ android/key.properties
 .superset/
 supabase/.temp/
 supabase/.branches/
+supabase/functions/.env.local
+supabase/functions/**/.env*
 .mcp.json
 
 # Figma audit artifacts (screenshots, raw context) — keep only AUDIT.md

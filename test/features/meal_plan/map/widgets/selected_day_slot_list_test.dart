@@ -1,6 +1,7 @@
 // a11y coverage for SelectedDaySlotList — the icon-only unassign button now
-// carries a "Remove from day" tooltip (which also serves as its screen-reader
-// label) and fires onRemove with the recipe id.
+// carries a per-recipe "Remove {title} from day" tooltip (which also serves as
+// its screen-reader label) and fires onRemoveAt with the card's positional
+// index (duplicates are removed by position, not id).
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -18,25 +19,24 @@ const _recipe = Recipe(
 );
 
 void main() {
-  testWidgets('remove button has a tooltip label + fires onRemove with id', (
-    tester,
-  ) async {
-    String? removed;
+  testWidgets('remove button has a per-recipe tooltip + fires onRemoveAt with '
+      'the index', (tester) async {
+    int? removedIndex;
 
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
           body: SelectedDaySlotList(
             recipes: const [_recipe],
-            onRemove: (id) => removed = id,
+            onRemoveAt: (index) => removedIndex = index,
           ),
         ),
       ),
     );
 
-    expect(find.byTooltip('Remove from day'), findsOneWidget);
+    expect(find.byTooltip('Remove Pea Puree from day'), findsOneWidget);
 
-    await tester.tap(find.byTooltip('Remove from day'));
-    expect(removed, 'r1');
+    await tester.tap(find.byTooltip('Remove Pea Puree from day'));
+    expect(removedIndex, 0);
   });
 }

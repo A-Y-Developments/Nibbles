@@ -12,6 +12,7 @@ import 'package:nibbles/src/common/domain/entities/allergen.dart';
 import 'package:nibbles/src/common/domain/entities/allergen_log.dart';
 import 'package:nibbles/src/common/domain/entities/allergen_program_state.dart';
 import 'package:nibbles/src/common/domain/entities/baby.dart';
+import 'package:nibbles/src/common/domain/entities/meal_plan.dart';
 import 'package:nibbles/src/common/domain/entities/meal_plan_entry.dart';
 import 'package:nibbles/src/common/domain/entities/reaction_detail.dart';
 import 'package:nibbles/src/common/domain/enums/gender.dart';
@@ -239,6 +240,10 @@ class _QaMealPlanRepository implements MealPlanRepository {
       const Result.success(<MealPlanEntry>[]);
 
   @override
+  Future<Result<List<MealPlanEntry>>> getEntriesForPlan(String planId) async =>
+      const Result.success(<MealPlanEntry>[]);
+
+  @override
   Future<Result<MealPlanEntry>> assignRecipe(
     String babyId,
     String recipeId,
@@ -271,5 +276,20 @@ class _QaMealPlanRepository implements MealPlanRepository {
 
   @override
   Future<Result<void>> clearDay(String babyId, DateTime date) async =>
+      const Result.success(null);
+
+  @override
+  Future<Result<MealPlan?>> getActivePlan(String babyId) async =>
+      const Result.success(null);
+
+  @override
+  Future<Result<MealPlan>> createPlan(
+    String babyId,
+    DateTime start,
+    DateTime end,
+  ) async => const Result.failure(UnknownException('QA bypass: noop.'));
+
+  @override
+  Future<Result<void>> deletePlan(String planId) async =>
       const Result.success(null);
 }

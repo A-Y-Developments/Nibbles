@@ -74,36 +74,55 @@ class MapMealsController extends _$MapMealsController {
     state = state.copyWith(selectedDay: _dateOnly(day));
   }
 
-  /// Adds (or overwrites) the assignment for [recipeId] to the currently
-  /// selected day on the state.
+  /// COPIES [recipeId] onto the currently selected day (appended to that
+  /// day's list). The picked palette is reusable, so the same recipe can be
+  /// added to many days and to one day multiple times — this never removes
+  /// anything from the palette.
   void assignToSelectedDay(String recipeId) {
-    final next = Map<String, DateTime>.from(state.assignments);
-    next[recipeId] = state.selectedDay;
+    final day = _dateOnly(state.selectedDay);
+    final next = <DateTime, List<String>>{
+      for (final entry in state.assignments.entries)
+        entry.key: List<String>.from(entry.value),
+    };
+    (next[day] ??= <String>[]).add(recipeId);
     state = state.copyWith(assignments: next, errorMessage: null);
     unawaited(
       ref
           .read(analyticsProvider)
           .logMealPrepMappingAssigned(
             recipeId: recipeId,
-            dayOffsetIso: _isoDate(state.selectedDay),
+            dayOffsetIso: _isoDate(day),
           ),
     );
   }
 
-  /// Removes [recipeId] from the assignments map.
-  void unassign(String recipeId) {
-    final next = Map<String, DateTime>.from(state.assignments)
-      ..remove(recipeId);
+  /// Removes a single mapped instance from the selected day by its position
+  /// [index] in that day's list (mapped cards can hold duplicates, so removal
+  /// is positional, not id-based).
+  void unassignFromSelectedDayAt(int index) {
+    final day = _dateOnly(state.selectedDay);
+    final current = state.assignments[day];
+    if (current == null || index < 0 || index >= current.length) return;
+    final updated = List<String>.from(current)..removeAt(index);
+    final next = <DateTime, List<String>>{
+      for (final entry in state.assignments.entries)
+        entry.key: List<String>.from(entry.value),
+    };
+    if (updated.isEmpty) {
+      next.remove(day);
+    } else {
+      next[day] = updated;
+    }
     state = state.copyWith(assignments: next, errorMessage: null);
   }
 
-  /// Bulk-commits the assignments via [MealPlanService.appendMealsToRange].
+  /// Creates/replaces the plan for the window, then bulk-appends every mapped
+  /// meal instance into it via [MealPlanService.appendMealsToRange].
   ///
+  /// Partial (or empty) mappings are allowed — Finish is enabled at any time.
   /// Returns true on success (caller pops with `true`). On failure leaves
   /// `errorMessage` set so the screen can show the P1 retry dialog.
   Future<bool> commit() async {
-    if (state.assignments.isEmpty) return false;
-
     state = state.copyWith(isCommitting: true, errorMessage: null);
 
     final babyId = await ref.read(currentBabyIdProvider.future);
@@ -115,38 +134,41 @@ class MapMealsController extends _$MapMealsController {
       return false;
     }
 
-    final start = state.startDate;
-    final assignments = state.assignments.entries.map((entry) {
-      final day = _dateOnly(entry.value);
-      final offset = day.difference(start).inDays;
-      return RecipeAssignment(recipeId: entry.key, dayOffset: offset);
-    }).toList();
-
-    final result = await ref
-        .read(mealPlanServiceProvider)
-        .appendMealsToRange(
-          babyId: babyId,
-          startDate: state.startDate,
-          endDate: state.endDate,
-          assignments: assignments,
+    final start = _dateOnly(state.startDate);
+    final assignments = <RecipeAssignment>[];
+    for (final entry in state.assignments.entries) {
+      final offset = _dateOnly(entry.key).difference(start).inDays;
+      for (final recipeId in entry.value) {
+        assignments.add(
+          RecipeAssignment(recipeId: recipeId, dayOffset: offset),
         );
+      }
+    }
+
+    final service = ref.read(mealPlanServiceProvider);
+
+    final planResult = await service.createPlan(
+      babyId,
+      state.startDate,
+      state.endDate,
+    );
+    if (planResult.isFailure) {
+      return _recordAndFail(
+        planResult.errorOrNull?.message,
+        assignments.length,
+      );
+    }
+
+    final result = await service.appendMealsToRange(
+      babyId: babyId,
+      startDate: state.startDate,
+      endDate: state.endDate,
+      mealPlanId: planResult.dataOrNull!.id,
+      assignments: assignments,
+    );
 
     if (result.isFailure) {
-      final dayCount = state.endDate.difference(state.startDate).inDays + 1;
-      await ref.read(mealPrepCrashRecorderProvider)(
-        'meal_prep_commit_failure: ${result.errorOrNull?.message}',
-        StackTrace.current,
-        reason: 'meal_prep_commit_failure',
-        information: <String>[
-          'recipe_count=${assignments.length}',
-          'day_count=$dayCount',
-        ],
-      );
-      state = state.copyWith(
-        isCommitting: false,
-        errorMessage: result.errorOrNull?.message ?? 'Failed to save plan.',
-      );
-      return false;
+      return _recordAndFail(result.errorOrNull?.message, assignments.length);
     }
 
     state = state.copyWith(isCommitting: false);
@@ -155,10 +177,29 @@ class MapMealsController extends _$MapMealsController {
           .read(analyticsProvider)
           .logMealPrepCommitted(
             recipeCount: assignments.length,
-            dayCount: state.endDate.difference(state.startDate).inDays + 1,
+            dayCount: state.dayCount,
           ),
     );
     return true;
+  }
+
+  /// Records the non-fatal crash payload, sets the P1 `errorMessage`, and
+  /// returns false so [commit] can bail out.
+  Future<bool> _recordAndFail(String? message, int recipeCount) async {
+    await ref.read(mealPrepCrashRecorderProvider)(
+      'meal_prep_commit_failure: $message',
+      StackTrace.current,
+      reason: 'meal_prep_commit_failure',
+      information: <String>[
+        'recipe_count=$recipeCount',
+        'day_count=${state.dayCount}',
+      ],
+    );
+    state = state.copyWith(
+      isCommitting: false,
+      errorMessage: message ?? 'Failed to save plan.',
+    );
+    return false;
   }
 
   /// `yyyy-MM-dd` for analytics. Locale-stable, no PII.

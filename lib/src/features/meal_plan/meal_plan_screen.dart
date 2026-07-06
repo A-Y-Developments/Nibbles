@@ -12,6 +12,8 @@ import 'package:nibbles/src/common/domain/entities/meal_plan_entry.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/common/services/meal_plan_service.dart';
+import 'package:nibbles/src/features/meal_plan/ai/ai_loading_screen.dart';
+import 'package:nibbles/src/features/meal_plan/ai/meal_preferences_sheet.dart';
 import 'package:nibbles/src/features/meal_plan/map/map_meals_state.dart';
 import 'package:nibbles/src/features/meal_plan/meal_plan_controller.dart';
 import 'package:nibbles/src/features/meal_plan/meal_plan_state.dart';
@@ -35,16 +37,13 @@ String _isoDate(DateTime dt) {
   return '${dt.year}-$m-$d';
 }
 
-/// Screen-level overflow menu actions (Figma 971:7999).
-enum _ScreenMenuAction { addToShopList, createMealPrep, clearCurrentWeek }
+/// Screen-level overflow menu actions (Figma 971:7826).
+enum _ScreenMenuAction { addToShopList, createMealPrep, clearCurrentPlan }
 
-/// Rewritten Meal Plan screen (NIB-69).
-///
-/// Renders a butter-gradient [MealPlanHeader] + a vertical list of
-/// [DayAccordionCard]s + an '+ Add Date' footer (or a [MealPlanEmptyState]
-/// when there are no entries). Consumes NIB-87's [showBrowseMealSheet],
-/// NIB-95's `AppRoute.mealPlanMap` + [MapMealsArgs], and NIB-103's
-/// [showClearMealPlanConfirm].
+/// Meal Plan screen. Renders a butter-gradient [MealPlanHeader] + a vertical
+/// list of [DayAccordionCard]s + a "+ Add Date" footer when a plan is active,
+/// or a [MealPlanEmptyState] when there is no active plan. Drives the manual
+/// (browse → map) and AI (preferences → loading → generate) meal-prep flows.
 class MealPlanScreen extends ConsumerWidget {
   const MealPlanScreen({super.key});
 
@@ -124,12 +123,12 @@ class _MealPlanBody extends ConsumerStatefulWidget {
 
 class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
   /// Local override that extends the visible window beyond the controller's
-  /// `windowEnd`. '+ Add Date' increments this by 1 day. Cleared when the
-  /// controller state changes window (e.g. invalidate on the day rollover).
+  /// `windowEnd`. "+ Add Date" increments this by 1 day. Cleared when the plan
+  /// changes (a fresh create/delete resets the body).
   DateTime? _extraEnd;
 
   /// Guard so `meal_plan_viewed` only fires once per mount, after the
-  /// controller resolves with success.
+  /// controller resolves with an active plan.
   bool _viewedFired = false;
 
   @override
@@ -155,21 +154,15 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
     if (baby == null) {
       return const Center(child: Text('No baby profile found.'));
     }
-    _fireViewedOnce(state);
-    if (state.entries.isEmpty) {
+    if (state.plan == null) {
       return MealPlanEmptyState(
         babyName: baby.name,
         ageMonths: ageInMonths(baby.dateOfBirth),
-        onCreateMealPlan: _onCreateMealPlanFromEmpty,
-        overflowButton: _NoFlashMenuTheme(
-          child: Builder(
-            builder: (btnContext) => MealPlanOverflowButton(
-              onTap: () => _openEmptyStateMenu(btnContext),
-            ),
-          ),
-        ),
+        onSetMealPrep: (range) => _startAiFlow(range, baby),
+        onFillInMyself: _startManualFlow,
       );
     }
+    _fireViewedOnce(state);
     return _PopulatedView(
       babyId: widget.babyId,
       state: state,
@@ -204,8 +197,6 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
     final notifier = ref.read(
       mealPlanControllerProvider(widget.babyId).notifier,
     );
-    // Read current expanded state BEFORE toggling so we can fire the correct
-    // expanded/collapsed event for the resulting state.
     final current = ref
         .read(mealPlanControllerProvider(widget.babyId))
         .valueOrNull;
@@ -239,7 +230,11 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
     unawaited(ref.read(analyticsProvider).logMealPlanAddDateTapped());
   }
 
-  Future<void> _onCreateMealPlanFromEmpty(DateTimeRange range) async {
+  // --- Meal-prep entry flows ------------------------------------------------
+
+  /// Manual path: browse recipes for the range, then map them onto days. The
+  /// Map screen self-persists the plan (createPlan + append) on Finish.
+  Future<void> _startManualFlow(DateTimeRange range) async {
     final days = range.end.difference(range.start).inDays + 1;
     unawaited(ref.read(analyticsProvider).logMealPrepRangeSelected(days: days));
     final picked = await showBrowseMealSheet(
@@ -251,6 +246,83 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
     if (picked == null || picked.isEmpty) return;
     if (!mounted) return;
     await _pushMapMeals(picked, range.start, range.end);
+  }
+
+  /// AI path: collect preferences + notes, run generation behind a full-screen
+  /// non-dismissable loading route, then land on the populated planner.
+  Future<void> _startAiFlow(DateTimeRange range, Baby baby) async {
+    final analytics = ref.read(analyticsProvider);
+    unawaited(analytics.logMealPrepAiStarted());
+
+    final input = await showAiPreferencesFlow(context, babyName: baby.name);
+    if (input == null || !mounted) return;
+    unawaited(
+      analytics.logMealPrepAiPreferencesSelected(
+        count: input.preferences.length,
+      ),
+    );
+
+    final result = await context.pushNamed<AiLoadingResult>(
+      AppRoute.mealPlanAiLoading.name,
+      extra: AiLoadingArgs(
+        babyId: widget.babyId,
+        babyName: baby.name,
+        startDate: range.start,
+        endDate: range.end,
+        preferences: input.preferences,
+        notes: input.notes,
+      ),
+    );
+    if (!mounted || result == null) return;
+
+    if (!result.success) {
+      unawaited(analytics.logMealPrepAiFailed());
+      await _showGenerateErrorDialog(result.errorMessage);
+      return;
+    }
+
+    ref.invalidate(mealPlanControllerProvider(widget.babyId));
+    final refreshed = await ref.read(
+      mealPlanControllerProvider(widget.babyId).future,
+    );
+    final days = range.end.difference(range.start).inDays + 1;
+    unawaited(analytics.logMealPlanCreated(days: days));
+    unawaited(
+      analytics.logMealPrepAiGenerated(
+        recipeCount: refreshed.entries.length,
+        dayCount: days,
+      ),
+    );
+  }
+
+  Future<void> _showGenerateErrorDialog(String? message) async {
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+        ),
+        title: const Text(
+          "Couldn't build your plan",
+          style: AppTypography.sectionTitle,
+        ),
+        content: Text(
+          message ?? 'Please try again.',
+          style: AppTypography.textTheme.bodyMedium,
+        ),
+        actions: [
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.greenDeep,
+              foregroundColor: AppColors.onGreen,
+            ),
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text('OK', style: AppTypography.button),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _onDayAdd(DateTime day) async {
@@ -309,8 +381,8 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
       case _ScreenMenuAction.createMealPrep:
         unawaited(analytics.logMealPrepCreateStarted());
         await _onCreateMealPrep(state);
-      case _ScreenMenuAction.clearCurrentWeek:
-        await _onClearWindow(state);
+      case _ScreenMenuAction.clearCurrentPlan:
+        await _onDeletePlan();
     }
   }
 
@@ -318,54 +390,60 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
     DateTime day,
     DayCardMenuAction action,
   ) async {
-    final state = ref
-        .read(mealPlanControllerProvider(widget.babyId))
-        .valueOrNull;
-    if (state == null) return;
     switch (action) {
       case DayCardMenuAction.addToShopList:
-        // Per NIB-109 spec, `meal_plan_add_to_shop_list` only fires from the
-        // SCREEN-LEVEL overflow menu (see [_onScreenMenuSelected]). The
-        // day-card menu intentionally does not fire it.
         await _openAddToShoppingList(day);
-      case DayCardMenuAction.clearCurrentWeek:
-        await _onClearWindow(state);
+      case DayCardMenuAction.clearCurrentDate:
+        await _onClearDay(day);
     }
   }
 
   Future<void> _onCreateMealPrep(MealPlanState state) async {
-    // First let the user pick the date range via the Select Period Date
-    // bottom-sheet (Figma 971:8000). Pre-fill with the current window so the
-    // sheet opens on the same range the planner is showing.
-    final range = await showSelectPeriodDateSheet(
+    final baby = state.baby;
+    if (baby == null) return;
+    // Pick range + mode via the Select Period Date sheet (Figma 971:8053).
+    final result = await showSelectPeriodDateSheet(
       context,
       initialStart: state.windowStart,
       initialEnd: _effectiveWindowEnd(state),
     );
-    if (range == null) return;
-    if (!mounted) return;
+    if (result == null || !mounted) return;
 
-    final days = range.end.difference(range.start).inDays + 1;
-    unawaited(ref.read(analyticsProvider).logMealPrepRangeSelected(days: days));
-    final picked = await showBrowseMealSheet(
-      context,
-      babyId: widget.babyId,
-      startDate: range.start,
-      endDate: range.end,
-    );
-    if (picked == null || picked.isEmpty) return;
-    if (!mounted) return;
-    await _pushMapMeals(picked, range.start, range.end);
+    switch (result.mode) {
+      case MealPrepMode.ai:
+        await _startAiFlow(result.range, baby);
+      case MealPrepMode.manual:
+        await _startManualFlow(result.range);
+    }
   }
 
-  Future<void> _onClearWindow(MealPlanState state) async {
+  Future<void> _onDeletePlan() async {
     final confirmed = await showClearMealPlanConfirm(context);
-    if (confirmed != true) return;
-    if (!mounted) return;
-    final endDate = _effectiveWindowEnd(state);
+    if (confirmed != true || !mounted) return;
     final ok = await ref
         .read(mealPlanControllerProvider(widget.babyId).notifier)
-        .clearRange(state.windowStart, endDate);
+        .deleteActivePlan();
+    if (!ok) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Couldn't delete plan. Try again.")),
+        );
+      }
+      return;
+    }
+    setState(() => _extraEnd = null);
+    unawaited(ref.read(analyticsProvider).logMealPlanDeleted());
+  }
+
+  Future<void> _onClearDay(DateTime day) async {
+    final confirmed = await showClearMealPlanConfirm(
+      context,
+      title: 'Clear all meals for this day?',
+    );
+    if (confirmed != true || !mounted) return;
+    final ok = await ref
+        .read(mealPlanControllerProvider(widget.babyId).notifier)
+        .clearDay(day);
     if (!ok) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -374,11 +452,8 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
       }
       return;
     }
-    final dayCount = endDate.difference(state.windowStart).inDays + 1;
     unawaited(
-      ref
-          .read(analyticsProvider)
-          .logMealPlanClearWeekConfirmed(dayCount: dayCount),
+      ref.read(analyticsProvider).logMealPlanClearWeekConfirmed(dayCount: 1),
     );
   }
 
@@ -396,7 +471,6 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
     );
   }
 
-  /// NIB-136: range-scoped sheet from the screen-level overflow menu.
   Future<void> _openRangeAddToShoplist(DateTime start, DateTime end) async {
     await showRangeAddToShoplistSheet(
       context,
@@ -421,6 +495,8 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
     );
     if ((result ?? false) && mounted) {
       ref.invalidate(mealPlanControllerProvider(widget.babyId));
+      final days = endDate.difference(startDate).inDays + 1;
+      unawaited(ref.read(analyticsProvider).logMealPlanCreated(days: days));
     }
   }
 
@@ -429,57 +505,6 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
       AppRoute.recipeDetail.name,
       pathParameters: {'recipeId': recipeId},
     );
-  }
-
-  /// Opens the screen-level overflow menu while the empty state is showing.
-  /// Empty state has no entries, so 'Add to shop list' and 'Clear current
-  /// week' are not actionable — only the 'Create new meal prep' route is
-  /// surfaced, which funnels through the same Select Period Date sheet.
-  Future<void> _openEmptyStateMenu(BuildContext btnContext) async {
-    final state = ref
-        .read(mealPlanControllerProvider(widget.babyId))
-        .valueOrNull;
-    if (state == null) return;
-
-    final renderBox = btnContext.findRenderObject() as RenderBox?;
-    final overlay =
-        Overlay.of(btnContext).context.findRenderObject() as RenderBox?;
-    if (renderBox == null || overlay == null) return;
-
-    final topRight = renderBox.localToGlobal(
-      Offset(renderBox.size.width, 0),
-      ancestor: overlay,
-    );
-    final position = RelativeRect.fromLTRB(
-      topRight.dx - AppSizes.pagePaddingH * 2,
-      topRight.dy + AppSizes.xxl,
-      AppSizes.pagePaddingH,
-      0,
-    );
-
-    final action = await showMenu<_ScreenMenuAction>(
-      context: btnContext,
-      position: position,
-      color: AppColors.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-      ),
-      items: const [
-        PopupMenuItem<_ScreenMenuAction>(
-          value: _ScreenMenuAction.createMealPrep,
-          padding: EdgeInsets.zero,
-          child: _ScreenMenuRow(
-            icon: Icons.add,
-            label: 'Create new meal prep',
-            highlight: true,
-          ),
-        ),
-      ],
-    );
-    if (action == _ScreenMenuAction.createMealPrep) {
-      unawaited(ref.read(analyticsProvider).logMealPrepCreateStarted());
-      await _onCreateMealPrep(state);
-    }
   }
 }
 
@@ -514,9 +539,8 @@ class _PopulatedView extends StatelessWidget {
 
   static DateTime _dateOnly(DateTime dt) => DateTime(dt.year, dt.month, dt.day);
 
-  /// Match the controller's UTC date-only normalization (see
-  /// `MealPlanController._expandedKey`) so accordion expand state survives
-  /// across rebuilds.
+  /// Match the controller's UTC date-only normalization so accordion expand
+  /// state survives across rebuilds.
   static DateTime _expandedKey(DateTime day) =>
       DateTime.utc(day.year, day.month, day.day);
 
@@ -622,10 +646,10 @@ class _PopulatedView extends StatelessWidget {
           child: _ScreenMenuRow(icon: Icons.add, label: 'Create new meal prep'),
         ),
         PopupMenuItem<_ScreenMenuAction>(
-          value: _ScreenMenuAction.clearCurrentWeek,
+          value: _ScreenMenuAction.clearCurrentPlan,
           child: _ScreenMenuRow(
             icon: Icons.delete_outline,
-            label: 'Clear current week',
+            label: 'Clear current plan',
           ),
         ),
       ],
@@ -635,9 +659,8 @@ class _PopulatedView extends StatelessWidget {
 }
 
 /// Strips the grey/tinted [InkWell] splash + highlight from the overflow
-/// menu rows. `showMenu` captures the ambient [Theme] from the trigger
-/// context, so wrapping the overflow button here makes the popup rows
-/// stay white on press — only a resting `highlight` row paints lime.
+/// menu rows so the popup rows stay white on press — only a resting
+/// `highlight` row paints lime.
 class _NoFlashMenuTheme extends StatelessWidget {
   const _NoFlashMenuTheme({required this.child});
 
@@ -656,9 +679,9 @@ class _NoFlashMenuTheme extends StatelessWidget {
   }
 }
 
-/// Row used inside the screen-level overflow popup. When [highlight] is
-/// true the entire row paints in lime (butter) with forest-deep text +
-/// icon — matches the default-active row in Figma 971:7826.
+/// Row used inside the screen-level overflow popup. When [highlight] is true
+/// the entire row paints in lime (butter) with forest-deep text + icon —
+/// matches the default-active row in Figma 971:7826.
 class _ScreenMenuRow extends StatelessWidget {
   const _ScreenMenuRow({
     required this.icon,

@@ -6,6 +6,8 @@ import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
+import 'package:nibbles/src/common/domain/meal_stage.dart';
+import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/common/services/meal_plan_service.dart'
     show MealPlanService;
 import 'package:nibbles/src/features/meal_plan/map/map_meals_controller.dart';
@@ -17,10 +19,12 @@ import 'package:nibbles/src/features/meal_plan/map/widgets/selected_day_slot_lis
 /// Map Meals Plan full-screen (NIB-95).
 ///
 /// Takes a list of picked recipes + a date range (handed in via
-/// [MapMealsArgs] through `GoRouterState.extra` from NIB-87's Browse Meal
-/// sheet) and lets the user assign each picked recipe to a day in the
-/// range. On commit, calls [MealPlanService.appendMealsToRange] (APPEND
-/// only — no replace per NIB-120). On success pops with `true`. On
+/// [MapMealsArgs] through `GoRouterState.extra`) and lets the user assign
+/// picked recipes to days in the range by DRAGGING them onto the day
+/// drop-zone or TAPPING them. The picked palette is reusable — a recipe can
+/// be mapped onto many days. On Finish, creates/replaces the plan via
+/// [MealPlanService.createPlan] then bulk-appends the mapped meals via
+/// [MealPlanService.appendMealsToRange]. On success pops with `true`; on
 /// failure shows a blocking P1 retry dialog.
 class MapMealsScreen extends ConsumerWidget {
   const MapMealsScreen({required this.args, super.key});
@@ -37,74 +41,49 @@ class MapMealsScreen extends ConsumerWidget {
     DateTime.sunday: 'Sunday',
   };
 
-  static const _weekdayShort = <int, String>{
-    DateTime.monday: 'Mon',
-    DateTime.tuesday: 'Tue',
-    DateTime.wednesday: 'Wed',
-    DateTime.thursday: 'Thu',
-    DateTime.friday: 'Fri',
-    DateTime.saturday: 'Sat',
-    DateTime.sunday: 'Sun',
-  };
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(mapMealsControllerProvider(args));
     final notifier = ref.read(mapMealsControllerProvider(args).notifier);
+    final mealsPerDay = _mealsPerDay(ref);
 
     return PopScope(
       canPop: state.assignments.isEmpty && !state.isCommitting,
       onPopInvokedWithResult: (didPop, _) async {
         if (didPop) return;
-        final confirmed = await showDialog<bool>(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            backgroundColor: AppColors.surface,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-            ),
-            title: const Text(
-              'Discard unsaved meal mappings?',
-              style: AppTypography.sectionTitle,
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(false),
-                child: Text(
-                  'Keep',
-                  style: AppTypography.button.copyWith(
-                    color: AppColors.fgMuted,
-                  ),
-                ),
-              ),
-              FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.destructive,
-                  foregroundColor: AppColors.onGreen,
-                ),
-                onPressed: () => Navigator.of(ctx).pop(true),
-                child: Text('Discard', style: AppTypography.button),
-              ),
-            ],
-          ),
-        );
+        final confirmed = await _confirmDiscard(context);
         if ((confirmed ?? false) && context.mounted) {
           Navigator.of(context).pop();
         }
       },
       child: GradientScaffold(
-        appBar: _MapMealsAppBar(state: state),
+        appBar: const _MapMealsAppBar(),
         body: SafeArea(
           top: false,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: AppSizes.md),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSizes.pagePaddingH,
+                  0,
+                  AppSizes.pagePaddingH,
+                  AppSizes.md,
+                ),
+                child: Text(
+                  '${state.filledCount} of ${state.totalSlots(mealsPerDay)} '
+                  'slots filled',
+                  style: AppTypography.caption.copyWith(
+                    color: AppColors.fgMuted,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
               DayChipRow(
                 startDate: state.startDate,
                 endDate: state.endDate,
                 selectedDay: state.selectedDay,
-                filledDays: state.filledDays(),
+                fullDays: state.fullDays(mealsPerDay),
                 onSelect: notifier.selectDay,
               ),
               const SizedBox(height: AppSizes.md),
@@ -116,24 +95,18 @@ class MapMealsScreen extends ConsumerWidget {
                   children: [
                     _SelectedDayHeader(
                       state: state,
+                      mealsPerDay: mealsPerDay,
                       weekdayNames: _weekdayName,
                     ),
-                    if (state.recipesForSelectedDay().isNotEmpty) ...[
-                      const SizedBox(height: AppSizes.xs),
-                      Text(
-                        'Drag & drop or click meals below to add them',
-                        style: AppTypography.caption.copyWith(
-                          color: AppColors.fgMuted,
-                        ),
-                      ),
-                    ],
                     const SizedBox(height: AppSizes.sm),
-                    SelectedDaySlotList(
+                    _DayDropZone(
                       recipes: state.recipesForSelectedDay(),
-                      onRemove: notifier.unassign,
+                      onAccept: (recipe) =>
+                          notifier.assignToSelectedDay(recipe.id),
+                      onRemoveAt: notifier.unassignFromSelectedDayAt,
                     ),
                     const SizedBox(height: AppSizes.lg),
-                    _MealsPickedHeader(totalCount: state.totalCount),
+                    _MealsPickedHeader(count: state.pickedRecipes.length),
                     const SizedBox(height: AppSizes.sm),
                     for (var i = 0; i < state.pickedRecipes.length; i++) ...[
                       if (i != 0) const SizedBox(height: AppSizes.sm),
@@ -142,17 +115,16 @@ class MapMealsScreen extends ConsumerWidget {
                         onTap: () => notifier.assignToSelectedDay(
                           state.pickedRecipes[i].id,
                         ),
-                        assignedLabel: _assignedLabelFor(
-                          state.pickedRecipes[i],
-                          state,
-                        ),
                       ),
                     ],
                     const SizedBox(height: AppSizes.xl),
                   ],
                 ),
               ),
-              _CommitBar(state: state, onCommit: () => _onCommit(context, ref)),
+              _FinishBar(
+                isCommitting: state.isCommitting,
+                onFinish: () => _onFinish(context, ref),
+              ),
             ],
           ),
         ),
@@ -160,14 +132,46 @@ class MapMealsScreen extends ConsumerWidget {
     );
   }
 
-  String? _assignedLabelFor(Recipe recipe, MapMealsState state) {
-    final assignedDay = state.assignments[recipe.id];
-    if (assignedDay == null) return null;
-    final abbrev = _weekdayShort[assignedDay.weekday] ?? '';
-    return '$abbrev ${assignedDay.day}';
+  int _mealsPerDay(WidgetRef ref) {
+    final baby = ref.watch(currentBabyProvider).valueOrNull;
+    if (baby == null) return 1;
+    return mealsPerDayForDob(baby.dateOfBirth);
   }
 
-  Future<void> _onCommit(BuildContext context, WidgetRef ref) async {
+  Future<bool?> _confirmDiscard(BuildContext context) {
+    return showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+        ),
+        title: const Text(
+          'Discard unsaved meal mappings?',
+          style: AppTypography.sectionTitle,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(
+              'Keep',
+              style: AppTypography.button.copyWith(color: AppColors.fgMuted),
+            ),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.destructive,
+              foregroundColor: AppColors.onGreen,
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text('Discard', style: AppTypography.button),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _onFinish(BuildContext context, WidgetRef ref) async {
     final notifier = ref.read(mapMealsControllerProvider(args).notifier);
     final success = await notifier.commit();
     if (!context.mounted) return;
@@ -214,7 +218,7 @@ class MapMealsScreen extends ConsumerWidget {
               ),
               onPressed: () {
                 Navigator.of(dialogContext).pop();
-                _onCommit(context, ref);
+                _onFinish(context, ref);
               },
               child: Text('Retry', style: AppTypography.button),
             ),
@@ -225,10 +229,39 @@ class MapMealsScreen extends ConsumerWidget {
   }
 }
 
-class _MapMealsAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const _MapMealsAppBar({required this.state});
+/// `DragTarget<Recipe>` drop-zone wrapping the selected day's slot list.
+///
+/// Accepting a drop copies the recipe onto the selected day; while a drag
+/// hovers the dashed border turns green (Figma 971:8511).
+class _DayDropZone extends StatelessWidget {
+  const _DayDropZone({
+    required this.recipes,
+    required this.onAccept,
+    required this.onRemoveAt,
+  });
 
-  final MapMealsState state;
+  final List<Recipe> recipes;
+  final ValueChanged<Recipe> onAccept;
+  final ValueChanged<int> onRemoveAt;
+
+  @override
+  Widget build(BuildContext context) {
+    return DragTarget<Recipe>(
+      onWillAcceptWithDetails: (_) => true,
+      onAcceptWithDetails: (details) => onAccept(details.data),
+      builder: (context, candidate, rejected) {
+        return SelectedDaySlotList(
+          recipes: recipes,
+          onRemoveAt: onRemoveAt,
+          isHovering: candidate.isNotEmpty,
+        );
+      },
+    );
+  }
+}
+
+class _MapMealsAppBar extends StatelessWidget implements PreferredSizeWidget {
+  const _MapMealsAppBar();
 
   @override
   Size get preferredSize => const Size.fromHeight(AppSizes.appBarHeight);
@@ -247,30 +280,6 @@ class _MapMealsAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       title: Text('Map Meals Plan', style: AppTypography.textTheme.titleLarge),
       centerTitle: false,
-      actions: [
-        Padding(
-          padding: const EdgeInsets.only(right: AppSizes.pagePaddingH),
-          child: Center(
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSizes.sp12,
-                vertical: AppSizes.xs,
-              ),
-              decoration: BoxDecoration(
-                color: AppColors.greenTint,
-                borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-              ),
-              child: Text(
-                '${state.filledCount} of ${state.totalCount} slots filled',
-                style: AppTypography.caption.copyWith(
-                  color: AppColors.greenDeep,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
@@ -279,9 +288,9 @@ class _MapMealsAppBar extends StatelessWidget implements PreferredSizeWidget {
 /// flush-left and the picked-count chip (`N selected`) sits flush-right
 /// on the same row.
 class _MealsPickedHeader extends StatelessWidget {
-  const _MealsPickedHeader({required this.totalCount});
+  const _MealsPickedHeader({required this.count});
 
-  final int totalCount;
+  final int count;
 
   @override
   Widget build(BuildContext context) {
@@ -291,7 +300,7 @@ class _MealsPickedHeader extends StatelessWidget {
           child: Text('Meals Picked', style: AppTypography.sectionTitle),
         ),
         Text(
-          '$totalCount selected',
+          '$count selected',
           style: AppTypography.caption.copyWith(
             color: AppColors.fgMuted,
             fontWeight: FontWeight.w600,
@@ -303,47 +312,39 @@ class _MealsPickedHeader extends StatelessWidget {
 }
 
 class _SelectedDayHeader extends StatelessWidget {
-  const _SelectedDayHeader({required this.state, required this.weekdayNames});
+  const _SelectedDayHeader({
+    required this.state,
+    required this.mealsPerDay,
+    required this.weekdayNames,
+  });
 
   final MapMealsState state;
+  final int mealsPerDay;
   final Map<int, String> weekdayNames;
 
   @override
   Widget build(BuildContext context) {
     final dayName = weekdayNames[state.selectedDay.weekday] ?? '';
-    final n = state.recipesForSelectedDay().length;
-    final m = state.totalCount;
+    final k = state.assignedCountForSelectedDay();
     return Text(
-      'Meals for $dayName ($n/$m)',
+      'Meals for $dayName ($k/$mealsPerDay)',
       style: AppTypography.sectionTitle,
     );
   }
 }
 
-/// Floating commit bar for the Map Meals Plan screen.
+/// Floating bottom "Finish" pill for the Map Meals Plan screen.
 ///
-/// Per the Figma spec (frames 971:8375 → 971:8511) the CTA progresses
-/// through three states based on how many picked recipes are assigned:
-///
-/// * 0 assignments      → bar is hidden (frames 03/04 show no CTA at all)
-/// * 1..N-1 assignments → `Add (<remaining>)`
-/// * N == totalCount    → `Complete Mapping`
-class _CommitBar extends StatelessWidget {
-  const _CommitBar({required this.state, required this.onCommit});
+/// Per the redesign the CTA is enabled at ANY time — partial (or empty)
+/// mapping is allowed. Only disabled while a commit is in flight.
+class _FinishBar extends StatelessWidget {
+  const _FinishBar({required this.isCommitting, required this.onFinish});
 
-  final MapMealsState state;
-  final VoidCallback onCommit;
+  final bool isCommitting;
+  final VoidCallback onFinish;
 
   @override
   Widget build(BuildContext context) {
-    final filled = state.filledCount;
-    final total = state.totalCount;
-    if (filled == 0) return const SizedBox.shrink();
-
-    final isComplete = filled >= total;
-    final label = isComplete ? 'Complete Mapping' : 'Add (${total - filled})';
-    final disabled = state.isCommitting;
-
     return SafeArea(
       top: false,
       child: Padding(
@@ -353,26 +354,18 @@ class _CommitBar extends StatelessWidget {
           AppSizes.pagePaddingH,
           AppSizes.sp12,
         ),
-        child: Semantics(
-          button: true,
-          enabled: !disabled,
-          label: state.isCommitting ? 'Saving meal plan' : label,
-          child: SizedBox(
-            width: double.infinity,
-            height: AppSizes.buttonHeight,
-            child: FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.greenDeep,
-                foregroundColor: AppColors.onGreen,
-                disabledBackgroundColor: AppColors.borderMuted,
-                disabledForegroundColor: AppColors.fgFaint,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-                ),
-              ),
-              onPressed: disabled ? null : onCommit,
-              child: state.isCommitting
-                  ? const ExcludeSemantics(
+        child: isCommitting
+            ? Semantics(
+                button: true,
+                enabled: false,
+                label: 'Saving meal plan',
+                excludeSemantics: true,
+                child: const SizedBox(
+                  height: AppSizes.buttonHeight,
+                  child: Material(
+                    color: AppColors.borderMuted,
+                    shape: StadiumBorder(),
+                    child: Center(
                       child: SizedBox(
                         width: AppSizes.iconSm,
                         height: AppSizes.iconSm,
@@ -381,11 +374,15 @@ class _CommitBar extends StatelessWidget {
                           color: AppColors.onGreen,
                         ),
                       ),
-                    )
-                  : Text(label, style: AppTypography.button),
-            ),
-          ),
-        ),
+                    ),
+                  ),
+                ),
+              )
+            : AppPillButton(
+                label: 'Finish',
+                onPressed: onFinish,
+                identifier: 'map-meals-finish',
+              ),
       ),
     );
   }

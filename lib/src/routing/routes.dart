@@ -14,6 +14,7 @@ import 'package:nibbles/src/features/auth/register/register_screen.dart';
 import 'package:nibbles/src/features/auth/reset_password/reset_password_screen.dart';
 import 'package:nibbles/src/features/home/home_screen.dart';
 import 'package:nibbles/src/features/home/home_shell_screen.dart';
+import 'package:nibbles/src/features/meal_plan/ai/ai_loading_screen.dart';
 import 'package:nibbles/src/features/meal_plan/map/map_meals_screen.dart';
 import 'package:nibbles/src/features/meal_plan/map/map_meals_state.dart';
 import 'package:nibbles/src/features/meal_plan/meal_plan_screen.dart';
@@ -397,6 +398,15 @@ GoRouter goRouter(Ref ref) {
                     builder: (context, state) {
                       final args = state.extra! as MapMealsArgs;
                       return MapMealsScreen(args: args);
+                    },
+                  ),
+                  GoRoute(
+                    path: 'ai-loading',
+                    name: AppRoute.mealPlanAiLoading.name,
+                    parentNavigatorKey: rootNavigatorKey,
+                    builder: (context, state) {
+                      final args = state.extra! as AiLoadingArgs;
+                      return AiLoadingScreen(args: args);
                     },
                   ),
                 ],

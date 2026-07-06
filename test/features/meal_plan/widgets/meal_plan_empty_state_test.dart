@@ -1,38 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
-import 'package:nibbles/src/features/meal_plan/widgets/inline_calendar.dart';
 import 'package:nibbles/src/features/meal_plan/widgets/meal_plan_empty_state.dart';
 import 'package:nibbles/src/features/meal_plan/widgets/meal_plan_header.dart';
-
-const _monthAbbr = [
-  'Jan',
-  'Feb',
-  'Mar',
-  'Apr',
-  'May',
-  'Jun',
-  'Jul',
-  'Aug',
-  'Sep',
-  'Oct',
-  'Nov',
-  'Dec',
-];
-
-String _formatDisplayDate(DateTime d) {
-  return '${_monthAbbr[d.month - 1]} ${d.day}, ${d.year}';
-}
+import 'package:nibbles/src/features/meal_plan/widgets/meal_prep_calendar.dart';
 
 Future<void> _pump(
   WidgetTester tester, {
   required String babyName,
   int ageMonths = 4,
-  ValueChanged<DateTimeRange>? onCreate,
+  ValueChanged<DateTimeRange>? onSetMealPrep,
+  ValueChanged<DateTimeRange>? onFillInMyself,
 }) async {
-  // Give the screen extra height so the CTA + calendars fit in the viewport
-  // without scrolling — keeps taps deterministic.
-  tester.view.physicalSize = const Size(1080, 2800);
+  tester.view.physicalSize = const Size(1080, 3200);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
@@ -42,116 +22,105 @@ Future<void> _pump(
         body: MealPlanEmptyState(
           babyName: babyName,
           ageMonths: ageMonths,
-          onCreateMealPlan: onCreate ?? (_) {},
+          onSetMealPrep: onSetMealPrep ?? (_) {},
+          onFillInMyself: onFillInMyself ?? (_) {},
         ),
       ),
     ),
   );
 }
 
+/// Picks a start + end day via the two inline [MealPrepCalendar]s so the CTAs
+/// become enabled. Uses days 15 → 20 of the focused (current) month.
+Future<void> _pickRange(WidgetTester tester) async {
+  // Open the START field (both fields show the placeholder initially).
+  await tester.tap(find.text('dd/MM/yyyy').first);
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('15').first);
+  await tester.pumpAndSettle();
+
+  // Only the END field still shows the placeholder now.
+  await tester.tap(find.text('dd/MM/yyyy'));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('20').first);
+  await tester.pumpAndSettle();
+}
+
 void main() {
   group('MealPlanEmptyState', () {
-    testWidgets('renders Figma verbatim copy with babyName', (tester) async {
-      await _pump(tester, babyName: 'Oliver');
-
-      // Header from MealPlanHeader.
-      expect(find.byType(MealPlanHeader), findsOneWidget);
-      expect(find.text('Meal Planner for Oliver'), findsOneWidget);
-      expect(find.text('4 Month'), findsOneWidget);
-
-      // Form labels + verbatim caption under the flower.
-      expect(find.text('Start Date'), findsOneWidget);
-      expect(find.text('End Date'), findsOneWidget);
-      expect(find.text("Let's create a meal plan for Oliver!"), findsOneWidget);
-    });
-
-    testWidgets(
-      'CTA is enabled by default — defaults are today + (today + 6 days)',
-      (tester) async {
-        await _pump(tester, babyName: 'Oliver');
-
-        final cta = find.widgetWithText(AppPillButton, 'Create meal plan');
-        expect(cta, findsOneWidget);
-
-        // Enabled on first paint because defaults are populated.
-        expect(tester.widget<AppPillButton>(cta).onPressed, isNotNull);
-      },
-    );
-
-    testWidgets('tapping a date field opens the inline calendar', (
+    testWidgets('renders header + caption + both CTAs (disabled initially)', (
       tester,
     ) async {
       await _pump(tester, babyName: 'Oliver');
 
-      expect(find.byType(InlineCalendar), findsNothing);
+      expect(find.byType(MealPlanHeader), findsOneWidget);
+      expect(find.text('Meal Planner for Oliver'), findsOneWidget);
+      expect(find.text('4 Month'), findsOneWidget);
+      expect(find.text("Let's create meal plan for Oliver!"), findsOneWidget);
 
-      // The field is tappable via its `MMM d, yyyy` value text inside the
-      // GestureDetector. Use today's value to find the Start Date row.
-      final today = DateTime.now();
-      final startText = _formatDisplayDate(
-        DateTime(today.year, today.month, today.day),
-      );
-      await tester.tap(find.text(startText).first);
-      await tester.pumpAndSettle();
-      expect(find.byType(InlineCalendar), findsOneWidget);
+      // Overflow is hidden on the empty state.
+      expect(find.byType(MealPlanOverflowButton), findsNothing);
 
-      // Toggle the same field — should close.
-      await tester.tap(find.text(startText).first);
-      await tester.pumpAndSettle();
-      expect(find.byType(InlineCalendar), findsNothing);
+      final setCta = find.widgetWithText(AppPillButton, 'Set a Meal Prep');
+      final fillCta = find.widgetWithText(AppPillButton, 'Fill in myself');
+      expect(setCta, findsOneWidget);
+      expect(fillCta, findsOneWidget);
+      // Disabled until a valid range is chosen.
+      expect(tester.widget<AppPillButton>(setCta).onPressed, isNull);
+      expect(tester.widget<AppPillButton>(fillCta).onPressed, isNull);
     });
 
-    testWidgets(
-      'picking a Start Date keeps CTA enabled (form auto-bumps end)',
-      (tester) async {
-        DateTimeRange? captured;
-        await _pump(tester, babyName: 'Oliver', onCreate: (r) => captured = r);
+    testWidgets('tapping a date field reveals a MealPrepCalendar', (
+      tester,
+    ) async {
+      await _pump(tester, babyName: 'Oliver');
 
-        final cta = find.widgetWithText(AppPillButton, 'Create meal plan');
-        final today = DateTime.now();
-        final startText = _formatDisplayDate(
-          DateTime(today.year, today.month, today.day),
-        );
+      expect(find.byType(MealPrepCalendar), findsNothing);
+      await tester.tap(find.text('dd/MM/yyyy').first);
+      await tester.pumpAndSettle();
+      expect(find.byType(MealPrepCalendar), findsWidgets);
+    });
 
-        // Open the Start Date inline calendar and pick day 28 of the
-        // focused month (day 28 exists in every month).
-        await tester.tap(find.text(startText).first);
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('28').first);
-        await tester.pumpAndSettle();
+    testWidgets('choosing a range enables the CTAs and "Set a Meal Prep" '
+        'fires onSetMealPrep with the range', (tester) async {
+      DateTimeRange? captured;
+      await _pump(
+        tester,
+        babyName: 'Oliver',
+        onSetMealPrep: (r) => captured = r,
+      );
 
-        // CTA must remain enabled — the form auto-bumps end if needed so
-        // end >= start.
-        expect(
-          tester.widget<AppPillButton>(cta).onPressed,
-          isNotNull,
-          reason: 'Form must auto-bump end so range stays valid.',
-        );
+      await _pickRange(tester);
 
-        await tester.tap(cta);
-        await tester.pumpAndSettle();
-        expect(captured, isNotNull);
-        expect(!captured!.end.isBefore(captured!.start), isTrue);
-      },
-    );
+      final setCta = find.widgetWithText(AppPillButton, 'Set a Meal Prep');
+      expect(tester.widget<AppPillButton>(setCta).onPressed, isNotNull);
 
-    testWidgets(
-      'tapping CTA emits the picked DateTimeRange via onCreateMealPlan',
-      (tester) async {
-        DateTimeRange? captured;
-        await _pump(tester, babyName: 'Oliver', onCreate: (r) => captured = r);
+      await tester.tap(setCta);
+      await tester.pumpAndSettle();
 
-        final cta = find.widgetWithText(AppPillButton, 'Create meal plan');
-        await tester.tap(cta);
-        await tester.pumpAndSettle();
+      expect(captured, isNotNull);
+      expect(!captured!.end.isBefore(captured!.start), isTrue);
+    });
 
-        expect(captured, isNotNull);
-        expect(
-          captured!.end.difference(captured!.start).inDays,
-          6,
-          reason: 'Default end = start + 6 days.',
-        );
-      },
-    );
+    testWidgets('"Fill in myself" fires onFillInMyself with the range', (
+      tester,
+    ) async {
+      DateTimeRange? captured;
+      await _pump(
+        tester,
+        babyName: 'Oliver',
+        onFillInMyself: (r) => captured = r,
+      );
+
+      await _pickRange(tester);
+
+      final fillCta = find.widgetWithText(AppPillButton, 'Fill in myself');
+      expect(tester.widget<AppPillButton>(fillCta).onPressed, isNotNull);
+
+      await tester.tap(fillCta);
+      await tester.pumpAndSettle();
+
+      expect(captured, isNotNull);
+    });
   });
 }

@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nibbles/src/app/constants/allergen_emoji.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
-import 'package:nibbles/src/app/themes/app_typography.dart';
+import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
 import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
@@ -13,6 +13,7 @@ import 'package:nibbles/src/common/services/allergen_service.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/common/services/helpers/derive_allergen_status.dart';
 import 'package:nibbles/src/common/services/recipe_service.dart';
+import 'package:nibbles/src/features/meal_plan/sheets/review_selection_sheet.dart';
 import 'package:nibbles/src/features/meal_plan/sheets/widgets/browse_meal_recipe_card.dart';
 import 'package:nibbles/src/features/meal_plan/sheets/widgets/recommendation_carousel_section.dart';
 import 'package:nibbles/src/logging/analytics.dart';
@@ -205,14 +206,21 @@ class _BrowseMealSheetState extends ConsumerState<_BrowseMealSheet> {
     });
   }
 
-  void _confirm() {
+  /// "Next" → open the review sheet with the current picks. Confirming there
+  /// ("Map Meals") returns the final list up through this sheet; backing out
+  /// of review leaves the browse selection intact.
+  Future<void> _next() async {
     final all = _recipes ?? const <Recipe>[];
     final byId = {for (final r in all) r.id: r};
     final picked = _selectedRecipeIds
         .map((id) => byId[id])
         .whereType<Recipe>()
         .toList();
-    Navigator.of(context).pop(picked);
+    if (picked.isEmpty) return;
+    final confirmed = await showReviewSelectionSheet(context, recipes: picked);
+    if (confirmed != null && mounted) {
+      Navigator.of(context).pop(confirmed);
+    }
   }
 
   List<Recipe> get _searchResults {
@@ -336,10 +344,9 @@ class _BrowseMealSheetState extends ConsumerState<_BrowseMealSheet> {
                 const SizedBox(height: AppSizes.md),
                 Expanded(child: _body()),
                 if (!_loading && _error == null)
-                  _StickyAddBar(
-                    count: _selectedRecipeIds.length,
-                    inReviewMode: _filter != BrowseMealSelectionFilter.none,
-                    onPressed: _selectedRecipeIds.isEmpty ? null : _confirm,
+                  _FooterBar(
+                    onBack: _maybeClose,
+                    onNext: _selectedRecipeIds.isEmpty ? null : _next,
                   ),
               ],
             ),
@@ -618,23 +625,13 @@ class _ErrorPlaceholder extends StatelessWidget {
   }
 }
 
-class _StickyAddBar extends StatelessWidget {
-  const _StickyAddBar({
-    required this.count,
-    required this.inReviewMode,
-    required this.onPressed,
-  });
+/// Sticky Back / Next footer (Figma 971:8264). "Next" advances to the review
+/// sheet; it is disabled until at least one recipe is selected.
+class _FooterBar extends StatelessWidget {
+  const _FooterBar({required this.onBack, required this.onNext});
 
-  final int count;
-  final bool inReviewMode;
-  final VoidCallback? onPressed;
-
-  /// Floating CTA label per ticket NIB-87:
-  ///   * Browse phase  → "Add (N)"
-  ///   * Review phase  → "Mapp Meal Plan" (verbatim Figma copy; PO has the
-  ///     "Map" correction noted as an open question but the bracketed
-  ///     verbatim spelling is required until clarified).
-  String get _label => inReviewMode ? 'Mapp Meal Plan' : 'Add ($count)';
+  final VoidCallback onBack;
+  final VoidCallback? onNext;
 
   @override
   Widget build(BuildContext context) {
@@ -649,23 +646,20 @@ class _StickyAddBar extends StatelessWidget {
         AppSizes.pagePaddingH,
         AppSizes.md,
       ),
-      child: SizedBox(
-        width: double.infinity,
-        height: AppSizes.buttonHeight,
-        child: FilledButton(
-          onPressed: onPressed,
-          style: FilledButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: AppColors.onPrimary,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+      child: Row(
+        children: [
+          Expanded(
+            child: AppPillButton(
+              label: 'Back',
+              variant: AppPillButtonVariant.secondary,
+              onPressed: onBack,
             ),
           ),
-          child: Text(
-            _label,
-            style: AppTypography.button.copyWith(color: AppColors.onPrimary),
+          const SizedBox(width: AppSizes.sm),
+          Expanded(
+            child: AppPillButton(label: 'Next', onPressed: onNext),
           ),
-        ),
+        ],
       ),
     );
   }

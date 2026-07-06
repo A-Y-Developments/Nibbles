@@ -2,23 +2,58 @@ import 'package:flutter/material.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
+import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
 import 'package:nibbles/src/features/meal_plan/widgets/meal_plan_date_range_form.dart';
 
-/// Bottom-sheet variant of the Meal Plan date range form (Figma 971:8000).
-///
-/// Title: 'Select Period Date'. Hosts the same [MealPlanDateRangeForm] used
-/// by the empty state, but with the 'Custom meal plan' CTA per the Figma
-/// frame. Launched from the meal-plan overflow → 'Create new meal prep'
-/// action. Pops with the chosen [DateTimeRange] on submit, or `null` on
+/// Which path the user chose out of the Select Period Date sheet.
+enum MealPrepMode {
+  /// Generate the plan with AI.
+  ai,
+
+  /// Fill the plan in manually (browse → review → map).
+  manual,
+}
+
+/// Result of the Select Period Date sheet: the chosen [mode] plus the
+/// selected [range]. Returned via [showSelectPeriodDateSheet].
+class SelectPeriodResult {
+  const SelectPeriodResult({required this.mode, required this.range});
+
+  final MealPrepMode mode;
+  final DateTimeRange range;
+}
+
+/// Bottom sheet "Select Period Date" (Figma 971:8053). Hosts the shared
+/// [MealPlanDateRangeForm] (two date fields + "N weeks · M days" chip) and a
+/// button pair: primary "Generate with AI" (sparkle) and ghost
+/// "Fill in myself". Launched from the meal-plan overflow →
+/// "Create new meal prep". Pops with a [SelectPeriodResult], or `null` on
 /// dismiss.
-class SelectPeriodDateSheet extends StatelessWidget {
+class SelectPeriodDateSheet extends StatefulWidget {
   const SelectPeriodDateSheet({this.initialStart, this.initialEnd, super.key});
 
   final DateTime? initialStart;
   final DateTime? initialEnd;
 
   @override
+  State<SelectPeriodDateSheet> createState() => _SelectPeriodDateSheetState();
+}
+
+class _SelectPeriodDateSheetState extends State<SelectPeriodDateSheet> {
+  DateTimeRange? _range;
+
+  void _submit(MealPrepMode mode) {
+    final range = _range;
+    if (range == null) return;
+    Navigator.of(
+      context,
+    ).pop(SelectPeriodResult(mode: mode, range: range));
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final hasRange = _range != null;
+
     return SafeArea(
       top: false,
       child: Padding(
@@ -55,10 +90,21 @@ class SelectPeriodDateSheet extends StatelessWidget {
               ),
               const SizedBox(height: AppSizes.md),
               MealPlanDateRangeForm(
-                ctaLabel: 'Custom meal plan',
-                initialStart: initialStart,
-                initialEnd: initialEnd,
-                onSubmit: (range) => Navigator.of(context).pop(range),
+                initialStart: widget.initialStart,
+                initialEnd: widget.initialEnd,
+                onRangeChanged: (range) => setState(() => _range = range),
+              ),
+              const SizedBox(height: AppSizes.lg),
+              AppPillButton(
+                label: 'Generate with AI',
+                leading: const Icon(Icons.auto_awesome),
+                onPressed: hasRange ? () => _submit(MealPrepMode.ai) : null,
+              ),
+              const SizedBox(height: AppSizes.sm),
+              AppPillButton(
+                label: 'Fill in myself',
+                variant: AppPillButtonVariant.ghost,
+                onPressed: hasRange ? () => _submit(MealPrepMode.manual) : null,
               ),
             ],
           ),
@@ -68,14 +114,14 @@ class SelectPeriodDateSheet extends StatelessWidget {
   }
 }
 
-/// Helper that shows [SelectPeriodDateSheet] as a modal bottom sheet.
-/// Returns the chosen [DateTimeRange], or `null` on dismiss.
-Future<DateTimeRange?> showSelectPeriodDateSheet(
+/// Shows [SelectPeriodDateSheet] as a modal bottom sheet. Returns the chosen
+/// [SelectPeriodResult] (mode + range), or `null` on dismiss.
+Future<SelectPeriodResult?> showSelectPeriodDateSheet(
   BuildContext context, {
   DateTime? initialStart,
   DateTime? initialEnd,
 }) {
-  return showModalBottomSheet<DateTimeRange>(
+  return showModalBottomSheet<SelectPeriodResult>(
     context: context,
     isScrollControlled: true,
     backgroundColor: AppColors.surface,
