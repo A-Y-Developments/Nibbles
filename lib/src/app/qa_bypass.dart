@@ -198,6 +198,10 @@ class _QaAllergenRepository implements AllergenRepository {
   ) async => Result.success(detail);
 
   @override
+  Future<Result<void>> deleteReactionDetail(String logId) async =>
+      const Result.success(null);
+
+  @override
   Future<Result<void>> advanceProgramState(
     String babyId,
     String nextAllergenKey,

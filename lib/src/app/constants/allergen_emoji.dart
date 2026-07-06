@@ -1,38 +1,43 @@
 /// Static map of allergen key → emoji string.
-/// Sequence: peanut(1) → egg(2) → dairy(3) → tree_nuts(4) → sesame(5) →
-///           soy(6) → wheat(7) → fish(8) → shellfish(9)
+/// The Big 11 sequence (display order):
+/// milk(1) → walnut(2) → peanut(3) → egg(4) → cashew(5) → wheat(6) →
+/// prawn(7) → fish(8) → sesame(9) → soybean(10) → almond(11)
 ///
-/// Note: sesame and soy share the 🫘 emoji — visual distinction
-/// should be handled at the design layer if needed.
+/// Note: several tree nuts share 🌰 — visual distinction is handled at the
+/// design layer via per-allergen icon assets.
 abstract final class AllergenEmoji {
   static const Map<String, String> map = {
+    'milk': '🥛',
+    'walnut': '🌰',
     'peanut': '🥜',
     'egg': '🥚',
-    'dairy': '🥛',
-    'tree_nuts': '🌰',
-    'sesame': '🫘',
-    'soy': '🫘',
+    'cashew': '🌰',
     'wheat': '🌾',
+    'prawn': '🦐',
     'fish': '🐟',
-    'shellfish': '🦐',
+    'sesame': '🫘',
+    'soybean': '🫘',
+    'almond': '🌰',
   };
 
   /// Returns the emoji for [allergenKey], or an empty string if not found.
   static String get(String allergenKey) => map[allergenKey] ?? '';
 
-  /// Proper-cased display name per allergen key (e.g. 'tree_nuts' →
-  /// 'Tree Nuts'). Single source of truth so casing stays consistent
-  /// app-wide — use instead of ad-hoc `key.replaceAll('_', ' ')`.
+  /// Proper-cased display name per allergen key. Single source of truth so
+  /// casing stays consistent app-wide — use instead of ad-hoc
+  /// `key.replaceAll('_', ' ')`.
   static const Map<String, String> nameMap = {
+    'milk': 'Milk',
+    'walnut': 'Walnut',
     'peanut': 'Peanut',
     'egg': 'Egg',
-    'dairy': 'Dairy',
-    'tree_nuts': 'Tree Nuts',
-    'sesame': 'Sesame',
-    'soy': 'Soy',
+    'cashew': 'Cashew',
     'wheat': 'Wheat',
+    'prawn': 'Prawn',
     'fish': 'Fish',
-    'shellfish': 'Shellfish',
+    'sesame': 'Sesame',
+    'soybean': 'Soybean',
+    'almond': 'Almond',
   };
 
   /// Display name for [allergenKey]; falls back to a humanized key

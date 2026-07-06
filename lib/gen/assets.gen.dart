@@ -120,12 +120,20 @@ class $AssetsIconsNavGen {
 class $AssetsImagesAllergenGen {
   const $AssetsImagesAllergenGen();
 
+  /// File path: assets/images/allergen/allergen_blob.png
+  AssetGenImage get allergenBlob =>
+      const AssetGenImage('assets/images/allergen/allergen_blob.png');
+
+  /// File path: assets/images/allergen/allergen_milk.png
+  AssetGenImage get allergenMilk =>
+      const AssetGenImage('assets/images/allergen/allergen_milk.png');
+
   /// File path: assets/images/allergen/baby_orange.svg
   SvgGenImage get babyOrange =>
       const SvgGenImage('assets/images/allergen/baby_orange.svg');
 
   /// List of all assets
-  List<SvgGenImage> get values => [babyOrange];
+  List<dynamic> get values => [allergenBlob, allergenMilk, babyOrange];
 }
 
 class $AssetsImagesAuthGen {

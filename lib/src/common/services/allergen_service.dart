@@ -174,10 +174,15 @@ class AllergenService {
   /// (P3 — failure is logged to Crashlytics and never propagated, so the
   /// row update is not blocked by a stale photo). The final UPDATE on
   /// allergen_logs always runs once we reach it.
+  ///
+  /// [reactionDetail] reconciles the log's `reaction_details` row: when
+  /// `log.hadReaction` is true it is upserted (delete-then-insert, since
+  /// log_id is UNIQUE); when false any existing reaction detail is removed.
   Future<Result<AllergenLog>> updateAllergenLog({
     required AllergenLog log,
     String? newPhotoLocalPath,
     String? oldPhotoPath,
+    ReactionDetail? reactionDetail,
   }) async {
     var effectiveLog = log;
 
@@ -202,7 +207,24 @@ class AllergenService {
       }
     }
 
-    return _repo.updateLog(effectiveLog);
+    final updateResult = await _repo.updateLog(effectiveLog);
+    if (updateResult.isFailure) return updateResult;
+
+    final clearResult = await _repo.deleteReactionDetail(log.id);
+    if (clearResult.isFailure) {
+      return Result.failure(clearResult.errorOrNull!);
+    }
+
+    if (log.hadReaction && reactionDetail != null) {
+      final detailResult = await _repo.saveReactionDetail(
+        reactionDetail.copyWith(id: '', logId: log.id),
+      );
+      if (detailResult.isFailure) {
+        return Result.failure(detailResult.errorOrNull!);
+      }
+    }
+
+    return updateResult;
   }
 
   /// Deletes an allergen log and its associated photo (if any).

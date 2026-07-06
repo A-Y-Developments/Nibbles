@@ -74,7 +74,7 @@ class AllergenCompleteScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: AppSizes.lg),
                   Text(
-                    '${s.babyName} has passed all 9 allergens! '
+                    '${s.babyName} has passed all 11 allergens! '
                     'Well done.',
                     style: Theme.of(context).textTheme.headlineSmall,
                     textAlign: TextAlign.center,

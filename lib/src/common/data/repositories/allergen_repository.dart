@@ -50,6 +50,11 @@ abstract interface class AllergenRepository {
   /// ALLRG-06: Insert reaction_details row.
   Future<Result<ReactionDetail>> saveReactionDetail(ReactionDetail detail);
 
+  /// Deletes the reaction_details row for [logId] (if any). No-op when the
+  /// log has no reaction detail. Used by the edit flow to clear a reaction
+  /// before re-inserting (log_id is UNIQUE, so this is an upsert primitive).
+  Future<Result<void>> deleteReactionDetail(String logId);
+
   /// ALLRG-07: Advance program state to next allergen.
   Future<Result<void>> advanceProgramState(
     String babyId,
@@ -252,6 +257,18 @@ class AllergenRepositoryImpl implements AllergenRepository {
           .single();
 
       return Result.success(_reactionDetailFromRow(data));
+    } on PostgrestException catch (e) {
+      return Result.failure(ServerException(e.message));
+    } on Object {
+      return const Result.failure(UnknownException());
+    }
+  }
+
+  @override
+  Future<Result<void>> deleteReactionDetail(String logId) async {
+    try {
+      await _supabase.from('reaction_details').delete().eq('log_id', logId);
+      return const Result.success(null);
     } on PostgrestException catch (e) {
       return Result.failure(ServerException(e.message));
     } on Object {

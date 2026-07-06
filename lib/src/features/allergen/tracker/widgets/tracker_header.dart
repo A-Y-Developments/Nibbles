@@ -31,7 +31,7 @@ class TrackerHeader extends StatelessWidget {
   final int notTriedCount;
   final bool showNotTried;
 
-  static const int _totalAllergens = 9;
+  static const int _totalAllergens = 11;
 
   @override
   Widget build(BuildContext context) {
