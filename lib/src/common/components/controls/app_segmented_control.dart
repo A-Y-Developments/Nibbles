@@ -4,7 +4,7 @@ import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 
 /// 2-up segmented control. Mirrors kit components-segmented preview:
-/// track #EAEAEA (borderSoft), radiusMd, active segment greenDeep/cream,
+/// track #EAEAEA (borderSoft), radiusFull (pill), active segment greenDeep/cream,
 /// labels in Parkinsans display 700/15 (kit `var(--font-display)` 700 15px/1).
 class AppSegmentedControl extends StatelessWidget {
   const AppSegmentedControl({
@@ -25,7 +25,7 @@ class AppSegmentedControl extends StatelessWidget {
       padding: const EdgeInsets.all(1),
       decoration: BoxDecoration(
         color: AppColors.borderSoft,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+        borderRadius: BorderRadius.circular(AppSizes.radiusFull),
       ),
       child: Row(
         children: List.generate(segments.length, (i) {
@@ -38,7 +38,7 @@ class AppSegmentedControl extends StatelessWidget {
                 duration: const Duration(milliseconds: 120),
                 decoration: BoxDecoration(
                   color: active ? AppColors.greenDeep : Colors.transparent,
-                  borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+                  borderRadius: BorderRadius.circular(AppSizes.radiusFull),
                 ),
                 alignment: Alignment.center,
                 child: Text(
