@@ -20,6 +20,7 @@ import 'package:nibbles/src/common/domain/enums/gender.dart';
 import 'package:nibbles/src/common/services/allergen_service.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/features/allergen/tracker/allergen_tracker_screen.dart';
+import 'package:nibbles/src/features/allergen/tracker/widgets/allergen_exposure_card.dart';
 import 'package:nibbles/src/features/allergen/tracker/widgets/allergen_progress_card.dart';
 import 'package:nibbles/src/features/allergen/tracker/widgets/start_introduce_card.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
@@ -60,15 +61,17 @@ final _baby = Baby(
 );
 
 const _allergens = [
-  Allergen(key: 'peanut', name: 'Peanut', sequenceOrder: 1, emoji: '🥜'),
-  Allergen(key: 'egg', name: 'Egg', sequenceOrder: 2, emoji: '🥚'),
-  Allergen(key: 'dairy', name: 'Dairy', sequenceOrder: 3, emoji: '🥛'),
-  Allergen(key: 'tree_nuts', name: 'Tree Nuts', sequenceOrder: 4, emoji: '🌰'),
-  Allergen(key: 'sesame', name: 'Sesame', sequenceOrder: 5, emoji: '🫘'),
-  Allergen(key: 'soy', name: 'Soy', sequenceOrder: 6, emoji: '🫘'),
-  Allergen(key: 'wheat', name: 'Wheat', sequenceOrder: 7, emoji: '🌾'),
+  Allergen(key: 'milk', name: 'Milk', sequenceOrder: 1, emoji: '🥛'),
+  Allergen(key: 'walnut', name: 'Walnut', sequenceOrder: 2, emoji: '🌰'),
+  Allergen(key: 'peanut', name: 'Peanut', sequenceOrder: 3, emoji: '🥜'),
+  Allergen(key: 'egg', name: 'Egg', sequenceOrder: 4, emoji: '🥚'),
+  Allergen(key: 'cashew', name: 'Cashew', sequenceOrder: 5, emoji: '🌰'),
+  Allergen(key: 'wheat', name: 'Wheat', sequenceOrder: 6, emoji: '🌾'),
+  Allergen(key: 'prawn', name: 'Prawn', sequenceOrder: 7, emoji: '🦐'),
   Allergen(key: 'fish', name: 'Fish', sequenceOrder: 8, emoji: '🐟'),
-  Allergen(key: 'shellfish', name: 'Shellfish', sequenceOrder: 9, emoji: '🦐'),
+  Allergen(key: 'sesame', name: 'Sesame', sequenceOrder: 9, emoji: '🫘'),
+  Allergen(key: 'soybean', name: 'Soybean', sequenceOrder: 10, emoji: '🫘'),
+  Allergen(key: 'almond', name: 'Almond', sequenceOrder: 11, emoji: '🌰'),
 ];
 
 AllergenLog _makeLog({
@@ -168,54 +171,56 @@ void main() {
   // ---------------------------------------------------------------------------
 
   group('AllergenTrackerScreen board', () {
-    Map<String, AllergenStatus> statusesEggDairySafePeanutFlagged() => {
+    // milk ongoing, walnut + egg safe, peanut flagged, the remaining 7
+    // not-tried → Safe=2, Unsafe=1, Ongoing=1, Not Tried=7.
+    Map<String, AllergenStatus> statusesMixed() => {
+      'milk': AllergenStatus.inProgress,
+      'walnut': AllergenStatus.safe,
       'peanut': AllergenStatus.flagged,
       'egg': AllergenStatus.safe,
-      'dairy': AllergenStatus.safe,
-      'tree_nuts': AllergenStatus.notStarted,
-      'sesame': AllergenStatus.notStarted,
-      'soy': AllergenStatus.notStarted,
-      'wheat': AllergenStatus.notStarted,
-      'fish': AllergenStatus.notStarted,
-      'shellfish': AllergenStatus.notStarted,
+      for (final a in _allergens.where(
+        (a) => !const {'milk', 'walnut', 'peanut', 'egg'}.contains(a.key),
+      ))
+        a.key: AllergenStatus.notStarted,
     };
 
     testWidgets(
-      'Ongoing tab lists in-progress allergens; switching to Big 11 reveals '
-      '9 sections AND Not Tried=6, Safe=2, Unsafe=1 stat columns',
+      'Ongoing tab shows the in-progress allergen hero; switching to Big 11 '
+      'reveals grouped sections AND Not Tried=7, Safe=2, Unsafe=1 stat columns',
       (tester) async {
         final logs = [
+          _makeLog(id: 'm1', allergenKey: 'milk'),
+          _makeLog(id: 'm2', allergenKey: 'milk'),
+          _makeLog(id: 'w1', allergenKey: 'walnut'),
+          _makeLog(id: 'w2', allergenKey: 'walnut'),
+          _makeLog(id: 'w3', allergenKey: 'walnut'),
           _makeLog(id: 'p1', allergenKey: 'peanut', hadReaction: true),
           _makeLog(id: 'e1', allergenKey: 'egg'),
           _makeLog(id: 'e2', allergenKey: 'egg'),
           _makeLog(id: 'e3', allergenKey: 'egg'),
-          _makeLog(id: 'd1', allergenKey: 'dairy'),
-          _makeLog(id: 'd2', allergenKey: 'dairy'),
-          _makeLog(id: 'd3', allergenKey: 'dairy'),
         ];
-        stubReads(statuses: statusesEggDairySafePeanutFlagged(), logs: logs);
+        stubReads(statuses: statusesMixed(), logs: logs);
 
         await tester.pumpWidget(buildSubject(_PushRecorder()));
         await tester.pumpAndSettle();
 
-        // Ongoing tab section header and See All link present.
+        // Ongoing tab: burgundy exposure hero for the in-progress allergen
+        // (milk) + its Reaction Log feed.
         expect(find.text('Allergen Exposure'), findsOneWidget);
-        expect(find.text('See All'), findsOneWidget);
+        expect(find.byType(AllergenExposureCard), findsOneWidget);
         // "Safe foods" stat column is shown on Ongoing tab.
         expect(find.text('Safe foods'), findsOneWidget);
-        // Big 11 stat column is hidden in Ongoing → no Not Tried label.
+        // Big 11-only "Not Tried" stat column is hidden in Ongoing.
         expect(find.text('Not Tried'), findsNothing);
-        // Reaction Log list rendered for the logged entries (may be below
-        // the fold depending on test viewport, so allow off-screen).
         expect(find.text('Reaction Log', skipOffstage: false), findsOneWidget);
 
         // Switch to Big 11 tab.
         await tester.tap(find.text('Big 11'));
         await tester.pumpAndSettle();
 
-        // Big 11 grouped sections.
+        // Big 11 grouped sections — all three headers present.
         expect(find.text('Already Tried'), findsOneWidget);
-        // Big 11 "Ongoing" header is hidden (no in-progress allergens here).
+        expect(find.text('Ongoing'), findsOneWidget);
         expect(find.text('Not Tried'), findsWidgets);
         // SliverList builds lazily — some StartIntroduceCards may be below
         // the fold. skipOffstage: false to include them.
@@ -249,11 +254,10 @@ void main() {
           );
         }
         semantics.dispose();
-        // Stat-column + flagged-card badge now share the canonical "Unsafe"
-        // term (NIB-191), so it appears on the stat and any flagged card.
+        // The flagged card badge uses the canonical "Unsafe" term (NIB-191).
         expect(find.text('Unsafe'), findsWidgets);
-        // Stat-column numeric values: 6 not-tried, 1 flagged, 2 safe.
-        expect(find.text('6'), findsWidgets);
+        // Stat-column numeric values: 7 not-tried, 1 flagged, 2 safe.
+        expect(find.text('7'), findsWidgets);
         expect(find.text('1'), findsWidgets);
         expect(find.text('2'), findsWidgets);
       },
@@ -261,7 +265,7 @@ void main() {
 
     testWidgets(
       'Ongoing tab keeps section scaffolding visible with per-section '
-      'placeholders when there are no exposures or logs',
+      'placeholders when there is no in-progress allergen',
       (tester) async {
         stubReads(
           statuses: {
@@ -276,7 +280,10 @@ void main() {
         expect(find.text('Allergen Exposure'), findsOneWidget);
         expect(find.text('Reaction Log', skipOffstage: false), findsOneWidget);
         // Per-section placeholders sit inside their sections.
-        expect(find.text('No exposures yet'), findsOneWidget);
+        expect(
+          find.text('No allergen is being introduced right now.'),
+          findsOneWidget,
+        );
         expect(
           find.text('No reactions logged yet', skipOffstage: false),
           findsOneWidget,
@@ -284,19 +291,13 @@ void main() {
       },
     );
 
-    testWidgets('Tapping Start Introduce marks the allergen active via the '
-        'service WITHOUT navigating', (tester) async {
+    testWidgets('Tapping Start Introduce opens the pre-introduce sheet '
+        'WITHOUT navigating', (tester) async {
       stubReads(
         statuses: {
           for (final a in _allergens) a.key: AllergenStatus.notStarted,
         },
       );
-      when(
-        () => mockService.startIntroducingAllergen(
-          babyId: any(named: 'babyId'),
-          allergenKey: any(named: 'allergenKey'),
-        ),
-      ).thenAnswer((_) async => const Result.success(null));
 
       final recorder = _PushRecorder();
       await tester.pumpWidget(buildSubject(recorder));
@@ -312,15 +313,10 @@ void main() {
       await tester.tap(firstStart);
       await tester.pumpAndSettle();
 
-      // No navigation occurred — the selection is persisted in place.
+      // The pre-introduce bottom sheet opens (first allergen in order = milk);
+      // the selection is committed inside the sheet, not via a route.
+      expect(find.text('Start Milk for 3 Times'), findsOneWidget);
       expect(recorder.lastName, isNull);
-      // First allergen in sequence order is peanut.
-      verify(
-        () => mockService.startIntroducingAllergen(
-          babyId: _babyId,
-          allergenKey: 'peanut',
-        ),
-      ).called(1);
     });
 
     testWidgets(
@@ -363,41 +359,13 @@ void main() {
     );
 
     testWidgets(
-      'See All link on Ongoing tab switches segment to Big 11 (no nav)',
-      (tester) async {
-        stubReads(
-          statuses: {
-            'peanut': AllergenStatus.safe,
-            for (final a in _allergens.skip(1))
-              a.key: AllergenStatus.notStarted,
-          },
-          logs: [_makeLog(id: 'p1', allergenKey: 'peanut')],
-        );
-
-        await tester.pumpWidget(buildSubject(_PushRecorder()));
-        await tester.pumpAndSettle();
-
-        // Pre-tap: Ongoing tab content is showing the Allergen Exposure header.
-        expect(find.text('Allergen Exposure'), findsOneWidget);
-        expect(find.text('Already Tried'), findsNothing);
-
-        await tester.tap(find.text('See All'));
-        await tester.pumpAndSettle();
-
-        // After tapping See All, Big 11 sections are shown.
-        expect(find.text('Already Tried'), findsOneWidget);
-        expect(find.text('Allergen Exposure'), findsNothing);
-      },
-    );
-
-    testWidgets(
       'Tapping an allergen tile navigates to detail; returning refreshes '
       'the tracker so per-allergen status is not stale',
       (tester) async {
         stubReads(
           statuses: {
             'peanut': AllergenStatus.safe,
-            for (final a in _allergens.skip(1))
+            for (final a in _allergens.where((a) => a.key != 'peanut'))
               a.key: AllergenStatus.notStarted,
           },
           logs: [

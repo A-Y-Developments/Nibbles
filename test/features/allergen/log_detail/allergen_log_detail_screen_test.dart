@@ -168,6 +168,71 @@ void main() {
       },
     );
 
+    testWidgets('3-dot menu exposes "Edit Reaction" + "Delete Log"', (
+      tester,
+    ) async {
+      stubLogs([_makeLog(notes: 'note')]);
+
+      await tester.pumpWidget(buildSubject());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('log_detail_menu')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Edit Reaction'), findsOneWidget);
+      expect(find.text('Delete Log'), findsOneWidget);
+    });
+
+    testWidgets(
+      'Delete opens the confirmation sheet with the "Are you sure" copy + '
+      'Cancel / Delete buttons',
+      (tester) async {
+        stubLogs([_makeLog(notes: 'note')]);
+
+        await tester.pumpWidget(buildSubject());
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byKey(const Key('log_detail_menu')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('log_actions_menu_delete')));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Are you sure you want to delete?'), findsOneWidget);
+        expect(
+          find.byKey(const Key('delete_log_cancel_button')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('delete_log_confirm_button')),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'attachment block renders the photo + Change Picture but NOT the '
+      'title / description captions',
+      (tester) async {
+        stubLogs([
+          _makeLog(
+            attachmentTitle: 'Rash on cheek area',
+            attachmentDescription: 'Appeared 20 minutes after the meal',
+            photoUrl: 'allergen-attachments/$_babyId/p.jpg',
+          ),
+        ]);
+
+        await tester.pumpWidget(buildSubject());
+        await tester.pumpAndSettle();
+
+        expect(find.text('Attachment (Optional)'), findsOneWidget);
+        expect(find.text('Change Picture'), findsOneWidget);
+        // Caption + description are intentionally dropped from the redesigned
+        // attachment block.
+        expect(find.text('Rash on cheek area'), findsNothing);
+        expect(find.text('Appeared 20 minutes after the meal'), findsNothing);
+      },
+    );
+
     testWidgets(
       'Confirming the delete popup calls deleteAllergenLog with the log id + '
       'photo path',

@@ -26,25 +26,22 @@ const _peanutKey = 'peanut';
 final _now = DateTime(2026, 3, 24);
 
 final _allergens = [
-  const Allergen(key: 'peanut', name: 'Peanut', sequenceOrder: 1, emoji: '🥜'),
-  const Allergen(key: 'egg', name: 'Egg', sequenceOrder: 2, emoji: '🥚'),
-  const Allergen(key: 'dairy', name: 'Dairy', sequenceOrder: 3, emoji: '🥛'),
-  const Allergen(
-    key: 'tree_nuts',
-    name: 'Tree Nuts',
-    sequenceOrder: 4,
-    emoji: '🌰',
-  ),
-  const Allergen(key: 'sesame', name: 'Sesame', sequenceOrder: 5, emoji: '🫘'),
-  const Allergen(key: 'soy', name: 'Soy', sequenceOrder: 6, emoji: '🫘'),
-  const Allergen(key: 'wheat', name: 'Wheat', sequenceOrder: 7, emoji: '🌾'),
+  const Allergen(key: 'milk', name: 'Milk', sequenceOrder: 1, emoji: '🥛'),
+  const Allergen(key: 'walnut', name: 'Walnut', sequenceOrder: 2, emoji: '🌰'),
+  const Allergen(key: 'peanut', name: 'Peanut', sequenceOrder: 3, emoji: '🥜'),
+  const Allergen(key: 'egg', name: 'Egg', sequenceOrder: 4, emoji: '🥚'),
+  const Allergen(key: 'cashew', name: 'Cashew', sequenceOrder: 5, emoji: '🌰'),
+  const Allergen(key: 'wheat', name: 'Wheat', sequenceOrder: 6, emoji: '🌾'),
+  const Allergen(key: 'prawn', name: 'Prawn', sequenceOrder: 7, emoji: '🦐'),
   const Allergen(key: 'fish', name: 'Fish', sequenceOrder: 8, emoji: '🐟'),
+  const Allergen(key: 'sesame', name: 'Sesame', sequenceOrder: 9, emoji: '🫘'),
   const Allergen(
-    key: 'shellfish',
-    name: 'Shellfish',
-    sequenceOrder: 9,
-    emoji: '🦐',
+    key: 'soybean',
+    name: 'Soybean',
+    sequenceOrder: 10,
+    emoji: '🫘',
   ),
+  const Allergen(key: 'almond', name: 'Almond', sequenceOrder: 11, emoji: '🌰'),
 ];
 
 AllergenLog _makeLog({
@@ -107,6 +104,12 @@ void main() {
     when(
       () => mockRepo.getProgramState(any()),
     ).thenAnswer((_) async => Result.success(_makeProgramState()));
+
+    // updateAllergenLog reconciles reaction_details by clearing the row first
+    // (Phase 0). Default to a no-op success; reconcile-specific tests override.
+    when(
+      () => mockRepo.deleteReactionDetail(any()),
+    ).thenAnswer((_) async => const Result.success(null));
   });
 
   // ---------------------------------------------------------------------------
@@ -237,7 +240,7 @@ void main() {
   // ---------------------------------------------------------------------------
 
   group('AllergenService.getAllergenBoardSummary', () {
-    test('returns 9 items in sequence order', () async {
+    test('returns 11 items in sequence order', () async {
       when(
         () => mockRepo.getAllergens(),
       ).thenAnswer((_) async => Result.success(_allergens));
@@ -249,9 +252,9 @@ void main() {
 
       expect(result.isSuccess, isTrue);
       final items = result.dataOrNull!;
-      expect(items.length, 9);
-      expect(items.first.allergen.key, 'peanut');
-      expect(items.last.allergen.key, 'shellfish');
+      expect(items.length, 11);
+      expect(items.first.allergen.key, 'milk');
+      expect(items.last.allergen.key, 'almond');
     });
 
     test('logs are correctly bucketed per allergen', () async {
@@ -270,11 +273,11 @@ void main() {
       final items = result.dataOrNull!;
       final peanutItem = items.firstWhere((i) => i.allergen.key == 'peanut');
       final eggItem = items.firstWhere((i) => i.allergen.key == 'egg');
-      final dairyItem = items.firstWhere((i) => i.allergen.key == 'dairy');
+      final milkItem = items.firstWhere((i) => i.allergen.key == 'milk');
 
       expect(peanutItem.logs, hasLength(1));
       expect(eggItem.logs, hasLength(1));
-      expect(dairyItem.logs, isEmpty);
+      expect(milkItem.logs, isEmpty);
     });
 
     test('returns Failure when allergens fetch fails', () async {
@@ -300,17 +303,17 @@ void main() {
         allergenKey: 'egg',
         hadReaction: true,
       );
-      final dairyClean1 = _makeLog(id: 'log-d1', allergenKey: 'dairy');
-      final dairyClean2 = _makeLog(id: 'log-d2', allergenKey: 'dairy');
-      final dairyClean3 = _makeLog(id: 'log-d3', allergenKey: 'dairy');
+      final milkClean1 = _makeLog(id: 'log-m1', allergenKey: 'milk');
+      final milkClean2 = _makeLog(id: 'log-m2', allergenKey: 'milk');
+      final milkClean3 = _makeLog(id: 'log-m3', allergenKey: 'milk');
       final peanutClean = _makeLog(id: 'log-p1');
 
       when(() => mockRepo.getLogs(any())).thenAnswer(
         (_) async => Result.success([
           eggReaction,
-          dairyClean1,
-          dairyClean2,
-          dairyClean3,
+          milkClean1,
+          milkClean2,
+          milkClean3,
           peanutClean,
         ]),
       );
@@ -323,14 +326,14 @@ void main() {
       for (final key in kAllergenKeys) {
         expect(statuses.containsKey(key), isTrue, reason: 'missing $key');
       }
-      // 3 clean dairy logs → safe.
-      expect(statuses['dairy'], AllergenStatus.safe);
+      // 3 clean milk logs → safe.
+      expect(statuses['milk'], AllergenStatus.safe);
       // 1 reaction-flagged egg log → flagged.
       expect(statuses['egg'], AllergenStatus.flagged);
       // 1 clean peanut log → inProgress.
       expect(statuses['peanut'], AllergenStatus.inProgress);
       // Untouched allergens default to notStarted.
-      expect(statuses['shellfish'], AllergenStatus.notStarted);
+      expect(statuses['almond'], AllergenStatus.notStarted);
       expect(statuses['fish'], AllergenStatus.notStarted);
       // Reads logs + program state (the latter powers the "Start Introduce"
       // selection overlay; here no allergen is selected so it's a no-op).
@@ -373,9 +376,9 @@ void main() {
 
     test('blocks with ValidationException when another allergen is in '
         'progress', () async {
-      // dairy has 1 clean log → inProgress, so a new introduction is blocked.
+      // milk has 1 clean log → inProgress, so a new introduction is blocked.
       when(() => mockRepo.getLogs(any())).thenAnswer(
-        (_) async => Result.success([_makeLog(id: 'd1', allergenKey: 'dairy')]),
+        (_) async => Result.success([_makeLog(id: 'm1', allergenKey: 'milk')]),
       );
 
       final result = await sut.startIntroducingAllergen(
@@ -450,9 +453,11 @@ void main() {
     test(
       'advances currentAllergenKey to next in sequence (peanut → egg)',
       () async {
-        when(
-          () => mockRepo.getProgramState(any()),
-        ).thenAnswer((_) async => Result.success(_makeProgramState()));
+        when(() => mockRepo.getProgramState(any())).thenAnswer(
+          (_) async => Result.success(
+            _makeProgramState(currentSequenceOrder: 3),
+          ),
+        );
         when(
           () => mockRepo.getAllergens(),
         ).thenAnswer((_) async => Result.success(_allergens));
@@ -463,19 +468,19 @@ void main() {
         final result = await sut.advanceToNextAllergen(_babyId);
 
         expect(result.isSuccess, isTrue);
-        verify(() => mockRepo.advanceProgramState(_babyId, 'egg', 2)).called(1);
+        verify(() => mockRepo.advanceProgramState(_babyId, 'egg', 4)).called(1);
         verifyNever(() => mockRepo.completeProgramState(any()));
       },
     );
 
     test(
-      'after Shellfish (last allergen) → calls completeProgramState',
+      'after Almond (last allergen) → calls completeProgramState',
       () async {
         when(() => mockRepo.getProgramState(any())).thenAnswer(
           (_) async => Result.success(
             _makeProgramState(
-              currentAllergenKey: 'shellfish',
-              currentSequenceOrder: 9,
+              currentAllergenKey: 'almond',
+              currentSequenceOrder: 11,
             ),
           ),
         );
@@ -653,6 +658,59 @@ void main() {
       expect(recorded, 1);
       verify(() => mockRepo.updateLog(any())).called(1);
     });
+
+    test(
+      'reaction ON: reconciles reaction_details — deletes the row then '
+      're-inserts the supplied detail',
+      () async {
+        final log = _makeLog(hadReaction: true);
+        final detail = ReactionDetail(
+          id: '',
+          logId: '',
+          severity: ReactionSeverity.moderate,
+          symptoms: const ['Hives'],
+          createdAt: _now,
+        );
+        when(
+          () => mockRepo.updateLog(any()),
+        ).thenAnswer((_) async => Result.success(log));
+        when(
+          () => mockRepo.saveReactionDetail(any()),
+        ).thenAnswer((_) async => Result.success(detail.copyWith(id: 'd1')));
+
+        final result = await sut.updateAllergenLog(
+          log: log,
+          reactionDetail: detail,
+        );
+
+        expect(result.isSuccess, isTrue);
+        verify(() => mockRepo.deleteReactionDetail(log.id)).called(1);
+        final saved =
+            verify(
+                  () => mockRepo.saveReactionDetail(captureAny()),
+                ).captured.single
+                as ReactionDetail;
+        // Re-inserted detail is re-parented to the log being updated.
+        expect(saved.logId, log.id);
+        expect(saved.severity, ReactionSeverity.moderate);
+      },
+    );
+
+    test(
+      'reaction OFF: clears reaction_details and never re-inserts a detail',
+      () async {
+        final log = _makeLog();
+        when(
+          () => mockRepo.updateLog(any()),
+        ).thenAnswer((_) async => Result.success(log));
+
+        final result = await sut.updateAllergenLog(log: log);
+
+        expect(result.isSuccess, isTrue);
+        verify(() => mockRepo.deleteReactionDetail(log.id)).called(1);
+        verifyNever(() => mockRepo.saveReactionDetail(any()));
+      },
+    );
   });
 
   // ---------------------------------------------------------------------------

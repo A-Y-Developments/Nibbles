@@ -54,20 +54,22 @@ void main() {
   });
 
   group('kAllergenKeys', () {
-    test('contains all 9 canonical keys in display order', () {
-      expect(kAllergenKeys, hasLength(9));
+    test('contains all 11 canonical keys in display order', () {
+      expect(kAllergenKeys, hasLength(11));
       expect(
         kAllergenKeys,
         equals(const [
+          'milk',
+          'walnut',
           'peanut',
           'egg',
-          'dairy',
-          'tree_nuts',
-          'sesame',
-          'soy',
+          'cashew',
           'wheat',
+          'prawn',
           'fish',
-          'shellfish',
+          'sesame',
+          'soybean',
+          'almond',
         ]),
       );
     });

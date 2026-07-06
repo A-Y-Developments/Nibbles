@@ -19,7 +19,7 @@ part 'allergen_log_controller.g.dart';
 /// (NIB-127).
 ///
 /// Shared between CREATE (new log) and EDIT (existing log) modes. EDIT mode
-/// hydrates state from an existing log via [hydrateForEdit]; submit dispatches
+/// hydrates state from an existing log via [hydrateFromLog]; submit dispatches
 /// to either [AllergenService.saveAllergenLog] or
 /// [AllergenService.updateAllergenLog].
 @Riverpod(keepAlive: true)
@@ -85,62 +85,6 @@ class AllergenLogController extends _$AllergenLogController {
   /// fields empty).
   void reset() =>
       state = AllergenLogState(hydrated: true, logDate: DateTime.now());
-
-  /// Hydrates the controller from an existing [AllergenLog] for EDIT mode.
-  /// Looks up the log via [AllergenService.getLogs] filtered to [logId].
-  ///
-  /// Idempotent — if the controller is already hydrated for [logId] it
-  /// short-circuits so screen rebuilds don't double-fetch.
-  Future<void> hydrateForEdit({
-    required String babyId,
-    required String allergenKey,
-    required String logId,
-  }) async {
-    if (state.hydrated && state.logId == logId) {
-      // Re-entering EDIT for the SAME log: clear any stale `isSaved` left by a
-      // previous save of this log. The controller is keepAlive, so without
-      // this the screen's save-listener trips on the first interaction and
-      // bounces the user out — dropping the second edit + returning a phantom
-      // saved=true.
-      if (state.isSaved) state = state.copyWith(isSaved: false);
-      return;
-    }
-
-    state = state.copyWith(isLoading: true);
-
-    final service = ref.read(allergenServiceProvider);
-    final logsResult = await service.getLogs(babyId, allergenKey: allergenKey);
-    if (logsResult.isFailure) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: "Couldn't load this log. Please try again.",
-      );
-      return;
-    }
-
-    final log = logsResult.dataOrNull!
-        .where((AllergenLog l) => l.id == logId)
-        .firstOrNull;
-    if (log == null) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: "Couldn't load this log. Please try again.",
-      );
-      return;
-    }
-
-    state = AllergenLogState(
-      logId: log.id,
-      hydrated: true,
-      taste: log.emojiTaste,
-      hadReaction: log.hadReaction,
-      notes: log.notes,
-      attachmentTitle: log.attachmentTitle,
-      attachmentDescription: log.attachmentDescription,
-      existingPhotoPath: log.photoUrl,
-      logDate: log.logDate,
-    );
-  }
 
   /// Hydrates the controller directly from an [AllergenLog] the caller already
   /// holds (EDIT mode entry from the reaction sheet). When the log records a
