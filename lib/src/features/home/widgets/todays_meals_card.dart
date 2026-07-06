@@ -91,6 +91,7 @@ class TodaysMealsCard extends StatelessWidget {
                   variant: AppCardVariant.dashed,
                   borderColor: AppColors.lime,
                   borderWidth: 2,
+                  cornerRadius: AppSizes.radiusMd,
                   padding: const EdgeInsets.all(AppSizes.sp12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
