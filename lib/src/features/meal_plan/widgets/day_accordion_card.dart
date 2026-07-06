@@ -4,6 +4,7 @@ import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
+import 'package:nibbles/src/common/components/cards/app_card.dart';
 import 'package:nibbles/src/common/components/chips/app_chip.dart';
 import 'package:nibbles/src/common/domain/entities/meal_plan_entry.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
@@ -13,13 +14,16 @@ enum DayCardMenuAction {
   /// Add this day's recipes to the shopping list.
   addToShopList,
 
-  /// Clear meals for the entire current window.
-  clearCurrentWeek,
+  /// Clear all meals for this single day.
+  clearCurrentDate,
 }
 
-/// Collapsible day card (Figma 971:8570). Renders the date header,
-/// per-card overflow menu, a chevron, and on expand either a list of
-/// recipe rows + a butter "Add" pill OR an empty hint + the same pill.
+/// Collapsible day card (Figma 971:8619 / 971:8571).
+///
+/// A day WITH meals renders a solid card: date header + `⋯` menu + chevron,
+/// and on expand a list of recipe rows + a ghost "Add" pill. A day with NO
+/// meals renders a dashed card with a "No meal plan yet" hint + "Add" pill
+/// (always visible — no chevron).
 class DayAccordionCard extends StatelessWidget {
   const DayAccordionCard({
     required this.day,
@@ -78,11 +82,44 @@ class DayAccordionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isEmpty = entries.isEmpty;
+    const margin = EdgeInsets.symmetric(
+      horizontal: AppSizes.pagePaddingH,
+      vertical: AppSizes.xs,
+    );
+
+    if (isEmpty) {
+      return Padding(
+        padding: margin,
+        child: AppCard(
+          variant: AppCardVariant.dashed,
+          padding: const EdgeInsets.all(AppSizes.cardPadding),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _Header(
+                dateLabel: _dateLabel(),
+                isExpanded: isExpanded,
+                onToggle: onToggle,
+                onMenuSelected: onMenuSelected,
+                showChevron: false,
+              ),
+              const SizedBox(height: AppSizes.sm),
+              _EmptyHint(),
+              const SizedBox(height: AppSizes.sm),
+              AppPillButton(
+                label: 'Add',
+                variant: AppPillButtonVariant.ghost,
+                onPressed: onAdd,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Container(
-      margin: const EdgeInsets.symmetric(
-        horizontal: AppSizes.pagePaddingH,
-        vertical: AppSizes.xs,
-      ),
+      margin: margin,
       padding: const EdgeInsets.all(AppSizes.cardPadding),
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -100,17 +137,13 @@ class DayAccordionCard extends StatelessWidget {
           ),
           if (isExpanded) ...[
             const SizedBox(height: AppSizes.sm),
-            if (entries.isEmpty)
-              _EmptyHint()
-            else
-              _RecipeList(
-                entries: entries,
-                recipes: recipes,
-                flaggedAllergenKeys: flaggedAllergenKeys,
-                onRecipeTap: onRecipeTap,
-              ),
+            _RecipeList(
+              entries: entries,
+              recipes: recipes,
+              flaggedAllergenKeys: flaggedAllergenKeys,
+              onRecipeTap: onRecipeTap,
+            ),
             const SizedBox(height: AppSizes.sm),
-            // Full-width lime "Add" pill (Figma 971:8619, 971:7804).
             AppPillButton(
               label: 'Add',
               variant: AppPillButtonVariant.ghost,
@@ -129,18 +162,20 @@ class _Header extends StatelessWidget {
     required this.isExpanded,
     required this.onToggle,
     required this.onMenuSelected,
+    this.showChevron = true,
   });
 
   final String dateLabel;
   final bool isExpanded;
   final VoidCallback onToggle;
   final ValueChanged<DayCardMenuAction> onMenuSelected;
+  final bool showChevron;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: onToggle,
+      onTap: showChevron ? onToggle : null,
       child: Row(
         children: [
           Expanded(
@@ -165,23 +200,24 @@ class _Header extends StatelessWidget {
                 ),
               ),
               PopupMenuItem<DayCardMenuAction>(
-                value: DayCardMenuAction.clearCurrentWeek,
+                value: DayCardMenuAction.clearCurrentDate,
                 child: _MenuRow(
                   icon: Icons.delete_outline,
-                  label: 'Clear current week',
+                  label: 'Clear current date',
                 ),
               ),
             ],
             child: const _DayCardChip(icon: Icons.more_horiz),
           ),
-          const SizedBox(width: AppSizes.xs),
-          // Green-filled rounded-square chevron button (Figma 971:8619).
-          _DayCardChip(
-            icon: isExpanded
-                ? Icons.keyboard_arrow_up
-                : Icons.keyboard_arrow_down,
-            onTap: onToggle,
-          ),
+          if (showChevron) ...[
+            const SizedBox(width: AppSizes.xs),
+            _DayCardChip(
+              icon: isExpanded
+                  ? Icons.keyboard_arrow_up
+                  : Icons.keyboard_arrow_down,
+              onTap: onToggle,
+            ),
+          ],
         ],
       ),
     );
@@ -244,8 +280,10 @@ class _EmptyHint extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: AppSizes.sm),
       child: Center(
         child: Text(
-          'No meal plan yet.',
-          style: AppTypography.textTheme.titleSmall,
+          'No meal plan yet',
+          style: AppTypography.textTheme.titleSmall?.copyWith(
+            color: AppColors.fgMuted,
+          ),
         ),
       ),
     );
@@ -297,16 +335,19 @@ class _RecipeRow extends StatelessWidget {
   final Set<String> flaggedAllergenKeys;
   final VoidCallback onTap;
 
-  static const _maxVisibleTags = 2;
+  static const _maxNutritionTags = 2;
 
   @override
   Widget build(BuildContext context) {
     final title = recipe?.title ?? '…';
-    final tags = recipe?.allergenTags ?? const <String>[];
-    final visible = tags.take(_maxVisibleTags).toList();
-    final overflow = tags.length - visible.length;
+    final ageRange = recipe?.ageRange;
+    final nutrition = (recipe?.nutritionTags ?? const <String>[])
+        .take(_maxNutritionTags)
+        .toList();
 
-    final flaggedNames = tags
+    // Preserve the flagged-allergen safety cue in the semantics label even
+    // though the visible chips now surface nutrition + age.
+    final flaggedNames = (recipe?.allergenTags ?? const <String>[])
         .where(flaggedAllergenKeys.contains)
         .map(AllergenEmoji.displayName)
         .toList();
@@ -346,18 +387,16 @@ class _RecipeRow extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    if (tags.isNotEmpty) ...[
+                    if (ageRange != null || nutrition.isNotEmpty) ...[
                       const SizedBox(height: AppSizes.xs),
                       Wrap(
                         spacing: AppSizes.xs,
                         runSpacing: AppSizes.xs,
                         children: [
-                          for (final tag in visible)
-                            _AllergenTagChip(
-                              tag: tag,
-                              flagged: flaggedAllergenKeys.contains(tag),
-                            ),
-                          if (overflow > 0) _OverflowChip(count: overflow),
+                          for (final tag in nutrition)
+                            AppChip(label: tag),
+                          if (ageRange != null)
+                            AppChip(label: ageRange, tone: AppChipTone.mute),
                         ],
                       ),
                     ],
@@ -412,34 +451,5 @@ class _ThumbnailPlaceholder extends StatelessWidget {
         color: AppColors.fgFaint,
       ),
     );
-  }
-}
-
-class _AllergenTagChip extends StatelessWidget {
-  const _AllergenTagChip({required this.tag, required this.flagged});
-
-  final String tag;
-  final bool flagged;
-
-  @override
-  Widget build(BuildContext context) {
-    final emoji = AllergenEmoji.get(tag);
-    final name = AllergenEmoji.displayName(tag);
-    return AppChip(
-      label: name,
-      emoji: emoji,
-      tone: flagged ? AppChipTone.flag : AppChipTone.neutral,
-    );
-  }
-}
-
-class _OverflowChip extends StatelessWidget {
-  const _OverflowChip({required this.count});
-
-  final int count;
-
-  @override
-  Widget build(BuildContext context) {
-    return AppChip(label: '+$count');
   }
 }

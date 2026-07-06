@@ -11,43 +11,59 @@ import 'package:nibbles/src/common/domain/entities/recipe.dart';
 /// populated container).
 const _kHelperText = 'Drag & drop or click meals below to add them';
 
-/// "Meals for {Day}" panel for the Map Meals Plan screen (NIB-95).
+/// The `DragTarget` drop-zone body for the Map Meals Plan screen (NIB-95).
 ///
-/// * Empty: dashed-border placeholder card containing
-///   "No Meals Mapped Yet" + a Drag-&-drop helper line (frame 971:8375).
-/// * Populated: cream-tinted dashed container holding one row per
-///   assigned recipe (thumbnail + title + allergen tags + delete_outline
-///   to unassign) — see frames 971:8476 / 971:8511.
+/// * Empty: dashed placeholder card containing "No Meals Mapped Yet" + a
+///   drag-&-drop helper line (frame 971:8375).
+/// * Populated: cream-tinted dashed container holding one card per assigned
+///   recipe instance (thumbnail + title + allergen tags + x to unassign) —
+///   frames 971:8476 / 971:8511. Removal is positional (duplicates allowed).
+/// * While a drag hovers ([isHovering]) the dashed border turns green
+///   (frame 971:8511).
 class SelectedDaySlotList extends StatelessWidget {
   const SelectedDaySlotList({
     required this.recipes,
-    required this.onRemove,
+    required this.onRemoveAt,
+    this.isHovering = false,
     super.key,
   });
 
+  /// Ordered recipes for the selected day (duplicates preserved). Index is the
+  /// removal key passed back through [onRemoveAt].
   final List<Recipe> recipes;
-  final ValueChanged<String> onRemove;
+  final ValueChanged<int> onRemoveAt;
+  final bool isHovering;
 
   @override
   Widget build(BuildContext context) {
+    final borderColor = isHovering ? AppColors.green : AppColors.borderMuted;
     if (recipes.isEmpty) {
-      return const _EmptyDayPlaceholder();
+      return _EmptyDayPlaceholder(borderColor: borderColor);
     }
-    return _PopulatedDayContainer(recipes: recipes, onRemove: onRemove);
+    return _PopulatedDayContainer(
+      recipes: recipes,
+      onRemoveAt: onRemoveAt,
+      borderColor: borderColor,
+    );
   }
 }
 
-/// Cream-tinted dashed container holding the assigned recipe rows.
+/// Cream-tinted dashed container holding the assigned recipe cards.
 class _PopulatedDayContainer extends StatelessWidget {
-  const _PopulatedDayContainer({required this.recipes, required this.onRemove});
+  const _PopulatedDayContainer({
+    required this.recipes,
+    required this.onRemoveAt,
+    required this.borderColor,
+  });
 
   final List<Recipe> recipes;
-  final ValueChanged<String> onRemove;
+  final ValueChanged<int> onRemoveAt;
+  final Color borderColor;
 
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
-      painter: const _DashedBorderPainter(),
+      painter: _DashedBorderPainter(color: borderColor),
       child: Container(
         width: double.infinity,
         decoration: BoxDecoration(
@@ -61,7 +77,7 @@ class _PopulatedDayContainer extends StatelessWidget {
               if (i != 0) const SizedBox(height: AppSizes.sm),
               _AssignedRecipeCard(
                 recipe: recipes[i],
-                onRemove: () => onRemove(recipes[i].id),
+                onRemove: () => onRemoveAt(i),
               ),
             ],
           ],
@@ -74,8 +90,8 @@ class _PopulatedDayContainer extends StatelessWidget {
 /// Recipe card displayed inside a filled day slot.
 ///
 /// Mirrors the Figma frame 971:8476 layout — thumbnail, two-line title,
-/// allergen tag chips, and a trailing `delete_outline` icon that
-/// unassigns the recipe.
+/// allergen tag chips, and a trailing `close` icon that unassigns this
+/// instance.
 class _AssignedRecipeCard extends StatelessWidget {
   const _AssignedRecipeCard({required this.recipe, required this.onRemove});
 
@@ -115,9 +131,9 @@ class _AssignedRecipeCard extends StatelessWidget {
           const SizedBox(width: AppSizes.sm),
           IconButton(
             onPressed: onRemove,
-            tooltip: 'Remove from day',
+            tooltip: 'Remove ${recipe.title} from day',
             icon: const Icon(
-              Icons.delete_outline,
+              Icons.close,
               color: AppColors.fgMuted,
               size: AppSizes.iconMd,
             ),
@@ -187,12 +203,14 @@ class _TagsRow extends StatelessWidget {
 }
 
 class _EmptyDayPlaceholder extends StatelessWidget {
-  const _EmptyDayPlaceholder();
+  const _EmptyDayPlaceholder({required this.borderColor});
+
+  final Color borderColor;
 
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
-      painter: const _DashedBorderPainter(),
+      painter: _DashedBorderPainter(color: borderColor),
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(
@@ -219,12 +237,14 @@ class _EmptyDayPlaceholder extends StatelessWidget {
 }
 
 class _DashedBorderPainter extends CustomPainter {
-  const _DashedBorderPainter();
+  const _DashedBorderPainter({required this.color});
+
+  final Color color;
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = AppColors.borderMuted
+      ..color = color
       ..style = PaintingStyle.stroke
       ..strokeWidth = AppSizes.dividerThickness;
 
@@ -253,5 +273,6 @@ class _DashedBorderPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _DashedBorderPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _DashedBorderPainter oldDelegate) =>
+      oldDelegate.color != color;
 }

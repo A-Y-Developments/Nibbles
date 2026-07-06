@@ -3,6 +3,7 @@ import 'package:nibbles/src/common/data/repositories/meal_plan_repository.dart';
 import 'package:nibbles/src/common/data/repositories/recipe_repository.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
+import 'package:nibbles/src/common/domain/entities/meal_plan.dart';
 import 'package:nibbles/src/common/domain/entities/meal_plan_entry.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -51,6 +52,21 @@ class MealPlanService {
   Future<Result<List<MealPlanEntry>>> getAllEntries(String babyId) =>
       _repo.getAllEntries(babyId);
 
+  /// Returns all meal plan entries for the inclusive `[startDate, endDate]`
+  /// window. Used by the persisted-plan controller to load a plan of arbitrary
+  /// length (unlike [getRolling7], which is fixed at 7 days).
+  Future<Result<List<MealPlanEntry>>> getEntriesInRange(
+    String babyId,
+    DateTime startDate,
+    DateTime endDate,
+  ) =>
+      _repo.getEntriesInRange(babyId, _dateOnly(startDate), _dateOnly(endDate));
+
+  /// Returns every entry owned by [planId] regardless of date, so meals added
+  /// on a "+ Add Date" day past the plan's end still load.
+  Future<Result<List<MealPlanEntry>>> getEntriesForPlan(String planId) =>
+      _repo.getEntriesForPlan(planId);
+
   /// Inserts a new recipe assignment for [planDate].
   /// Multiple meals per day are allowed.
   Future<Result<MealPlanEntry>> assignRecipe(
@@ -70,6 +86,7 @@ class MealPlanService {
     required DateTime startDate,
     required DateTime endDate,
     required List<RecipeAssignment> assignments,
+    String? mealPlanId,
   }) {
     if (assignments.isEmpty) {
       return Future.value(const Result.success([]));
@@ -97,6 +114,7 @@ class MealPlanService {
           recipeId: a.recipeId,
           planDate: start.add(Duration(days: a.dayOffset)),
           mealTime: a.mealTime,
+          mealPlanId: mealPlanId,
         ),
       );
     }
@@ -213,6 +231,20 @@ class MealPlanService {
   /// Deletes all meal plan entries for [babyId] on [date].
   Future<Result<void>> clearDay(String babyId, DateTime date) =>
       _repo.clearDay(babyId, date);
+
+  /// Returns the baby's current persisted plan, or `null` if none.
+  Future<Result<MealPlan?>> getActivePlan(String babyId) =>
+      _repo.getActivePlan(babyId);
+
+  /// Creates a plan for `[start, end]`, replacing any existing plan.
+  Future<Result<MealPlan>> createPlan(
+    String babyId,
+    DateTime start,
+    DateTime end,
+  ) => _repo.createPlan(babyId, _dateOnly(start), _dateOnly(end));
+
+  /// Deletes a plan by ID — cascades its entries.
+  Future<Result<void>> deletePlan(String planId) => _repo.deletePlan(planId);
 
   static DateTime _weekEnd(DateTime weekStart) =>
       weekStart.add(const Duration(days: 6));

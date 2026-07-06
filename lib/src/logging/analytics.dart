@@ -437,6 +437,43 @@ class Analytics {
     );
   }
 
+  Future<void> logMealPlanCreated({required int days}) async {
+    await _logEvent('meal_plan_created', parameters: {'days': days});
+  }
+
+  Future<void> logMealPlanDeleted() async {
+    await _logEvent('meal_plan_deleted');
+  }
+
+  // ---------------------------------------------------------------------------
+  // Meal Prep — AI generation. Non-PII: counts only, no names/notes/IDs.
+  // ---------------------------------------------------------------------------
+
+  Future<void> logMealPrepAiStarted() async {
+    await _logEvent('meal_prep_ai_started');
+  }
+
+  Future<void> logMealPrepAiPreferencesSelected({required int count}) async {
+    await _logEvent(
+      'meal_prep_ai_preferences_selected',
+      parameters: {'count': count},
+    );
+  }
+
+  Future<void> logMealPrepAiGenerated({
+    required int recipeCount,
+    required int dayCount,
+  }) async {
+    await _logEvent(
+      'meal_prep_ai_generated',
+      parameters: {'recipe_count': recipeCount, 'day_count': dayCount},
+    );
+  }
+
+  Future<void> logMealPrepAiFailed() async {
+    await _logEvent('meal_prep_ai_failed');
+  }
+
   // ---------------------------------------------------------------------------
   // Home (NIB-106) — non-PII only: allergen_key + intent taps.
   // ---------------------------------------------------------------------------

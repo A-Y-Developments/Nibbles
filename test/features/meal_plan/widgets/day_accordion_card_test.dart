@@ -20,12 +20,15 @@ MealPlanEntry _entry({
 Recipe _recipe({
   String id = 'r-1',
   String title = 'Peanut Butter Toast',
-  List<String> tags = const ['peanut'],
+  String ageRange = '6m+',
+  List<String> allergenTags = const ['peanut'],
+  List<String> nutritionTags = const ['Iron-Rich'],
 }) => Recipe(
   id: id,
   title: title,
-  ageRange: '6m+',
-  allergenTags: tags,
+  ageRange: ageRange,
+  allergenTags: allergenTags,
+  nutritionTags: nutritionTags,
   ingredients: const [],
   steps: const [],
   howToServe: 'Serve.',
@@ -62,7 +65,9 @@ Future<void> _pumpCard(
 
 void main() {
   group('DayAccordionCard', () {
-    testWidgets('collapsed: header visible, body hidden', (tester) async {
+    testWidgets('non-empty collapsed: header visible, body hidden', (
+      tester,
+    ) async {
       await _pumpCard(
         tester,
         entries: [_entry()],
@@ -70,95 +75,83 @@ void main() {
         isExpanded: false,
       );
 
-      // Header includes the date label e.g. "Saturday, 30 May".
       expect(find.textContaining('30 May'), findsOneWidget);
-      // Body content (recipe title + Add pill) is hidden.
       expect(find.text('Peanut Butter Toast'), findsNothing);
       expect(find.text('Add'), findsNothing);
-      expect(find.text('No meal plan yet.'), findsNothing);
     });
 
-    testWidgets('expanded + entries: recipe row renders with title + tag chips '
+    testWidgets('non-empty expanded: recipe row title + nutrition + age chips '
         '+ Add pill', (tester) async {
       await _pumpCard(
         tester,
         entries: [_entry()],
-        recipes: {
-          'r-1': _recipe(tags: const ['peanut', 'egg']),
-        },
+        recipes: {'r-1': _recipe()},
         isExpanded: true,
       );
 
       expect(find.text('Peanut Butter Toast'), findsOneWidget);
       expect(find.text('Add'), findsOneWidget);
-      // Tag chips render with replaced underscore labels.
-      expect(find.text('Peanut'), findsOneWidget);
-      expect(find.text('Egg'), findsOneWidget);
-      // No empty-state hint.
-      expect(find.text('No meal plan yet.'), findsNothing);
+      // Nutrition + age chips render (allergen chips are no longer shown).
+      expect(find.text('Iron-Rich'), findsOneWidget);
+      expect(find.text('6m+'), findsOneWidget);
     });
 
-    testWidgets(
-      'expanded + entries: 3+ tags renders +N overflow chip after first 2',
-      (tester) async {
-        await _pumpCard(
-          tester,
-          entries: [_entry()],
-          recipes: {
-            'r-1': _recipe(tags: const ['peanut', 'egg', 'dairy', 'soy']),
-          },
-          isExpanded: true,
-        );
+    testWidgets('expanded: only the first 2 nutrition tags render', (
+      tester,
+    ) async {
+      await _pumpCard(
+        tester,
+        entries: [_entry()],
+        recipes: {
+          'r-1': _recipe(
+            nutritionTags: const ['Iron-Rich', 'High Energy', 'Extra'],
+          ),
+        },
+        isExpanded: true,
+      );
 
-        // First 2 tags visible.
-        expect(find.text('Peanut'), findsOneWidget);
-        expect(find.text('Egg'), findsOneWidget);
-        // 4 - 2 = +2 overflow chip.
-        expect(find.text('+2'), findsOneWidget);
-        // Hidden tags should not render their labels.
-        expect(find.text('Dairy'), findsNothing);
-        expect(find.text('Soy'), findsNothing);
-      },
-    );
+      expect(find.text('Iron-Rich'), findsOneWidget);
+      expect(find.text('High Energy'), findsOneWidget);
+      expect(find.text('Extra'), findsNothing);
+    });
 
-    testWidgets('expanded + empty: shows empty hint and Add pill', (
+    testWidgets('empty day: dashed "No meal plan yet" + Add always visible', (
       tester,
     ) async {
       await _pumpCard(
         tester,
         entries: const [],
         recipes: const {},
-        isExpanded: true,
+        isExpanded: false,
       );
 
-      expect(find.text('No meal plan yet.'), findsOneWidget);
+      expect(find.text('No meal plan yet'), findsOneWidget);
       expect(find.text('Add'), findsOneWidget);
     });
 
-    testWidgets('header tap fires onToggle', (tester) async {
+    testWidgets('non-empty header tap fires onToggle', (tester) async {
       var toggled = 0;
       await _pumpCard(
         tester,
-        entries: const [],
-        recipes: const {},
+        entries: [_entry()],
+        recipes: {'r-1': _recipe()},
         isExpanded: false,
         onToggle: () => toggled++,
       );
 
-      // Tap on the header text — the GestureDetector wraps the row.
       await tester.tap(find.textContaining('30 May'));
       await tester.pumpAndSettle();
 
       expect(toggled, 1);
     });
 
-    testWidgets('"Add" pill tap fires onAdd', (tester) async {
+    testWidgets('empty-day "Add" pill tap fires onAdd', (tester) async {
       var added = 0;
       await _pumpCard(
         tester,
         entries: const [],
         recipes: const {},
-        isExpanded: true,
+        isExpanded: false,
         onAdd: () => added++,
       );
 

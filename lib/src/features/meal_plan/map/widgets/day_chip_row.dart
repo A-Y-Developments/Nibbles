@@ -8,16 +8,16 @@ import 'package:nibbles/src/app/themes/app_typography.dart';
 /// Renders one chip per day in `[startDate, endDate]`. Each chip renders
 /// in one of three states (Figma frame 971:8441 / CalendarPerday):
 ///
-/// * Selected (current chip)        — forestdarkn bg / cream text
-/// * Filled (has any assigned meal) — cream bg / forestdarkn text + check
-/// * Not-selected                   — white bg / forestdarkn text
+/// * Selected (current chip)        — forest fill / cream text
+/// * Full (slots for the day met)   — cream fill / forest text + ✓, lime outline
+/// * Not-selected                   — white fill / forest text
 class DayChipRow extends StatelessWidget {
   const DayChipRow({
     required this.startDate,
     required this.endDate,
     required this.selectedDay,
     required this.onSelect,
-    this.filledDays = const <DateTime>{},
+    this.fullDays = const <DateTime>{},
     super.key,
   });
 
@@ -26,9 +26,9 @@ class DayChipRow extends StatelessWidget {
   final DateTime selectedDay;
   final ValueChanged<DateTime> onSelect;
 
-  /// Set of days (date-only) that have at least one assigned meal — used
-  /// to render the "Filled" chip variant.
-  final Set<DateTime> filledDays;
+  /// Set of days (date-only) whose per-day slot target is met — used to
+  /// render the "full" chip variant (✓ + lime outline).
+  final Set<DateTime> fullDays;
 
   static const _weekdayAbbrev = <int, String>{
     DateTime.monday: 'Mon',
@@ -78,11 +78,11 @@ class DayChipRow extends StatelessWidget {
         itemBuilder: (context, index) {
           final day = days[index];
           final isSelected = _isSameDay(day, selectedDay);
-          final isFilled = filledDays.any((d) => _isSameDay(d, day));
+          final isFull = fullDays.any((d) => _isSameDay(d, day));
           return _DayChip(
             day: day,
             isSelected: isSelected,
-            isFilled: isFilled,
+            isFull: isFull,
             onTap: () => onSelect(day),
           );
         },
@@ -95,13 +95,13 @@ class _DayChip extends StatelessWidget {
   const _DayChip({
     required this.day,
     required this.isSelected,
-    required this.isFilled,
+    required this.isFull,
     required this.onTap,
   });
 
   final DateTime day;
   final bool isSelected;
-  final bool isFilled;
+  final bool isFull;
   final VoidCallback onTap;
 
   @override
@@ -116,10 +116,10 @@ class _DayChip extends StatelessWidget {
       bg = AppColors.greenDeep;
       fg = AppColors.onGreen;
       borderColor = AppColors.greenDeep;
-    } else if (isFilled) {
+    } else if (isFull) {
       bg = AppColors.butterSoft;
       fg = AppColors.greenDeep;
-      borderColor = AppColors.greenDeep;
+      borderColor = AppColors.butterDark;
     } else {
       bg = AppColors.surface;
       fg = AppColors.fgDefault;
@@ -149,7 +149,7 @@ class _DayChip extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (isFilled && !isSelected)
+              if (isFull && !isSelected)
                 Icon(Icons.check, color: fg, size: AppSizes.iconSm),
               Text(
                 abbrev,

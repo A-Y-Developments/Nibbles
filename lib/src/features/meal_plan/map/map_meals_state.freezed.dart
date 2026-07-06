@@ -212,7 +212,8 @@ mixin _$MapMealsState {
   DateTime get startDate => throw _privateConstructorUsedError;
   DateTime get endDate => throw _privateConstructorUsedError;
   DateTime get selectedDay => throw _privateConstructorUsedError;
-  Map<String, DateTime> get assignments => throw _privateConstructorUsedError;
+  Map<DateTime, List<String>> get assignments =>
+      throw _privateConstructorUsedError;
   bool get isCommitting => throw _privateConstructorUsedError;
   String? get errorMessage => throw _privateConstructorUsedError;
 
@@ -235,7 +236,7 @@ abstract class $MapMealsStateCopyWith<$Res> {
     DateTime startDate,
     DateTime endDate,
     DateTime selectedDay,
-    Map<String, DateTime> assignments,
+    Map<DateTime, List<String>> assignments,
     bool isCommitting,
     String? errorMessage,
   });
@@ -285,7 +286,7 @@ class _$MapMealsStateCopyWithImpl<$Res, $Val extends MapMealsState>
             assignments: null == assignments
                 ? _value.assignments
                 : assignments // ignore: cast_nullable_to_non_nullable
-                      as Map<String, DateTime>,
+                      as Map<DateTime, List<String>>,
             isCommitting: null == isCommitting
                 ? _value.isCommitting
                 : isCommitting // ignore: cast_nullable_to_non_nullable
@@ -314,7 +315,7 @@ abstract class _$$MapMealsStateImplCopyWith<$Res>
     DateTime startDate,
     DateTime endDate,
     DateTime selectedDay,
-    Map<String, DateTime> assignments,
+    Map<DateTime, List<String>> assignments,
     bool isCommitting,
     String? errorMessage,
   });
@@ -363,7 +364,7 @@ class __$$MapMealsStateImplCopyWithImpl<$Res>
         assignments: null == assignments
             ? _value._assignments
             : assignments // ignore: cast_nullable_to_non_nullable
-                  as Map<String, DateTime>,
+                  as Map<DateTime, List<String>>,
         isCommitting: null == isCommitting
             ? _value.isCommitting
             : isCommitting // ignore: cast_nullable_to_non_nullable
@@ -385,7 +386,8 @@ class _$MapMealsStateImpl extends _MapMealsState {
     required this.startDate,
     required this.endDate,
     required this.selectedDay,
-    final Map<String, DateTime> assignments = const <String, DateTime>{},
+    final Map<DateTime, List<String>> assignments =
+        const <DateTime, List<String>>{},
     this.isCommitting = false,
     this.errorMessage,
   }) : _pickedRecipes = pickedRecipes,
@@ -406,10 +408,10 @@ class _$MapMealsStateImpl extends _MapMealsState {
   final DateTime endDate;
   @override
   final DateTime selectedDay;
-  final Map<String, DateTime> _assignments;
+  final Map<DateTime, List<String>> _assignments;
   @override
   @JsonKey()
-  Map<String, DateTime> get assignments {
+  Map<DateTime, List<String>> get assignments {
     if (_assignments is EqualUnmodifiableMapView) return _assignments;
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableMapView(_assignments);
@@ -477,7 +479,7 @@ abstract class _MapMealsState extends MapMealsState {
     required final DateTime startDate,
     required final DateTime endDate,
     required final DateTime selectedDay,
-    final Map<String, DateTime> assignments,
+    final Map<DateTime, List<String>> assignments,
     final bool isCommitting,
     final String? errorMessage,
   }) = _$MapMealsStateImpl;
@@ -492,7 +494,7 @@ abstract class _MapMealsState extends MapMealsState {
   @override
   DateTime get selectedDay;
   @override
-  Map<String, DateTime> get assignments;
+  Map<DateTime, List<String>> get assignments;
   @override
   bool get isCommitting;
   @override

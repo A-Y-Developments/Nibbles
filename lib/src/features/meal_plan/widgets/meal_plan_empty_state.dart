@@ -3,47 +3,55 @@ import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/brand/brand_flower.dart';
+import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
 import 'package:nibbles/src/features/meal_plan/widgets/meal_plan_date_range_form.dart';
 import 'package:nibbles/src/features/meal_plan/widgets/meal_plan_header.dart';
 
-/// Meal Plan empty-state route (Figma 971:8199 / 971:8547).
+/// Meal Plan empty-state route (Figma 2839:16295 / 2839:15923).
 ///
 /// Layout (top → bottom):
-/// 1. Butter-gradient [MealPlanHeader] (title + age subtitle + overflow).
-/// 2. White rounded form card hosting [MealPlanDateRangeForm] with the
-///    'Create meal plan' CTA.
-/// 3. Brand [BrandFlower] flower illustration.
-/// 4. Caption "Let's create a meal plan for {babyName}!" — the baby name
-///    interpolates the runtime value.
-///
-/// Tapping a date field opens an inline calendar directly below it — never
-/// the OS picker. Hitting the CTA emits a [DateTimeRange] via
-/// [onCreateMealPlan].
-class MealPlanEmptyState extends StatelessWidget {
+/// 1. Butter-gradient [MealPlanHeader] (title + age subtitle). The overflow
+///    `⋯` is HIDDEN in the empty state — creation happens via the card CTAs.
+/// 2. White rounded form card hosting [MealPlanDateRangeForm] (two date fields
+///    + the coral "N weeks · M days" info chip once both dates are set) plus
+///    the CTA pair: primary "Set a Meal Prep" (sparkle → AI flow) and ghost
+///    "Fill in myself" (→ manual flow). Both stay disabled until a valid range
+///    is chosen.
+/// 3. Brand [BrandFlower] + caption "Let's create meal plan for {babyName}!".
+class MealPlanEmptyState extends StatefulWidget {
   const MealPlanEmptyState({
     required this.babyName,
     required this.ageMonths,
-    required this.onCreateMealPlan,
-    this.overflowButton,
+    required this.onSetMealPrep,
+    required this.onFillInMyself,
     super.key,
   });
 
   final String babyName;
   final int ageMonths;
-  final ValueChanged<DateTimeRange> onCreateMealPlan;
 
-  /// Optional overflow button slot — empty state still renders the header,
-  /// so pass a [MealPlanOverflowButton] to enable the screen-level menu.
-  final Widget? overflowButton;
+  /// AI path — fires with the chosen range when "Set a Meal Prep" is tapped.
+  final ValueChanged<DateTimeRange> onSetMealPrep;
+
+  /// Manual path — fires with the chosen range when "Fill in myself" is tapped.
+  final ValueChanged<DateTimeRange> onFillInMyself;
+
+  @override
+  State<MealPlanEmptyState> createState() => _MealPlanEmptyStateState();
+}
+
+class _MealPlanEmptyStateState extends State<MealPlanEmptyState> {
+  DateTimeRange? _range;
 
   @override
   Widget build(BuildContext context) {
+    final range = _range;
     return Column(
       children: [
         MealPlanHeader(
-          babyName: babyName,
-          ageMonths: ageMonths,
-          overflowButton: overflowButton ?? const SizedBox.shrink(),
+          babyName: widget.babyName,
+          ageMonths: widget.ageMonths,
+          overflowButton: const SizedBox.shrink(),
         ),
         Expanded(
           child: SingleChildScrollView(
@@ -57,9 +65,29 @@ class MealPlanEmptyState extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _FormCard(
-                  child: MealPlanDateRangeForm(
-                    ctaLabel: 'Create meal plan',
-                    onSubmit: onCreateMealPlan,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      MealPlanDateRangeForm(
+                        onRangeChanged: (r) => setState(() => _range = r),
+                      ),
+                      const SizedBox(height: AppSizes.md),
+                      AppPillButton(
+                        label: 'Set a Meal Prep',
+                        leading: const Icon(Icons.auto_awesome),
+                        onPressed: range == null
+                            ? null
+                            : () => widget.onSetMealPrep(range),
+                      ),
+                      const SizedBox(height: AppSizes.sm),
+                      AppPillButton(
+                        label: 'Fill in myself',
+                        variant: AppPillButtonVariant.ghost,
+                        onPressed: range == null
+                            ? null
+                            : () => widget.onFillInMyself(range),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: AppSizes.xxl),
@@ -67,7 +95,7 @@ class MealPlanEmptyState extends StatelessWidget {
                 const SizedBox(height: AppSizes.md),
                 Center(
                   child: Text(
-                    "Let's create a meal plan for $babyName!",
+                    "Let's create meal plan for ${widget.babyName}!",
                     textAlign: TextAlign.center,
                     style: AppTypography.emptyStateTitle,
                   ),
@@ -82,8 +110,7 @@ class MealPlanEmptyState extends StatelessWidget {
   }
 }
 
-/// White rounded card with soft shadow that wraps the date-range form
-/// — matches the Figma 971:8199 card around the Start/End/CTA stack.
+/// White rounded card with soft shadow that wraps the date-range form + CTAs.
 class _FormCard extends StatelessWidget {
   const _FormCard({required this.child});
 

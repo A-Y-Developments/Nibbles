@@ -267,6 +267,33 @@ class FakeAnalytics implements Analytics {
       _record('meal_plan_add_to_shop_list', {'day_count': dayCount});
 
   @override
+  Future<void> logMealPlanCreated({required int days}) async =>
+      _record('meal_plan_created', {'days': days});
+
+  @override
+  Future<void> logMealPlanDeleted() async => _record('meal_plan_deleted');
+
+  @override
+  Future<void> logMealPrepAiStarted() async =>
+      _record('meal_prep_ai_started');
+
+  @override
+  Future<void> logMealPrepAiPreferencesSelected({required int count}) async =>
+      _record('meal_prep_ai_preferences_selected', {'count': count});
+
+  @override
+  Future<void> logMealPrepAiGenerated({
+    required int recipeCount,
+    required int dayCount,
+  }) async => _record('meal_prep_ai_generated', {
+    'recipe_count': recipeCount,
+    'day_count': dayCount,
+  });
+
+  @override
+  Future<void> logMealPrepAiFailed() async => _record('meal_prep_ai_failed');
+
+  @override
   Future<void> logHomeOngoingAllergenTapped({
     required String allergenKey,
   }) async =>

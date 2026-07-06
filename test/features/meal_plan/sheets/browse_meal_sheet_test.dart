@@ -231,7 +231,7 @@ void main() {
       expect(find.textContaining('No results for "zzz"'), findsOneWidget);
     });
 
-    testWidgets('"Add (N)" returns picked recipes on Navigator.pop', (
+    testWidgets('Next → review "Map Meals" returns picks on Navigator.pop', (
       tester,
     ) async {
       await openSheet(
@@ -243,11 +243,11 @@ void main() {
       await tester.tap(find.text(_safeA.title).first);
       await tester.pump();
 
-      // CTA reflects the count.
-      expect(find.text('Add (1)'), findsOneWidget);
-
-      await tester.tap(find.text('Add (1)'));
-      // Drive the sheet dismissal animation.
+      // Advance to the review sheet, then confirm with "Map Meals".
+      await tester.tap(find.text('Next'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.tap(find.text('Map Meals'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
 
@@ -334,7 +334,7 @@ void main() {
     );
 
     testWidgets(
-      'tapping selected counter chip toggles review mode + CTA label',
+      'tapping selected counter chip toggles review mode (hides search)',
       (tester) async {
         await openSheet(
           tester,
@@ -346,20 +346,18 @@ void main() {
         await tester.tap(find.text(_safeA.title).first);
         await tester.pump();
 
-        // CTA default label.
-        expect(find.text('Add (1)'), findsOneWidget);
-        expect(find.text('Mapp Meal Plan'), findsNothing);
+        // Browse mode shows the search field.
+        expect(find.text('Search recipe'), findsOneWidget);
 
-        // Enter review mode via the selected pill.
+        // Enter review mode via the selected pill — search + carousels hide.
         await tester.tap(find.text('1 selected'));
         await tester.pump();
 
-        expect(find.text('Mapp Meal Plan'), findsOneWidget);
-        expect(find.text('Add (1)'), findsNothing);
+        expect(find.text('Search recipe'), findsNothing);
       },
     );
 
-    testWidgets('search field uses verbatim "Search recipes" hint', (
+    testWidgets('search field uses verbatim "Search recipe" hint', (
       tester,
     ) async {
       await openSheet(
@@ -368,7 +366,7 @@ void main() {
         flaggedKeys: const {},
       );
 
-      expect(find.text('Search recipes'), findsOneWidget);
+      expect(find.text('Search recipe'), findsOneWidget);
     });
 
     testWidgets('close (X) icon dismisses the sheet with a null result', (

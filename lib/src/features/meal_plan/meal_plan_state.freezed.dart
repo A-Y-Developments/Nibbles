@@ -20,6 +20,7 @@ mixin _$MealPlanState {
   DateTime get windowStart => throw _privateConstructorUsedError;
   DateTime get windowEnd => throw _privateConstructorUsedError;
   List<MealPlanEntry> get entries => throw _privateConstructorUsedError;
+  MealPlan? get plan => throw _privateConstructorUsedError;
   Baby? get baby => throw _privateConstructorUsedError;
   Map<DateTime, bool> get expanded => throw _privateConstructorUsedError;
   Map<String, Recipe> get recipes => throw _privateConstructorUsedError;
@@ -46,6 +47,7 @@ abstract class $MealPlanStateCopyWith<$Res> {
     DateTime windowStart,
     DateTime windowEnd,
     List<MealPlanEntry> entries,
+    MealPlan? plan,
     Baby? baby,
     Map<DateTime, bool> expanded,
     Map<String, Recipe> recipes,
@@ -54,6 +56,7 @@ abstract class $MealPlanStateCopyWith<$Res> {
     AllergenProgramState? programState,
   });
 
+  $MealPlanCopyWith<$Res>? get plan;
   $BabyCopyWith<$Res>? get baby;
   $AllergenBoardItemCopyWith<$Res>? get currentAllergenBoardItem;
   $AllergenProgramStateCopyWith<$Res>? get programState;
@@ -77,6 +80,7 @@ class _$MealPlanStateCopyWithImpl<$Res, $Val extends MealPlanState>
     Object? windowStart = null,
     Object? windowEnd = null,
     Object? entries = null,
+    Object? plan = freezed,
     Object? baby = freezed,
     Object? expanded = null,
     Object? recipes = null,
@@ -98,6 +102,10 @@ class _$MealPlanStateCopyWithImpl<$Res, $Val extends MealPlanState>
                 ? _value.entries
                 : entries // ignore: cast_nullable_to_non_nullable
                       as List<MealPlanEntry>,
+            plan: freezed == plan
+                ? _value.plan
+                : plan // ignore: cast_nullable_to_non_nullable
+                      as MealPlan?,
             baby: freezed == baby
                 ? _value.baby
                 : baby // ignore: cast_nullable_to_non_nullable
@@ -125,6 +133,20 @@ class _$MealPlanStateCopyWithImpl<$Res, $Val extends MealPlanState>
           )
           as $Val,
     );
+  }
+
+  /// Create a copy of MealPlanState
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $MealPlanCopyWith<$Res>? get plan {
+    if (_value.plan == null) {
+      return null;
+    }
+
+    return $MealPlanCopyWith<$Res>(_value.plan!, (value) {
+      return _then(_value.copyWith(plan: value) as $Val);
+    });
   }
 
   /// Create a copy of MealPlanState
@@ -185,6 +207,7 @@ abstract class _$$MealPlanStateImplCopyWith<$Res>
     DateTime windowStart,
     DateTime windowEnd,
     List<MealPlanEntry> entries,
+    MealPlan? plan,
     Baby? baby,
     Map<DateTime, bool> expanded,
     Map<String, Recipe> recipes,
@@ -193,6 +216,8 @@ abstract class _$$MealPlanStateImplCopyWith<$Res>
     AllergenProgramState? programState,
   });
 
+  @override
+  $MealPlanCopyWith<$Res>? get plan;
   @override
   $BabyCopyWith<$Res>? get baby;
   @override
@@ -218,6 +243,7 @@ class __$$MealPlanStateImplCopyWithImpl<$Res>
     Object? windowStart = null,
     Object? windowEnd = null,
     Object? entries = null,
+    Object? plan = freezed,
     Object? baby = freezed,
     Object? expanded = null,
     Object? recipes = null,
@@ -239,6 +265,10 @@ class __$$MealPlanStateImplCopyWithImpl<$Res>
             ? _value._entries
             : entries // ignore: cast_nullable_to_non_nullable
                   as List<MealPlanEntry>,
+        plan: freezed == plan
+            ? _value.plan
+            : plan // ignore: cast_nullable_to_non_nullable
+                  as MealPlan?,
         baby: freezed == baby
             ? _value.baby
             : baby // ignore: cast_nullable_to_non_nullable
@@ -275,6 +305,7 @@ class _$MealPlanStateImpl implements _MealPlanState {
     required this.windowStart,
     required this.windowEnd,
     required final List<MealPlanEntry> entries,
+    this.plan,
     this.baby,
     final Map<DateTime, bool> expanded = const <DateTime, bool>{},
     final Map<String, Recipe> recipes = const <String, Recipe>{},
@@ -298,6 +329,8 @@ class _$MealPlanStateImpl implements _MealPlanState {
     return EqualUnmodifiableListView(_entries);
   }
 
+  @override
+  final MealPlan? plan;
   @override
   final Baby? baby;
   final Map<DateTime, bool> _expanded;
@@ -335,7 +368,7 @@ class _$MealPlanStateImpl implements _MealPlanState {
 
   @override
   String toString() {
-    return 'MealPlanState(windowStart: $windowStart, windowEnd: $windowEnd, entries: $entries, baby: $baby, expanded: $expanded, recipes: $recipes, flaggedAllergenKeys: $flaggedAllergenKeys, currentAllergenBoardItem: $currentAllergenBoardItem, programState: $programState)';
+    return 'MealPlanState(windowStart: $windowStart, windowEnd: $windowEnd, entries: $entries, plan: $plan, baby: $baby, expanded: $expanded, recipes: $recipes, flaggedAllergenKeys: $flaggedAllergenKeys, currentAllergenBoardItem: $currentAllergenBoardItem, programState: $programState)';
   }
 
   @override
@@ -348,6 +381,7 @@ class _$MealPlanStateImpl implements _MealPlanState {
             (identical(other.windowEnd, windowEnd) ||
                 other.windowEnd == windowEnd) &&
             const DeepCollectionEquality().equals(other._entries, _entries) &&
+            (identical(other.plan, plan) || other.plan == plan) &&
             (identical(other.baby, baby) || other.baby == baby) &&
             const DeepCollectionEquality().equals(other._expanded, _expanded) &&
             const DeepCollectionEquality().equals(other._recipes, _recipes) &&
@@ -370,6 +404,7 @@ class _$MealPlanStateImpl implements _MealPlanState {
     windowStart,
     windowEnd,
     const DeepCollectionEquality().hash(_entries),
+    plan,
     baby,
     const DeepCollectionEquality().hash(_expanded),
     const DeepCollectionEquality().hash(_recipes),
@@ -392,6 +427,7 @@ abstract class _MealPlanState implements MealPlanState {
     required final DateTime windowStart,
     required final DateTime windowEnd,
     required final List<MealPlanEntry> entries,
+    final MealPlan? plan,
     final Baby? baby,
     final Map<DateTime, bool> expanded,
     final Map<String, Recipe> recipes,
@@ -406,6 +442,8 @@ abstract class _MealPlanState implements MealPlanState {
   DateTime get windowEnd;
   @override
   List<MealPlanEntry> get entries;
+  @override
+  MealPlan? get plan;
   @override
   Baby? get baby;
   @override

@@ -36,6 +36,10 @@ enum AppRoute {
   home(path: '/home', name: 'home'),
   mealPlan(path: '/home/meal', name: 'meal-plan'),
   mealPlanMap(path: '/home/meal/map', name: 'meal-plan-map'),
+  mealPlanAiLoading(
+    path: '/home/meal/ai-loading',
+    name: 'meal-plan-ai-loading',
+  ),
   shoppingList(path: '/home/shopping-list', name: 'shopping-list'),
   recipeLibrary(path: '/home/recipe', name: 'recipe-library'),
   startingGuide(path: '/home/recipe/guide', name: 'starting-guide'),

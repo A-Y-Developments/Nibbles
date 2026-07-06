@@ -19,9 +19,11 @@ class MapMealsArgs with _$MapMealsArgs {
 
 /// NIB-95 Map Meals Plan screen state.
 ///
-/// `assignments` is `recipeId -> DateTime` (one slot per recipe). The user
-/// taps a picked recipe row to assign it to [selectedDay]; tapping again
-/// after picking a different chip re-assigns it.
+/// `assignments` is a MULTIMAP `day(date-only) -> ordered [recipeId]`. The
+/// picked-recipe palette is REUSABLE: dragging or tapping a picked recipe
+/// COPIES it onto [selectedDay] (appended to that day's list), so the same
+/// recipe can live on many days and a day can hold multiple copies. Removing
+/// a mapped card removes a single instance by its position in the day's list.
 @freezed
 class MapMealsState with _$MapMealsState {
   const factory MapMealsState({
@@ -29,36 +31,58 @@ class MapMealsState with _$MapMealsState {
     required DateTime startDate,
     required DateTime endDate,
     required DateTime selectedDay,
-    @Default(<String, DateTime>{}) Map<String, DateTime> assignments,
+    @Default(<DateTime, List<String>>{})
+    Map<DateTime, List<String>> assignments,
     @Default(false) bool isCommitting,
     String? errorMessage,
   }) = _MapMealsState;
 
   const MapMealsState._();
 
-  /// Number of slots filled (length of [assignments]) — for the AppBar chip.
-  int get filledCount => assignments.length;
+  /// Total number of assigned meal instances across every day — the "X" in
+  /// "X of M slots filled".
+  int get filledCount =>
+      assignments.values.fold(0, (sum, ids) => sum + ids.length);
 
-  /// Total picked recipes — for the AppBar chip's denominator.
-  int get totalCount => pickedRecipes.length;
+  /// Inclusive day count of the `[startDate, endDate]` window.
+  int get dayCount =>
+      _dateOnly(endDate).difference(_dateOnly(startDate)).inDays + 1;
 
-  /// Recipes assigned to [selectedDay].
+  /// Total slot target across the whole window — the "M" in
+  /// "X of M slots filled" — i.e. `dayCount * mealsPerDay`.
+  int totalSlots(int mealsPerDay) => dayCount * mealsPerDay;
+
+  /// Recipe ids assigned to [selectedDay], in insertion order (duplicates
+  /// preserved). Positional — index is the removal key.
+  List<String> recipeIdsForSelectedDay() => List<String>.from(
+    assignments[_dateOnly(selectedDay)] ?? const <String>[],
+  );
+
+  /// Recipes assigned to [selectedDay], expanded from
+  /// [recipeIdsForSelectedDay] preserving order and duplicates.
   List<Recipe> recipesForSelectedDay() {
-    final key = _dateKey(selectedDay);
-    final ids = assignments.entries
-        .where((e) => _dateKey(e.value) == key)
-        .map((e) => e.key)
-        .toSet();
-    return pickedRecipes.where((r) => ids.contains(r.id)).toList();
+    final byId = {for (final r in pickedRecipes) r.id: r};
+    return [
+      for (final id in recipeIdsForSelectedDay())
+        if (byId[id] != null) byId[id]!,
+    ];
   }
 
-  /// Set of days (date-only) that have at least one assignment — drives
-  /// the day-chip "Filled" variant (frame 971:8441).
-  Set<DateTime> filledDays() {
-    return assignments.values
-        .map((d) => DateTime(d.year, d.month, d.day))
-        .toSet();
+  /// Number of meals assigned to [selectedDay] — the "k" in "Meals for
+  /// {Weekday} (k/N)".
+  int assignedCountForSelectedDay() =>
+      assignments[_dateOnly(selectedDay)]?.length ?? 0;
+
+  /// Days whose assigned count meets or exceeds the per-day target — drives
+  /// the day-chip ✓ / "full" variant (frame 971:8441). A [mealsPerDay] of 0
+  /// never marks a day full.
+  Set<DateTime> fullDays(int mealsPerDay) {
+    if (mealsPerDay <= 0) return const <DateTime>{};
+    return {
+      for (final entry in assignments.entries)
+        if (entry.value.length >= mealsPerDay) entry.key,
+    };
   }
 
-  static String _dateKey(DateTime dt) => '${dt.year}-${dt.month}-${dt.day}';
+  static DateTime _dateOnly(DateTime dt) => DateTime(dt.year, dt.month, dt.day);
 }

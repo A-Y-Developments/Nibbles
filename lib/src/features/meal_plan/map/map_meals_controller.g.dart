@@ -29,7 +29,7 @@ final mealPrepCrashRecorderProvider =
 // ignore: unused_element
 typedef MealPrepCrashRecorderRef = ProviderRef<MealPrepCrashRecorderFn>;
 String _$mapMealsControllerHash() =>
-    r'3bd04cb23a21215baf69a349c8514a2adea03309';
+    r'dae52946f556a3de89a67b95f047b3d0918fc3c6';
 
 /// Copied from Dart SDK
 class _SystemHash {

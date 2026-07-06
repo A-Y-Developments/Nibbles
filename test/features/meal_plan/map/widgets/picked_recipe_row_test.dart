@@ -1,6 +1,6 @@
-// a11y coverage for PickedRecipeRow — the bare InkWell tap-to-assign target
-// now exposes a labelled button; the assigned-day badge is surfaced in the
-// accessible name (excludeSemantics would otherwise drop it).
+// a11y + interaction coverage for PickedRecipeRow — the reusable palette row
+// exposes a labelled tap-to-assign button AND is wrapped in a Draggable<Recipe>
+// so it can be dropped onto the day drop-zone.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -28,28 +28,27 @@ void main() {
       _wrap(PickedRecipeRow(recipe: _recipe, onTap: () => tapped = true)),
     );
 
-    expect(find.bySemanticsLabel('Pea Puree'), findsOneWidget);
+    final label = find.bySemanticsLabel(
+      'Pea Puree. Drag or tap to add to the selected day',
+    );
+    expect(label, findsOneWidget);
 
-    await tester.tap(find.bySemanticsLabel('Pea Puree'));
+    await tester.tap(label);
     expect(tapped, isTrue);
 
     handle.dispose();
   });
 
-  testWidgets('assignedLabel is surfaced in the button label', (tester) async {
-    final handle = tester.ensureSemantics();
-
+  testWidgets('is wrapped in a Draggable<Recipe> carrying the recipe', (
+    tester,
+  ) async {
     await tester.pumpWidget(
-      _wrap(
-        PickedRecipeRow(recipe: _recipe, onTap: () {}, assignedLabel: 'Tue 3'),
-      ),
+      _wrap(PickedRecipeRow(recipe: _recipe, onTap: () {})),
     );
 
-    expect(
-      find.bySemanticsLabel('Pea Puree, assigned to Tue 3'),
-      findsOneWidget,
+    final draggable = tester.widget<Draggable<Recipe>>(
+      find.byType(Draggable<Recipe>),
     );
-
-    handle.dispose();
+    expect(draggable.data, _recipe);
   });
 }
