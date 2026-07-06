@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
+import 'package:nibbles/src/common/domain/entities/allergen.dart';
 import 'package:nibbles/src/common/domain/entities/allergen_log.dart';
 import 'package:nibbles/src/common/domain/entities/baby.dart';
 import 'package:nibbles/src/common/domain/entities/meal_plan_entry.dart';
@@ -44,6 +45,13 @@ const _recipe = Recipe(
   howToServe: 'Serve.',
 );
 
+const _milk = Allergen(
+  key: 'milk',
+  name: 'Milk',
+  sequenceOrder: 1,
+  emoji: '🥛',
+);
+
 AllergenLog _log(String allergenKey, {bool hadReaction = false, int n = 0}) =>
     AllergenLog(
       id: 'log-$allergenKey-$n',
@@ -56,7 +64,7 @@ AllergenLog _log(String allergenKey, {bool hadReaction = false, int n = 0}) =>
 
 MealPlanEntry _entry(DateTime date, {String recipeId = 'recipe-1'}) =>
     MealPlanEntry(
-      id: 'entry-$recipeId',
+      id: 'entry-$recipeId-${date.day}',
       babyId: _babyId,
       recipeId: recipeId,
       planDate: date,
@@ -68,11 +76,13 @@ ProviderContainer _makeContainer({
   required _MockMealPlanService mealPlan,
   required _MockRecipeService recipe,
 }) {
-  // HomeController reads program state for the "Start Introduce" selection
-  // overlay. Default to no active selection (failure → null) so derived
-  // statuses are unaffected; tests can override before reading the provider.
+  // Defaults so unrelated derivations don't interfere; individual tests
+  // override before reading the provider.
   when(
     () => allergen.getProgramState(any()),
+  ).thenAnswer((_) async => const Result.failure(UnknownException()));
+  when(
+    () => allergen.getCurrentAllergen(any()),
   ).thenAnswer((_) async => const Result.failure(UnknownException()));
 
   final container = ProviderContainer(
@@ -102,7 +112,7 @@ void main() {
         () => allergen.getLogs(_babyId),
       ).thenAnswer((_) async => const Result.success([]));
       when(
-        () => mealPlan.getRolling7(_babyId),
+        () => mealPlan.getAllEntries(_babyId),
       ).thenAnswer((_) async => const Result.success([]));
 
       final container = _makeContainer(
@@ -117,7 +127,8 @@ void main() {
 
       expect(state.baby, isNull);
       expect(state.allergenStatuses, isEmpty);
-      expect(state.todaysMeals, isEmpty);
+      expect(state.allMeals, isEmpty);
+      expect(state.mealPrepSetUp, isFalse);
     });
   });
 
@@ -133,7 +144,7 @@ void main() {
         (_) async => const Result.failure(ServerException('logs fetch failed')),
       );
       when(
-        () => mealPlan.getRolling7(_babyId),
+        () => mealPlan.getAllEntries(_babyId),
       ).thenAnswer((_) async => const Result.success([]));
 
       final container = _makeContainer(
@@ -149,7 +160,7 @@ void main() {
       );
     });
 
-    test('throws when mealPlan getRolling7 returns Failure', () async {
+    test('throws when mealPlan getAllEntries returns Failure', () async {
       final babyProfile = _MockBabyProfileService();
       final allergen = _MockAllergenService();
       final mealPlan = _MockMealPlanService();
@@ -159,7 +170,7 @@ void main() {
       when(
         () => allergen.getLogs(_babyId),
       ).thenAnswer((_) async => const Result.success([]));
-      when(() => mealPlan.getRolling7(_babyId)).thenAnswer(
+      when(() => mealPlan.getAllEntries(_babyId)).thenAnswer(
         (_) async =>
             const Result.failure(ServerException('meal plan fetch failed')),
       );
@@ -190,7 +201,7 @@ void main() {
         () => allergen.getLogs(_babyId),
       ).thenAnswer((_) async => const Result.success([]));
       when(
-        () => mealPlan.getRolling7(_babyId),
+        () => mealPlan.getAllEntries(_babyId),
       ).thenAnswer((_) async => const Result.success([]));
 
       final container = _makeContainer(
@@ -211,63 +222,7 @@ void main() {
       );
     });
 
-    test('single clean log → allergen inProgress', () async {
-      final babyProfile = _MockBabyProfileService();
-      final allergen = _MockAllergenService();
-      final mealPlan = _MockMealPlanService();
-      final recipe = _MockRecipeService();
-
-      when(babyProfile.getBaby).thenAnswer((_) async => _baby);
-      when(
-        () => allergen.getLogs(_babyId),
-      ).thenAnswer((_) async => Result.success([_log('peanut')]));
-      when(
-        () => mealPlan.getRolling7(_babyId),
-      ).thenAnswer((_) async => const Result.success([]));
-
-      final container = _makeContainer(
-        babyProfile: babyProfile,
-        allergen: allergen,
-        mealPlan: mealPlan,
-        recipe: recipe,
-      );
-      final state = await container.read(
-        homeControllerProvider(_babyId).future,
-      );
-
-      expect(state.allergenStatuses['peanut'], AllergenStatus.inProgress);
-    });
-
-    test('reaction log → allergen flagged', () async {
-      final babyProfile = _MockBabyProfileService();
-      final allergen = _MockAllergenService();
-      final mealPlan = _MockMealPlanService();
-      final recipe = _MockRecipeService();
-
-      when(babyProfile.getBaby).thenAnswer((_) async => _baby);
-      when(() => allergen.getLogs(_babyId)).thenAnswer(
-        (_) async => Result.success([_log('egg', hadReaction: true)]),
-      );
-      when(
-        () => mealPlan.getRolling7(_babyId),
-      ).thenAnswer((_) async => const Result.success([]));
-
-      final container = _makeContainer(
-        babyProfile: babyProfile,
-        allergen: allergen,
-        mealPlan: mealPlan,
-        recipe: recipe,
-      );
-      final state = await container.read(
-        homeControllerProvider(_babyId).future,
-      );
-
-      expect(state.allergenStatuses['egg'], AllergenStatus.flagged);
-    });
-  });
-
-  group('HomeController — log counts', () {
-    test('reaction logs excluded from log count', () async {
+    test('reaction log → allergen flagged and counts exclude it', () async {
       final babyProfile = _MockBabyProfileService();
       final allergen = _MockAllergenService();
       final mealPlan = _MockMealPlanService();
@@ -282,7 +237,7 @@ void main() {
         ]),
       );
       when(
-        () => mealPlan.getRolling7(_babyId),
+        () => mealPlan.getAllEntries(_babyId),
       ).thenAnswer((_) async => const Result.success([]));
 
       final container = _makeContainer(
@@ -295,25 +250,66 @@ void main() {
         homeControllerProvider(_babyId).future,
       );
 
+      expect(state.allergenStatuses['peanut'], AllergenStatus.flagged);
       expect(state.allergenLogCounts['peanut'], 2);
     });
   });
 
-  group('HomeController — meal plan and recipe hydration', () {
-    test('today entry populates todaysMeals and hydrates recipe', () async {
+  group('HomeController — current allergen wiring', () {
+    test('populates current allergen key/status/count', () async {
       final babyProfile = _MockBabyProfileService();
       final allergen = _MockAllergenService();
       final mealPlan = _MockMealPlanService();
       final recipe = _MockRecipeService();
-      final today = DateTime.now();
+
+      when(babyProfile.getBaby).thenAnswer((_) async => _baby);
+      when(
+        () => allergen.getLogs(_babyId),
+      ).thenAnswer((_) async => Result.success([_log('milk')]));
+      when(
+        () => mealPlan.getAllEntries(_babyId),
+      ).thenAnswer((_) async => const Result.success([]));
+
+      final container = _makeContainer(
+        babyProfile: babyProfile,
+        allergen: allergen,
+        mealPlan: mealPlan,
+        recipe: recipe,
+      );
+      // Registered after _makeContainer's any()-default so this specific stub
+      // wins (mocktail resolves to the last matching stub).
+      when(
+        () => allergen.getCurrentAllergen(_babyId),
+      ).thenAnswer((_) async => const Result.success(_milk));
+
+      final state = await container.read(
+        homeControllerProvider(_babyId).future,
+      );
+
+      expect(state.currentAllergenKey, 'milk');
+      expect(state.currentAllergenStatus, AllergenStatus.inProgress);
+      expect(state.currentAllergenCleanCount, 1);
+    });
+  });
+
+  group('HomeController — meals, recipes, plannedDates', () {
+    test('all entries populate allMeals, hydrate recipes, sort dates',
+        () async {
+      final babyProfile = _MockBabyProfileService();
+      final allergen = _MockAllergenService();
+      final mealPlan = _MockMealPlanService();
+      final recipe = _MockRecipeService();
+
+      final d1 = DateTime(2026, 3, 10);
+      final d2 = DateTime(2026, 3, 12);
 
       when(babyProfile.getBaby).thenAnswer((_) async => _baby);
       when(
         () => allergen.getLogs(_babyId),
       ).thenAnswer((_) async => const Result.success([]));
-      when(
-        () => mealPlan.getRolling7(_babyId),
-      ).thenAnswer((_) async => Result.success([_entry(today)]));
+      when(() => mealPlan.getAllEntries(_babyId)).thenAnswer(
+        (_) async => Result.success([_entry(d2), _entry(d1)]),
+      );
       when(
         () => recipe.getRecipeById('recipe-1'),
       ).thenAnswer((_) async => const Result.success(_recipe));
@@ -328,57 +324,27 @@ void main() {
         homeControllerProvider(_babyId).future,
       );
 
-      expect(state.todaysMeals.length, 1);
-      expect(state.todaysRecipes['recipe-1'], _recipe);
+      expect(state.allMeals.length, 2);
+      expect(state.allRecipes['recipe-1'], _recipe);
+      expect(state.plannedDates, [d1, d2]);
+      expect(state.mealPrepSetUp, isTrue);
     });
-
-    test(
-      'future entry excluded from todaysMeals, hasAnyPlannedMeal true',
-      () async {
-        final babyProfile = _MockBabyProfileService();
-        final allergen = _MockAllergenService();
-        final mealPlan = _MockMealPlanService();
-        final recipe = _MockRecipeService();
-        final tomorrow = DateTime.now().add(const Duration(days: 1));
-
-        when(babyProfile.getBaby).thenAnswer((_) async => _baby);
-        when(
-          () => allergen.getLogs(_babyId),
-        ).thenAnswer((_) async => const Result.success([]));
-        when(
-          () => mealPlan.getRolling7(_babyId),
-        ).thenAnswer((_) async => Result.success([_entry(tomorrow)]));
-
-        final container = _makeContainer(
-          babyProfile: babyProfile,
-          allergen: allergen,
-          mealPlan: mealPlan,
-          recipe: recipe,
-        );
-        final state = await container.read(
-          homeControllerProvider(_babyId).future,
-        );
-
-        expect(state.todaysMeals, isEmpty);
-        expect(state.hasAnyPlannedMeal, isTrue);
-      },
-    );
 
     test('failed recipe fetch is silently skipped (P3)', () async {
       final babyProfile = _MockBabyProfileService();
       final allergen = _MockAllergenService();
       final mealPlan = _MockMealPlanService();
       final recipe = _MockRecipeService();
-      final today = DateTime.now();
+      final day = DateTime(2026, 3, 10);
 
       when(babyProfile.getBaby).thenAnswer((_) async => _baby);
       when(
         () => allergen.getLogs(_babyId),
       ).thenAnswer((_) async => const Result.success([]));
-      when(() => mealPlan.getRolling7(_babyId)).thenAnswer(
+      when(() => mealPlan.getAllEntries(_babyId)).thenAnswer(
         (_) async => Result.success([
-          _entry(today),
-          _entry(today, recipeId: 'recipe-2'),
+          _entry(day),
+          _entry(day, recipeId: 'recipe-2'),
         ]),
       );
       when(
@@ -398,12 +364,12 @@ void main() {
         homeControllerProvider(_babyId).future,
       );
 
-      expect(state.todaysMeals.length, 2);
-      expect(state.todaysRecipes.containsKey('recipe-1'), isTrue);
-      expect(state.todaysRecipes.containsKey('recipe-2'), isFalse);
+      expect(state.allMeals.length, 2);
+      expect(state.allRecipes.containsKey('recipe-1'), isTrue);
+      expect(state.allRecipes.containsKey('recipe-2'), isFalse);
     });
 
-    test('empty rolling window skips recipeService entirely', () async {
+    test('empty entries skip recipeService entirely', () async {
       final babyProfile = _MockBabyProfileService();
       final allergen = _MockAllergenService();
       final mealPlan = _MockMealPlanService();
@@ -414,7 +380,7 @@ void main() {
         () => allergen.getLogs(_babyId),
       ).thenAnswer((_) async => const Result.success([]));
       when(
-        () => mealPlan.getRolling7(_babyId),
+        () => mealPlan.getAllEntries(_babyId),
       ).thenAnswer((_) async => const Result.success([]));
 
       final container = _makeContainer(

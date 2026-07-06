@@ -692,4 +692,36 @@ void main() {
       expect(result.isFailure, isTrue);
     });
   });
+
+  // ---------------------------------------------------------------------------
+  // getAllEntries
+  // ---------------------------------------------------------------------------
+
+  group('MealPlanService.getAllEntries', () {
+    test('delegates to repo and returns entries', () async {
+      final entries = [
+        _makeEntry(),
+        _makeEntry(id: 'e2', recipeId: 'r2'),
+      ];
+      when(
+        () => mockMealPlanRepo.getAllEntries(any()),
+      ).thenAnswer((_) async => Result.success(entries));
+
+      final result = await sut.getAllEntries(_babyId);
+
+      expect(result.isSuccess, isTrue);
+      expect(result.dataOrNull, entries);
+      verify(() => mockMealPlanRepo.getAllEntries(_babyId)).called(1);
+    });
+
+    test('propagates repo failure', () async {
+      when(() => mockMealPlanRepo.getAllEntries(any())).thenAnswer(
+        (_) async => const Result.failure(ServerException('DB error')),
+      );
+
+      final result = await sut.getAllEntries(_babyId);
+
+      expect(result.isFailure, isTrue);
+    });
+  });
 }

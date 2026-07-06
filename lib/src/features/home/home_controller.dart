@@ -2,6 +2,7 @@ import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/domain/entities/allergen_log.dart';
 import 'package:nibbles/src/common/domain/entities/meal_plan_entry.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
+import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
 import 'package:nibbles/src/common/services/allergen_service.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/common/services/helpers/derive_allergen_status.dart';
@@ -12,22 +13,21 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'home_controller.g.dart';
 
-/// NIB-86: Redesigned Home dashboard controller (extended for NIB-77).
+/// Home redesign controller. Fetches the FULL dataset once so per-day slices
+/// (see `homeDayViewProvider`) are pure client-side derivations.
 ///
 /// Parallel-fetches:
-///  1. The current baby profile (NIB-65 header + greeting).
-///  2. Per-allergen logs (NIB-126 status derivation + NIB-77 log counts
-///     for the ongoing card "X/3 times" subhead and segment fill).
-///  3. Rolling-7 meal plan entries (NIB-59), filtered to today.
+///  1. Baby profile (greeting + age for guidance).
+///  2. Allergen logs (status derivation + clean counts).
+///  3. Program state (the "Start Introduce" selection overlay).
+///  4. The current/active allergen (hero allergen widget).
+///  5. ALL meal plan entries (mealPrepSetUp, plannedDates, day slices).
 ///
-/// After the meal-plan entries resolve, the controller hydrates each unique
-/// `recipeId` into a [Recipe] map so the today's-meals card can render
-/// recipe titles + allergen/nutrition chips. Recipe fetch failures are P3 —
-/// the controller falls back to a partial map without throwing.
-///
-/// A missing baby is NOT an error — the screen renders the full empty-state
-/// placeholder. Allergen or meal-plan fetch failures throw via the existing
-/// pattern and surface as `AsyncValue.error`.
+/// After entries resolve, every unique `recipeId` is hydrated into a [Recipe]
+/// map. Recipe fetch failures are P3 (skipped). A missing baby is NOT an error
+/// — an empty [HomeState] is returned. Allergen-log and meal-plan fetch
+/// failures throw and surface as `AsyncValue.error`. A failed current-allergen
+/// or program-state read degrades gracefully (no hero key / no overlay).
 @riverpod
 class HomeController extends _$HomeController {
   @override
@@ -35,41 +35,35 @@ class HomeController extends _$HomeController {
     final babyFut = ref.read(babyProfileServiceProvider).getBaby();
     final logsFut = ref.read(allergenServiceProvider).getLogs(babyId);
     final stateFut = ref.read(allergenServiceProvider).getProgramState(babyId);
-    final mealsFut = ref.read(mealPlanServiceProvider).getRolling7(babyId);
+    final currentFut = ref
+        .read(allergenServiceProvider)
+        .getCurrentAllergen(babyId);
+    final mealsFut = ref.read(mealPlanServiceProvider).getAllEntries(babyId);
 
     final baby = await babyFut;
     final logsResult = await logsFut;
     final stateResult = await stateFut;
+    final currentResult = await currentFut;
     final mealsResult = await mealsFut;
 
-    if (baby == null) {
-      // Empty-state path: no baby yet — surface a successful, empty state so
-      // the screen can render the empty-state placeholder rather than an error.
-      return const HomeState();
-    }
+    if (baby == null) return const HomeState();
 
     if (logsResult.isFailure) throw logsResult.errorOrNull!;
     if (mealsResult.isFailure) throw mealsResult.errorOrNull!;
 
     final allLogs = logsResult.dataOrNull ?? const <AllergenLog>[];
-    final rolling = mealsResult.dataOrNull ?? const <MealPlanEntry>[];
+    final allMeals = mealsResult.dataOrNull ?? const <MealPlanEntry>[];
 
     final logsByKey = <String, List<AllergenLog>>{};
     for (final log in allLogs) {
       (logsByKey[log.allergenKey] ??= <AllergenLog>[]).add(log);
     }
 
-    // Mirrors the tracker: the actively-introduced allergen ("Start
-    // Introduce") shows as inProgress before any log exists. A failed
-    // program-state read degrades to no overlay.
     final statuses = deriveStatusesWithSelection(
       logsByKey: logsByKey,
       selectedAllergenKey: stateResult.dataOrNull?.selectedAllergenKey,
     );
 
-    // Clean-log counts feed the ongoing card "X/3 times" + segment fill.
-    // Reactions never advance the count — they flip the allergen to flagged
-    // which suppresses the ongoing card entirely.
     final logCounts = {
       for (final key in kAllergenKeys)
         key: (logsByKey[key] ?? const <AllergenLog>[])
@@ -77,26 +71,39 @@ class HomeController extends _$HomeController {
             .length,
     };
 
-    final today = DateTime.now();
-    final todaysMeals = rolling
-        .where((e) => _isSameDay(e.planDate, today))
-        .toList(growable: false);
+    final currentKey = currentResult.dataOrNull?.key;
+    final currentStatus = currentKey == null
+        ? AllergenStatus.notStarted
+        : statuses[currentKey] ?? AllergenStatus.notStarted;
+    final currentClean = currentKey == null ? 0 : logCounts[currentKey] ?? 0;
 
-    final recipes = await _hydrateRecipes(todaysMeals);
+    final plannedDates = _plannedDates(allMeals);
+    final recipes = await _hydrateRecipes(allMeals);
 
     return HomeState(
       baby: baby,
+      allMeals: allMeals,
+      allRecipes: recipes,
+      plannedDates: plannedDates,
       allergenStatuses: statuses,
       allergenLogCounts: logCounts,
-      todaysMeals: todaysMeals,
-      todaysRecipes: recipes,
-      hasAnyPlannedMeal: rolling.isNotEmpty,
+      currentAllergenKey: currentKey,
+      currentAllergenStatus: currentStatus,
+      currentAllergenCleanCount: currentClean,
     );
   }
 
+  /// Sorted, unique date-only days that carry at least one meal.
+  List<DateTime> _plannedDates(List<MealPlanEntry> entries) {
+    final days = <DateTime>{
+      for (final e in entries)
+        DateTime(e.planDate.year, e.planDate.month, e.planDate.day),
+    };
+    return days.toList()..sort();
+  }
+
   /// Resolve each unique `recipeId` referenced by [entries] to its [Recipe].
-  /// Failed lookups are silently skipped (P3 — the meal row falls back to
-  /// the meal-time label) so a single bad id doesn't kill the dashboard.
+  /// Failed lookups are silently skipped (P3).
   Future<Map<String, Recipe>> _hydrateRecipes(
     List<MealPlanEntry> entries,
   ) async {
@@ -119,6 +126,3 @@ class HomeController extends _$HomeController {
     return out;
   }
 }
-
-bool _isSameDay(DateTime a, DateTime b) =>
-    a.year == b.year && a.month == b.month && a.day == b.day;

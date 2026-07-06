@@ -243,6 +243,10 @@ class $AssetsImagesHomeGen {
   SvgGenImage get heroBackdrop =>
       const SvgGenImage('assets/images/home/hero_backdrop.svg');
 
+  /// File path: assets/images/home/hero_bowl.png
+  AssetGenImage get heroBowl =>
+      const AssetGenImage('assets/images/home/hero_bowl.png');
+
   /// File path: assets/images/home/hero_cloud.svg
   SvgGenImage get heroCloud =>
       const SvgGenImage('assets/images/home/hero_cloud.svg');
@@ -256,10 +260,11 @@ class $AssetsImagesHomeGen {
       const SvgGenImage('assets/images/home/tip_info.svg');
 
   /// List of all assets
-  List<SvgGenImage> get values => [
+  List<dynamic> get values => [
     allergenMilk,
     guidanceBaby,
     heroBackdrop,
+    heroBowl,
     heroCloud,
     tipBulb,
     tipInfo,

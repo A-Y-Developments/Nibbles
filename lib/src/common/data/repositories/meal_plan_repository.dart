@@ -41,6 +41,10 @@ abstract interface class MealPlanRepository {
     DateTime endDate,
   );
 
+  /// Fetch every meal_plan_entry for [babyId], ordered by plan_date.
+  /// Backs the Home redesign's full dataset (mealPrepSetUp, plannedDates).
+  Future<Result<List<MealPlanEntry>>> getAllEntries(String babyId);
+
   /// MEAL-02: Insert a new meal entry for [planDate].
   /// Multiple entries per day are allowed.
   Future<Result<MealPlanEntry>> assignRecipe(
@@ -102,6 +106,28 @@ class MealPlanRepositoryImpl implements MealPlanRepository {
           .eq('baby_id', babyId)
           .gte('plan_date', _formatDate(startDate))
           .lte('plan_date', _formatDate(endDate))
+          .order('plan_date');
+
+      return Result.success(
+        (data as List<dynamic>)
+            .cast<Map<String, dynamic>>()
+            .map(_entryFromRow)
+            .toList(),
+      );
+    } on PostgrestException catch (e) {
+      return Result.failure(ServerException(e.message));
+    } on Object {
+      return const Result.failure(UnknownException());
+    }
+  }
+
+  @override
+  Future<Result<List<MealPlanEntry>>> getAllEntries(String babyId) async {
+    try {
+      final data = await _supabase
+          .from('meal_plan_entries')
+          .select()
+          .eq('baby_id', babyId)
           .order('plan_date');
 
       return Result.success(

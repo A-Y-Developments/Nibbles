@@ -6,7 +6,7 @@ part of 'home_controller.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$homeControllerHash() => r'552c2447ace9be435e855355746296c0bdfd6758';
+String _$homeControllerHash() => r'608a99151b6d36badce16c88599704a9fb32d2e4';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -36,82 +36,78 @@ abstract class _$HomeController
   FutureOr<HomeState> build(String babyId);
 }
 
-/// NIB-86: Redesigned Home dashboard controller (extended for NIB-77).
+/// Home redesign controller. Fetches the FULL dataset once so per-day slices
+/// (see `homeDayViewProvider`) are pure client-side derivations.
 ///
 /// Parallel-fetches:
-///  1. The current baby profile (NIB-65 header + greeting).
-///  2. Per-allergen logs (NIB-126 status derivation + NIB-77 log counts
-///     for the ongoing card "X/3 times" subhead and segment fill).
-///  3. Rolling-7 meal plan entries (NIB-59), filtered to today.
+///  1. Baby profile (greeting + age for guidance).
+///  2. Allergen logs (status derivation + clean counts).
+///  3. Program state (the "Start Introduce" selection overlay).
+///  4. The current/active allergen (hero allergen widget).
+///  5. ALL meal plan entries (mealPrepSetUp, plannedDates, day slices).
 ///
-/// After the meal-plan entries resolve, the controller hydrates each unique
-/// `recipeId` into a [Recipe] map so the today's-meals card can render
-/// recipe titles + allergen/nutrition chips. Recipe fetch failures are P3 —
-/// the controller falls back to a partial map without throwing.
-///
-/// A missing baby is NOT an error — the screen renders the full empty-state
-/// placeholder. Allergen or meal-plan fetch failures throw via the existing
-/// pattern and surface as `AsyncValue.error`.
+/// After entries resolve, every unique `recipeId` is hydrated into a [Recipe]
+/// map. Recipe fetch failures are P3 (skipped). A missing baby is NOT an error
+/// — an empty [HomeState] is returned. Allergen-log and meal-plan fetch
+/// failures throw and surface as `AsyncValue.error`. A failed current-allergen
+/// or program-state read degrades gracefully (no hero key / no overlay).
 ///
 /// Copied from [HomeController].
 @ProviderFor(HomeController)
 const homeControllerProvider = HomeControllerFamily();
 
-/// NIB-86: Redesigned Home dashboard controller (extended for NIB-77).
+/// Home redesign controller. Fetches the FULL dataset once so per-day slices
+/// (see `homeDayViewProvider`) are pure client-side derivations.
 ///
 /// Parallel-fetches:
-///  1. The current baby profile (NIB-65 header + greeting).
-///  2. Per-allergen logs (NIB-126 status derivation + NIB-77 log counts
-///     for the ongoing card "X/3 times" subhead and segment fill).
-///  3. Rolling-7 meal plan entries (NIB-59), filtered to today.
+///  1. Baby profile (greeting + age for guidance).
+///  2. Allergen logs (status derivation + clean counts).
+///  3. Program state (the "Start Introduce" selection overlay).
+///  4. The current/active allergen (hero allergen widget).
+///  5. ALL meal plan entries (mealPrepSetUp, plannedDates, day slices).
 ///
-/// After the meal-plan entries resolve, the controller hydrates each unique
-/// `recipeId` into a [Recipe] map so the today's-meals card can render
-/// recipe titles + allergen/nutrition chips. Recipe fetch failures are P3 —
-/// the controller falls back to a partial map without throwing.
-///
-/// A missing baby is NOT an error — the screen renders the full empty-state
-/// placeholder. Allergen or meal-plan fetch failures throw via the existing
-/// pattern and surface as `AsyncValue.error`.
+/// After entries resolve, every unique `recipeId` is hydrated into a [Recipe]
+/// map. Recipe fetch failures are P3 (skipped). A missing baby is NOT an error
+/// — an empty [HomeState] is returned. Allergen-log and meal-plan fetch
+/// failures throw and surface as `AsyncValue.error`. A failed current-allergen
+/// or program-state read degrades gracefully (no hero key / no overlay).
 ///
 /// Copied from [HomeController].
 class HomeControllerFamily extends Family<AsyncValue<HomeState>> {
-  /// NIB-86: Redesigned Home dashboard controller (extended for NIB-77).
+  /// Home redesign controller. Fetches the FULL dataset once so per-day slices
+  /// (see `homeDayViewProvider`) are pure client-side derivations.
   ///
   /// Parallel-fetches:
-  ///  1. The current baby profile (NIB-65 header + greeting).
-  ///  2. Per-allergen logs (NIB-126 status derivation + NIB-77 log counts
-  ///     for the ongoing card "X/3 times" subhead and segment fill).
-  ///  3. Rolling-7 meal plan entries (NIB-59), filtered to today.
+  ///  1. Baby profile (greeting + age for guidance).
+  ///  2. Allergen logs (status derivation + clean counts).
+  ///  3. Program state (the "Start Introduce" selection overlay).
+  ///  4. The current/active allergen (hero allergen widget).
+  ///  5. ALL meal plan entries (mealPrepSetUp, plannedDates, day slices).
   ///
-  /// After the meal-plan entries resolve, the controller hydrates each unique
-  /// `recipeId` into a [Recipe] map so the today's-meals card can render
-  /// recipe titles + allergen/nutrition chips. Recipe fetch failures are P3 —
-  /// the controller falls back to a partial map without throwing.
-  ///
-  /// A missing baby is NOT an error — the screen renders the full empty-state
-  /// placeholder. Allergen or meal-plan fetch failures throw via the existing
-  /// pattern and surface as `AsyncValue.error`.
+  /// After entries resolve, every unique `recipeId` is hydrated into a [Recipe]
+  /// map. Recipe fetch failures are P3 (skipped). A missing baby is NOT an error
+  /// — an empty [HomeState] is returned. Allergen-log and meal-plan fetch
+  /// failures throw and surface as `AsyncValue.error`. A failed current-allergen
+  /// or program-state read degrades gracefully (no hero key / no overlay).
   ///
   /// Copied from [HomeController].
   const HomeControllerFamily();
 
-  /// NIB-86: Redesigned Home dashboard controller (extended for NIB-77).
+  /// Home redesign controller. Fetches the FULL dataset once so per-day slices
+  /// (see `homeDayViewProvider`) are pure client-side derivations.
   ///
   /// Parallel-fetches:
-  ///  1. The current baby profile (NIB-65 header + greeting).
-  ///  2. Per-allergen logs (NIB-126 status derivation + NIB-77 log counts
-  ///     for the ongoing card "X/3 times" subhead and segment fill).
-  ///  3. Rolling-7 meal plan entries (NIB-59), filtered to today.
+  ///  1. Baby profile (greeting + age for guidance).
+  ///  2. Allergen logs (status derivation + clean counts).
+  ///  3. Program state (the "Start Introduce" selection overlay).
+  ///  4. The current/active allergen (hero allergen widget).
+  ///  5. ALL meal plan entries (mealPrepSetUp, plannedDates, day slices).
   ///
-  /// After the meal-plan entries resolve, the controller hydrates each unique
-  /// `recipeId` into a [Recipe] map so the today's-meals card can render
-  /// recipe titles + allergen/nutrition chips. Recipe fetch failures are P3 —
-  /// the controller falls back to a partial map without throwing.
-  ///
-  /// A missing baby is NOT an error — the screen renders the full empty-state
-  /// placeholder. Allergen or meal-plan fetch failures throw via the existing
-  /// pattern and surface as `AsyncValue.error`.
+  /// After entries resolve, every unique `recipeId` is hydrated into a [Recipe]
+  /// map. Recipe fetch failures are P3 (skipped). A missing baby is NOT an error
+  /// — an empty [HomeState] is returned. Allergen-log and meal-plan fetch
+  /// failures throw and surface as `AsyncValue.error`. A failed current-allergen
+  /// or program-state read degrades gracefully (no hero key / no overlay).
   ///
   /// Copied from [HomeController].
   HomeControllerProvider call(String babyId) {
@@ -140,42 +136,40 @@ class HomeControllerFamily extends Family<AsyncValue<HomeState>> {
   String? get name => r'homeControllerProvider';
 }
 
-/// NIB-86: Redesigned Home dashboard controller (extended for NIB-77).
+/// Home redesign controller. Fetches the FULL dataset once so per-day slices
+/// (see `homeDayViewProvider`) are pure client-side derivations.
 ///
 /// Parallel-fetches:
-///  1. The current baby profile (NIB-65 header + greeting).
-///  2. Per-allergen logs (NIB-126 status derivation + NIB-77 log counts
-///     for the ongoing card "X/3 times" subhead and segment fill).
-///  3. Rolling-7 meal plan entries (NIB-59), filtered to today.
+///  1. Baby profile (greeting + age for guidance).
+///  2. Allergen logs (status derivation + clean counts).
+///  3. Program state (the "Start Introduce" selection overlay).
+///  4. The current/active allergen (hero allergen widget).
+///  5. ALL meal plan entries (mealPrepSetUp, plannedDates, day slices).
 ///
-/// After the meal-plan entries resolve, the controller hydrates each unique
-/// `recipeId` into a [Recipe] map so the today's-meals card can render
-/// recipe titles + allergen/nutrition chips. Recipe fetch failures are P3 —
-/// the controller falls back to a partial map without throwing.
-///
-/// A missing baby is NOT an error — the screen renders the full empty-state
-/// placeholder. Allergen or meal-plan fetch failures throw via the existing
-/// pattern and surface as `AsyncValue.error`.
+/// After entries resolve, every unique `recipeId` is hydrated into a [Recipe]
+/// map. Recipe fetch failures are P3 (skipped). A missing baby is NOT an error
+/// — an empty [HomeState] is returned. Allergen-log and meal-plan fetch
+/// failures throw and surface as `AsyncValue.error`. A failed current-allergen
+/// or program-state read degrades gracefully (no hero key / no overlay).
 ///
 /// Copied from [HomeController].
 class HomeControllerProvider
     extends AutoDisposeAsyncNotifierProviderImpl<HomeController, HomeState> {
-  /// NIB-86: Redesigned Home dashboard controller (extended for NIB-77).
+  /// Home redesign controller. Fetches the FULL dataset once so per-day slices
+  /// (see `homeDayViewProvider`) are pure client-side derivations.
   ///
   /// Parallel-fetches:
-  ///  1. The current baby profile (NIB-65 header + greeting).
-  ///  2. Per-allergen logs (NIB-126 status derivation + NIB-77 log counts
-  ///     for the ongoing card "X/3 times" subhead and segment fill).
-  ///  3. Rolling-7 meal plan entries (NIB-59), filtered to today.
+  ///  1. Baby profile (greeting + age for guidance).
+  ///  2. Allergen logs (status derivation + clean counts).
+  ///  3. Program state (the "Start Introduce" selection overlay).
+  ///  4. The current/active allergen (hero allergen widget).
+  ///  5. ALL meal plan entries (mealPrepSetUp, plannedDates, day slices).
   ///
-  /// After the meal-plan entries resolve, the controller hydrates each unique
-  /// `recipeId` into a [Recipe] map so the today's-meals card can render
-  /// recipe titles + allergen/nutrition chips. Recipe fetch failures are P3 —
-  /// the controller falls back to a partial map without throwing.
-  ///
-  /// A missing baby is NOT an error — the screen renders the full empty-state
-  /// placeholder. Allergen or meal-plan fetch failures throw via the existing
-  /// pattern and surface as `AsyncValue.error`.
+  /// After entries resolve, every unique `recipeId` is hydrated into a [Recipe]
+  /// map. Recipe fetch failures are P3 (skipped). A missing baby is NOT an error
+  /// — an empty [HomeState] is returned. Allergen-log and meal-plan fetch
+  /// failures throw and surface as `AsyncValue.error`. A failed current-allergen
+  /// or program-state read degrades gracefully (no hero key / no overlay).
   ///
   /// Copied from [HomeController].
   HomeControllerProvider(String babyId)

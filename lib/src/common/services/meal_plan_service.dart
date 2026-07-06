@@ -46,6 +46,11 @@ class MealPlanService {
     return _repo.getEntriesInRange(babyId, start, end);
   }
 
+  /// Returns every meal plan entry for [babyId], ordered by plan_date.
+  /// Backs the Home redesign (mealPrepSetUp discriminator + date strip range).
+  Future<Result<List<MealPlanEntry>>> getAllEntries(String babyId) =>
+      _repo.getAllEntries(babyId);
+
   /// Inserts a new recipe assignment for [planDate].
   /// Multiple meals per day are allowed.
   Future<Result<MealPlanEntry>> assignRecipe(

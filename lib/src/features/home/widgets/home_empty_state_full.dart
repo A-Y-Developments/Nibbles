@@ -3,15 +3,13 @@ import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
-import 'package:nibbles/src/features/home/widgets/getting_started_tips_card.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 
 /// NIB-96: Header-less full "Ready to Start?" empty state.
 ///
-/// Renders only the [ReadyToStartCard] + the single [GettingStartedTipsCard].
-/// Used by the `home_screen` only on the `baby == null` edge case — every
-/// other Home variant keeps the header/greeting/stats chrome and composes
-/// [ReadyToStartCard] / [GettingStartedTipsCard] inline.
+/// Renders the [ReadyToStartCard]. Used by the `home_screen` only on the
+/// `baby == null` edge case — every other Home state keeps the
+/// header/greeting/hero chrome.
 class HomeEmptyStateFull extends StatelessWidget {
   const HomeEmptyStateFull({this.babyName, this.onCreateMealPlan, super.key});
 
@@ -46,8 +44,6 @@ class HomeEmptyStateFull extends StatelessWidget {
             babyName: babyName,
             onPressed: () => _onPressed(context),
           ),
-          const SizedBox(height: AppSizes.lg),
-          const GettingStartedTipsCard(),
           const SizedBox(height: AppSizes.xl),
         ],
       ),
