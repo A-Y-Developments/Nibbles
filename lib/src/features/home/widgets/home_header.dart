@@ -20,6 +20,7 @@ class HomeHeader extends StatelessWidget {
     required this.babyName,
     required this.ageMonths,
     this.onAvatarTap,
+    this.onTodayTap,
     super.key,
   });
 
@@ -31,15 +32,16 @@ class HomeHeader extends StatelessWidget {
   final int ageMonths;
   final VoidCallback? onAvatarTap;
 
+  /// Resets the Home date strip back to today.
+  final VoidCallback? onTodayTap;
+
   @override
   Widget build(BuildContext context) {
-    // Transparent: the header now sits directly on the lime HomeHero backdrop
-    // (Figma 1266:12135) rather than a butter card of its own.
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSizes.sm),
       child: Row(
         children: [
-          const _TodayPill(),
+          _TodayPill(onTap: onTodayTap),
           const Expanded(
             child: Center(
               child: Text(
@@ -62,11 +64,13 @@ class HomeHeader extends StatelessWidget {
 }
 
 class _TodayPill extends StatelessWidget {
-  const _TodayPill();
+  const _TodayPill({this.onTap});
+
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final pill = Container(
       height: AppSizes.roundButtonSm,
       padding: const EdgeInsets.symmetric(horizontal: AppSizes.sp12),
       alignment: Alignment.center,
@@ -82,6 +86,24 @@ class _TodayPill extends StatelessWidget {
           fontWeight: FontWeight.w700,
           height: 1,
           color: AppColors.greenDeep,
+        ),
+      ),
+    );
+
+    if (onTap == null) return pill;
+
+    return Semantics(
+      button: true,
+      label: 'Jump to today',
+      identifier: 'home_today_pill',
+      excludeSemantics: true,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+          child: pill,
         ),
       ),
     );

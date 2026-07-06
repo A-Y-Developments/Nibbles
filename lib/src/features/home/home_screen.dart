@@ -3,48 +3,31 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nibbles/src/app/constants/allergen_emoji.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/features/home/home_controller.dart';
+import 'package:nibbles/src/features/home/home_day_view.dart';
 import 'package:nibbles/src/features/home/home_state.dart';
-import 'package:nibbles/src/features/home/widgets/day_chip_row.dart';
-import 'package:nibbles/src/features/home/widgets/getting_started_tips_card.dart';
-import 'package:nibbles/src/features/home/widgets/greeting_card.dart';
 import 'package:nibbles/src/features/home/widgets/helpful_guidance_card.dart';
 import 'package:nibbles/src/features/home/widgets/home_empty_state_full.dart';
 import 'package:nibbles/src/features/home/widgets/home_header.dart';
-import 'package:nibbles/src/features/home/widgets/home_hero.dart';
+import 'package:nibbles/src/features/home/widgets/home_hero_card.dart';
 import 'package:nibbles/src/features/home/widgets/home_no_meals_state.dart';
-import 'package:nibbles/src/features/home/widgets/ongoing_introduced_card.dart';
-import 'package:nibbles/src/features/home/widgets/stat_ring_card.dart';
-import 'package:nibbles/src/features/home/widgets/today_date_label.dart';
 import 'package:nibbles/src/features/home/widgets/todays_meals_card.dart';
 import 'package:nibbles/src/logging/analytics.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 
-/// NIB-86 scaffold + NIB-77 populated dashboard + NIB-96 empty-state variant
-/// routing.
+/// Home redesign dashboard.
 ///
-/// The screen is intentionally thin: it watches the controller and routes
-/// the resulting [HomeState] into one of four variants — Figma frames
-/// 1266:12135 (ready-to-start empty), 1242:10152 (ready-to-start with
-/// ongoing), 1266:12400 (no meals mapped) and 1242:10567 (populated). The
-/// header/greeting/stats chrome is present in ALL four; the middle and
-/// tips sections swap based on [HomeState.variant].
-///
-/// The populated branch carries NIB-77's data flow — `allergenLogCounts`
-/// drives the ongoing card "X/3 times" subhead and `todaysRecipes` hydrates
-/// the today's-meals card chips. Non-populated variants that still render
-/// the ongoing card pass `logCounts` too (zeros are tolerated).
-///
-/// The `baby == null` edge case keeps the standalone [HomeEmptyStateFull]
-/// (no header — there is no baby to greet).
-///
-/// Converted to [ConsumerStatefulWidget] in NIB-106 so `initState` can fire
-/// `logScreenView('home')` once on mount via a post-frame callback.
+/// Watches [homeControllerProvider] (hero + allergen + date strip) and
+/// [homeDayViewProvider] (per-day meals + guidance). Composition is a plain
+/// scroll column: header, optional date strip, lime hero card, meals section
+/// and helpful guidance. The `baby == null` edge case keeps the standalone
+/// [HomeEmptyStateFull].
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
@@ -56,9 +39,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Emit screen_view('home') once on the first frame. Guarded + unawaited
-    // so an uninitialised Firebase / analytics hiccup never throws into the
-    // frame callback (mirrors splash_screen.dart).
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(_logScreenView());
     });
@@ -122,6 +102,7 @@ class _HomeBody extends ConsumerWidget {
         onRetry: () => ref.invalidate(homeControllerProvider(babyId)),
       ),
       data: (state) => _HomeContent(
+        babyId: babyId,
         state: state,
         onCreateFirstMeal: onCreateFirstMeal,
         onRefresh: () async => ref.invalidate(homeControllerProvider(babyId)),
@@ -130,24 +111,62 @@ class _HomeBody extends ConsumerWidget {
   }
 }
 
-class _HomeContent extends StatelessWidget {
+class _HomeContent extends ConsumerWidget {
   const _HomeContent({
+    required this.babyId,
     required this.state,
     required this.onCreateFirstMeal,
     required this.onRefresh,
   });
 
+  final String babyId;
   final HomeState state;
   final VoidCallback onCreateFirstMeal;
   final Future<void> Function() onRefresh;
 
-  @override
-  Widget build(BuildContext context) {
-    final baby = state.baby;
+  static const List<String> _weekdays = [
+    'Mon',
+    'Tue',
+    'Wed',
+    'Thu',
+    'Fri',
+    'Sat',
+    'Sun',
+  ];
 
-    // `baby == null` is the only branch that drops the dashboard chrome —
-    // there is no baby to greet. All three Figma variants below render the
-    // header + greeting + stats.
+  static const List<String> _months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+
+  void _openMealPlan(BuildContext context) =>
+      context.goNamed(AppRoute.mealPlan.name);
+
+  void _openTracker(BuildContext context) =>
+      context.pushNamed(AppRoute.allergenTracker.name);
+
+  void _openAllergenDetail(BuildContext context) {
+    final key = state.currentAllergenKey;
+    if (key == null) return;
+    context.pushNamed(
+      AppRoute.allergenDetail.name,
+      pathParameters: {'allergenKey': key},
+    );
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final baby = state.baby;
     if (baby == null) {
       return GradientScaffold(
         body: SafeArea(
@@ -157,18 +176,10 @@ class _HomeContent extends StatelessWidget {
     }
 
     final ageMonths = _monthsBetween(baby.dateOfBirth, DateTime.now());
-    final variant = state.variant;
-
-    // Light up the '✓ Iron Rich' stat chip when any of today's meals is an
-    // iron-rich recipe (Figma 1242:10567). The StatRingCard param existed but
-    // was never wired — home is the call-site that supplies the data.
-    final hasIronRichRecipes = state.todaysRecipes.values.any(
-      (r) => r.nutritionTags.any((t) => t.toLowerCase().contains('iron')),
-    );
-
-    // Lime hero paints to y=0 behind the status bar (top: false), so the
-    // scroll content carries the top safe inset itself to clear the notch.
+    final selected = ref.watch(selectedHomeDateProvider);
+    final dayView = ref.watch(homeDayViewProvider(babyId));
     final topInset = MediaQuery.of(context).padding.top;
+    final key = state.currentAllergenKey;
 
     return GradientScaffold(
       body: SafeArea(
@@ -186,65 +197,46 @@ class _HomeContent extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    // Full-bleed lime hero behind header/greeting/stats —
-                    // escapes the scroll padding via negative insets and
-                    // pulls past the top safe inset to reach the screen edge.
-                    Positioned(
-                      top: -(AppSizes.pagePaddingV + topInset),
-                      left: -AppSizes.pagePaddingH,
-                      right: -AppSizes.pagePaddingH,
-                      // The lime backs only the header + greeting + stat card.
-                      // Its bottom curve sits at ≈80% of the hero box, so this
-                      // extension is tuned to drop the curve just past the stat
-                      // card — long enough to clear it, short enough that the
-                      // date label + content below sit on the plain scaffold.
-                      bottom: -(AppSizes.xxl + AppSizes.lg),
-                      child: const HomeHero(),
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        HomeHeader(
-                          babyName: baby.name,
-                          ageMonths: ageMonths,
-                          onAvatarTap: () =>
-                              context.pushNamed(AppRoute.profile.name),
-                        ),
-                        const SizedBox(height: AppSizes.md),
-                        GreetingCard(
-                          babyName: baby.name,
-                          ageMonths: ageMonths,
-                          dateOfBirth: baby.dateOfBirth,
-                        ),
-                        const SizedBox(height: AppSizes.md),
-                        StatRingCard(
-                          safeCount: state.safeCount,
-                          flaggedCount: state.flaggedCount,
-                          notStartedCount: state.notStartedCount,
-                          inProgressCount: state.inProgressCount,
-                          todayMealCount: state.todayMealCount,
-                          todayMealTarget: 2,
-                          hasIronRichRecipes: hasIronRichRecipes,
-                          onAllergenTap: () =>
-                              context.pushNamed(AppRoute.allergenTracker.name),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                // 36px breathing room below the lime hero section.
-                const SizedBox(height: AppSizes.sp40),
-                ..._middleSection(
-                  state: state,
+                HomeHeader(
                   babyName: baby.name,
-                  variant: variant,
-                  onCreateFirstMeal: onCreateFirstMeal,
+                  ageMonths: ageMonths,
+                  onAvatarTap: () => context.pushNamed(AppRoute.profile.name),
+                  onTodayTap: () =>
+                      ref.read(selectedHomeDateProvider.notifier).state =
+                          homeDateOnly(DateTime.now()),
                 ),
+                if (state.mealPrepSetUp) ...[
+                  const SizedBox(height: AppSizes.md),
+                  WeekStrip(
+                    days: _buildWeekDays(state.plannedDates, selected),
+                    onDaySelected: (i) =>
+                        ref.read(selectedHomeDateProvider.notifier).state =
+                            state.plannedDates[i],
+                  ),
+                ],
                 const SizedBox(height: AppSizes.md),
-                _tipsSection(variant),
+                HomeHeroCard(
+                  babyName: baby.name,
+                  ageMonths: ageMonths,
+                  dateOfBirth: baby.dateOfBirth,
+                  mealCount: dayView.mealCount,
+                  mealTarget: dayView.mealTarget,
+                  introducedCount: state.introducedCount,
+                  ironRich: dayView.ironRich,
+                  hasActiveProgramAllergen: state.hasActiveProgramAllergen,
+                  heroState: state.allergenHeroState,
+                  allergenKey: key,
+                  allergenDisplayName: key == null
+                      ? ''
+                      : AllergenEmoji.displayName(key),
+                  allergenCleanCount: state.currentAllergenCleanCount,
+                  onStartTracker: () => _openTracker(context),
+                  onOpenDetail: () => _openAllergenDetail(context),
+                ),
+                const SizedBox(height: AppSizes.sp40),
+                _mealsSection(context, dayView),
+                const SizedBox(height: AppSizes.md),
+                HelpfulGuidanceCard(tips: dayView.guidance),
                 const SizedBox(height: AppSizes.xl),
               ],
             ),
@@ -254,80 +246,43 @@ class _HomeContent extends StatelessWidget {
     );
   }
 
-  /// Middle section composition per variant.
-  ///
-  /// - [HomeVariant.readyToStartEmpty]: only the date label + the
-  ///   ReadyToStart card. No ongoing, no day chips, no today's meals.
-  /// - [HomeVariant.readyToStartWithOngoing]: ongoing + day chips + date
-  ///   label + ReadyToStart card.
-  /// - [HomeVariant.noMealsToday]: ongoing + day chips + date label +
-  ///   `HomeNoMealsState` dashed body.
-  /// - [HomeVariant.populated]: ongoing + day chips + `TodaysMealsCard`
-  ///   (which renders its own date label).
-  List<Widget> _middleSection({
-    required HomeState state,
-    required String babyName,
-    required HomeVariant variant,
-    required VoidCallback onCreateFirstMeal,
-  }) {
-    switch (variant) {
-      case HomeVariant.readyToStartEmpty:
-        return [
-          const TodayDateLabel(),
-          const SizedBox(height: AppSizes.sm),
-          ReadyToStartCard(babyName: babyName, onPressed: onCreateFirstMeal),
-        ];
-      case HomeVariant.readyToStartWithOngoing:
-        return [
-          OngoingIntroducedCard(
-            allergenStatuses: state.allergenStatuses,
-            logCounts: state.allergenLogCounts,
-          ),
-          const SizedBox(height: AppSizes.md),
-          const DayChipRow(),
-          const SizedBox(height: AppSizes.md),
-          const TodayDateLabel(),
-          const SizedBox(height: AppSizes.sm),
-          ReadyToStartCard(babyName: babyName, onPressed: onCreateFirstMeal),
-        ];
-      case HomeVariant.noMealsToday:
-        return [
-          OngoingIntroducedCard(
-            allergenStatuses: state.allergenStatuses,
-            logCounts: state.allergenLogCounts,
-          ),
-          const SizedBox(height: AppSizes.md),
-          const DayChipRow(),
-          const SizedBox(height: AppSizes.md),
-          const TodayDateLabel(),
-          const SizedBox(height: AppSizes.sm),
-          HomeNoMealsState(babyName: babyName, onAddMeal: onCreateFirstMeal),
-        ];
-      case HomeVariant.populated:
-        return [
-          OngoingIntroducedCard(
-            allergenStatuses: state.allergenStatuses,
-            logCounts: state.allergenLogCounts,
-          ),
-          const SizedBox(height: AppSizes.md),
-          const DayChipRow(),
-          const SizedBox(height: AppSizes.md),
-          TodaysMealsCard(
-            todaysMeals: state.todaysMeals,
-            recipes: state.todaysRecipes,
-          ),
-        ];
+  Widget _mealsSection(BuildContext context, HomeDayView dayView) {
+    if (!state.mealPrepSetUp) {
+      return ReadyToStartCard(
+        babyName: state.baby?.name,
+        onPressed: onCreateFirstMeal,
+      );
     }
+    if (dayView.meals.isEmpty) {
+      return HomeNoMealsState(
+        babyName: state.baby?.name,
+        onAddMeal: () => _openMealPlan(context),
+      );
+    }
+    return TodaysMealsCard(
+      meals: dayView.meals,
+      recipes: dayView.recipes,
+      mealCount: dayView.mealCount,
+      mealTarget: dayView.mealTarget,
+      onAdd: () => _openMealPlan(context),
+    );
   }
 
-  /// Populated keeps the rich [HelpfulGuidanceCard]; every other variant
-  /// renders the single "Getting Started Tips" cream card.
-  Widget _tipsSection(HomeVariant variant) {
-    if (variant == HomeVariant.populated) {
-      return const HelpfulGuidanceCard();
-    }
-    return const GettingStartedTipsCard();
+  List<WeekDay> _buildWeekDays(List<DateTime> dates, DateTime selected) {
+    return [
+      for (final date in dates)
+        WeekDay(
+          dayOfWeek: _weekdays[date.weekday - 1],
+          date: '${date.day} ${_months[date.month - 1]}',
+          state: _isSameDay(date, selected)
+              ? DayChipState.selected
+              : DayChipState.idle,
+        ),
+    ];
   }
+
+  bool _isSameDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
 
   int _monthsBetween(DateTime from, DateTime to) {
     final raw = (to.year - from.year) * 12 + (to.month - from.month);

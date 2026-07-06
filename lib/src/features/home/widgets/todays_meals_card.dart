@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
+import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
 import 'package:nibbles/src/common/components/cards/app_card.dart';
 import 'package:nibbles/src/common/components/chips/app_chip.dart';
 import 'package:nibbles/src/common/domain/entities/meal_plan_entry.dart';
@@ -13,114 +14,93 @@ import 'package:nibbles/src/common/domain/entities/recipe.dart';
 import 'package:nibbles/src/logging/analytics.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 
-/// Home — Today's meals card (NIB-77, Figma 1242:10630).
+/// Home — Today's meals card for the selected day.
 ///
-/// Header: 'Today, {Month Day}' (title3) rendered outside the white card.
 /// Card body:
-///   - 'TODAY'S MEALS' overline + `n/2` meta counter.
-///   - Butter "Great job! Everything important is covered" banner that
-///     ONLY shows when meal coverage is 100% (n >= [_dailyTarget]).
-///   - One meal row per entry, hydrated from [recipes] when available
-///     (recipe title + allergen/nutrition chips). Rows that miss recipe
-///     hydration fall back to the meal-time label so the card never blanks.
+///   - "TODAY'S MEALS" overline + `mealCount/mealTarget` counter.
+///   - Butter "Great job!" banner when coverage is met (>= target).
+///   - A dashed lime inner card, one [_MealRow] per entry, plus an inline
+///     "Add" pill when the day is under target.
 ///
-/// Each row taps to `recipeDetail` with the entry's `recipeId`. When
-/// `todaysMeals` is empty an inline "No meals today" placeholder renders
-/// (full-screen empty state lives in NIB-96).
+/// Rows tap through to `recipeDetail`; the "Add" pill invokes [onAdd].
 class TodaysMealsCard extends StatelessWidget {
   const TodaysMealsCard({
-    required this.todaysMeals,
-    this.recipes = const <String, Recipe>{},
+    required this.meals,
+    required this.recipes,
+    required this.mealCount,
+    required this.mealTarget,
+    required this.onAdd,
     super.key,
   });
 
-  final List<MealPlanEntry> todaysMeals;
-
-  /// Recipe-id → [Recipe] map populated by the controller. Missing keys are
-  /// silently tolerated — the row falls back to the meal-time label.
+  final List<MealPlanEntry> meals;
   final Map<String, Recipe> recipes;
-
-  static const List<String> _shortMonths = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-
-  static const int _dailyTarget = 2;
+  final int mealCount;
+  final int mealTarget;
+  final VoidCallback onAdd;
 
   @override
   Widget build(BuildContext context) {
-    final today = DateTime.now();
-    final headerTitle = 'Today, ${_shortMonths[today.month - 1]} ${today.day}';
-    final isComplete = todaysMeals.length >= _dailyTarget;
+    final isComplete = mealCount >= mealTarget;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(headerTitle, style: AppTypography.sectionTitle),
-        const SizedBox(height: AppSizes.sm),
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(AppSizes.radiusXl),
-            boxShadow: AppSizes.shadowCard,
-          ),
-          padding: const EdgeInsets.all(AppSizes.sp12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _MealsOverlineRow(count: todaysMeals.length),
-              if (isComplete) ...[
-                const SizedBox(height: AppSizes.sm),
-                const _GreatJobBanner(),
-              ],
-              const SizedBox(height: AppSizes.sm + 2),
-              if (todaysMeals.isEmpty)
-                const _NoMealsInline()
-              else
-                AppCard(
-                  variant: AppCardVariant.dashed,
-                  borderColor: AppColors.lime,
-                  borderWidth: 2,
-                  cornerRadius: AppSizes.radiusMd,
-                  padding: const EdgeInsets.all(AppSizes.sp12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: List<Widget>.generate(todaysMeals.length, (i) {
-                      final entry = todaysMeals[i];
-                      return Padding(
-                        padding: EdgeInsets.only(
-                          top: i == 0 ? 0 : AppSizes.sp12,
-                        ),
-                        child: _MealRow(
-                          entry: entry,
-                          recipe: recipes[entry.recipeId],
-                        ),
-                      );
-                    }),
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppSizes.radiusXl),
+        boxShadow: AppSizes.shadowCard,
+      ),
+      padding: const EdgeInsets.all(AppSizes.sp12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _MealsOverlineRow(count: mealCount, target: mealTarget),
+          if (isComplete) ...[
+            const SizedBox(height: AppSizes.sm),
+            const _GreatJobBanner(),
+          ],
+          const SizedBox(height: AppSizes.sm + 2),
+          AppCard(
+            variant: AppCardVariant.dashed,
+            borderColor: AppColors.lime,
+            borderWidth: 2,
+            cornerRadius: AppSizes.radiusMd,
+            padding: const EdgeInsets.all(AppSizes.sp12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                ...List<Widget>.generate(meals.length, (i) {
+                  final entry = meals[i];
+                  return Padding(
+                    padding: EdgeInsets.only(top: i == 0 ? 0 : AppSizes.sp12),
+                    child: _MealRow(
+                      entry: entry,
+                      recipe: recipes[entry.recipeId],
+                    ),
+                  );
+                }),
+                if (!isComplete) ...[
+                  const SizedBox(height: AppSizes.sp12),
+                  AppPillButton(
+                    label: 'Add',
+                    onPressed: onAdd,
+                    leading: const Icon(Icons.add),
+                    identifier: 'home_add_meal_button',
                   ),
-                ),
-            ],
+                ],
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
 
 class _MealsOverlineRow extends StatelessWidget {
-  const _MealsOverlineRow({required this.count});
+  const _MealsOverlineRow({required this.count, required this.target});
 
   final int count;
+  final int target;
 
   @override
   Widget build(BuildContext context) {
@@ -140,7 +120,7 @@ class _MealsOverlineRow extends StatelessWidget {
             ),
           ),
           Text(
-            '$count/${TodaysMealsCard._dailyTarget}',
+            '$count/$target',
             style: AppTypography.caption.copyWith(
               color: AppColors.fgFaint,
               fontWeight: FontWeight.w700,
@@ -152,8 +132,7 @@ class _MealsOverlineRow extends StatelessWidget {
   }
 }
 
-/// Butter coverage banner — verbatim audit copy "Great job! Everything
-/// important is covered". Only rendered when daily target is met.
+/// Butter coverage banner — only rendered when the daily target is met.
 class _GreatJobBanner extends StatelessWidget {
   const _GreatJobBanner();
 
@@ -215,14 +194,6 @@ class _MealRow extends StatelessWidget {
             ? _capitalize(entry.mealTime!)
             : 'Meal');
 
-    // Tag chips: up to 2 visible (category + nutritionTags), with a "+N"
-    // overflow chip when more remain. Matches the audit's "Fruit / Iron
-    // Rich / +2" layout.
-    //
-    // `recipe.allergenTags` is INTENTIONALLY excluded — that field means
-    // "this recipe CONTAINS these allergens" (safety signal), surfacing it
-    // as a friendly tag here would invert its meaning. Category + nutrition
-    // tags are the positive-attribute fields.
     final tags = <_TagChipData>[
       if ((recipe?.category ?? '').isNotEmpty)
         _TagChipData(
@@ -288,8 +259,7 @@ class _MealRow extends StatelessWidget {
   }
 }
 
-/// Meal-row thumbnail — real recipe photo at the Figma size (90x76, r10)
-/// with an emoji fallback. Mirrors browse_meal_recipe_card._Thumbnail.
+/// Meal-row thumbnail — real recipe photo (90x76) with an emoji fallback.
 class _MealThumbnail extends StatelessWidget {
   const _MealThumbnail({this.url});
 
@@ -357,26 +327,6 @@ class _TagChipsRow extends StatelessWidget {
       spacing: AppSizes.xs + 2,
       runSpacing: AppSizes.xs,
       children: chips,
-    );
-  }
-}
-
-class _NoMealsInline extends StatelessWidget {
-  const _NoMealsInline();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.sm,
-        vertical: AppSizes.sm + 2,
-      ),
-      child: Text(
-        'No meals today',
-        style: AppTypography.textTheme.bodyMedium?.copyWith(
-          color: AppColors.fgFaint,
-        ),
-      ),
     );
   }
 }

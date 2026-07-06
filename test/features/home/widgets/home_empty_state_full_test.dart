@@ -1,12 +1,11 @@
-// NIB-96 — Widget-level coverage for `HomeEmptyStateFull`.
+// Widget-level coverage for `HomeEmptyStateFull`.
 //
-// Verifies the verbatim Figma copy on the Ready-to-Start card + the single
-// Getting Started Tips card render, baby-name interpolation works, and the
-// CTA invokes the supplied `onCreateMealPlan` callback when provided.
+// The redesign reduces this standalone (no-baby) empty state to a single
+// `ReadyToStartCard`. Verifies the verbatim Figma copy, baby-name
+// interpolation, and that the CTA invokes the supplied `onCreateMealPlan`.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nibbles/src/common/components/cards/tip_card.dart';
 import 'package:nibbles/src/features/home/widgets/home_empty_state_full.dart';
 
 Widget _wrap(Widget child) => MaterialApp(
@@ -35,32 +34,6 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('Create First Meal'), findsOneWidget);
-    },
-  );
-
-  testWidgets(
-    'renders the single Getting Started Tips section with verbatim copy',
-    (tester) async {
-      tester.view.physicalSize = const Size(1080, 2400);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-
-      await tester.pumpWidget(
-        _wrap(HomeEmptyStateFull(onCreateMealPlan: () {})),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.text('Helpful Guidance'), findsOneWidget);
-      expect(find.byType(TipCard), findsOneWidget);
-      expect(find.text('Getting Started Tips'), findsOneWidget);
-      expect(
-        find.text(
-          'Start with single-ingredient purees and introduce one new food '
-          'every 3-5 days to monitor for reactions.',
-        ),
-        findsOneWidget,
-      );
     },
   );
 

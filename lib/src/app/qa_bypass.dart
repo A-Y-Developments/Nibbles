@@ -235,6 +235,10 @@ class _QaMealPlanRepository implements MealPlanRepository {
   ) async => const Result.success(<MealPlanEntry>[]);
 
   @override
+  Future<Result<List<MealPlanEntry>>> getAllEntries(String babyId) async =>
+      const Result.success(<MealPlanEntry>[]);
+
+  @override
   Future<Result<MealPlanEntry>> assignRecipe(
     String babyId,
     String recipeId,
