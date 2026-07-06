@@ -43,7 +43,7 @@ class ReactionLogRow extends StatelessWidget {
       onTap: onTap,
       child: Row(
         children: [
-          Assets.images.allergen.babyOrange.svg(width: 52, height: 52),
+          Assets.images.allergen.babyOrange.svg(width: 48, height: 48),
           const SizedBox(width: AppSizes.sp12),
           Expanded(
             child: Column(

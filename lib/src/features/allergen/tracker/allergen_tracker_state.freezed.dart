@@ -29,6 +29,11 @@ mixin _$AllergenTrackerState {
   /// Used to render the per-card 0/3 progress and the Reaction Log list.
   List<AllergenLog> get logs => throw _privateConstructorUsedError;
 
+  /// The actively-introduced ("Start Introduce") allergen key, if any.
+  /// Persists as the Ongoing-tab focus even after it flags / goes safe,
+  /// until a new introduction replaces it.
+  String? get selectedAllergenKey => throw _privateConstructorUsedError;
+
   /// Create a copy of AllergenTrackerState
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -47,6 +52,7 @@ abstract class $AllergenTrackerStateCopyWith<$Res> {
     List<Allergen> allergens,
     Map<String, AllergenStatus> statuses,
     List<AllergenLog> logs,
+    String? selectedAllergenKey,
   });
 }
 
@@ -71,6 +77,7 @@ class _$AllergenTrackerStateCopyWithImpl<
     Object? allergens = null,
     Object? statuses = null,
     Object? logs = null,
+    Object? selectedAllergenKey = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -86,6 +93,10 @@ class _$AllergenTrackerStateCopyWithImpl<
                 ? _value.logs
                 : logs // ignore: cast_nullable_to_non_nullable
                       as List<AllergenLog>,
+            selectedAllergenKey: freezed == selectedAllergenKey
+                ? _value.selectedAllergenKey
+                : selectedAllergenKey // ignore: cast_nullable_to_non_nullable
+                      as String?,
           )
           as $Val,
     );
@@ -105,6 +116,7 @@ abstract class _$$AllergenTrackerStateImplCopyWith<$Res>
     List<Allergen> allergens,
     Map<String, AllergenStatus> statuses,
     List<AllergenLog> logs,
+    String? selectedAllergenKey,
   });
 }
 
@@ -125,6 +137,7 @@ class __$$AllergenTrackerStateImplCopyWithImpl<$Res>
     Object? allergens = null,
     Object? statuses = null,
     Object? logs = null,
+    Object? selectedAllergenKey = freezed,
   }) {
     return _then(
       _$AllergenTrackerStateImpl(
@@ -140,6 +153,10 @@ class __$$AllergenTrackerStateImplCopyWithImpl<$Res>
             ? _value._logs
             : logs // ignore: cast_nullable_to_non_nullable
                   as List<AllergenLog>,
+        selectedAllergenKey: freezed == selectedAllergenKey
+            ? _value.selectedAllergenKey
+            : selectedAllergenKey // ignore: cast_nullable_to_non_nullable
+                  as String?,
       ),
     );
   }
@@ -152,6 +169,7 @@ class _$AllergenTrackerStateImpl implements _AllergenTrackerState {
     required final List<Allergen> allergens,
     required final Map<String, AllergenStatus> statuses,
     required final List<AllergenLog> logs,
+    this.selectedAllergenKey,
   }) : _allergens = allergens,
        _statuses = statuses,
        _logs = logs;
@@ -193,9 +211,15 @@ class _$AllergenTrackerStateImpl implements _AllergenTrackerState {
     return EqualUnmodifiableListView(_logs);
   }
 
+  /// The actively-introduced ("Start Introduce") allergen key, if any.
+  /// Persists as the Ongoing-tab focus even after it flags / goes safe,
+  /// until a new introduction replaces it.
+  @override
+  final String? selectedAllergenKey;
+
   @override
   String toString() {
-    return 'AllergenTrackerState(allergens: $allergens, statuses: $statuses, logs: $logs)';
+    return 'AllergenTrackerState(allergens: $allergens, statuses: $statuses, logs: $logs, selectedAllergenKey: $selectedAllergenKey)';
   }
 
   @override
@@ -208,7 +232,9 @@ class _$AllergenTrackerStateImpl implements _AllergenTrackerState {
               _allergens,
             ) &&
             const DeepCollectionEquality().equals(other._statuses, _statuses) &&
-            const DeepCollectionEquality().equals(other._logs, _logs));
+            const DeepCollectionEquality().equals(other._logs, _logs) &&
+            (identical(other.selectedAllergenKey, selectedAllergenKey) ||
+                other.selectedAllergenKey == selectedAllergenKey));
   }
 
   @override
@@ -217,6 +243,7 @@ class _$AllergenTrackerStateImpl implements _AllergenTrackerState {
     const DeepCollectionEquality().hash(_allergens),
     const DeepCollectionEquality().hash(_statuses),
     const DeepCollectionEquality().hash(_logs),
+    selectedAllergenKey,
   );
 
   /// Create a copy of AllergenTrackerState
@@ -237,6 +264,7 @@ abstract class _AllergenTrackerState implements AllergenTrackerState {
     required final List<Allergen> allergens,
     required final Map<String, AllergenStatus> statuses,
     required final List<AllergenLog> logs,
+    final String? selectedAllergenKey,
   }) = _$AllergenTrackerStateImpl;
 
   /// All 9 canonical allergens ordered by `sequenceOrder` (display order).
@@ -252,6 +280,12 @@ abstract class _AllergenTrackerState implements AllergenTrackerState {
   /// Used to render the per-card 0/3 progress and the Reaction Log list.
   @override
   List<AllergenLog> get logs;
+
+  /// The actively-introduced ("Start Introduce") allergen key, if any.
+  /// Persists as the Ongoing-tab focus even after it flags / goes safe,
+  /// until a new introduction replaces it.
+  @override
+  String? get selectedAllergenKey;
 
   /// Create a copy of AllergenTrackerState
   /// with the given fields replaced by the non-null parameter values.

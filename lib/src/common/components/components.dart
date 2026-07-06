@@ -21,6 +21,7 @@ export 'controls/app_checkbox.dart';
 export 'controls/app_segmented_control.dart';
 export 'controls/app_sliding_segmented_control.dart';
 export 'controls/app_switch.dart';
+export 'controls/calendar_date_picker_sheet.dart';
 export 'controls/radio_pill.dart';
 export 'feedback/animated_ellipsis_text.dart';
 export 'feedback/empty_state.dart';

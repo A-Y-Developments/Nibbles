@@ -1,6 +1,7 @@
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/domain/entities/allergen.dart';
 import 'package:nibbles/src/common/domain/entities/allergen_log.dart';
+import 'package:nibbles/src/common/domain/entities/allergen_program_state.dart';
 import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
 import 'package:nibbles/src/common/services/allergen_service.dart';
 import 'package:nibbles/src/features/allergen/tracker/allergen_tracker_state.dart';
@@ -30,15 +31,19 @@ class AllergenTrackerController extends _$AllergenTrackerController {
       Result<List<Allergen>> allergensResult,
       Result<Map<String, AllergenStatus>> statusesResult,
       Result<List<AllergenLog>> logsResult,
+      Result<AllergenProgramState> stateResult,
     ) = await (
       service.getAllergens(),
       service.getAllergenStatuses(babyId),
       service.getLogs(babyId),
+      service.getProgramState(babyId),
     ).wait;
 
     if (allergensResult.isFailure) throw allergensResult.errorOrNull!;
     if (statusesResult.isFailure) throw statusesResult.errorOrNull!;
     if (logsResult.isFailure) throw logsResult.errorOrNull!;
+    // Program-state read failure degrades gracefully — the selection overlay
+    // is dropped, never the whole board.
 
     final allergens = List<Allergen>.of(allergensResult.dataOrNull!)
       ..sort((a, b) => a.sequenceOrder.compareTo(b.sequenceOrder));
@@ -50,6 +55,7 @@ class AllergenTrackerController extends _$AllergenTrackerController {
       allergens: allergens,
       statuses: statusesResult.dataOrNull!,
       logs: logs,
+      selectedAllergenKey: stateResult.dataOrNull?.selectedAllergenKey,
     );
   }
 

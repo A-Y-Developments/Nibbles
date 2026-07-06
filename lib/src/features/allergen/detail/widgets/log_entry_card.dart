@@ -30,7 +30,9 @@ class LogEntryCard extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final hadReaction = log.hadReaction;
     final notes = log.notes;
-    final attachment = log.attachmentTitle;
+    final hasAttachment =
+        (log.photoUrl != null && log.photoUrl!.isNotEmpty) ||
+        (log.attachmentTitle != null && log.attachmentTitle!.isNotEmpty);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSizes.sm),
@@ -75,14 +77,13 @@ class LogEntryCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
-                  if (attachment != null && attachment.isNotEmpty) ...[
+                  if (hasAttachment) ...[
                     const SizedBox(height: AppSizes.sm),
-                    Align(
+                    const Align(
                       alignment: Alignment.centerLeft,
                       child: AppChip(
-                        label: attachment,
-                        tone: AppChipTone.mute,
-                        icon: const Icon(Icons.attach_file_rounded),
+                        label: 'Attachment',
+                        tone: AppChipTone.butter,
                       ),
                     ),
                   ],

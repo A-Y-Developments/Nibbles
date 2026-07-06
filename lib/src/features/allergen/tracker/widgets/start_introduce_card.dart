@@ -16,7 +16,8 @@ import 'package:nibbles/src/features/allergen/tracker/widgets/allergen_icon_tile
 /// The "Start Introduce" button marks the allergen as actively introduced
 /// (status flips to `inProgress`) — no navigation, no log. Disabled via
 /// [enabled] while another allergen is already in progress (single-active
-/// rule). Tapping the card body opens the allergen detail screen via [onTap].
+/// rule). A notStarted allergen has no detail to show, so the card body is
+/// only tappable when an [onTap] is supplied.
 class StartIntroduceCard extends StatelessWidget {
   const StartIntroduceCard({
     required this.allergen,

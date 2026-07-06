@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:nibbles/gen/fonts.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
@@ -6,12 +6,9 @@ import 'package:nibbles/src/app/themes/app_sizes.dart';
 /// Sliding segmented control (Figma 962:6668) shared across the Shopping List
 /// (List / Bought) and Allergen Tracker (Ongoing / Big 11) tabs.
 ///
-/// Native [CupertinoSlidingSegmentedControl] gives the animated thumb slide.
-/// A [LayoutBuilder] divides the available width equally so the control spans
-/// full width — the native control otherwise hugs its content.
-///
-/// Track borderSoft, forest thumb, Parkinsans SemiBold 15/22 labels
-/// (active onGreen, inactive green).
+/// A custom animated pill thumb (Cupertino's thumb radius is fixed and can't
+/// go fully rounded). Track borderSoft, forest `greenDeep` thumb, stadium
+/// radius, Parkinsans SemiBold 15/22 labels (active onGreen, inactive green).
 class AppSlidingSegmentedControl extends StatelessWidget {
   const AppSlidingSegmentedControl({
     required this.segments,
@@ -32,22 +29,44 @@ class AppSlidingSegmentedControl extends StatelessWidget {
       builder: (context, constraints) {
         final segmentWidth =
             (constraints.maxWidth - _trackPadding * 2) / segments.length;
-        return CupertinoSlidingSegmentedControl<int>(
-          groupValue: selectedIndex,
-          backgroundColor: AppColors.borderSoft,
-          thumbColor: AppColors.green,
+        return Container(
           padding: const EdgeInsets.all(_trackPadding),
-          onValueChanged: (value) {
-            if (value != null) onChanged(value);
-          },
-          children: {
-            for (var i = 0; i < segments.length; i++)
-              i: _SegmentLabel(
-                label: segments[i],
-                active: selectedIndex == i,
+          decoration: BoxDecoration(
+            color: AppColors.borderSoft,
+            borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+          ),
+          child: Stack(
+            children: [
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOut,
+                left: selectedIndex * segmentWidth,
+                top: 0,
+                bottom: 0,
                 width: segmentWidth,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: AppColors.greenDeep,
+                    borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+                  ),
+                ),
               ),
-          },
+              Row(
+                children: [
+                  for (var i = 0; i < segments.length; i++)
+                    GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => onChanged(i),
+                      child: _SegmentLabel(
+                        label: segments[i],
+                        active: selectedIndex == i,
+                        width: segmentWidth,
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
         );
       },
     );

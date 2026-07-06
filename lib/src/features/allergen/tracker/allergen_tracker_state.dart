@@ -24,5 +24,10 @@ class AllergenTrackerState with _$AllergenTrackerState {
     /// All logs for the baby, sorted oldest → newest by `createdAt`.
     /// Used to render the per-card 0/3 progress and the Reaction Log list.
     required List<AllergenLog> logs,
+
+    /// The actively-introduced ("Start Introduce") allergen key, if any.
+    /// Persists as the Ongoing-tab focus even after it flags / goes safe,
+    /// until a new introduction replaces it.
+    String? selectedAllergenKey,
   }) = _AllergenTrackerState;
 }

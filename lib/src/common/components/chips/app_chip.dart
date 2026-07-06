@@ -35,7 +35,7 @@ class AppChip extends StatelessWidget {
       case AppChipTone.warn:
         return AppColors.warning.withValues(alpha: 0.15);
       case AppChipTone.flag:
-        return AppColors.error.withValues(alpha: 0.12);
+        return AppColors.dangerBg;
       case AppChipTone.mute:
         return AppColors.surfaceVariant;
       case AppChipTone.butter:
@@ -54,7 +54,7 @@ class AppChip extends StatelessWidget {
       case AppChipTone.warn:
         return AppColors.warnFg;
       case AppChipTone.flag:
-        return AppColors.flagFg;
+        return AppColors.dangerFg;
       case AppChipTone.mute:
         return AppColors.fgMuted;
       case AppChipTone.butter:

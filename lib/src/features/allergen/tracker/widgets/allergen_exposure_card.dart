@@ -39,68 +39,69 @@ class AllergenExposureCard extends StatelessWidget {
           child: Stack(
             children: [
               Positioned(
-                right: -40,
-                top: -30,
+                right: -30,
+                top: -24,
                 child: Opacity(
-                  opacity: 0.06,
-                  child: Assets.images.allergen.allergenBlob.image(
-                    width: 200,
-                    fit: BoxFit.contain,
+                  opacity: 0.5,
+                  child: ColorFiltered(
+                    colorFilter: const ColorFilter.mode(
+                      AppColors.cardBurgundy,
+                      BlendMode.srcIn,
+                    ),
+                    child: Assets.images.allergen.allergenBlob.image(
+                      width: 200,
+                      fit: BoxFit.contain,
+                    ),
                   ),
                 ),
               ),
               Padding(
                 padding: const EdgeInsets.all(AppSizes.md),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
-                    Row(
-                      children: [
-                        const AllergenIconTile(
-                          size: 52,
-                          backing: Colors.white10,
-                        ),
-                        const SizedBox(width: AppSizes.sp12),
-                        Expanded(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                allergen.name,
-                                style: textTheme.titleMedium?.copyWith(
-                                  color: AppColors.cream,
-                                ),
-                              ),
-                              const SizedBox(height: AppSizes.sp2),
-                              Text(
-                                '$clamped/3 times',
-                                style: textTheme.bodyMedium?.copyWith(
-                                  color: AppColors.cream.withValues(alpha: 0.7),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          width: AppSizes.roundButtonSm,
-                          height: AppSizes.roundButtonSm,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.12),
-                            shape: BoxShape.circle,
-                          ),
-                          alignment: Alignment.center,
-                          child: const Icon(
-                            Icons.chevron_right_rounded,
-                            size: AppSizes.iconMd,
-                            color: AppColors.cream,
-                          ),
-                        ),
-                      ],
+                    AllergenIconTile(
+                      backing: Colors.white.withValues(alpha: 0.10),
+                      borderColor: AppColors.cream.withValues(alpha: 0.45),
                     ),
-                    const SizedBox(height: AppSizes.md),
-                    _HeroSegmentBar(filledCount: clamped),
+                    const SizedBox(width: AppSizes.sp12),
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            allergen.name,
+                            style: textTheme.titleMedium?.copyWith(
+                              color: AppColors.cream,
+                            ),
+                          ),
+                          const SizedBox(height: AppSizes.sp2),
+                          Text(
+                            '$clamped/3 times',
+                            style: textTheme.bodyMedium?.copyWith(
+                              color: AppColors.cream.withValues(alpha: 0.7),
+                            ),
+                          ),
+                          const SizedBox(height: AppSizes.sm),
+                          _HeroSegmentBar(filledCount: clamped),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: AppSizes.sm),
+                    Container(
+                      width: AppSizes.roundButtonSm,
+                      height: AppSizes.roundButtonSm,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      alignment: Alignment.center,
+                      child: const Icon(
+                        Icons.chevron_right_rounded,
+                        size: AppSizes.iconMd,
+                        color: AppColors.cream,
+                      ),
+                    ),
                   ],
                 ),
               ),

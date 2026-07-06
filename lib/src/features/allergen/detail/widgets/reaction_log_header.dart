@@ -29,8 +29,8 @@ class ReactionLogHeader extends StatelessWidget {
                 height: 48,
                 child: Center(
                   child: Container(
-                    width: AppSizes.roundButtonSm,
-                    height: AppSizes.roundButtonSm,
+                    width: AppSizes.roundButton,
+                    height: AppSizes.roundButton,
                     decoration: const BoxDecoration(
                       color: AppColors.greenDeep,
                       shape: BoxShape.circle,

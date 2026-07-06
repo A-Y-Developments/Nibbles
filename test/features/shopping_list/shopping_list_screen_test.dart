@@ -1,10 +1,10 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
+import 'package:nibbles/src/common/components/controls/app_sliding_segmented_control.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/domain/entities/shopping_list_item.dart';
@@ -77,10 +77,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Shopping List'), findsOneWidget);
-      expect(
-        find.byType(CupertinoSlidingSegmentedControl<int>),
-        findsOneWidget,
-      );
+      expect(find.byType(AppSlidingSegmentedControl), findsOneWidget);
       expect(find.text('List'), findsOneWidget);
       expect(find.text('Bought'), findsOneWidget);
     });

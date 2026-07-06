@@ -44,13 +44,13 @@ class AllergenDetailHeader extends StatelessWidget {
     'Dec',
   ];
 
-  String _format(DateTime d) => '${_months[d.month - 1]} ${d.day}, ${d.year}';
+  String _formatOrDash(DateTime? d) =>
+      d == null ? '-' : '${_months[d.month - 1]} ${d.day}, ${d.year}';
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final clamped = cleanLogCount.clamp(0, 3);
-    final hasDates = firstIntroduced != null && lastGiven != null;
     final cream70 = AppColors.cream.withValues(alpha: 0.7);
 
     return ClipPath(
@@ -131,29 +131,27 @@ class AllergenDetailHeader extends StatelessWidget {
                         DetailStatusPill(status: status),
                       ],
                     ),
-                    if (hasDates) ...[
-                      const SizedBox(height: AppSizes.lg),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: _DateColumn(
-                              label: 'First Introduced',
-                              value: _format(firstIntroduced!),
-                              labelColor: cream70,
-                            ),
+                    const SizedBox(height: AppSizes.lg),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: _DateColumn(
+                            label: 'First Introduced',
+                            value: _formatOrDash(firstIntroduced),
+                            labelColor: cream70,
                           ),
-                          const SizedBox(width: AppSizes.md),
-                          Expanded(
-                            child: _DateColumn(
-                              label: 'Last Given',
-                              value: _format(lastGiven!),
-                              labelColor: cream70,
-                            ),
+                        ),
+                        const SizedBox(width: AppSizes.md),
+                        Expanded(
+                          child: _DateColumn(
+                            label: 'Last Given',
+                            value: _formatOrDash(lastGiven),
+                            labelColor: cream70,
                           ),
-                        ],
-                      ),
-                    ],
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: AppSizes.lg),
                     DetailSegmentBar(introducedCount: clamped, onDark: true),
                   ],
@@ -174,26 +172,11 @@ class _BackButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: 'Back',
-      child: Material(
-        color: Colors.white.withValues(alpha: 0.12),
-        shape: const CircleBorder(),
-        child: InkWell(
-          onTap: onBack,
-          customBorder: const CircleBorder(),
-          child: const SizedBox(
-            width: AppSizes.roundButton,
-            height: AppSizes.roundButton,
-            child: Icon(
-              Icons.arrow_back_ios_new_rounded,
-              size: AppSizes.iconSm,
-              color: AppColors.cream,
-            ),
-          ),
-        ),
-      ),
+    // Plain arrow_back, matching the recipe-detail top bar (cream on burgundy).
+    return IconButton(
+      onPressed: onBack,
+      icon: const Icon(Icons.arrow_back, color: AppColors.cream),
+      tooltip: 'Back',
     );
   }
 }
