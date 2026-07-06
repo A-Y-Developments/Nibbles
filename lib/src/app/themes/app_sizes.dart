@@ -15,16 +15,16 @@ abstract final class AppSizes {
   static const double xxl = 48;
   static const double xxxl = 64;
 
-  // Border radius — max-rounded design system: every corner token maps to the
-  // full pill radius; revert to the graded 4/8/10/16/20/24/30 scale to undo.
+  // Border radius
+  static const double radiusXs = 4;
+  static const double radiusSm = 8;
+  static const double radiusMd = 10;
+  static const double radiusLg = 16;
+  static const double radiusXl = 20;
+  static const double radius2xl = 24;
+  // Floating Add-Ingredient card — Figma 971:9883 (rounded-[30px]).
+  static const double radius3xl = 30;
   static const double radiusFull = 999;
-  static const double radiusXs = radiusFull;
-  static const double radiusSm = radiusFull;
-  static const double radiusMd = radiusFull;
-  static const double radiusLg = radiusFull;
-  static const double radiusXl = radiusFull;
-  static const double radius2xl = radiusFull;
-  static const double radius3xl = radiusFull;
 
   // Icon sizes
   static const double iconSm = 16;

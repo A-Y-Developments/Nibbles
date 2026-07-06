@@ -10,7 +10,8 @@ import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/features/onboarding/readiness/readiness_signs.dart';
 import 'package:nibbles/src/features/starting_guide/widgets/guide_section_heading.dart';
 
-const double _cardRadius = AppSizes.radiusFull;
+/// Figma cards on the guide use a 12px corner radius (no exact token).
+const double _cardRadius = 12;
 
 /// Figma readiness hero "Group 78" baby icon is 154×154; it punches through the
 /// top edge of the signs card.
