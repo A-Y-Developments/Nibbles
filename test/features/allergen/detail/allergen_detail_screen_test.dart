@@ -80,16 +80,6 @@ void main() {
               const AllergenDetailScreen(allergenKey: _allergenKey),
         ),
         GoRoute(
-          path: AppRoute.allergenLogCreate.path,
-          name: AppRoute.allergenLogCreate.name,
-          builder: (ctx, st) {
-            recorder
-              ..lastName = AppRoute.allergenLogCreate.name
-              ..lastPathParams = st.pathParameters;
-            return const Scaffold(body: Text('CREATE_STUB'));
-          },
-        ),
-        GoRoute(
           path: AppRoute.allergenLogDetail.path,
           name: AppRoute.allergenLogDetail.name,
           builder: (_, __) => const Scaffold(body: Text('LOG_DETAIL_STUB')),
@@ -207,25 +197,5 @@ void main() {
         findsOneWidget,
       );
     });
-
-    testWidgets(
-      '+ button tap navigates to allergen-log-create with the allergen key',
-      (tester) async {
-        stubLogs([_makeLog(id: 'l1')], AllergenStatus.inProgress);
-
-        final recorder = _PushRecorder();
-        await tester.pumpWidget(buildSubject(recorder));
-        await tester.pumpAndSettle();
-
-        // Locate the Add Reaction Log button via its add_rounded icon.
-        final addIcon = find.byIcon(Icons.add_rounded);
-        expect(addIcon, findsOneWidget);
-        await tester.tap(addIcon);
-        await tester.pumpAndSettle();
-
-        expect(recorder.lastName, AppRoute.allergenLogCreate.name);
-        expect(recorder.lastPathParams?['allergenKey'], _allergenKey);
-      },
-    );
   });
 }

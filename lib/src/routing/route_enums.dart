@@ -45,17 +45,9 @@ enum AppRoute {
   ),
   allergenTracker(path: '/home/allergen/tracker', name: 'allergen-tracker'),
   allergenDetail(path: '/home/allergen/:allergenKey', name: 'allergen-detail'),
-  allergenLogCreate(
-    path: '/home/allergen/:allergenKey/log',
-    name: 'allergen-log-create',
-  ),
   allergenLogDetail(
     path: '/home/allergen/:allergenKey/log/:logId',
     name: 'allergen-log-detail',
-  ),
-  allergenLogEdit(
-    path: '/home/allergen/:allergenKey/log/:logId/edit',
-    name: 'allergen-log-edit',
   ),
   allergenComplete(path: '/home/allergen/complete', name: 'allergen-complete'),
   recipeDetail(path: '/home/recipes/:recipeId', name: 'recipe-detail'),

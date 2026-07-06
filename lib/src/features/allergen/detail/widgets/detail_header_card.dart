@@ -1,81 +1,257 @@
 import 'package:flutter/material.dart';
+import 'package:nibbles/gen/assets.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
-import 'package:nibbles/src/common/components/cards/app_card.dart';
 import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
+import 'package:nibbles/src/features/allergen/detail/widgets/detail_segment_bar.dart';
 import 'package:nibbles/src/features/allergen/detail/widgets/detail_status_pill.dart';
+import 'package:nibbles/src/features/allergen/tracker/widgets/allergen_icon_tile.dart';
 
-/// Top hero card on the allergen detail screen.
-///
-/// Layout: round coral-soft emoji tile + name + subtext + status pill.
-/// Subtext: literal 'Completed' when status == safe, else 'X/3 times'
-/// (where X is total introductions, capped at 3) per spec 5.
-class DetailHeaderCard extends StatelessWidget {
-  const DetailHeaderCard({
-    required this.emoji,
+/// Burgundy curved hero header on the allergen detail screen (Figma
+/// 1116:19762 / 1525:20065 / 1525:20232). Back + title, allergen tile, name,
+/// "N/3 times", status pill, First Introduced / Last Given and a 3-segment
+/// progress bar — over a soft `allergenBlob` backdrop with a curved bottom.
+class AllergenDetailHeader extends StatelessWidget {
+  const AllergenDetailHeader({
     required this.name,
-    required this.introducedCount,
     required this.status,
+    required this.cleanLogCount,
+    required this.firstIntroduced,
+    required this.lastGiven,
+    required this.onBack,
     super.key,
   });
 
-  final String emoji;
   final String name;
-  final int introducedCount;
   final AllergenStatus status;
+  final int cleanLogCount;
+  final DateTime? firstIntroduced;
+  final DateTime? lastGiven;
+  final VoidCallback onBack;
 
-  String get _subtext {
-    if (status == AllergenStatus.safe) return 'Completed';
-    final capped = introducedCount.clamp(0, 3);
-    return '$capped/3 times';
-  }
+  static const List<String> _months = <String>[
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+
+  String _format(DateTime d) => '${_months[d.month - 1]} ${d.day}, ${d.year}';
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    return AppCard(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.md,
-        vertical: AppSizes.md,
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: const BoxDecoration(
-              color: AppColors.coralSoft,
-              shape: BoxShape.circle,
-            ),
-            alignment: Alignment.center,
-            child: Text(emoji, style: const TextStyle(fontSize: 26)),
-          ),
-          const SizedBox(width: AppSizes.sp12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  name,
-                  style: textTheme.titleMedium,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+    final clamped = cleanLogCount.clamp(0, 3);
+    final hasDates = firstIntroduced != null && lastGiven != null;
+    final cream70 = AppColors.cream.withValues(alpha: 0.7);
+
+    return ClipPath(
+      clipper: _HeaderArchClipper(),
+      child: Container(
+        width: double.infinity,
+        color: AppColors.burgundyDark,
+        child: Stack(
+          children: [
+            Positioned(
+              right: -50,
+              bottom: -20,
+              child: Opacity(
+                opacity: 0.06,
+                child: Assets.images.allergen.allergenBlob.image(
+                  width: 240,
+                  fit: BoxFit.contain,
                 ),
-                const SizedBox(height: AppSizes.sp2),
-                Text(
-                  _subtext,
-                  style: textTheme.bodySmall?.copyWith(
-                    color: AppColors.fgFaint,
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
-          const SizedBox(width: AppSizes.sm),
-          DetailStatusPill(status: status),
-        ],
+            SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSizes.pagePaddingH,
+                  AppSizes.sm,
+                  AppSizes.pagePaddingH,
+                  AppSizes.xl,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        _BackButton(onBack: onBack),
+                        Expanded(
+                          child: Text(
+                            'Details Allergen',
+                            textAlign: TextAlign.center,
+                            style: textTheme.titleSmall?.copyWith(
+                              color: AppColors.cream,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: AppSizes.roundButton),
+                      ],
+                    ),
+                    const SizedBox(height: AppSizes.lg),
+                    Row(
+                      children: [
+                        const AllergenIconTile(backing: Colors.white10),
+                        const SizedBox(width: AppSizes.sp12),
+                        Expanded(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                name,
+                                style: textTheme.titleMedium?.copyWith(
+                                  color: AppColors.cream,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: AppSizes.sp2),
+                              Text(
+                                '$clamped/3 times',
+                                style: textTheme.bodyMedium?.copyWith(
+                                  color: cream70,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: AppSizes.sm),
+                        DetailStatusPill(status: status),
+                      ],
+                    ),
+                    if (hasDates) ...[
+                      const SizedBox(height: AppSizes.lg),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: _DateColumn(
+                              label: 'First Introduced',
+                              value: _format(firstIntroduced!),
+                              labelColor: cream70,
+                            ),
+                          ),
+                          const SizedBox(width: AppSizes.md),
+                          Expanded(
+                            child: _DateColumn(
+                              label: 'Last Given',
+                              value: _format(lastGiven!),
+                              labelColor: cream70,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                    const SizedBox(height: AppSizes.lg),
+                    DetailSegmentBar(introducedCount: clamped, onDark: true),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
+}
+
+class _BackButton extends StatelessWidget {
+  const _BackButton({required this.onBack});
+
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: 'Back',
+      child: Material(
+        color: Colors.white.withValues(alpha: 0.12),
+        shape: const CircleBorder(),
+        child: InkWell(
+          onTap: onBack,
+          customBorder: const CircleBorder(),
+          child: const SizedBox(
+            width: AppSizes.roundButton,
+            height: AppSizes.roundButton,
+            child: Icon(
+              Icons.arrow_back_ios_new_rounded,
+              size: AppSizes.iconSm,
+              color: AppColors.cream,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DateColumn extends StatelessWidget {
+  const _DateColumn({
+    required this.label,
+    required this.value,
+    required this.labelColor,
+  });
+
+  final String label;
+  final String value;
+  final Color labelColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          label,
+          style: textTheme.labelSmall?.copyWith(
+            color: labelColor,
+            letterSpacing: 0.6,
+          ),
+        ),
+        const SizedBox(height: AppSizes.xs),
+        Text(
+          value,
+          style: textTheme.bodyMedium?.copyWith(
+            color: AppColors.cream,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _HeaderArchClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    const arch = 28.0;
+    return Path()
+      ..lineTo(0, size.height - arch)
+      ..quadraticBezierTo(
+        size.width / 2,
+        size.height,
+        size.width,
+        size.height - arch,
+      )
+      ..lineTo(size.width, 0)
+      ..close();
+  }
+
+  @override
+  bool shouldReclip(_HeaderArchClipper oldClipper) => false;
 }

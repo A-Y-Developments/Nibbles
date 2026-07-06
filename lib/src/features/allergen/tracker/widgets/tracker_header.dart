@@ -74,7 +74,7 @@ class _StatRow extends StatelessWidget {
           child: _StatColumn(value: safeCount, label: 'Safe foods'),
         ),
         Expanded(
-          child: _StatColumn(value: flaggedCount, label: 'Unsafe'),
+          child: _StatColumn(value: flaggedCount, label: 'Not Safe'),
         ),
         if (showNotTried)
           Expanded(

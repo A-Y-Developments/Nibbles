@@ -74,8 +74,8 @@ class LocalFlagService {
       _box.put('program_completion_shown_$babyId', true);
 
   /// Awaitable variant of [setProgramCompletionShown]. Used by the AL-08
-  /// reachability gate in `allergen_log_screen.dart` (NIB-128) so the flag
-  /// flip is durable BEFORE we route to `/home/allergen/complete`.
+  /// reachability gate in `reaction_log_sheet.dart` so the flag flip is
+  /// durable BEFORE we route to `/home/allergen/complete`.
   Future<void> markProgramCompletionShown(String babyId) =>
       _box.put('program_completion_shown_$babyId', true);
 

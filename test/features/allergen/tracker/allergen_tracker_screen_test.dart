@@ -131,16 +131,6 @@ void main() {
       routes: [
         GoRoute(path: '/', builder: (_, __) => const AllergenTrackerScreen()),
         GoRoute(
-          path: AppRoute.allergenLogCreate.path,
-          name: AppRoute.allergenLogCreate.name,
-          builder: (ctx, st) {
-            recorder
-              ..lastName = AppRoute.allergenLogCreate.name
-              ..lastPathParams = st.pathParameters;
-            return const Scaffold(body: Text('CREATE_STUB'));
-          },
-        ),
-        GoRoute(
           path: AppRoute.allergenDetail.path,
           name: AppRoute.allergenDetail.name,
           builder: (ctx, st) {

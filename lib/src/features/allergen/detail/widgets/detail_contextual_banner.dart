@@ -22,20 +22,19 @@ class DetailContextualBanner extends StatelessWidget {
       case AllergenStatus.notStarted:
         return null;
       case AllergenStatus.inProgress:
-        // NIB-156 — per-allergen advancement (NIB-120/126): the next action is
-        // to give the SAME allergen again, not move to the next one.
         return (
-          text: 'Give $allergenName again tomorrow',
+          text:
+              'This allergen introduction is in progress. Complete the plan '
+              'before introducing another allergen.',
           bg: AppColors.coralSoft,
           fg: AppColors.coralDeep,
         );
       case AllergenStatus.safe:
         return (
           text:
-              "You've already introduced this allergen! Don't forget to "
-              "include it regularly in your baby's meal prep to help "
-              'maintain exposure.',
-          bg: AppColors.butterSoft,
+              'This allergen has already been introduced. Continue offering '
+              'it regularly to help maintain exposure.',
+          bg: AppColors.cardCream,
           fg: AppColors.greenDeep,
         );
       case AllergenStatus.flagged:

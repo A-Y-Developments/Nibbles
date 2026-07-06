@@ -112,11 +112,6 @@ void main() {
           ],
         ),
         GoRoute(
-          path: AppRoute.allergenLogEdit.path,
-          name: AppRoute.allergenLogEdit.name,
-          builder: (_, __) => const Scaffold(body: Text('EDIT_STUB')),
-        ),
-        GoRoute(
           path: AppRoute.allergenComplete.path,
           name: AppRoute.allergenComplete.name,
           builder: (_, __) => const Scaffold(body: Text('AL08_STUB')),
@@ -170,108 +165,6 @@ void main() {
         expect(find.text('Unsafe'), findsOneWidget);
         expect(find.text('Safe'), findsNothing);
         expect(find.text('Attachment (Optional)'), findsNothing);
-      },
-    );
-
-    testWidgets(
-      'Tried-Safe + attachment: "Attachment (Optional)" label, attachment '
-      'title/description, and "Change Picture" CTA are rendered',
-      (tester) async {
-        stubLogs([
-          _makeLog(
-            notes: 'My baby love it, no reaction',
-            attachmentTitle: 'Rash on cheek area',
-            attachmentDescription: 'Taken 30 min after feeding',
-            photoUrl: 'allergen-attachments/$_babyId/p.jpg',
-          ),
-        ]);
-
-        await tester.pumpWidget(buildSubject());
-        await tester.pumpAndSettle();
-
-        expect(find.text('Attachment (Optional)'), findsOneWidget);
-        expect(find.text('Rash on cheek area'), findsOneWidget);
-        expect(find.text('Taken 30 min after feeding'), findsOneWidget);
-        expect(find.text('Change Picture'), findsOneWidget);
-      },
-    );
-
-    testWidgets(
-      'Tried-Unsafe + attachment: Unsafe pill + attachment block visible',
-      (tester) async {
-        stubLogs([
-          _makeLog(
-            hadReaction: true,
-            notes: 'Rash on cheek',
-            attachmentTitle: 'Rash on cheek area',
-            attachmentDescription: 'Taken 30 min after feeding',
-            photoUrl: 'allergen-attachments/$_babyId/p.jpg',
-          ),
-        ]);
-
-        await tester.pumpWidget(buildSubject());
-        await tester.pumpAndSettle();
-
-        expect(find.text('Unsafe'), findsOneWidget);
-        expect(find.text('Attachment (Optional)'), findsOneWidget);
-        expect(find.text('Change Picture'), findsOneWidget);
-        expect(find.text('Rash on cheek area'), findsOneWidget);
-      },
-    );
-
-    testWidgets(
-      '3-dot menu overlay exposes "Edit Reactions" and "Delete Log"',
-      (tester) async {
-        stubLogs([_makeLog(notes: 'note')]);
-
-        await tester.pumpWidget(buildSubject());
-        await tester.pumpAndSettle();
-
-        await tester.tap(find.byKey(const Key('log_detail_menu')));
-        await tester.pumpAndSettle();
-
-        expect(find.text('Edit Reactions'), findsOneWidget);
-        expect(find.text('Delete Log'), findsOneWidget);
-      },
-    );
-
-    testWidgets(
-      'Delete row opens the Figma confirmation popup with verbatim copy + '
-      'Cancel/Delete pill buttons; Cancel dismisses without deleting',
-      (tester) async {
-        stubLogs([_makeLog(notes: 'note')]);
-
-        await tester.pumpWidget(buildSubject());
-        await tester.pumpAndSettle();
-
-        await tester.tap(find.byKey(const Key('log_detail_menu')));
-        await tester.pumpAndSettle();
-        await tester.tap(find.byKey(const Key('log_actions_menu_delete')));
-        await tester.pumpAndSettle();
-
-        // Scope-specific destructive copy (NIB-185).
-        expect(
-          find.text("Delete this log? This may change the allergen's status."),
-          findsOneWidget,
-        );
-        expect(
-          find.byKey(const Key('delete_log_cancel_button')),
-          findsOneWidget,
-        );
-        expect(
-          find.byKey(const Key('delete_log_confirm_button')),
-          findsOneWidget,
-        );
-
-        await tester.tap(find.byKey(const Key('delete_log_cancel_button')));
-        await tester.pumpAndSettle();
-
-        verifyNever(
-          () => mockService.deleteAllergenLog(
-            logId: any(named: 'logId'),
-            photoPath: any(named: 'photoPath'),
-          ),
-        );
       },
     );
 

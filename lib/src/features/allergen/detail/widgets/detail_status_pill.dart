@@ -33,7 +33,11 @@ class DetailStatusPill extends StatelessWidget {
           fg: AppColors.greenDeep,
         );
       case AllergenStatus.flagged:
-        return (label: 'Unsafe', bg: AppColors.coral, fg: AppColors.cream);
+        return (
+          label: 'Unsafe',
+          bg: AppColors.destructiveSoft,
+          fg: AppColors.flagFg,
+        );
     }
   }
 

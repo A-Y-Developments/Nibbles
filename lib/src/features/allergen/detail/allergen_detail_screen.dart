@@ -8,9 +8,7 @@ import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart
 import 'package:nibbles/src/features/allergen/detail/allergen_detail_controller.dart';
 import 'package:nibbles/src/features/allergen/detail/allergen_detail_state.dart';
 import 'package:nibbles/src/features/allergen/detail/widgets/detail_contextual_banner.dart';
-import 'package:nibbles/src/features/allergen/detail/widgets/detail_dates_block.dart';
 import 'package:nibbles/src/features/allergen/detail/widgets/detail_header_card.dart';
-import 'package:nibbles/src/features/allergen/detail/widgets/detail_segment_bar.dart';
 import 'package:nibbles/src/features/allergen/detail/widgets/log_entry_card.dart';
 import 'package:nibbles/src/features/allergen/detail/widgets/reaction_log_header.dart';
 import 'package:nibbles/src/features/allergen/log/reaction_log_sheet.dart';
@@ -75,7 +73,7 @@ class _AllergenDetailView extends ConsumerWidget {
   final AllergenDetailState state;
   final String allergenKey;
 
-  int get _introducedCount => state.logs.length;
+  int get _cleanLogCount => state.logs.where((l) => !l.hadReaction).length;
 
   Future<void> _onAddPressed(BuildContext context, WidgetRef ref) async {
     final saved = await showReactionLogSheet(
@@ -91,65 +89,56 @@ class _AllergenDetailView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final hasLogs = state.logs.isNotEmpty;
 
-    return GradientScaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: Text(state.allergen.name),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.pagePaddingH,
-          vertical: AppSizes.pagePaddingV,
-        ),
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: Column(
         children: [
-          DetailHeaderCard(
-            emoji: state.allergen.emoji,
+          AllergenDetailHeader(
             name: state.allergen.name,
-            introducedCount: _introducedCount,
             status: state.status,
+            cleanLogCount: _cleanLogCount,
+            firstIntroduced: state.firstIntroduced,
+            lastGiven: state.lastGiven,
+            onBack: () => context.pop(),
           ),
-
-          if (hasLogs) ...[
-            const SizedBox(height: AppSizes.lg),
-            DetailDatesBlock(
-              firstIntroduced: state.firstIntroduced!,
-              lastGiven: state.lastGiven!,
-            ),
-          ],
-
-          const SizedBox(height: AppSizes.lg),
-          DetailSegmentBar(introducedCount: _introducedCount),
-
-          const SizedBox(height: AppSizes.lg),
-          DetailContextualBanner(
-            status: state.status,
-            allergenName: state.allergen.name,
-          ),
-
-          const SizedBox(height: AppSizes.lg),
-          ReactionLogHeader(onAddPressed: () => _onAddPressed(context, ref)),
-          const SizedBox(height: AppSizes.sm),
-
-          if (hasLogs)
-            ...state.logs.asMap().entries.map(
-              (e) => LogEntryCard(
-                key: ValueKey(e.value.id),
-                log: e.value,
-                logNumber: e.key + 1,
-                onTap: () => context.pushNamed(
-                  AppRoute.allergenLogDetail.name,
-                  pathParameters: {
-                    'allergenKey': allergenKey,
-                    'logId': e.value.id,
-                  },
-                ),
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(
+                AppSizes.pagePaddingH,
+                AppSizes.lg,
+                AppSizes.pagePaddingH,
+                AppSizes.xxl,
               ),
-            )
-          else
-            const _EmptyLogsHint(),
-
-          const SizedBox(height: AppSizes.xxl),
+              children: [
+                ReactionLogHeader(
+                  onAddPressed: () => _onAddPressed(context, ref),
+                ),
+                const SizedBox(height: AppSizes.sm),
+                if (hasLogs)
+                  ...state.logs.asMap().entries.map(
+                    (e) => LogEntryCard(
+                      key: ValueKey(e.value.id),
+                      log: e.value,
+                      logNumber: e.key + 1,
+                      onTap: () => context.pushNamed(
+                        AppRoute.allergenLogDetail.name,
+                        pathParameters: {
+                          'allergenKey': allergenKey,
+                          'logId': e.value.id,
+                        },
+                      ),
+                    ),
+                  )
+                else
+                  const _EmptyLogsHint(),
+                const SizedBox(height: AppSizes.lg),
+                DetailContextualBanner(
+                  status: state.status,
+                  allergenName: state.allergen.name,
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
