@@ -13,6 +13,7 @@ import 'package:nibbles/src/features/allergen/detail/widgets/detail_header_card.
 import 'package:nibbles/src/features/allergen/detail/widgets/detail_segment_bar.dart';
 import 'package:nibbles/src/features/allergen/detail/widgets/log_entry_card.dart';
 import 'package:nibbles/src/features/allergen/detail/widgets/reaction_log_header.dart';
+import 'package:nibbles/src/features/allergen/log/reaction_log_sheet.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 
 class AllergenDetailScreen extends ConsumerWidget {
@@ -77,9 +78,9 @@ class _AllergenDetailView extends ConsumerWidget {
   int get _introducedCount => state.logs.length;
 
   Future<void> _onAddPressed(BuildContext context, WidgetRef ref) async {
-    final saved = await context.pushNamed<bool>(
-      AppRoute.allergenLogCreate.name,
-      pathParameters: {'allergenKey': state.allergen.key},
+    final saved = await showReactionLogSheet(
+      context,
+      allergenKey: state.allergen.key,
     );
     if (saved ?? false) {
       ref.invalidate(allergenDetailControllerProvider(allergenKey));

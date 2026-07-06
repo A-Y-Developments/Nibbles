@@ -19,6 +19,14 @@ final _privateConstructorUsedError = UnsupportedError(
 mixin _$AllergenLogState {
   EmojiTaste? get taste => throw _privateConstructorUsedError;
   bool get hadReaction => throw _privateConstructorUsedError;
+
+  /// Checked symptom presets (subset of [SymptomPresets.all]). Only
+  /// persisted when [hadReaction] is on; optional (may be empty).
+  List<String> get symptoms => throw _privateConstructorUsedError;
+
+  /// Reaction severity. REQUIRED when [hadReaction] is on (Save is disabled
+  /// until it is chosen); null otherwise.
+  ReactionSeverity? get severity => throw _privateConstructorUsedError;
   String? get notes => throw _privateConstructorUsedError;
   String? get attachmentTitle => throw _privateConstructorUsedError;
   String? get attachmentDescription => throw _privateConstructorUsedError;
@@ -60,6 +68,8 @@ abstract class $AllergenLogStateCopyWith<$Res> {
   $Res call({
     EmojiTaste? taste,
     bool hadReaction,
+    List<String> symptoms,
+    ReactionSeverity? severity,
     String? notes,
     String? attachmentTitle,
     String? attachmentDescription,
@@ -92,6 +102,8 @@ class _$AllergenLogStateCopyWithImpl<$Res, $Val extends AllergenLogState>
   $Res call({
     Object? taste = freezed,
     Object? hadReaction = null,
+    Object? symptoms = null,
+    Object? severity = freezed,
     Object? notes = freezed,
     Object? attachmentTitle = freezed,
     Object? attachmentDescription = freezed,
@@ -115,6 +127,14 @@ class _$AllergenLogStateCopyWithImpl<$Res, $Val extends AllergenLogState>
                 ? _value.hadReaction
                 : hadReaction // ignore: cast_nullable_to_non_nullable
                       as bool,
+            symptoms: null == symptoms
+                ? _value.symptoms
+                : symptoms // ignore: cast_nullable_to_non_nullable
+                      as List<String>,
+            severity: freezed == severity
+                ? _value.severity
+                : severity // ignore: cast_nullable_to_non_nullable
+                      as ReactionSeverity?,
             notes: freezed == notes
                 ? _value.notes
                 : notes // ignore: cast_nullable_to_non_nullable
@@ -181,6 +201,8 @@ abstract class _$$AllergenLogStateImplCopyWith<$Res>
   $Res call({
     EmojiTaste? taste,
     bool hadReaction,
+    List<String> symptoms,
+    ReactionSeverity? severity,
     String? notes,
     String? attachmentTitle,
     String? attachmentDescription,
@@ -212,6 +234,8 @@ class __$$AllergenLogStateImplCopyWithImpl<$Res>
   $Res call({
     Object? taste = freezed,
     Object? hadReaction = null,
+    Object? symptoms = null,
+    Object? severity = freezed,
     Object? notes = freezed,
     Object? attachmentTitle = freezed,
     Object? attachmentDescription = freezed,
@@ -235,6 +259,14 @@ class __$$AllergenLogStateImplCopyWithImpl<$Res>
             ? _value.hadReaction
             : hadReaction // ignore: cast_nullable_to_non_nullable
                   as bool,
+        symptoms: null == symptoms
+            ? _value._symptoms
+            : symptoms // ignore: cast_nullable_to_non_nullable
+                  as List<String>,
+        severity: freezed == severity
+            ? _value.severity
+            : severity // ignore: cast_nullable_to_non_nullable
+                  as ReactionSeverity?,
         notes: freezed == notes
             ? _value.notes
             : notes // ignore: cast_nullable_to_non_nullable
@@ -294,6 +326,8 @@ class _$AllergenLogStateImpl implements _AllergenLogState {
   const _$AllergenLogStateImpl({
     this.taste,
     this.hadReaction = false,
+    final List<String> symptoms = const <String>[],
+    this.severity,
     this.notes,
     this.attachmentTitle,
     this.attachmentDescription,
@@ -306,13 +340,32 @@ class _$AllergenLogStateImpl implements _AllergenLogState {
     this.isSaved = false,
     this.photoUploadFailed = false,
     this.errorMessage,
-  });
+  }) : _symptoms = symptoms;
 
   @override
   final EmojiTaste? taste;
   @override
   @JsonKey()
   final bool hadReaction;
+
+  /// Checked symptom presets (subset of [SymptomPresets.all]). Only
+  /// persisted when [hadReaction] is on; optional (may be empty).
+  final List<String> _symptoms;
+
+  /// Checked symptom presets (subset of [SymptomPresets.all]). Only
+  /// persisted when [hadReaction] is on; optional (may be empty).
+  @override
+  @JsonKey()
+  List<String> get symptoms {
+    if (_symptoms is EqualUnmodifiableListView) return _symptoms;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_symptoms);
+  }
+
+  /// Reaction severity. REQUIRED when [hadReaction] is on (Save is disabled
+  /// until it is chosen); null otherwise.
+  @override
+  final ReactionSeverity? severity;
   @override
   final String? notes;
   @override
@@ -355,7 +408,7 @@ class _$AllergenLogStateImpl implements _AllergenLogState {
 
   @override
   String toString() {
-    return 'AllergenLogState(taste: $taste, hadReaction: $hadReaction, notes: $notes, attachmentTitle: $attachmentTitle, attachmentDescription: $attachmentDescription, photoPath: $photoPath, existingPhotoPath: $existingPhotoPath, logId: $logId, hydrated: $hydrated, logDate: $logDate, isLoading: $isLoading, isSaved: $isSaved, photoUploadFailed: $photoUploadFailed, errorMessage: $errorMessage)';
+    return 'AllergenLogState(taste: $taste, hadReaction: $hadReaction, symptoms: $symptoms, severity: $severity, notes: $notes, attachmentTitle: $attachmentTitle, attachmentDescription: $attachmentDescription, photoPath: $photoPath, existingPhotoPath: $existingPhotoPath, logId: $logId, hydrated: $hydrated, logDate: $logDate, isLoading: $isLoading, isSaved: $isSaved, photoUploadFailed: $photoUploadFailed, errorMessage: $errorMessage)';
   }
 
   @override
@@ -366,6 +419,9 @@ class _$AllergenLogStateImpl implements _AllergenLogState {
             (identical(other.taste, taste) || other.taste == taste) &&
             (identical(other.hadReaction, hadReaction) ||
                 other.hadReaction == hadReaction) &&
+            const DeepCollectionEquality().equals(other._symptoms, _symptoms) &&
+            (identical(other.severity, severity) ||
+                other.severity == severity) &&
             (identical(other.notes, notes) || other.notes == notes) &&
             (identical(other.attachmentTitle, attachmentTitle) ||
                 other.attachmentTitle == attachmentTitle) &&
@@ -393,6 +449,8 @@ class _$AllergenLogStateImpl implements _AllergenLogState {
     runtimeType,
     taste,
     hadReaction,
+    const DeepCollectionEquality().hash(_symptoms),
+    severity,
     notes,
     attachmentTitle,
     attachmentDescription,
@@ -423,6 +481,8 @@ abstract class _AllergenLogState implements AllergenLogState {
   const factory _AllergenLogState({
     final EmojiTaste? taste,
     final bool hadReaction,
+    final List<String> symptoms,
+    final ReactionSeverity? severity,
     final String? notes,
     final String? attachmentTitle,
     final String? attachmentDescription,
@@ -441,6 +501,16 @@ abstract class _AllergenLogState implements AllergenLogState {
   EmojiTaste? get taste;
   @override
   bool get hadReaction;
+
+  /// Checked symptom presets (subset of [SymptomPresets.all]). Only
+  /// persisted when [hadReaction] is on; optional (may be empty).
+  @override
+  List<String> get symptoms;
+
+  /// Reaction severity. REQUIRED when [hadReaction] is on (Save is disabled
+  /// until it is chosen); null otherwise.
+  @override
+  ReactionSeverity? get severity;
   @override
   String? get notes;
   @override

@@ -56,7 +56,7 @@ Future<LogActionMenuChoice?> showLogActionsMenu(
         padding: EdgeInsets.zero,
         child: _MenuRow(
           icon: Icons.edit_outlined,
-          label: 'Edit Reactions',
+          label: 'Edit Reaction',
           color: AppColors.greenDeep,
         ),
       ),

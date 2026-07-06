@@ -6,7 +6,6 @@ import 'package:nibbles/src/common/services/local_flag_service.dart';
 import 'package:nibbles/src/common/services/subscription_service.dart';
 import 'package:nibbles/src/features/allergen/complete/allergen_complete_screen.dart';
 import 'package:nibbles/src/features/allergen/detail/allergen_detail_screen.dart';
-import 'package:nibbles/src/features/allergen/log/allergen_log_screen.dart';
 import 'package:nibbles/src/features/allergen/log_detail/allergen_log_detail_screen.dart';
 import 'package:nibbles/src/features/allergen/tracker/allergen_tracker_screen.dart';
 import 'package:nibbles/src/features/auth/forgot_password/forgot_password_screen.dart';
@@ -326,43 +325,20 @@ GoRouter goRouter(Ref ref) {
                               state.pathParameters['allergenKey'] ?? '',
                         ),
                         routes: [
+                          // Reaction log capture/edit is a bottom sheet
+                          // (showReactionLogSheet), not a route. Only the
+                          // read-only log detail remains a full-screen push.
                           GoRoute(
-                            path: 'log',
-                            name: AppRoute.allergenLogCreate.name,
+                            path: 'log/:logId',
+                            name: AppRoute.allergenLogDetail.name,
                             parentNavigatorKey: rootNavigatorKey,
-                            builder: (context, state) => AllergenLogScreen(
-                              allergenKey:
-                                  state.pathParameters['allergenKey'] ?? '',
-                            ),
-                            routes: [
-                              GoRoute(
-                                path: ':logId',
-                                name: AppRoute.allergenLogDetail.name,
-                                parentNavigatorKey: rootNavigatorKey,
-                                builder: (context, state) {
-                                  final params = state.pathParameters;
-                                  return AllergenLogDetailScreen(
-                                    allergenKey: params['allergenKey'] ?? '',
-                                    logId: params['logId'] ?? '',
-                                  );
-                                },
-                                routes: [
-                                  GoRoute(
-                                    path: 'edit',
-                                    name: AppRoute.allergenLogEdit.name,
-                                    parentNavigatorKey: rootNavigatorKey,
-                                    builder: (context, state) {
-                                      final params = state.pathParameters;
-                                      return AllergenLogScreen(
-                                        allergenKey:
-                                            params['allergenKey'] ?? '',
-                                        logId: params['logId'],
-                                      );
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ],
+                            builder: (context, state) {
+                              final params = state.pathParameters;
+                              return AllergenLogDetailScreen(
+                                allergenKey: params['allergenKey'] ?? '',
+                                logId: params['logId'] ?? '',
+                              );
+                            },
                           ),
                         ],
                       ),
