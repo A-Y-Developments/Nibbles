@@ -35,7 +35,7 @@ class ShopRow extends StatelessWidget {
 
   // Kit-spec sizes (.shop-row__cb / .shop-row__del).
   static const double _affordance = 22;
-  static const double _cbRadius = 6;
+  static const double _cbRadius = AppSizes.radiusFull;
   static const double _checkGlyphSize = 13;
   static const double _delGlyphSize = 14;
 
