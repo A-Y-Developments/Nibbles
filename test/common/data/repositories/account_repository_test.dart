@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:nibbles/src/common/data/repositories/account_repository.dart';
@@ -9,105 +7,88 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class _MockSupabaseClient extends Mock implements SupabaseClient {}
 
-/// Test seam: a SupabaseClient whose `rpc(...)` is intercepted by a
-/// behaviour closure. The closure decides whether the awaited rpc resolves
-/// with a value or throws (the repo only cares about that distinction).
-///
-/// We can't easily construct a real `PostgrestFilterBuilder<T>` in tests, so
-/// the closure returns a `_FakeBuilder<T>` which implements `Future<T>` and
-/// `PostgrestFilterBuilder<T>` via `noSuchMethod`.
-class _SupabaseClientWithRpc extends _MockSupabaseClient {
-  _SupabaseClientWithRpc(this._behaviour);
-
-  final FutureOr<Object?> Function(String fn, Map<String, dynamic>? params)
-  _behaviour;
-
-  @override
-  PostgrestFilterBuilder<T> rpc<T>(
-    String fn, {
-    Map<String, dynamic>? params,
-    dynamic get = false,
-  }) {
-    return _FakeBuilder<T>(() async => await _behaviour(fn, params) as T);
-  }
-}
-
-// PostgrestFilterBuilder is @immutable but we need to memoise the awaited
-// future once. Lint suppression matches other test fakes in the codebase.
-// ignore: must_be_immutable
-class _FakeBuilder<T> implements PostgrestFilterBuilder<T> {
-  _FakeBuilder(this._run);
-
-  final Future<T> Function() _run;
-  Future<T>? _cached;
-  Future<T> get _future => _cached ??= _run();
-
-  @override
-  Future<R> then<R>(
-    FutureOr<R> Function(T value) onValue, {
-    Function? onError,
-  }) => _future.then(onValue, onError: onError);
-
-  @override
-  Future<T> catchError(Function onError, {bool Function(Object error)? test}) =>
-      _future.catchError(onError, test: test);
-
-  @override
-  Future<T> whenComplete(FutureOr<void> Function() action) =>
-      _future.whenComplete(action);
-
-  @override
-  Future<T> timeout(Duration timeLimit, {FutureOr<T> Function()? onTimeout}) =>
-      _future.timeout(timeLimit, onTimeout: onTimeout);
-
-  @override
-  Stream<T> asStream() => _future.asStream();
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
-}
+class _MockFunctionsClient extends Mock implements FunctionsClient {}
 
 void main() {
+  late _MockSupabaseClient client;
+  late _MockFunctionsClient functions;
+
+  setUp(() {
+    client = _MockSupabaseClient();
+    functions = _MockFunctionsClient();
+    when(() => client.functions).thenReturn(functions);
+  });
+
+  AccountRepositoryImpl sut() => AccountRepositoryImpl(supabaseClient: client);
+
   group('AccountRepositoryImpl.requestAccountDeletion', () {
-    test('returns Result.success(null) on a clean rpc call '
-        'and forwards reason as p_reason', () async {
-      String? capturedFn;
-      Map<String, dynamic>? capturedParams;
-      final client = _SupabaseClientWithRpc((fn, params) {
-        capturedFn = fn;
-        capturedParams = params;
-        return null;
-      });
-      final sut = AccountRepositoryImpl(supabaseClient: client);
+    test(
+      'invokes delete-account with the reason and returns success',
+      () async {
+        when(
+          () => functions.invoke(any(), body: any(named: 'body')),
+        ).thenAnswer(
+          (_) async => FunctionResponse(data: {'success': true}, status: 200),
+        );
 
-      final result = await sut.requestAccountDeletion('too_expensive');
+        final result = await sut().requestAccountDeletion('too_expensive');
 
-      expect(result, isA<Success<void>>());
-      expect(capturedFn, 'request_account_deletion');
-      expect(capturedParams, {'p_reason': 'too_expensive'});
-    });
+        expect(result, isA<Success<void>>());
+        final captured = verify(
+          () => functions.invoke(captureAny(), body: captureAny(named: 'body')),
+        ).captured;
+        expect(captured[0], 'delete-account');
+        expect(captured[1], {'reason': 'too_expensive'});
+      },
+    );
 
-    test('maps PostgrestException to Failure(ServerException)', () async {
-      final client = _SupabaseClientWithRpc((_, __) {
-        throw const PostgrestException(message: 'rls denied', code: '42501');
-      });
-      final sut = AccountRepositoryImpl(supabaseClient: client);
+    test(
+      'maps FunctionException(details.error) to Failure(ServerException)',
+      () async {
+        when(() => functions.invoke(any(), body: any(named: 'body'))).thenThrow(
+          const FunctionException(
+            status: 500,
+            details: {'error': 'Could not delete account. Please try again.'},
+          ),
+        );
 
-      final result = await sut.requestAccountDeletion('not_useful');
+        final result = await sut().requestAccountDeletion('not_useful');
 
-      expect(result, isA<Failure<void>>());
-      final failure = result as Failure<void>;
-      expect(failure.error, isA<ServerException>());
-      expect(failure.error.message, 'rls denied');
-    });
+        expect(result, isA<Failure<void>>());
+        final failure = result as Failure<void>;
+        expect(failure.error, isA<ServerException>());
+        expect(
+          failure.error.message,
+          'Could not delete account. Please try again.',
+        );
+      },
+    );
+
+    test(
+      'FunctionException without a string error uses a fallback message',
+      () async {
+        when(
+          () => functions.invoke(any(), body: any(named: 'body')),
+        ).thenThrow(const FunctionException(status: 500));
+
+        final result = await sut().requestAccountDeletion('other');
+
+        expect(result, isA<Failure<void>>());
+        final failure = result as Failure<void>;
+        expect(failure.error, isA<ServerException>());
+        expect(
+          failure.error.message,
+          'Account deletion failed. Please try again.',
+        );
+      },
+    );
 
     test('maps any other thrown Object to Failure(UnknownException)', () async {
-      final client = _SupabaseClientWithRpc((_, __) {
-        throw Exception('boom');
-      });
-      final sut = AccountRepositoryImpl(supabaseClient: client);
+      when(
+        () => functions.invoke(any(), body: any(named: 'body')),
+      ).thenThrow(Exception('boom'));
 
-      final result = await sut.requestAccountDeletion('other');
+      final result = await sut().requestAccountDeletion('other');
 
       expect(result, isA<Failure<void>>());
       expect((result as Failure<void>).error, isA<UnknownException>());

@@ -28,9 +28,9 @@ class AccountRepositoryImpl implements AccountRepository {
   @override
   Future<Result<void>> requestAccountDeletion(String reason) async {
     try {
-      // `delete-account` Edge Function hard-deletes the auth user (service role)
-      // → cascades all user + baby-scoped data. Throws FunctionException on any
-      // non-2xx; its `details` carries the `{ "error": ... }` body.
+      // `delete-account` Edge Function hard-deletes the auth user (service
+      // role) → cascades all user + baby-scoped data. It throws
+      // FunctionException on any non-2xx; `details` carries the error body.
       await _supabase.functions.invoke(
         'delete-account',
         body: {'reason': reason},
