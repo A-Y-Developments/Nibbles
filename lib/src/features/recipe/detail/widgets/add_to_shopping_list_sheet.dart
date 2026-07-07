@@ -5,36 +5,31 @@ import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
 import 'package:nibbles/src/common/components/controls/app_checkbox.dart';
 import 'package:nibbles/src/common/domain/entities/ingredient.dart';
 
-/// Shows the Add-to-Shoplist bottom sheet (NIB-75 — Figma 971:9042 / 971:9204).
+/// Shows the Add-to-Shoplist bottom sheet (NIB-75).
 ///
-/// Layout matches the Figma:
-///   * sheet title "Add to Shoplist" with a close (X) button top-right
-///   * one row per ingredient — leading checkbox + name + trailing burgundy X
-///     that drops the row from this sheet's candidate list
-///   * side-by-side bottom CTAs:
-///       - butter ghost pill — "Unselect All" (when all selected) or
-///         "Select All" (when any are deselected)
-///       - green primary pill — "Add (N)" where N is the live selected count
+/// Layout mirrors the meal-plan day modal (`AddToShoppingListModal`):
+///   * draggable sheet, grab handle, title + "Select all" toggle, divider
+///   * plain checkbox rows (leading checkbox + name) with a trailing burgundy
+///     X that drops the row from this sheet's candidate list
+///   * single full-width "Add (N) items" pill at the bottom
 ///
-/// All rows are pre-selected on open (success-1 state). Tapping "Unselect All"
-/// flips the toggle label and disables the primary CTA (success-2 state).
+/// Recipe-specific behaviour retained: ingredients are pre-loaded (no async
+/// fetch), and the per-row X removes the row with an Undo snackbar.
 ///
-/// The verbatim "Mon, 20 - Thu 23 April" date subtitle from the Figma is a
-/// meal-plan-window artifact; recipe-scoped shopping list adds have no date
-/// context, so it is intentionally omitted.
-///
-/// Resolves to the picked ingredient names on confirm, or `null` on dismiss.
+/// All rows are pre-selected on open. Resolves to the picked ingredient names
+/// on confirm, or `null` on dismiss.
 Future<List<String>?> showAddToShoppingListSheet(
   BuildContext context,
   List<Ingredient> ingredients,
 ) {
   return showModalBottomSheet<List<String>>(
     context: context,
+    useRootNavigator: true,
     isScrollControlled: true,
-    backgroundColor: AppColors.butterSoft,
+    backgroundColor: AppColors.surface,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(
-        top: Radius.circular(AppSizes.radius2xl),
+        top: Radius.circular(AppSizes.radiusLg),
       ),
     ),
     builder: (context) => _ShoppingListSheet(ingredients: ingredients),
@@ -54,16 +49,15 @@ class _ShoppingListSheetState extends State<_ShoppingListSheet> {
   /// Indices (in the original ingredients order) currently selected.
   late Set<int> _selected;
 
-  /// Indices removed via the per-row `X`. Cannot be re-added in this session.
+  /// Indices removed via the per-row `X`. Cannot be re-added except via Undo.
   final Set<int> _removed = <int>{};
 
-  /// Guard against double-tap on confirm / close.
+  /// Guard against double-tap on confirm.
   bool _dismissing = false;
 
   @override
   void initState() {
     super.initState();
-    // Default: every row pre-selected (success-1 state).
     _selected = <int>{for (var i = 0; i < widget.ingredients.length; i++) i};
   }
 
@@ -133,40 +127,29 @@ class _ShoppingListSheetState extends State<_ShoppingListSheet> {
     }
   }
 
-  void _close() {
-    if (_dismissing) return;
-    _dismissing = true;
-    if (Navigator.of(context).canPop()) {
-      Navigator.of(context).pop();
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final textTheme = Theme.of(context).textTheme;
     final selectedCount = _selected.length;
     final visibleIndices = <int>[
       for (var i = 0; i < widget.ingredients.length; i++)
         if (!_removed.contains(i)) i,
     ];
-    final toggleLabel = _allSelected ? 'Unselect All' : 'Select All';
 
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+    return DraggableScrollableSheet(
+      initialChildSize: 0.7,
+      minChildSize: 0.4,
+      maxChildSize: 0.95,
+      expand: false,
+      builder: (context, scrollController) {
+        return Column(
           children: [
             const SizedBox(height: AppSizes.sm),
-            // Grab handle.
             Container(
-              width: AppSizes.sp40,
-              height: AppSizes.xs,
+              width: 36,
+              height: 4,
               decoration: BoxDecoration(
-                color: AppColors.borderSoft,
+                color: AppColors.divider,
                 borderRadius: BorderRadius.circular(AppSizes.radiusFull),
               ),
             ),
@@ -176,87 +159,52 @@ class _ShoppingListSheetState extends State<_ShoppingListSheet> {
                 horizontal: AppSizes.pagePaddingH,
               ),
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: Text(
-                      'Add to Shoplist',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: AppColors.fgStrong,
-                      ),
-                    ),
+                    child: Text('Add to Shoplist', style: textTheme.titleSmall),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.close, size: AppSizes.iconMd),
-                    color: AppColors.fgStrong,
-                    onPressed: _close,
-                    tooltip: 'Close',
-                    constraints: const BoxConstraints(
-                      minWidth: AppSizes.xxl,
-                      minHeight: AppSizes.xxl,
+                  if (_remainingCount > 0)
+                    TextButton(
+                      onPressed: _toggleSelectAll,
+                      child: Text(_allSelected ? 'Deselect all' : 'Select all'),
                     ),
-                  ),
                 ],
               ),
             ),
-            const SizedBox(height: AppSizes.sm),
-            Flexible(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.6,
+            const SizedBox(height: AppSizes.xs),
+            const Divider(height: 1),
+            Expanded(
+              child: visibleIndices.isEmpty
+                  ? _EmptyState(textTheme: textTheme)
+                  : ListView.builder(
+                      controller: scrollController,
+                      itemCount: visibleIndices.length,
+                      itemBuilder: (context, i) {
+                        final index = visibleIndices[i];
+                        return _IngredientRow(
+                          name: widget.ingredients[index].name,
+                          selected: _selected.contains(index),
+                          onToggle: () => _toggleRow(index),
+                          onRemove: () => _removeRow(index),
+                        );
+                      },
+                    ),
+            ),
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSizes.pagePaddingH,
+                  vertical: AppSizes.md,
                 ),
-                child: visibleIndices.isEmpty
-                    ? _EmptyState(theme: theme)
-                    : ListView.separated(
-                        shrinkWrap: true,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSizes.pagePaddingH,
-                          vertical: AppSizes.sp12,
-                        ),
-                        itemCount: visibleIndices.length,
-                        separatorBuilder: (_, __) =>
-                            const SizedBox(height: AppSizes.sm),
-                        itemBuilder: (context, i) {
-                          final index = visibleIndices[i];
-                          return _IngredientRow(
-                            name: widget.ingredients[index].name,
-                            selected: _selected.contains(index),
-                            onToggle: () => _toggleRow(index),
-                            onRemove: () => _removeRow(index),
-                          );
-                        },
-                      ),
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.fromLTRB(
-                AppSizes.pagePaddingH,
-                AppSizes.sp12,
-                AppSizes.pagePaddingH,
-                AppSizes.sp12 + MediaQuery.of(context).padding.bottom,
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: AppPillButton(
-                      label: toggleLabel,
-                      variant: AppPillButtonVariant.ghost,
-                      onPressed: _remainingCount == 0 ? null : _toggleSelectAll,
-                    ),
-                  ),
-                  const SizedBox(width: AppSizes.sp12),
-                  Expanded(
-                    child: AppPillButton(
-                      label: 'Add ($selectedCount)',
-                      onPressed: selectedCount == 0 ? null : _confirm,
-                    ),
-                  ),
-                ],
+                child: AppPillButton(
+                  label: 'Add ($selectedCount) items',
+                  onPressed: selectedCount == 0 ? null : _confirm,
+                ),
               ),
             ),
           ],
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -276,52 +224,37 @@ class _IngredientRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final textTheme = Theme.of(context).textTheme;
 
     return Semantics(
       container: true,
       label: name,
       checked: selected,
       onTap: onToggle,
-      child: Material(
-        color: AppColors.cream,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        child: InkWell(
-          onTap: onToggle,
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSizes.sp12,
-              vertical: AppSizes.sp12,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.cream,
-              borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-              border: Border.all(color: AppColors.borderSoft),
-            ),
-            child: Row(
-              children: [
-                ExcludeSemantics(
-                  child: AppCheckbox(
-                    value: selected,
-                    onChanged: (_) => onToggle(),
-                  ),
+      child: InkWell(
+        onTap: onToggle,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSizes.pagePaddingH,
+            vertical: AppSizes.xs,
+          ),
+          child: Row(
+            children: [
+              ExcludeSemantics(
+                child: AppCheckbox(
+                  value: selected,
+                  onChanged: (_) => onToggle(),
                 ),
-                const SizedBox(width: AppSizes.sp12),
-                Expanded(
-                  child: ExcludeSemantics(
-                    child: Text(
-                      name,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        color: AppColors.fgDefault,
-                      ),
-                    ),
-                  ),
+              ),
+              const SizedBox(width: AppSizes.sm),
+              Expanded(
+                child: ExcludeSemantics(
+                  child: Text(name, style: textTheme.bodyMedium),
                 ),
-                const SizedBox(width: AppSizes.sm),
-                _RemoveButton(name: name, onPressed: onRemove),
-              ],
-            ),
+              ),
+              const SizedBox(width: AppSizes.sm),
+              _RemoveButton(name: name, onPressed: onRemove),
+            ],
           ),
         ),
       ),
@@ -337,9 +270,6 @@ class _RemoveButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Plain X glyph in Nibble-primary-Burgundy (Figma 971:9042 — token
-    // Nibble-primary-Burgundy #77393b). No circular background per the
-    // Figma rows.
     return Semantics(
       button: true,
       label: 'Remove $name',
@@ -364,21 +294,19 @@ class _RemoveButton extends StatelessWidget {
 }
 
 class _EmptyState extends StatelessWidget {
-  const _EmptyState({required this.theme});
+  const _EmptyState({required this.textTheme});
 
-  final ThemeData theme;
+  final TextTheme textTheme;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.pagePaddingH,
-        vertical: AppSizes.xl,
-      ),
-      child: Center(
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSizes.pagePaddingH),
         child: Text(
           'No ingredients left.',
-          style: theme.textTheme.bodyMedium?.copyWith(color: AppColors.fgFaint),
+          style: textTheme.bodyMedium?.copyWith(color: AppColors.subtext),
+          textAlign: TextAlign.center,
         ),
       ),
     );

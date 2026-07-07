@@ -7,7 +7,7 @@ part of 'meal_plan_controller.dart';
 // **************************************************************************
 
 String _$mealPlanControllerHash() =>
-    r'8c55aa4e0a15bcff79bb44ba296d70aa064abbdf';
+    r'e15ccd9c76dea3eb8cce6d70c49e0fee6d5a3eb7';
 
 /// Copied from Dart SDK
 class _SystemHash {

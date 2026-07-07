@@ -209,29 +209,24 @@ void main() {
       },
     );
 
-    testWidgets(
-      'attachment block renders the photo + Change Picture but NOT the '
-      'title / description captions',
-      (tester) async {
-        stubLogs([
-          _makeLog(
-            attachmentTitle: 'Rash on cheek area',
-            attachmentDescription: 'Appeared 20 minutes after the meal',
-            photoUrl: 'allergen-attachments/$_babyId/p.jpg',
-          ),
-        ]);
+    testWidgets('attachment block renders the photo + Change Picture + title / '
+        'description captions', (tester) async {
+      stubLogs([
+        _makeLog(
+          attachmentTitle: 'Rash on cheek area',
+          attachmentDescription: 'Appeared 20 minutes after the meal',
+          photoUrl: 'allergen-attachments/$_babyId/p.jpg',
+        ),
+      ]);
 
-        await tester.pumpWidget(buildSubject());
-        await tester.pumpAndSettle();
+      await tester.pumpWidget(buildSubject());
+      await tester.pumpAndSettle();
 
-        expect(find.text('Attachment (Optional)'), findsOneWidget);
-        expect(find.text('Change Picture'), findsOneWidget);
-        // Caption + description are intentionally dropped from the redesigned
-        // attachment block.
-        expect(find.text('Rash on cheek area'), findsNothing);
-        expect(find.text('Appeared 20 minutes after the meal'), findsNothing);
-      },
-    );
+      expect(find.text('Attachment (Optional)'), findsOneWidget);
+      expect(find.text('Change Picture'), findsOneWidget);
+      expect(find.text('Rash on cheek area'), findsOneWidget);
+      expect(find.text('Appeared 20 minutes after the meal'), findsOneWidget);
+    });
 
     testWidgets(
       'Confirming the delete popup calls deleteAllergenLog with the log id + '

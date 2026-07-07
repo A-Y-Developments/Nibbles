@@ -39,8 +39,15 @@ void main() {
       expect(const HomeState().mealPrepSetUp, isFalse);
     });
 
-    test('true with at least one meal', () {
-      expect(HomeState(allMeals: [_entry()]).mealPrepSetUp, isTrue);
+    test('true with a picked meal-prep range (plannedDates)', () {
+      expect(
+        HomeState(plannedDates: [DateTime(2026, 3, 10)]).mealPrepSetUp,
+        isTrue,
+      );
+    });
+
+    test('false when meals exist but no picked range', () {
+      expect(HomeState(allMeals: [_entry()]).mealPrepSetUp, isFalse);
     });
   });
 
@@ -58,9 +65,7 @@ void main() {
     });
 
     test('allAllergensDone true when all 11 are safe/flagged', () {
-      final state = HomeState(
-        allergenStatuses: _statuses(safe: 8, flagged: 3),
-      );
+      final state = HomeState(allergenStatuses: _statuses(safe: 8, flagged: 3));
       expect(state.introducedCount, kAllergenKeys.length);
       expect(state.allAllergensDone, isTrue);
     });
@@ -68,8 +73,9 @@ void main() {
     test('hasActiveProgramAllergen tracks introduced or in-progress', () {
       expect(const HomeState().hasActiveProgramAllergen, isFalse);
       expect(
-        HomeState(allergenStatuses: _statuses(inProgress: 1))
-            .hasActiveProgramAllergen,
+        HomeState(
+          allergenStatuses: _statuses(inProgress: 1),
+        ).hasActiveProgramAllergen,
         isTrue,
       );
       final withSafe = HomeState(allergenStatuses: _statuses(safe: 1));
@@ -79,9 +85,7 @@ void main() {
 
   group('HomeState.allergenHeroState', () {
     test('start when current allergen not started', () {
-      const state = HomeState(
-        currentAllergenKey: 'milk',
-      );
+      const state = HomeState(currentAllergenKey: 'milk');
       expect(state.allergenHeroState, HomeAllergenHeroState.start);
     });
 

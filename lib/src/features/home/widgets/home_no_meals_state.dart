@@ -85,6 +85,7 @@ class HomeNoMealsState extends StatelessWidget {
                 const SizedBox(height: AppSizes.md),
                 AppPillButton(
                   label: '+ Add',
+                  variant: AppPillButtonVariant.ghost,
                   onPressed: () => _onPressed(context),
                 ),
               ],

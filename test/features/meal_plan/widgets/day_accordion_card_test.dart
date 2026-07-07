@@ -80,8 +80,8 @@ void main() {
       expect(find.text('Add'), findsNothing);
     });
 
-    testWidgets('non-empty expanded: recipe row title + nutrition + age chips '
-        '+ Add pill', (tester) async {
+    testWidgets('non-empty expanded: recipe row title + primary chip '
+        '+ overflow +N chip + Add pill', (tester) async {
       await _pumpCard(
         tester,
         entries: [_entry()],
@@ -91,29 +91,34 @@ void main() {
 
       expect(find.text('Peanut Butter Toast'), findsOneWidget);
       expect(find.text('Add'), findsOneWidget);
-      // Nutrition + age chips render (allergen chips are no longer shown).
+      // Single primary attribute chip (first nutrition tag); the age range
+      // folds into the +N overflow count chip (attributes = Iron-Rich, 6m+).
       expect(find.text('Iron-Rich'), findsOneWidget);
-      expect(find.text('6m+'), findsOneWidget);
+      expect(find.text('6m+'), findsNothing);
+      expect(find.text('1'), findsOneWidget);
     });
 
-    testWidgets('expanded: only the first 2 nutrition tags render', (
-      tester,
-    ) async {
-      await _pumpCard(
-        tester,
-        entries: [_entry()],
-        recipes: {
-          'r-1': _recipe(
-            nutritionTags: const ['Iron-Rich', 'High Energy', 'Extra'],
-          ),
-        },
-        isExpanded: true,
-      );
+    testWidgets(
+      'expanded: single primary chip + N-overflow chip for the rest',
+      (tester) async {
+        await _pumpCard(
+          tester,
+          entries: [_entry()],
+          recipes: {
+            'r-1': _recipe(
+              nutritionTags: const ['Iron-Rich', 'High Energy', 'Extra'],
+            ),
+          },
+          isExpanded: true,
+        );
 
-      expect(find.text('Iron-Rich'), findsOneWidget);
-      expect(find.text('High Energy'), findsOneWidget);
-      expect(find.text('Extra'), findsNothing);
-    });
+        // attributes = [Iron-Rich, High Energy, Extra, 6m+] → primary + '+3'.
+        expect(find.text('Iron-Rich'), findsOneWidget);
+        expect(find.text('High Energy'), findsNothing);
+        expect(find.text('Extra'), findsNothing);
+        expect(find.text('3'), findsOneWidget);
+      },
+    );
 
     testWidgets('empty day: dashed "No meal plan yet" + Add always visible', (
       tester,

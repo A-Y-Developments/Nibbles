@@ -15,7 +15,7 @@ class AllergenDetailHeader extends StatelessWidget {
   const AllergenDetailHeader({
     required this.name,
     required this.status,
-    required this.cleanLogCount,
+    required this.reactionFlags,
     required this.firstIntroduced,
     required this.lastGiven,
     required this.onBack,
@@ -24,7 +24,9 @@ class AllergenDetailHeader extends StatelessWidget {
 
   final String name;
   final AllergenStatus status;
-  final int cleanLogCount;
+
+  /// Per-exposure reaction flags, oldest-first — drives "N/3 times" + segments.
+  final List<bool> reactionFlags;
   final DateTime? firstIntroduced;
   final DateTime? lastGiven;
   final VoidCallback onBack;
@@ -50,7 +52,7 @@ class AllergenDetailHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final clamped = cleanLogCount.clamp(0, 3);
+    final clamped = reactionFlags.length.clamp(0, 3);
     final cream70 = AppColors.cream.withValues(alpha: 0.7);
 
     return ClipPath(
@@ -78,7 +80,7 @@ class AllergenDetailHeader extends StatelessWidget {
                   AppSizes.pagePaddingH,
                   AppSizes.sm,
                   AppSizes.pagePaddingH,
-                  AppSizes.xl,
+                  AppSizes.xxl,
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -153,7 +155,11 @@ class AllergenDetailHeader extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: AppSizes.lg),
-                    DetailSegmentBar(introducedCount: clamped, onDark: true),
+                    DetailSegmentBar(
+                      reactionFlags: reactionFlags,
+                      onDark: true,
+                    ),
+                    const SizedBox(height: AppSizes.xxl),
                   ],
                 ),
               ),
@@ -172,10 +178,9 @@ class _BackButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Plain arrow_back, matching the recipe-detail top bar (cream on burgundy).
     return IconButton(
       onPressed: onBack,
-      icon: const Icon(Icons.arrow_back, color: AppColors.cream),
+      icon: const Icon(Icons.arrow_back_rounded, color: AppColors.cream),
       tooltip: 'Back',
     );
   }
@@ -222,7 +227,7 @@ class _DateColumn extends StatelessWidget {
 class _HeaderArchClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
-    const arch = 28.0;
+    const arch = 60.0;
     return Path()
       ..lineTo(0, size.height - arch)
       ..quadraticBezierTo(

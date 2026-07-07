@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nibbles/gen/assets.gen.dart';
 import 'package:nibbles/gen/fonts.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
@@ -8,10 +9,9 @@ import 'package:nibbles/src/app/themes/app_sizes.dart';
 /// Layout (per `design/preview/components-header.html` + `HomeScreen.jsx`):
 ///   - Background: vertical gradient `butter → butterSoft`.
 ///   - Left:  white "Today" pill (h32, green-deep label).
-///   - Centre: "Nibbles" wordmark (title3 / Parkinsans 700 17, fg-strong).
-///   - Right: 36px green-deep avatar with the first letter of [babyName]
-///            (or '?' when empty). Tap delegates to [onAvatarTap] — NIB-86
-///            wired this to push the profile route.
+///   - Centre: Nibbles wordmark image.
+///   - Right: 36px green-deep circular avatar. Tap delegates to
+///            [onAvatarTap] — NIB-86 wired this to push the profile route.
 ///
 /// The signature is intentionally identical to the NIB-86 placeholder so
 /// `home_screen.dart` does not need to change.
@@ -42,16 +42,15 @@ class HomeHeader extends StatelessWidget {
       child: Row(
         children: [
           _TodayPill(onTap: onTodayTap),
-          const Expanded(
+          Expanded(
             child: Center(
-              child: Text(
-                'Nibbles',
-                style: TextStyle(
-                  fontFamily: FontFamily.parkinsans,
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
-                  height: 1,
-                  color: AppColors.fgStrong,
+              child: Semantics(
+                label: 'Nibbles',
+                image: true,
+                excludeSemantics: true,
+                child: Assets.images.home.nibblesWordmark.image(
+                  height: 22,
+                  fit: BoxFit.contain,
                 ),
               ),
             ),
@@ -72,7 +71,7 @@ class _TodayPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final pill = Container(
       height: AppSizes.roundButtonSm,
-      padding: const EdgeInsets.symmetric(horizontal: AppSizes.sp12),
+      padding: const EdgeInsets.symmetric(horizontal: AppSizes.sm),
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -82,7 +81,7 @@ class _TodayPill extends StatelessWidget {
         'Today',
         style: TextStyle(
           fontFamily: FontFamily.parkinsans,
-          fontSize: 13,
+          fontSize: 12,
           fontWeight: FontWeight.w700,
           height: 1,
           color: AppColors.greenDeep,
@@ -123,11 +122,11 @@ class _HeaderAvatar extends StatelessWidget {
       width: _size,
       height: _size,
       alignment: Alignment.center,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppColors.greenDeep,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+        shape: BoxShape.circle,
       ),
-      child: const Icon(Icons.person_outline, size: 20, color: AppColors.cream),
+      child: const Icon(Icons.person_outline, size: 18, color: AppColors.cream),
     );
 
     if (onTap == null) return avatar;

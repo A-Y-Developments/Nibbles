@@ -22,7 +22,7 @@ Future<void> _pump(
   bool hasActiveProgramAllergen = false,
   HomeAllergenHeroState heroState = HomeAllergenHeroState.start,
   String? allergenKey = 'milk',
-  int allergenCleanCount = 2,
+  List<bool> allergenReactionFlags = const [false, false],
 }) async {
   tester.view.physicalSize = const Size(1080, 2400);
   tester.view.devicePixelRatio = 1;
@@ -43,7 +43,7 @@ Future<void> _pump(
         heroState: heroState,
         allergenKey: allergenKey,
         allergenDisplayName: allergenKey == null ? '' : 'Milk',
-        allergenCleanCount: allergenCleanCount,
+        allergenReactionFlags: allergenReactionFlags,
         onStartTracker: () {},
         onOpenDetail: () {},
       ),

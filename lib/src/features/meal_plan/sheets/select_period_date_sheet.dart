@@ -45,9 +45,7 @@ class _SelectPeriodDateSheetState extends State<SelectPeriodDateSheet> {
   void _submit(MealPrepMode mode) {
     final range = _range;
     if (range == null) return;
-    Navigator.of(
-      context,
-    ).pop(SelectPeriodResult(mode: mode, range: range));
+    Navigator.of(context).pop(SelectPeriodResult(mode: mode, range: range));
   }
 
   @override
@@ -123,6 +121,7 @@ Future<SelectPeriodResult?> showSelectPeriodDateSheet(
 }) {
   return showModalBottomSheet<SelectPeriodResult>(
     context: context,
+    useRootNavigator: true,
     isScrollControlled: true,
     backgroundColor: AppColors.surface,
     shape: const RoundedRectangleBorder(

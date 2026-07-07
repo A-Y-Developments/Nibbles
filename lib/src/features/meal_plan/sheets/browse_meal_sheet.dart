@@ -48,6 +48,7 @@ Future<List<Recipe>?> showBrowseMealSheet(
 }) {
   return showModalBottomSheet<List<Recipe>>(
     context: context,
+    useRootNavigator: true,
     isScrollControlled: true,
     // NIB-161: default useSafeArea:false wraps the sheet in
     // MediaQuery.removePadding(removeTop), zeroing padding.top, so the header
@@ -206,9 +207,18 @@ class _BrowseMealSheetState extends ConsumerState<_BrowseMealSheet> {
     });
   }
 
-  /// "Next" → open the review sheet with the current picks. Confirming there
-  /// ("Map Meals") returns the final list up through this sheet; backing out
-  /// of review leaves the browse selection intact.
+  /// Whether the sheet targets a single fixed day (start == end). In that case
+  /// there is nothing to map, so the review / "Map Meals" step is skipped and
+  /// the picks are committed directly.
+  bool get _isSingleDate =>
+      widget.startDate.year == widget.endDate.year &&
+      widget.startDate.month == widget.endDate.month &&
+      widget.startDate.day == widget.endDate.day;
+
+  /// Commit the current picks. For a multi-day range this opens the review
+  /// sheet first ("Map Meals") before returning the list; for a single fixed
+  /// day it pops immediately — the target date is already known, so the review
+  /// step would map nothing.
   Future<void> _next() async {
     final all = _recipes ?? const <Recipe>[];
     final byId = {for (final r in all) r.id: r};
@@ -217,6 +227,10 @@ class _BrowseMealSheetState extends ConsumerState<_BrowseMealSheet> {
         .whereType<Recipe>()
         .toList();
     if (picked.isEmpty) return;
+    if (_isSingleDate) {
+      Navigator.of(context).pop(picked);
+      return;
+    }
     final confirmed = await showReviewSelectionSheet(context, recipes: picked);
     if (confirmed != null && mounted) {
       Navigator.of(context).pop(confirmed);
@@ -347,6 +361,7 @@ class _BrowseMealSheetState extends ConsumerState<_BrowseMealSheet> {
                   _FooterBar(
                     onBack: _maybeClose,
                     onNext: _selectedRecipeIds.isEmpty ? null : _next,
+                    nextLabel: _isSingleDate ? 'Add' : 'Next',
                   ),
               ],
             ),
@@ -625,13 +640,19 @@ class _ErrorPlaceholder extends StatelessWidget {
   }
 }
 
-/// Sticky Back / Next footer (Figma 971:8264). "Next" advances to the review
-/// sheet; it is disabled until at least one recipe is selected.
+/// Sticky Back / primary footer (Figma 971:8264). The primary CTA advances to
+/// the review sheet on a range ("Next") or commits directly on a single day
+/// ("Add"); it is disabled until at least one recipe is selected.
 class _FooterBar extends StatelessWidget {
-  const _FooterBar({required this.onBack, required this.onNext});
+  const _FooterBar({
+    required this.onBack,
+    required this.onNext,
+    required this.nextLabel,
+  });
 
   final VoidCallback onBack;
   final VoidCallback? onNext;
+  final String nextLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -657,7 +678,7 @@ class _FooterBar extends StatelessWidget {
           ),
           const SizedBox(width: AppSizes.sm),
           Expanded(
-            child: AppPillButton(label: 'Next', onPressed: onNext),
+            child: AppPillButton(label: nextLabel, onPressed: onNext),
           ),
         ],
       ),

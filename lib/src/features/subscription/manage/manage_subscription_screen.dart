@@ -168,7 +168,7 @@ class _ManageSubscriptionHeader extends StatelessWidget {
         children: [
           AppRoundButton(
             key: const Key('manage_subscription_back_button'),
-            icon: const Icon(Icons.arrow_back_ios_new_rounded),
+            icon: const Icon(Icons.arrow_back_rounded),
             onPressed: onBack,
             tone: AppRoundButtonTone.ghost,
             size: AppRoundButtonSize.small,

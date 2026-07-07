@@ -7,7 +7,7 @@ part of 'recipe_library_controller.dart';
 // **************************************************************************
 
 String _$recipeLibraryControllerHash() =>
-    r'0a4a8e9b05a9256d2765fb1260e4370abb2d8d98';
+    r'de47a1b988a0c348cb1191727ca27fb2b029a8e9';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -43,8 +43,6 @@ abstract class _$RecipeLibraryController
 /// category grouping, [AllergenService.getAllergenStatuses] for the
 /// ongoing-allergen recommendation header, and
 /// [RecipeService.getFlaggedAllergenKeys] for the 'Not safe' card treatment.
-/// The first-launch 'Read Guide' banner state is read synchronously from
-/// [LocalFlagService.isStartingGuideSeen].
 ///
 /// Copied from [RecipeLibraryController].
 @ProviderFor(RecipeLibraryController)
@@ -56,8 +54,6 @@ const recipeLibraryControllerProvider = RecipeLibraryControllerFamily();
 /// category grouping, [AllergenService.getAllergenStatuses] for the
 /// ongoing-allergen recommendation header, and
 /// [RecipeService.getFlaggedAllergenKeys] for the 'Not safe' card treatment.
-/// The first-launch 'Read Guide' banner state is read synchronously from
-/// [LocalFlagService.isStartingGuideSeen].
 ///
 /// Copied from [RecipeLibraryController].
 class RecipeLibraryControllerFamily
@@ -68,8 +64,6 @@ class RecipeLibraryControllerFamily
   /// category grouping, [AllergenService.getAllergenStatuses] for the
   /// ongoing-allergen recommendation header, and
   /// [RecipeService.getFlaggedAllergenKeys] for the 'Not safe' card treatment.
-  /// The first-launch 'Read Guide' banner state is read synchronously from
-  /// [LocalFlagService.isStartingGuideSeen].
   ///
   /// Copied from [RecipeLibraryController].
   const RecipeLibraryControllerFamily();
@@ -80,8 +74,6 @@ class RecipeLibraryControllerFamily
   /// category grouping, [AllergenService.getAllergenStatuses] for the
   /// ongoing-allergen recommendation header, and
   /// [RecipeService.getFlaggedAllergenKeys] for the 'Not safe' card treatment.
-  /// The first-launch 'Read Guide' banner state is read synchronously from
-  /// [LocalFlagService.isStartingGuideSeen].
   ///
   /// Copied from [RecipeLibraryController].
   RecipeLibraryControllerProvider call(String babyId) {
@@ -116,8 +108,6 @@ class RecipeLibraryControllerFamily
 /// category grouping, [AllergenService.getAllergenStatuses] for the
 /// ongoing-allergen recommendation header, and
 /// [RecipeService.getFlaggedAllergenKeys] for the 'Not safe' card treatment.
-/// The first-launch 'Read Guide' banner state is read synchronously from
-/// [LocalFlagService.isStartingGuideSeen].
 ///
 /// Copied from [RecipeLibraryController].
 class RecipeLibraryControllerProvider
@@ -132,8 +122,6 @@ class RecipeLibraryControllerProvider
   /// category grouping, [AllergenService.getAllergenStatuses] for the
   /// ongoing-allergen recommendation header, and
   /// [RecipeService.getFlaggedAllergenKeys] for the 'Not safe' card treatment.
-  /// The first-launch 'Read Guide' banner state is read synchronously from
-  /// [LocalFlagService.isStartingGuideSeen].
   ///
   /// Copied from [RecipeLibraryController].
   RecipeLibraryControllerProvider(String babyId)

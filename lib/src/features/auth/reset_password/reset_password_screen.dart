@@ -49,9 +49,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
 
     ref.listen(resetPasswordControllerProvider, (_, ResetPasswordState next) {
       if (next.success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Password updated successfully.')),
-        );
+        AppToast.success(context, 'Password updated successfully.');
         final hasSession = Supabase.instance.client.auth.currentSession != null;
         context.goNamed(hasSession ? AppRoute.home.name : AppRoute.login.name);
       }

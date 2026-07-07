@@ -63,7 +63,10 @@ class DeleteAccountController extends _$DeleteAccountController {
   @override
   DeleteAccountState build() => const DeleteAccountState();
 
-  Future<bool> submit(String reason) async {
+  Future<bool> submit(
+    String reason, {
+    Future<void> Function()? onBeforeSignOut,
+  }) async {
     // Re-entrancy guard: the overlay's Continue CTA disable is presentational
     // (isSubmitting flips on a next-frame rebuild), so a fast double-tap can
     // fire submit() twice before the button greys out — and this op is
@@ -77,12 +80,21 @@ class DeleteAccountController extends _$DeleteAccountController {
 
     switch (result) {
       case Success<void>():
-        await ref.read(localFlagServiceProvider).clearAll();
-        await ref.read(authServiceProvider.notifier).signOut();
+        // Capture the keepAlive singletons up front: `onBeforeSignOut` pops the
+        // sheet, which disposes this (autoDispose) controller — reading `ref`
+        // after that point would throw.
+        final flags = ref.read(localFlagServiceProvider);
+        final auth = ref.read(authServiceProvider.notifier);
+        final analytics = ref.read(analyticsProvider);
+
+        await flags.clearAll();
+        // Dismiss the sheet BEFORE signOut flips auth state and triggers the
+        // GoRouter redirect. Popping a route and tearing down the nav tree in
+        // the same frame trips a navigator re-entrancy assertion (blank).
+        await onBeforeSignOut?.call();
+        await auth.signOut();
         // Success — fire-and-forget. No PII (reason is logged on intent fire).
-        unawaited(ref.read(analyticsProvider).logAccountDeletionCompleted());
-        // Don't touch `state` after signOut — the provider is likely disposed
-        // by the time the redirect tears the profile subtree down.
+        unawaited(analytics.logAccountDeletionCompleted());
         return true;
       case Failure<void>(:final error):
         // P1 path: record non-fatal BEFORE the inline error SnackBar fires.

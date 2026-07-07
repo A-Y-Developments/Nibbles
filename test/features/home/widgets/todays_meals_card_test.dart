@@ -1,11 +1,10 @@
 // Widget coverage for the redesigned `TodaysMealsCard`.
 //
-// The card now takes an explicit `mealCount` / `mealTarget` and renders an
-// inline "Add" pill whenever the day is under target (the empty-state body
-// moved out to `HomeNoMealsState`). Asserts:
-//   - "Add" pill gating + "Great job!" banner gating on coverage.
-//   - Recipe-title hydration + meal-time / generic fallbacks.
-//   - Tag chips bind to `category` + `nutritionTags` only (+N overflow).
+// The card wraps a butter card around a dashed inner card that holds one
+// shared `RecipePlanRow` per meal plus an always-visible "Add" pill. Asserts:
+//   - "Add" pill always shows; the old "Great job!" banner is gone.
+//   - Recipe-title hydration + placeholder when the recipe is missing.
+//   - Tag chips bind to `nutritionTags` (+ age-range) with a "+N" overflow.
 //   - Meal rows expose a labelled button that routes to recipe detail.
 
 // Firebase platform-interface packages are transitive deps; the public
@@ -43,7 +42,10 @@ class _NoopAnalyticsPlatform extends FirebaseAnalyticsPlatform {
 GoRouter _router(Widget child) => GoRouter(
   initialLocation: '/',
   routes: [
-    GoRoute(path: '/', builder: (_, __) => Scaffold(body: child)),
+    GoRoute(
+      path: '/',
+      builder: (_, __) => Scaffold(body: child),
+    ),
     GoRoute(
       path: AppRoute.recipeDetail.path,
       name: AppRoute.recipeDetail.name,
@@ -112,16 +114,14 @@ void main() {
     FirebaseAnalyticsPlatform.instance = _NoopAnalyticsPlatform();
   });
 
-  group('TodaysMealsCard — Add pill + coverage banner gating', () {
-    testWidgets('below target (1/2) -> "Add" pill shows, no banner', (
+  group('TodaysMealsCard — counter + Add pill', () {
+    testWidgets('below target (1/2) -> counter + "Add" pill, no banner', (
       tester,
     ) async {
       _bigViewport(tester);
 
       await tester.pumpWidget(
-        _wrap(
-          _card(meals: [_entry('m1', 'r-a', mealTime: 'breakfast')]),
-        ),
+        _wrap(_card(meals: [_entry('m1', 'r-a', mealTime: 'breakfast')])),
       );
       await tester.pumpAndSettle();
 
@@ -133,7 +133,7 @@ void main() {
       );
     });
 
-    testWidgets('at target (2/2) -> banner shows, "Add" pill hidden', (
+    testWidgets('at target (2/2) -> no "Add" pill (slots full), no banner', (
       tester,
     ) async {
       _bigViewport(tester);
@@ -154,7 +154,7 @@ void main() {
       expect(find.text('Add'), findsNothing);
       expect(
         find.text('Great job! Everything important is covered'),
-        findsOneWidget,
+        findsNothing,
       );
     });
   });
@@ -180,9 +180,7 @@ void main() {
       expect(find.text('Breakfast'), findsNothing);
     });
 
-    testWidgets('no recipe + mealTime -> capitalized meal-time fallback', (
-      tester,
-    ) async {
+    testWidgets('no recipe -> ellipsis placeholder title', (tester) async {
       _bigViewport(tester);
 
       await tester.pumpWidget(
@@ -190,23 +188,12 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Lunch'), findsOneWidget);
-    });
-
-    testWidgets('no recipe + no mealTime -> generic "Meal" fallback', (
-      tester,
-    ) async {
-      _bigViewport(tester);
-
-      await tester.pumpWidget(_wrap(_card(meals: [_entry('m1', 'r-a')])));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Meal'), findsOneWidget);
+      expect(find.text('…'), findsOneWidget);
     });
   });
 
   group('TodaysMealsCard — tag chips', () {
-    testWidgets('category + nutritionTags render; allergenTags excluded', (
+    testWidgets('first nutrition tag renders; allergenTags excluded', (
       tester,
     ) async {
       _bigViewport(tester);
@@ -227,12 +214,14 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Fruit'), findsOneWidget);
       expect(find.text('Iron Rich'), findsOneWidget);
+      expect(find.text('Fruit'), findsNothing);
       expect(find.text('Dairy'), findsNothing);
     });
 
-    testWidgets('more than 2 tags -> "+N" overflow chip', (tester) async {
+    testWidgets('extra attributes collapse into a "+N" overflow chip', (
+      tester,
+    ) async {
       _bigViewport(tester);
 
       await tester.pumpWidget(
@@ -241,7 +230,6 @@ void main() {
             meals: [_entry('m1', 'r-a')],
             recipes: {
               'r-a': _recipe(
-                category: 'fruit',
                 nutritionTags: const ['Iron Rich', 'Vitamin A', 'Fiber'],
               ),
             },
@@ -250,9 +238,10 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Fruit'), findsOneWidget);
+      // First tag as a chip; remaining tags + age range collapse into a "+N"
+      // chip whose label is the count (the "+" is a leading icon, not text).
       expect(find.text('Iron Rich'), findsOneWidget);
-      expect(find.text('+2'), findsOneWidget);
+      expect(find.text('3'), findsOneWidget);
     });
   });
 
@@ -264,16 +253,11 @@ void main() {
       final handle = tester.ensureSemantics();
 
       await tester.pumpWidget(
-        _wrap(
-          _card(
-            meals: [_entry('m1', 'r1')],
-            recipes: {'r1': _recipe()},
-          ),
-        ),
+        _wrap(_card(meals: [_entry('m1', 'r1')], recipes: {'r1': _recipe()})),
       );
       await tester.pumpAndSettle();
 
-      const label = 'Meal, Chicken Liver, Apple & Sweet Potato Purée';
+      const label = 'Chicken Liver, Apple & Sweet Potato Purée';
       expect(find.bySemanticsLabel(label), findsOneWidget);
 
       await tester.tap(find.bySemanticsLabel(label));

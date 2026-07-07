@@ -24,9 +24,9 @@ import 'package:nibbles/src/routing/route_enums.dart';
 ///
 /// Reskins the Recipe Library tab to the butter-gradient hero + vertical
 /// stack of horizontal [RecipeCategoryRow]s per Figma 971:8644 / 971:8760.
-/// Driven by `RecipeService.getRecipesByCategory`. A first-launch forest
-/// 'New to Starting Solids?' [ReadGuideBanner] sits above the first row
-/// when `LocalFlagService.isStartingGuideSeen()` is `false`. Section order:
+/// Driven by `RecipeService.getRecipesByCategory`. A forest
+/// 'New to Starting Solids?' [ReadGuideBanner] always sits above the first
+/// row. Section order:
 ///   1. (optional) 'Recommendation for {ongoing allergen}' — recipes from
 ///      any category whose `allergenTags` contain the in-progress allergen.
 ///   2. One row per category in the order returned by the service.
@@ -102,18 +102,10 @@ class _RecipeLibraryBodyState extends ConsumerState<_RecipeLibraryBody> {
   }
 
   void _onBookmarkTap() {
-    // Per NIB-53 spec point 7: the bookmark just navigates (or shows the
-    // SnackBar). Only the 'Read Guide' CTA inside the banner marks the
-    // starting_guide_seen flag.
     _openStartingGuide();
   }
 
   void _onReadGuideTap() {
-    unawaited(
-      ref
-          .read(recipeLibraryControllerProvider(widget.babyId).notifier)
-          .markStartingGuideSeen(),
-    );
     _openStartingGuide();
   }
 
@@ -201,10 +193,7 @@ class _RecipeContent extends StatelessWidget {
     if (state.recipesByCategory.isEmpty) {
       return RefreshIndicator(
         onRefresh: onRefresh,
-        child: _EmptyView(
-          isStartingGuideSeen: state.isStartingGuideSeen,
-          onReadGuideTap: onReadGuideTap,
-        ),
+        child: _EmptyView(onReadGuideTap: onReadGuideTap),
       );
     }
 
@@ -216,8 +205,7 @@ class _RecipeContent extends StatelessWidget {
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          if (!state.isStartingGuideSeen)
-            ReadGuideBanner(onTap: onReadGuideTap),
+          ReadGuideBanner(onTap: onReadGuideTap),
           if (ongoingKey != null && recommendations.isNotEmpty)
             RecipeCategoryRow(
               title:
@@ -337,12 +325,8 @@ class _ErrorView extends StatelessWidget {
 }
 
 class _EmptyView extends StatelessWidget {
-  const _EmptyView({
-    required this.isStartingGuideSeen,
-    required this.onReadGuideTap,
-  });
+  const _EmptyView({required this.onReadGuideTap});
 
-  final bool isStartingGuideSeen;
   final VoidCallback onReadGuideTap;
 
   @override
@@ -350,7 +334,7 @@ class _EmptyView extends StatelessWidget {
     return ListView(
       padding: EdgeInsets.zero,
       children: [
-        if (!isStartingGuideSeen) ReadGuideBanner(onTap: onReadGuideTap),
+        ReadGuideBanner(onTap: onReadGuideTap),
         SizedBox(
           height: MediaQuery.of(context).size.height * 0.5,
           child: Center(

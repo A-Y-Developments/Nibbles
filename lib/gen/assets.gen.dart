@@ -55,9 +55,21 @@ class $AssetsImagesGen {
   AssetGenImage get launchQuatrefoil =>
       const AssetGenImage('assets/images/launch_quatrefoil.png');
 
+  /// File path: assets/images/launch_wordmark.png
+  AssetGenImage get launchWordmark =>
+      const AssetGenImage('assets/images/launch_wordmark.png');
+
+  /// File path: assets/images/launch_wordmark_android12.png
+  AssetGenImage get launchWordmarkAndroid12 =>
+      const AssetGenImage('assets/images/launch_wordmark_android12.png');
+
   /// File path: assets/images/nibbles_logo.png
   AssetGenImage get nibblesLogo =>
       const AssetGenImage('assets/images/nibbles_logo.png');
+
+  /// File path: assets/images/nibbles_logo_black.png
+  AssetGenImage get nibblesLogoBlack =>
+      const AssetGenImage('assets/images/nibbles_logo_black.png');
 
   /// Directory path: assets/images/onboarding
   $AssetsImagesOnboardingGen get onboarding =>
@@ -70,7 +82,14 @@ class $AssetsImagesGen {
   $AssetsImagesRecipeGen get recipe => const $AssetsImagesRecipeGen();
 
   /// List of all assets
-  List<dynamic> get values => [aGitkeep, launchQuatrefoil, nibblesLogo];
+  List<dynamic> get values => [
+    aGitkeep,
+    launchQuatrefoil,
+    launchWordmark,
+    launchWordmarkAndroid12,
+    nibblesLogo,
+    nibblesLogoBlack,
+  ];
 }
 
 class $AssetsJsonsGen {
@@ -251,6 +270,10 @@ class $AssetsImagesHomeGen {
   SvgGenImage get heroCloud =>
       const SvgGenImage('assets/images/home/hero_cloud.svg');
 
+  /// File path: assets/images/home/nibbles_wordmark.png
+  AssetGenImage get nibblesWordmark =>
+      const AssetGenImage('assets/images/home/nibbles_wordmark.png');
+
   /// File path: assets/images/home/tip_bulb.svg
   SvgGenImage get tipBulb =>
       const SvgGenImage('assets/images/home/tip_bulb.svg');
@@ -266,6 +289,7 @@ class $AssetsImagesHomeGen {
     heroBackdrop,
     heroBowl,
     heroCloud,
+    nibblesWordmark,
     tipBulb,
     tipInfo,
   ];

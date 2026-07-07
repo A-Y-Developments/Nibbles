@@ -21,7 +21,6 @@ mixin _$RecipeDetailState {
   String get currentAllergenKey => throw _privateConstructorUsedError;
   Map<String, AllergenStatus> get allergenStatuses =>
       throw _privateConstructorUsedError;
-  bool get isAddingToMealPlan => throw _privateConstructorUsedError;
   bool get isAddingToShoppingList => throw _privateConstructorUsedError;
 
   /// Create a copy of RecipeDetailState
@@ -42,7 +41,6 @@ abstract class $RecipeDetailStateCopyWith<$Res> {
     Recipe recipe,
     String currentAllergenKey,
     Map<String, AllergenStatus> allergenStatuses,
-    bool isAddingToMealPlan,
     bool isAddingToShoppingList,
   });
 
@@ -67,7 +65,6 @@ class _$RecipeDetailStateCopyWithImpl<$Res, $Val extends RecipeDetailState>
     Object? recipe = null,
     Object? currentAllergenKey = null,
     Object? allergenStatuses = null,
-    Object? isAddingToMealPlan = null,
     Object? isAddingToShoppingList = null,
   }) {
     return _then(
@@ -84,10 +81,6 @@ class _$RecipeDetailStateCopyWithImpl<$Res, $Val extends RecipeDetailState>
                 ? _value.allergenStatuses
                 : allergenStatuses // ignore: cast_nullable_to_non_nullable
                       as Map<String, AllergenStatus>,
-            isAddingToMealPlan: null == isAddingToMealPlan
-                ? _value.isAddingToMealPlan
-                : isAddingToMealPlan // ignore: cast_nullable_to_non_nullable
-                      as bool,
             isAddingToShoppingList: null == isAddingToShoppingList
                 ? _value.isAddingToShoppingList
                 : isAddingToShoppingList // ignore: cast_nullable_to_non_nullable
@@ -121,7 +114,6 @@ abstract class _$$RecipeDetailStateImplCopyWith<$Res>
     Recipe recipe,
     String currentAllergenKey,
     Map<String, AllergenStatus> allergenStatuses,
-    bool isAddingToMealPlan,
     bool isAddingToShoppingList,
   });
 
@@ -146,7 +138,6 @@ class __$$RecipeDetailStateImplCopyWithImpl<$Res>
     Object? recipe = null,
     Object? currentAllergenKey = null,
     Object? allergenStatuses = null,
-    Object? isAddingToMealPlan = null,
     Object? isAddingToShoppingList = null,
   }) {
     return _then(
@@ -163,10 +154,6 @@ class __$$RecipeDetailStateImplCopyWithImpl<$Res>
             ? _value._allergenStatuses
             : allergenStatuses // ignore: cast_nullable_to_non_nullable
                   as Map<String, AllergenStatus>,
-        isAddingToMealPlan: null == isAddingToMealPlan
-            ? _value.isAddingToMealPlan
-            : isAddingToMealPlan // ignore: cast_nullable_to_non_nullable
-                  as bool,
         isAddingToShoppingList: null == isAddingToShoppingList
             ? _value.isAddingToShoppingList
             : isAddingToShoppingList // ignore: cast_nullable_to_non_nullable
@@ -184,7 +171,6 @@ class _$RecipeDetailStateImpl extends _RecipeDetailState {
     required this.currentAllergenKey,
     final Map<String, AllergenStatus> allergenStatuses =
         const <String, AllergenStatus>{},
-    this.isAddingToMealPlan = false,
     this.isAddingToShoppingList = false,
   }) : _allergenStatuses = allergenStatuses,
        super._();
@@ -204,14 +190,11 @@ class _$RecipeDetailStateImpl extends _RecipeDetailState {
 
   @override
   @JsonKey()
-  final bool isAddingToMealPlan;
-  @override
-  @JsonKey()
   final bool isAddingToShoppingList;
 
   @override
   String toString() {
-    return 'RecipeDetailState(recipe: $recipe, currentAllergenKey: $currentAllergenKey, allergenStatuses: $allergenStatuses, isAddingToMealPlan: $isAddingToMealPlan, isAddingToShoppingList: $isAddingToShoppingList)';
+    return 'RecipeDetailState(recipe: $recipe, currentAllergenKey: $currentAllergenKey, allergenStatuses: $allergenStatuses, isAddingToShoppingList: $isAddingToShoppingList)';
   }
 
   @override
@@ -226,8 +209,6 @@ class _$RecipeDetailStateImpl extends _RecipeDetailState {
               other._allergenStatuses,
               _allergenStatuses,
             ) &&
-            (identical(other.isAddingToMealPlan, isAddingToMealPlan) ||
-                other.isAddingToMealPlan == isAddingToMealPlan) &&
             (identical(other.isAddingToShoppingList, isAddingToShoppingList) ||
                 other.isAddingToShoppingList == isAddingToShoppingList));
   }
@@ -238,7 +219,6 @@ class _$RecipeDetailStateImpl extends _RecipeDetailState {
     recipe,
     currentAllergenKey,
     const DeepCollectionEquality().hash(_allergenStatuses),
-    isAddingToMealPlan,
     isAddingToShoppingList,
   );
 
@@ -259,7 +239,6 @@ abstract class _RecipeDetailState extends RecipeDetailState {
     required final Recipe recipe,
     required final String currentAllergenKey,
     final Map<String, AllergenStatus> allergenStatuses,
-    final bool isAddingToMealPlan,
     final bool isAddingToShoppingList,
   }) = _$RecipeDetailStateImpl;
   const _RecipeDetailState._() : super._();
@@ -270,8 +249,6 @@ abstract class _RecipeDetailState extends RecipeDetailState {
   String get currentAllergenKey;
   @override
   Map<String, AllergenStatus> get allergenStatuses;
-  @override
-  bool get isAddingToMealPlan;
   @override
   bool get isAddingToShoppingList;
 

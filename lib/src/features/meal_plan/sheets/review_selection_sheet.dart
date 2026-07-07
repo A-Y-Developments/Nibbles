@@ -1,10 +1,8 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
-import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
-import 'package:nibbles/src/common/components/chips/app_chip.dart';
+import 'package:nibbles/src/common/components/cards/recipe_plan_row.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
 
 /// Review-selection sheet (Figma 971:8354). Lists every recipe the user
@@ -20,6 +18,7 @@ Future<List<Recipe>?> showReviewSelectionSheet(
 }) {
   return showModalBottomSheet<List<Recipe>>(
     context: context,
+    useRootNavigator: true,
     isScrollControlled: true,
     useSafeArea: true,
     backgroundColor: AppColors.surface,
@@ -63,9 +62,8 @@ class _ReviewSelectionSheet extends StatelessWidget {
                 itemCount: recipes.length,
                 separatorBuilder: (_, __) =>
                     const SizedBox(height: AppSizes.sm),
-                itemBuilder: (context, index) => _ReviewRow(
-                  recipe: recipes[index],
-                ),
+                itemBuilder: (context, index) =>
+                    RecipePlanRow(recipe: recipes[index]),
               ),
             ),
             _FooterBar(
@@ -114,120 +112,6 @@ class _Header extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _ReviewRow extends StatelessWidget {
-  const _ReviewRow({required this.recipe});
-
-  final Recipe recipe;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSizes.sp12),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-        border: Border.all(color: AppColors.borderSoft),
-      ),
-      child: Row(
-        children: [
-          _Thumbnail(url: recipe.thumbnailUrl),
-          const SizedBox(width: AppSizes.sp12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  recipe.title,
-                  style: AppTypography.bodyBold,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: AppSizes.xs),
-                _MetaRow(recipe: recipe),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Iron-Rich / nutrition chips + age range under the recipe title.
-class _MetaRow extends StatelessWidget {
-  const _MetaRow({required this.recipe});
-
-  final Recipe recipe;
-
-  @override
-  Widget build(BuildContext context) {
-    final tags = recipe.nutritionTags.take(2).toList();
-    final extra = recipe.nutritionTags.length - tags.length;
-    return Wrap(
-      spacing: AppSizes.xs,
-      runSpacing: AppSizes.xs,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        for (final tag in tags) AppChip(label: tag),
-        if (extra > 0) AppChip(label: '+$extra', tone: AppChipTone.mute),
-        Text(
-          recipe.ageRange,
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: AppColors.fgMuted),
-        ),
-      ],
-    );
-  }
-}
-
-class _Thumbnail extends StatelessWidget {
-  const _Thumbnail({required this.url});
-
-  final String? url;
-
-  @override
-  Widget build(BuildContext context) {
-    const size = AppSizes.xxl;
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-      child: (url == null || url!.isEmpty)
-          ? Container(
-              width: size,
-              height: size,
-              color: AppColors.surfaceVariant,
-              child: const Icon(
-                Icons.restaurant_outlined,
-                color: AppColors.hint,
-                size: AppSizes.iconMd,
-              ),
-            )
-          : CachedNetworkImage(
-              imageUrl: url!,
-              width: size,
-              height: size,
-              fit: BoxFit.cover,
-              placeholder: (_, __) => Container(
-                width: size,
-                height: size,
-                color: AppColors.surfaceVariant,
-              ),
-              errorWidget: (_, __, ___) => Container(
-                width: size,
-                height: size,
-                color: AppColors.surfaceVariant,
-                child: const Icon(
-                  Icons.restaurant_outlined,
-                  color: AppColors.hint,
-                  size: AppSizes.iconMd,
-                ),
-              ),
-            ),
     );
   }
 }

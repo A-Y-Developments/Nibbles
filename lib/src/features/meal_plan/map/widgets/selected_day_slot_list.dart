@@ -1,4 +1,6 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:nibbles/gen/assets.gen.dart';
 import 'package:nibbles/src/app/constants/allergen_emoji.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
@@ -151,30 +153,38 @@ class _Thumbnail extends StatelessWidget {
 
   final String? url;
 
+  Widget _placeholder() => Assets.images.recipe.mockRecipe.image(
+    width: AppSizes.iconXl,
+    height: AppSizes.iconXl,
+    fit: BoxFit.cover,
+  );
+
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-      child: Container(
+    Widget child;
+    if (url == null || url!.isEmpty) {
+      child = _placeholder();
+    } else if (url!.startsWith('assets/')) {
+      child = Image.asset(
+        url!,
         width: AppSizes.iconXl,
         height: AppSizes.iconXl,
-        color: AppColors.surfaceVariant,
-        child: url == null
-            ? const Icon(
-                Icons.restaurant,
-                color: AppColors.fgFaint,
-                size: AppSizes.iconMd,
-              )
-            : Image.network(
-                url!,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const Icon(
-                  Icons.restaurant,
-                  color: AppColors.fgFaint,
-                  size: AppSizes.iconMd,
-                ),
-              ),
-      ),
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _placeholder(),
+      );
+    } else {
+      child = CachedNetworkImage(
+        imageUrl: url!,
+        width: AppSizes.iconXl,
+        height: AppSizes.iconXl,
+        fit: BoxFit.cover,
+        placeholder: (_, __) => _placeholder(),
+        errorWidget: (_, __, ___) => _placeholder(),
+      );
+    }
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+      child: child,
     );
   }
 }
@@ -186,18 +196,21 @@ class _TagsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: AppSizes.xs,
-      runSpacing: AppSizes.xs,
-      children: tags
-          .take(3)
-          .map(
-            (t) => AppChip(
-              label: AllergenEmoji.displayName(t),
-              emoji: AllergenEmoji.get(t),
-            ),
-          )
-          .toList(),
+    final first = tags.first;
+    final overflow = tags.length - 1;
+    return Row(
+      children: [
+        Flexible(
+          child: AppChip(
+            label: AllergenEmoji.displayName(first),
+            emoji: AllergenEmoji.get(first),
+          ),
+        ),
+        if (overflow > 0) ...[
+          const SizedBox(width: AppSizes.xs),
+          AppChip(label: '$overflow', icon: const Icon(Icons.add, size: 12)),
+        ],
+      ],
     );
   }
 }

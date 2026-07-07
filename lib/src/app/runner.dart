@@ -11,7 +11,7 @@ import 'package:nibbles/firebase_options.dart';
 import 'package:nibbles/src/app.dart';
 import 'package:nibbles/src/app/config/flavor_config.dart';
 import 'package:nibbles/src/app/qa_bypass.dart';
-import 'package:purchases_flutter/purchases_flutter.dart';
+// import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Bootstrap order is strict — do not reorder.
@@ -76,11 +76,15 @@ Future<void> bootstrap({required Flavor flavor}) async {
     anonKey: FlavorConfig.instance.supabaseAnonKey,
   );
 
-  // 6. RevenueCat configure
-  final revenueCatKey = defaultTargetPlatform == TargetPlatform.iOS
-      ? FlavorConfig.instance.revenueCatAppleKey
-      : FlavorConfig.instance.revenueCatGoogleKey;
-  await Purchases.configure(PurchasesConfiguration(revenueCatKey));
+  // 6. RevenueCat configure — DISABLED while M2 (subscription) is deferred.
+  //    `.env` RevenueCat keys are placeholders until M2 ships; calling
+  //    configure() with them throws an invalid-API-key error on every boot.
+  //    Re-enable once real keys are in place:
+  //
+  // final revenueCatKey = defaultTargetPlatform == TargetPlatform.iOS
+  //     ? FlavorConfig.instance.revenueCatAppleKey
+  //     : FlavorConfig.instance.revenueCatGoogleKey;
+  // await Purchases.configure(PurchasesConfiguration(revenueCatKey));
 
   runApp(ProviderScope(overrides: qaBypassOverrides(), child: const App()));
 }

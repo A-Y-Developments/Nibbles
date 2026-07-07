@@ -80,19 +80,6 @@ class LocalFlagService {
       _box.put('program_completion_shown_$babyId', true);
 
   // ---------------------------------------------------------------------------
-  // Recipe Library — first-launch 'Read Guide' banner flag (NIB-53)
-  // ---------------------------------------------------------------------------
-
-  /// Returns `true` if the user has dismissed the Recipe Library first-launch
-  /// 'Read Guide' banner (by tapping its CTA or the bookmark in the header).
-  bool isStartingGuideSeen() =>
-      _box.get('starting_guide_seen', defaultValue: false) as bool;
-
-  /// Marks the Starting Guide as seen. Awaited so the banner stays dismissed
-  /// across the same frame's rebuild.
-  Future<void> markStartingGuideSeen() => _box.put('starting_guide_seen', true);
-
-  // ---------------------------------------------------------------------------
   // Account deletion (NIB-85 / NIB-120)
   // ---------------------------------------------------------------------------
 
@@ -108,7 +95,7 @@ class LocalFlagService {
   /// Wipes every key in the `local_flags` box. Called by the delete-account
   /// flow BEFORE signing out so that re-registering on the same device
   /// replays onboarding from scratch (no stale `onboarding_*_done`,
-  /// `program_completion_shown_*`, `starting_guide_seen`, etc.).
+  /// `program_completion_shown_*`, etc.).
   Future<void> clearAll() => _box.clear();
 }
 

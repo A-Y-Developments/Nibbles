@@ -3,15 +3,11 @@ import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 
-/// Single-select button-choice row used in the Delete Account overlay
-/// (Figma 1216:11954 / component 1207:11246).
+/// Single-select button-choice row used in the Delete Account overlay.
 ///
-/// Default: butter-soft (#fffcd5) fill, no border, 12px padding, radius 10,
-/// Parkinsans SemiBold 15/22 Black (#2c2c2c) label.
-///
-/// Selected (engineering-derived affordance; Figma canvas only shows the
-/// default state): deepens fill to butter and shifts the label to
-/// green-deep — fill-only, no trailing glyph (Figma doesn't show one).
+/// Default: butter-soft fill, transparent border, Parkinsans SemiBold label.
+/// Selected: butter fill + green-deep 1.5 border + green-deep label, with a
+/// filled green-deep check disc trailing so the picked reason is unmistakable.
 class ReasonChoiceRow extends StatelessWidget {
   const ReasonChoiceRow({
     required this.label,
@@ -36,28 +32,60 @@ class ReasonChoiceRow extends StatelessWidget {
       selected: selected,
       label: label,
       child: ExcludeSemantics(
-        child: Material(
-          color: fill,
-          shape: RoundedRectangleBorder(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 140),
+          curve: Curves.easeOut,
+          decoration: BoxDecoration(
+            color: fill,
             borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+            border: Border.all(
+              color: selected ? AppColors.greenDeep : Colors.transparent,
+              width: 1.5,
+            ),
           ),
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-            child: SizedBox(
-              width: double.infinity,
+          child: Material(
+            type: MaterialType.transparency,
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(AppSizes.radiusMd),
               child: Padding(
-                // Figma: padding 12 on all sides.
                 padding: const EdgeInsets.all(AppSizes.sp12),
-                child: Text(
-                  label,
-                  style: AppTypography.headline.copyWith(color: fg),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        label,
+                        style: AppTypography.headline.copyWith(color: fg),
+                      ),
+                    ),
+                    if (selected) ...[
+                      const SizedBox(width: AppSizes.sm),
+                      const _SelectedCheck(),
+                    ],
+                  ],
                 ),
               ),
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+class _SelectedCheck extends StatelessWidget {
+  const _SelectedCheck();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 22,
+      height: 22,
+      decoration: const BoxDecoration(
+        color: AppColors.greenDeep,
+        shape: BoxShape.circle,
+      ),
+      child: const Icon(Icons.check_rounded, size: 14, color: AppColors.cream),
     );
   }
 }

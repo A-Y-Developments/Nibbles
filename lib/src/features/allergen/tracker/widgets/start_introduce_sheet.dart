@@ -20,6 +20,7 @@ Future<bool> showStartIntroduceSheet(
 }) async {
   final result = await showModalBottomSheet<bool>(
     context: context,
+    useRootNavigator: true,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     builder: (_) => _StartIntroduceSheet(allergen: allergen, babyId: babyId),
@@ -71,11 +72,7 @@ class _StartIntroduceSheetState extends ConsumerState<_StartIntroduceSheet> {
     final message = error is ValidationException
         ? 'Finish the current allergen before starting another.'
         : (error?.message ?? "Couldn't start introduction. Please try again.");
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(content: Text(message), duration: const Duration(seconds: 3)),
-      );
+    AppToast.error(context, message);
   }
 
   @override

@@ -5,7 +5,6 @@ import 'package:nibbles/src/common/domain/entities/recipe.dart';
 import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
 import 'package:nibbles/src/common/services/allergen_service.dart';
 import 'package:nibbles/src/common/services/helpers/derive_allergen_status.dart';
-import 'package:nibbles/src/common/services/local_flag_service.dart';
 import 'package:nibbles/src/common/services/recipe_service.dart';
 import 'package:nibbles/src/features/recipe/library/recipe_library_state.dart';
 import 'package:nibbles/src/logging/analytics.dart';
@@ -31,15 +30,12 @@ const List<String> kRecipeCategoryOrder = [
 /// category grouping, [AllergenService.getAllergenStatuses] for the
 /// ongoing-allergen recommendation header, and
 /// [RecipeService.getFlaggedAllergenKeys] for the 'Not safe' card treatment.
-/// The first-launch 'Read Guide' banner state is read synchronously from
-/// [LocalFlagService.isStartingGuideSeen].
 @riverpod
 class RecipeLibraryController extends _$RecipeLibraryController {
   @override
   Future<RecipeLibraryState> build(String babyId) async {
     final recipeService = ref.read(recipeServiceProvider);
     final allergenService = ref.read(allergenServiceProvider);
-    final flags = ref.read(localFlagServiceProvider);
 
     final (categoriesResult, statusesResult, flaggedResult) = await (
       recipeService.getRecipesByCategory(babyId),
@@ -68,7 +64,6 @@ class RecipeLibraryController extends _$RecipeLibraryController {
       recipesByCategory: recipesByCategory,
       ongoingAllergenKey: ongoingAllergenKey,
       flaggedAllergenKeys: flagged,
-      isStartingGuideSeen: flags.isStartingGuideSeen(),
     );
   }
 
@@ -89,15 +84,6 @@ class RecipeLibraryController extends _$RecipeLibraryController {
   Future<void> refresh() async {
     ref.invalidateSelf();
     await future;
-  }
-
-  /// Persists the Starting Guide seen flag and updates state so the banner
-  /// disappears immediately. Fire-and-forget — Hive write is non-blocking.
-  Future<void> markStartingGuideSeen() async {
-    final current = state.valueOrNull;
-    if (current == null || current.isStartingGuideSeen) return;
-    state = AsyncData(current.copyWith(isStartingGuideSeen: true));
-    await ref.read(localFlagServiceProvider).markStartingGuideSeen();
   }
 
   /// Updates the active search query. The query is trimmed; a non-empty

@@ -11,7 +11,6 @@ class RecipeDetailState with _$RecipeDetailState {
     required String currentAllergenKey,
     @Default(<String, AllergenStatus>{})
     Map<String, AllergenStatus> allergenStatuses,
-    @Default(false) bool isAddingToMealPlan,
     @Default(false) bool isAddingToShoppingList,
   }) = _RecipeDetailState;
 

@@ -6,7 +6,7 @@ import 'package:nibbles/src/app/themes/app_sizes.dart';
 enum DayChipState { selected, idle, filled }
 
 /// Single 64x86 day chip in a horizontal week strip. Mirrors the
-/// components-calendar preview (radiusMd). NOT table_calendar.
+/// components-calendar preview (radius2xl). NOT table_calendar.
 ///
 /// - selected: greenDeep bg, butterSoft text
 /// - idle: white bg, greenDeep text, borderSoft border
@@ -72,7 +72,7 @@ class DayChip extends StatelessWidget {
         height: AppSizes.dayChipH,
         decoration: BoxDecoration(
           color: _background,
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+          borderRadius: BorderRadius.circular(AppSizes.radius2xl),
           border: _border,
         ),
         child: Column(

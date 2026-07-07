@@ -19,10 +19,19 @@ class WeekDay {
 /// referenced by the spec — NOT table_calendar (month grid is themed
 /// separately for meal-plan).
 class WeekStrip extends StatelessWidget {
-  const WeekStrip({required this.days, this.onDaySelected, super.key});
+  const WeekStrip({
+    required this.days,
+    this.onDaySelected,
+    this.padding = EdgeInsets.zero,
+    super.key,
+  });
 
   final List<WeekDay> days;
   final ValueChanged<int>? onDaySelected;
+
+  /// Leading/trailing inset for the scrollable list so the first/last chip can
+  /// align with padded content while the strip itself bleeds edge-to-edge.
+  final EdgeInsetsGeometry padding;
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +39,7 @@ class WeekStrip extends StatelessWidget {
       height: AppSizes.dayChipH,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: AppSizes.sp20),
+        padding: padding,
         itemCount: days.length,
         separatorBuilder: (_, __) => const SizedBox(width: AppSizes.sm + 2),
         itemBuilder: (context, i) {

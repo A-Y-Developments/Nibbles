@@ -4,8 +4,7 @@
 // canned [RecipeLibraryState], then asserts:
 //   * category rows render in insertion order (one [RecipeCategoryRow] per
 //     non-empty category)
-//   * the [ReadGuideBanner] is gated by
-//     [RecipeLibraryState.isStartingGuideSeen]
+//   * the [ReadGuideBanner] always renders above the first row
 //   * a non-empty `searchQuery` collapses the body into [RecipeSearchResults]
 //   * a non-empty `searchQuery` with no matches renders [RecipeSearchEmpty]
 //   * tapping a grid card pushes `/home/recipes/:recipeId` via GoRouter.
@@ -166,7 +165,6 @@ void main() {
             'Purees': [_r1, _r2],
             'Finger Foods': [_r3],
           },
-          isStartingGuideSeen: true,
         );
 
         await pump(tester, state: state);
@@ -187,7 +185,6 @@ void main() {
           'Purees': [_r1],
           'Other': [],
         },
-        isStartingGuideSeen: true,
       );
 
       await pump(tester, state: state);
@@ -199,38 +196,21 @@ void main() {
     });
   });
 
-  group('RecipeLibraryScreen — Read Guide banner gating', () {
-    testWidgets(
-      'isStartingGuideSeen=false → ReadGuideBanner renders above the first row',
-      (tester) async {
-        const state = RecipeLibraryState(
-          recipesByCategory: {
-            'Purees': [_r1],
-          },
-        );
-
-        await pump(tester, state: state);
-
-        expect(find.byType(ReadGuideBanner), findsOneWidget);
-        // CTA is baked into the banner SVG; exposed via the Semantics label.
-        expect(find.bySemanticsLabel('Read Guide'), findsOneWidget);
-      },
-    );
-
-    testWidgets('isStartingGuideSeen=true → ReadGuideBanner is hidden', (
+  group('RecipeLibraryScreen — Read Guide banner', () {
+    testWidgets('ReadGuideBanner always renders above the first row', (
       tester,
     ) async {
       const state = RecipeLibraryState(
         recipesByCategory: {
           'Purees': [_r1],
         },
-        isStartingGuideSeen: true,
       );
 
       await pump(tester, state: state);
 
-      expect(find.byType(ReadGuideBanner), findsNothing);
-      expect(find.text('Read Guide'), findsNothing);
+      expect(find.byType(ReadGuideBanner), findsOneWidget);
+      // CTA is baked into the banner SVG; exposed via the Semantics label.
+      expect(find.bySemanticsLabel('Read Guide'), findsOneWidget);
     });
   });
 
@@ -242,7 +222,6 @@ void main() {
           recipesByCategory: {
             'Purees': [_r1, _r2],
           },
-          isStartingGuideSeen: true,
           searchQuery: 'pea',
         );
 
@@ -263,7 +242,6 @@ void main() {
           recipesByCategory: {
             'Purees': [_r1, _r2],
           },
-          isStartingGuideSeen: true,
           searchQuery: 'zzzunknown',
         );
 
@@ -288,7 +266,6 @@ void main() {
         recipesByCategory: {
           'Purees': [_r1],
         },
-        isStartingGuideSeen: true,
       );
 
       final router = _makeRouter();

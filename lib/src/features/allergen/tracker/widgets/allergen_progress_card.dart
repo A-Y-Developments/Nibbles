@@ -10,12 +10,11 @@ import 'package:nibbles/src/features/allergen/tracker/widgets/allergen_icon_tile
 ///
 /// Figma 2780:13178 (Big 11 "Already Tried" / "Ongoing"):
 ///  - Quatrefoil allergen tile · name · "N/3 times" · status pill · chevron
-///  - 3-segment progress bar (filled segments = clean log count)
+///  - 3-segment progress bar (filled segments = total exposures, capped at 3)
 class AllergenProgressCard extends StatelessWidget {
   const AllergenProgressCard({
     required this.allergen,
     required this.status,
-    required this.cleanLogCount,
     required this.totalLogCount,
     required this.onTap,
     super.key,
@@ -24,10 +23,8 @@ class AllergenProgressCard extends StatelessWidget {
   final Allergen allergen;
   final AllergenStatus status;
 
-  /// Logs without `hadReaction == true`. Drives the segmented bar fill.
-  final int cleanLogCount;
-
-  /// All logs for this allergen (used for the "N total logs" caption).
+  /// All logs (safe + reaction) for this allergen — drives "N/3 times" and the
+  /// segmented bar fill. A reaction turns the whole bar red via [_barTone].
   final int totalLogCount;
 
   final VoidCallback onTap;
@@ -60,7 +57,7 @@ class AllergenProgressCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final trailingChip = _trailingChip();
-    final clamped = cleanLogCount.clamp(0, 3);
+    final clamped = totalLogCount.clamp(0, 3);
 
     return Semantics(
       identifier: 'allergen_card_${allergen.key}',

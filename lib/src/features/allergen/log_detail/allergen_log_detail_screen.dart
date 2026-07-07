@@ -16,6 +16,7 @@ import 'package:nibbles/src/common/services/allergen_service.dart';
 import 'package:nibbles/src/common/services/local_flag_service.dart';
 import 'package:nibbles/src/features/allergen/detail/allergen_detail_controller.dart';
 import 'package:nibbles/src/features/allergen/log/reaction_log_sheet.dart';
+import 'package:nibbles/src/features/allergen/log/widgets/attachment_photo_image.dart';
 import 'package:nibbles/src/features/allergen/log_detail/allergen_log_detail_controller.dart';
 import 'package:nibbles/src/features/allergen/log_detail/allergen_log_detail_state.dart';
 import 'package:nibbles/src/features/allergen/log_detail/widgets/delete_log_confirmation_sheet.dart';
@@ -178,9 +179,7 @@ class _LogDetailViewState extends ConsumerState<_LogDetailView> {
     if (!mounted) return;
 
     if (result.isFailure) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Couldn't delete log. Please try again.")),
-      );
+      AppToast.error(context, "Couldn't delete log. Please try again.");
       return;
     }
 
@@ -431,83 +430,59 @@ class _AttachmentBlock extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final photoPath = log.photoUrl;
     final hasPhoto = photoPath != null && photoPath.isNotEmpty;
+    final title = log.attachmentTitle?.trim();
+    final description = log.attachmentDescription?.trim();
+    final hasTitle = title != null && title.isNotEmpty;
+    final hasDescription = description != null && description.isNotEmpty;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
         if (hasPhoto) ...[
-          _PhotoPreview(photoPath: photoPath),
+          AttachmentPhotoImage(
+            localPath: null,
+            existingRemotePath: photoPath,
+            height: 195,
+            borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+          ),
           const SizedBox(height: AppSizes.sp12),
         ],
+        AppPillButton(
+          key: const Key('log_detail_change_picture'),
+          label: 'Change Picture',
+          onPressed: onChangePicturePressed,
+          variant: AppPillButtonVariant.ghost,
+        ),
+        const SizedBox(height: AppSizes.sp12),
         Row(
           children: [
-            Expanded(
-              child: AppPillButton(
-                key: const Key('log_detail_change_picture'),
-                label: 'Change Picture',
-                onPressed: onChangePicturePressed,
-                variant: AppPillButtonVariant.ghost,
-              ),
-            ),
+            if (hasTitle || hasDescription)
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (hasTitle) Text(title, style: AppTypography.headline),
+                    if (hasTitle && hasDescription)
+                      const SizedBox(height: AppSizes.sp2),
+                    if (hasDescription)
+                      Text(
+                        description,
+                        style: AppTypography.textTheme.bodyLarge?.copyWith(
+                          color: AppColors.fgFaint,
+                        ),
+                      ),
+                  ],
+                ),
+              )
+            else
+              const Spacer(),
             const SizedBox(width: AppSizes.sm),
             const _DownloadChip(),
           ],
         ),
       ],
-    );
-  }
-}
-
-class _PhotoPreview extends ConsumerWidget {
-  const _PhotoPreview({required this.photoPath});
-  final String photoPath;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final urlAsync = ref.watch(_signedPhotoUrlProvider(photoPath));
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-      child: urlAsync.when(
-        loading: () => Container(
-          height: 195,
-          width: double.infinity,
-          color: AppColors.surfaceVariant,
-          alignment: Alignment.center,
-          child: const CircularProgressIndicator(),
-        ),
-        error: (_, __) => Container(
-          height: 195,
-          width: double.infinity,
-          color: AppColors.surfaceVariant,
-          alignment: Alignment.center,
-          child: const Text('Photo unavailable'),
-        ),
-        data: (url) {
-          if (url == null) {
-            return Container(
-              height: 195,
-              width: double.infinity,
-              color: AppColors.surfaceVariant,
-              alignment: Alignment.center,
-              child: const Text('Photo unavailable'),
-            );
-          }
-          return Image.network(
-            url,
-            height: 195,
-            width: double.infinity,
-            fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => Container(
-              height: 195,
-              color: AppColors.surfaceVariant,
-              alignment: Alignment.center,
-              child: const Text('Photo unavailable'),
-            ),
-          );
-        },
-      ),
     );
   }
 }
@@ -536,13 +511,3 @@ class _DownloadChip extends StatelessWidget {
     );
   }
 }
-
-/// Resolves a signed URL for a stored attachment photo. Auto-disposed so the
-/// signed URL is re-fetched the next time the detail screen is opened.
-final _signedPhotoUrlProvider = FutureProvider.autoDispose
-    .family<String?, String>((ref, path) async {
-      final service = ref.watch(allergenServiceProvider);
-      final result = await service.getSignedPhotoUrl(path);
-      if (result.isFailure) return null;
-      return result.dataOrNull;
-    });

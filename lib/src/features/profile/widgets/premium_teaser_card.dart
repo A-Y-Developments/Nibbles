@@ -40,18 +40,18 @@ class PremiumTeaserCard extends StatelessWidget {
   Widget _buildUpsell(BuildContext context) {
     final theme = Theme.of(context);
 
-    // Scale the brand wordmark from kit 42 → 22 to fit the inline lockup.
-    final wordmark = AppTypography.brandWordmark.copyWith(
-      fontSize: 22,
-      letterSpacing: 22 * -0.02,
-    );
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Text('nibbles', style: wordmark),
+            Semantics(
+              label: 'Nibbles',
+              image: true,
+              child: ExcludeSemantics(
+                child: Assets.images.nibblesLogoBlack.image(height: 22),
+              ),
+            ),
             const SizedBox(width: AppSizes.sp12),
             _crown(),
           ],

@@ -48,6 +48,7 @@ Future<SubscriptionPlan?> showAllPlansSheet(
   assert(plans.isNotEmpty, 'showAllPlansSheet requires at least one plan');
   return showModalBottomSheet<SubscriptionPlan>(
     context: context,
+    useRootNavigator: true,
     isScrollControlled: true,
     backgroundColor: AppColors.surface,
     shape: const RoundedRectangleBorder(

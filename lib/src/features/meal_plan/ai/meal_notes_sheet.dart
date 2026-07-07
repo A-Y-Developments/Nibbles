@@ -18,6 +18,7 @@ Future<String?> showMealNotesSheet(
 }) {
   return showModalBottomSheet<String>(
     context: context,
+    useRootNavigator: true,
     isScrollControlled: true,
     useSafeArea: true,
     backgroundColor: AppColors.surface,
@@ -128,9 +129,8 @@ class _MealNotesSheetState extends State<_MealNotesSheet> {
                   Expanded(
                     child: AppPillButton(
                       label: 'Continue',
-                      onPressed: () => Navigator.of(
-                        context,
-                      ).pop(_controller.text.trim()),
+                      onPressed: () =>
+                          Navigator.of(context).pop(_controller.text.trim()),
                     ),
                   ),
                 ],

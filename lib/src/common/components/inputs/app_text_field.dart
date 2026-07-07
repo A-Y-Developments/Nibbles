@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 
-/// Labelled text field. Mirrors kit `.field` (h48, radiusMd, bgInput fill,
-/// sage focus shadow) + `label.field-label` (14/700) and the error state
-/// (#E53E3E border + caption error text).
+/// Labelled text field. Mirrors kit `.field` (h48, radiusFull pill, bgInput
+/// fill, sage focus shadow) + `label.field-label` (14/700) and the error
+/// state (#E53E3E border + caption error text).
 class AppTextField extends StatefulWidget {
   const AppTextField({
     this.label,
@@ -24,6 +24,13 @@ class AppTextField extends StatefulWidget {
     this.enableSuggestions = true,
     this.textCapitalization = TextCapitalization.none,
     this.identifier,
+    this.prefixIcon,
+    this.prefixIconConstraints,
+    this.fillColor,
+    this.borderColor,
+    this.contentPadding,
+    this.minLines,
+    this.maxLines = 1,
     super.key,
   });
 
@@ -63,6 +70,29 @@ class AppTextField extends StatefulWidget {
   /// accessibilityIdentifier on iOS).
   final String? identifier;
 
+  /// Optional leading widget rendered inside the field (e.g. a search icon).
+  final Widget? prefixIcon;
+  final BoxConstraints? prefixIconConstraints;
+
+  /// Override for the fill colour in both focused and unfocused states.
+  /// Defaults to the focus-reactive `bgInput`/`surface` toggle.
+  final Color? fillColor;
+
+  /// Override for the enabled/disabled/focused border colour, applied
+  /// uniformly regardless of focus. Defaults to the focus-reactive
+  /// `borderSoft`/`greenDeep` pair.
+  final Color? borderColor;
+
+  /// Override for the field's internal padding, controlling its height.
+  final EdgeInsetsGeometry? contentPadding;
+
+  /// Forwarded to [TextField.minLines]. Set alongside [maxLines] > 1 for a
+  /// multiline field.
+  final int? minLines;
+
+  /// Forwarded to [TextField.maxLines]. Defaults to 1 (single line).
+  final int? maxLines;
+
   @override
   State<AppTextField> createState() => _AppTextFieldState();
 }
@@ -100,7 +130,7 @@ class _AppTextFieldState extends State<AppTextField> {
 
     OutlineInputBorder borderOf(Color color, double width) {
       return OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+        borderRadius: BorderRadius.circular(AppSizes.radiusFull),
         borderSide: BorderSide(color: color, width: width),
       );
     }
@@ -137,26 +167,46 @@ class _AppTextFieldState extends State<AppTextField> {
             autocorrect: widget.autocorrect,
             enableSuggestions: widget.enableSuggestions,
             textCapitalization: widget.textCapitalization,
+            minLines: widget.minLines,
+            maxLines: widget.maxLines,
+            textAlignVertical: (widget.maxLines ?? 1) == 1
+                ? null
+                : TextAlignVertical.top,
             style: theme.textTheme.bodyLarge?.copyWith(
               color: AppColors.fgStrong,
             ),
             cursorColor: AppColors.greenDeep,
             decoration: InputDecoration(
               filled: true,
-              fillColor: focused ? AppColors.surface : AppColors.bgInput,
+              fillColor:
+                  widget.fillColor ??
+                  (focused ? AppColors.surface : AppColors.bgInput),
               isDense: true,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: AppSizes.md,
-                vertical: AppSizes.sp12 + 1,
-              ),
+              contentPadding:
+                  widget.contentPadding ??
+                  const EdgeInsets.symmetric(
+                    horizontal: AppSizes.md,
+                    vertical: AppSizes.sp12 + 1,
+                  ),
               hintText: widget.hintText,
               hintStyle: theme.textTheme.bodyLarge?.copyWith(
                 color: AppColors.greenSoft,
               ),
+              prefixIcon: widget.prefixIcon,
+              prefixIconConstraints: widget.prefixIconConstraints,
               suffixIcon: widget.suffixIcon,
-              enabledBorder: borderOf(AppColors.borderSoft, 1),
-              disabledBorder: borderOf(AppColors.borderSoft, 1),
-              focusedBorder: borderOf(AppColors.greenDeep, 2),
+              enabledBorder: borderOf(
+                widget.borderColor ?? AppColors.borderSoft,
+                1,
+              ),
+              disabledBorder: borderOf(
+                widget.borderColor ?? AppColors.borderSoft,
+                1,
+              ),
+              focusedBorder: borderOf(
+                widget.borderColor ?? AppColors.greenDeep,
+                2,
+              ),
               errorBorder: borderOf(errorColor, 1),
               focusedErrorBorder: borderOf(errorColor, 2),
               errorText: widget.errorText,

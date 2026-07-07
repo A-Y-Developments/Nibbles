@@ -11,14 +11,14 @@ import 'package:nibbles/src/features/home/widgets/start_allergen_button.dart';
 Widget _wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
 
 OngoingAllergenCard _card({
-  int cleanCount = 2,
+  List<bool> reactionFlags = const [false, false],
   bool showStartButton = false,
   VoidCallback? onTap,
   VoidCallback? onStart,
 }) => OngoingAllergenCard(
   allergenKey: 'milk',
   displayName: 'Milk',
-  cleanCount: cleanCount,
+  reactionFlags: reactionFlags,
   showStartButton: showStartButton,
   onTap: onTap ?? () {},
   onStart: onStart,
@@ -34,8 +34,20 @@ void main() {
       expect(find.byType(DetailSegmentBar), findsOneWidget);
     });
 
-    testWidgets('clean count is clamped to the 3-times target', (tester) async {
-      await tester.pumpWidget(_wrap(_card(cleanCount: 5)));
+    testWidgets('a reaction exposure still counts toward the total', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_wrap(_card(reactionFlags: const [false, true])));
+
+      expect(find.text('2/3 times'), findsOneWidget);
+    });
+
+    testWidgets('exposure count is clamped to the 3-times target', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(_card(reactionFlags: const [false, false, false, false, false])),
+      );
 
       expect(find.text('3/3 times'), findsOneWidget);
     });

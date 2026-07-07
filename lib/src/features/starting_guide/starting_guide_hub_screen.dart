@@ -7,7 +7,6 @@ import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/components.dart';
-import 'package:nibbles/src/common/services/local_flag_service.dart';
 import 'package:nibbles/src/features/starting_guide/constants/articles.dart';
 import 'package:nibbles/src/features/starting_guide/starting_guide_controller.dart';
 import 'package:nibbles/src/features/starting_guide/widgets/article_card.dart';
@@ -21,10 +20,6 @@ import 'package:nibbles/src/routing/route_enums.dart';
 /// Renders a butter-wash header + a vertical list of [ArticleCard]s, one per
 /// entry in [kStartingGuideArticles]. Tapping a card pushes the article
 /// screen routed by slug.
-///
-/// First-launch dismiss (build rule 9): on mount, marks the Starting Guide
-/// as seen via [LocalFlagService.markStartingGuideSeen] so the library
-/// banner stops showing on subsequent visits.
 class StartingGuideHubScreen extends ConsumerStatefulWidget {
   const StartingGuideHubScreen({super.key});
 
@@ -40,7 +35,6 @@ class _StartingGuideHubScreenState
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      unawaited(ref.read(localFlagServiceProvider).markStartingGuideSeen());
       // TODO(NIB-53): pass `source` via GoRouter `extra` so we can distinguish
       // hub vs article entry points instead of always firing 'unknown'.
       unawaited(Analytics.instance.logStartingGuideOpened(source: 'unknown'));

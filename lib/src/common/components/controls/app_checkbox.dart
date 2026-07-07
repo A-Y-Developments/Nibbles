@@ -23,7 +23,7 @@ class AppCheckbox extends StatelessWidget {
           height: AppSizes.checkbox,
           decoration: BoxDecoration(
             color: value ? AppColors.greenDeep : AppColors.surface,
-            borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+            shape: BoxShape.circle,
             border: Border.all(color: AppColors.greenDeep, width: 1.5),
           ),
           child: value

@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
+import 'package:nibbles/src/common/components/feedback/app_toast.dart';
 import 'package:nibbles/src/common/data/repositories/auth_repository.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
@@ -186,6 +187,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Login stub'), findsOneWidget);
+
+    // AppToast starts a 3s auto-dismiss Timer; must advance past it before
+    // the test ends.
+    await tester.pump(kAppToastDuration + const Duration(milliseconds: 700));
+    await tester.pump(const Duration(milliseconds: 700));
   });
 
   testWidgets(

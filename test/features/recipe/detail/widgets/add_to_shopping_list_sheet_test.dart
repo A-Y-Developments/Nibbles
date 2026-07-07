@@ -3,8 +3,8 @@
 // Drives `showAddToShoppingListSheet(context, ingredients)` and asserts:
 //   * each row renders a leading checkbox and a trailing remove
 //     ('Remove <name>') button
-//   * 'Select All' picks every visible row → CTA enabled
-//   * 'Unselect All' clears every selection → CTA disabled
+//   * 'Select all' picks every visible row → CTA enabled
+//   * 'Deselect all' clears every selection → CTA disabled
 //   * per-row remove drops the ingredient from the visible list and decrements
 //     the CTA count
 //   * confirm pops the sheet with the picked ingredient names
@@ -74,49 +74,50 @@ void main() {
         expect(find.byType(AppCheckbox), findsNWidgets(3));
         expect(find.bySemanticsLabel(RegExp('^Remove ')), findsNWidgets(3));
         // Pre-selected by default → CTA shows full count.
-        expect(find.text('Add (3)'), findsOneWidget);
+        expect(find.text('Add (3) items'), findsOneWidget);
       },
     );
 
-    testWidgets(
-      'all rows are pre-selected → Select All label is Unselect All',
-      (tester) async {
-        await setupViewport(tester);
-        await _openSheet(tester);
-
-        // Initial state: all selected → toggle reads 'Unselect All'.
-        expect(find.text('Unselect All'), findsOneWidget);
-        expect(find.text('Select All'), findsNothing);
-      },
-    );
-  });
-
-  group('AddToShoppingListSheet — select all toggle', () {
-    testWidgets('tap Unselect All → CTA disabled (Add (0))', (tester) async {
-      await setupViewport(tester);
-      await _openSheet(tester);
-
-      await tester.tap(find.text('Unselect All'));
-      await tester.pump();
-
-      // Now everything is deselected; CTA shows count 0.
-      expect(find.text('Add (0)'), findsOneWidget);
-      expect(find.text('Select All'), findsOneWidget);
-    });
-
-    testWidgets('tap Select All after deselecting → CTA enabled (Add (3))', (
+    testWidgets('all rows are pre-selected → toggle label is Deselect all', (
       tester,
     ) async {
       await setupViewport(tester);
       await _openSheet(tester);
 
-      await tester.tap(find.text('Unselect All'));
+      // Initial state: all selected → toggle reads 'Deselect all'.
+      expect(find.text('Deselect all'), findsOneWidget);
+      expect(find.text('Select all'), findsNothing);
+    });
+  });
+
+  group('AddToShoppingListSheet — select all toggle', () {
+    testWidgets('tap Deselect all → CTA disabled (Add (0) items)', (
+      tester,
+    ) async {
+      await setupViewport(tester);
+      await _openSheet(tester);
+
+      await tester.tap(find.text('Deselect all'));
       await tester.pump();
 
-      await tester.tap(find.text('Select All'));
+      // Now everything is deselected; CTA shows count 0.
+      expect(find.text('Add (0) items'), findsOneWidget);
+      expect(find.text('Select all'), findsOneWidget);
+    });
+
+    testWidgets('tap Select all after deselecting → CTA enabled (Add (3))', (
+      tester,
+    ) async {
+      await setupViewport(tester);
+      await _openSheet(tester);
+
+      await tester.tap(find.text('Deselect all'));
       await tester.pump();
 
-      expect(find.text('Add (3)'), findsOneWidget);
+      await tester.tap(find.text('Select all'));
+      await tester.pump();
+
+      expect(find.text('Add (3) items'), findsOneWidget);
     });
   });
 
@@ -128,14 +129,14 @@ void main() {
       await _openSheet(tester);
 
       expect(find.text('Bread'), findsOneWidget);
-      expect(find.text('Add (3)'), findsOneWidget);
+      expect(find.text('Add (3) items'), findsOneWidget);
 
       // Tap the second row's Remove button ('Bread').
       await tester.tap(find.bySemanticsLabel('Remove Bread'));
       await tester.pump();
 
       expect(find.text('Bread'), findsNothing);
-      expect(find.text('Add (2)'), findsOneWidget);
+      expect(find.text('Add (2) items'), findsOneWidget);
     });
   });
 
@@ -149,9 +150,9 @@ void main() {
         // Deselect 'Bread' (index 1).
         await tester.tap(find.text('Bread'));
         await tester.pump();
-        expect(find.text('Add (2)'), findsOneWidget);
+        expect(find.text('Add (2) items'), findsOneWidget);
 
-        await tester.tap(find.text('Add (2)'));
+        await tester.tap(find.text('Add (2) items'));
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 350));
 

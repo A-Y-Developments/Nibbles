@@ -27,7 +27,7 @@ class HomeHeroCard extends StatelessWidget {
     required this.heroState,
     required this.allergenKey,
     required this.allergenDisplayName,
-    required this.allergenCleanCount,
+    required this.allergenReactionFlags,
     required this.onStartTracker,
     required this.onOpenDetail,
     super.key,
@@ -44,7 +44,7 @@ class HomeHeroCard extends StatelessWidget {
   final HomeAllergenHeroState heroState;
   final String? allergenKey;
   final String allergenDisplayName;
-  final int allergenCleanCount;
+  final List<bool> allergenReactionFlags;
   final VoidCallback onStartTracker;
   final VoidCallback onOpenDetail;
 
@@ -65,76 +65,88 @@ class HomeHeroCard extends StatelessWidget {
         ),
     ];
 
-    return Material(
-      color: AppColors.lime,
-      borderRadius: BorderRadius.circular(AppSizes.radiusXl),
-      clipBehavior: Clip.antiAlias,
-      child: Stack(
-        children: [
-          Positioned(
-            top: -8,
-            right: -24,
-            child: Assets.images.home.heroBowl.image(
-              width: 185,
-              height: 200,
-              fit: BoxFit.contain,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(AppSizes.md),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SizedBox(
-                  width: _leftColumnWidth,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      GreetingCard(
-                        babyName: babyName,
-                        ageMonths: ageMonths,
-                        dateOfBirth: dateOfBirth,
+    final radius = BorderRadius.circular(AppSizes.radiusXl);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.lime,
+        borderRadius: radius,
+        boxShadow: AppSizes.shadowCard,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: radius,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onStartTracker,
+          child: Stack(
+            children: [
+              Positioned(
+                top: -8,
+                right: -24,
+                child: Assets.images.home.heroBowl.image(
+                  width: 185,
+                  height: 200,
+                  fit: BoxFit.contain,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(AppSizes.md),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    SizedBox(
+                      width: _leftColumnWidth,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          GreetingCard(
+                            babyName: babyName,
+                            ageMonths: ageMonths,
+                            dateOfBirth: dateOfBirth,
+                          ),
+                          const SizedBox(height: AppSizes.md),
+                          _StatRing(
+                            label: 'TODAY MEALS',
+                            value: '$mealCount',
+                            max: '/$mealTarget',
+                            numerator: mealCount,
+                            denominator: mealTarget,
+                          ),
+                          const SizedBox(height: AppSizes.sp12),
+                          _StatRing(
+                            label: 'ALLERGEN',
+                            value: '$introducedCount',
+                            max: '/${kAllergenKeys.length}',
+                            numerator: introducedCount,
+                            denominator: kAllergenKeys.length,
+                          ),
+                        ],
                       ),
+                    ),
+                    if (chips.isNotEmpty) ...[
                       const SizedBox(height: AppSizes.md),
-                      _StatRing(
-                        label: 'TODAY MEALS',
-                        value: '$mealCount',
-                        max: '/$mealTarget',
-                        numerator: mealCount,
-                        denominator: mealTarget,
-                      ),
-                      const SizedBox(height: AppSizes.sp12),
-                      _StatRing(
-                        label: 'ALLERGEN',
-                        value: '$introducedCount',
-                        max: '/${kAllergenKeys.length}',
-                        numerator: introducedCount,
-                        denominator: kAllergenKeys.length,
+                      Wrap(
+                        spacing: AppSizes.sm,
+                        runSpacing: AppSizes.sm,
+                        children: chips,
                       ),
                     ],
-                  ),
+                    const SizedBox(height: AppSizes.md),
+                    HeroAllergenSection(
+                      heroState: heroState,
+                      allergenKey: allergenKey,
+                      displayName: allergenDisplayName,
+                      reactionFlags: allergenReactionFlags,
+                      onStartTracker: onStartTracker,
+                      onOpenDetail: onOpenDetail,
+                    ),
+                  ],
                 ),
-                if (chips.isNotEmpty) ...[
-                  const SizedBox(height: AppSizes.md),
-                  Wrap(
-                    spacing: AppSizes.sm,
-                    runSpacing: AppSizes.sm,
-                    children: chips,
-                  ),
-                ],
-                const SizedBox(height: AppSizes.md),
-                HeroAllergenSection(
-                  heroState: heroState,
-                  allergenKey: allergenKey,
-                  displayName: allergenDisplayName,
-                  cleanCount: allergenCleanCount,
-                  onStartTracker: onStartTracker,
-                  onOpenDetail: onOpenDetail,
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

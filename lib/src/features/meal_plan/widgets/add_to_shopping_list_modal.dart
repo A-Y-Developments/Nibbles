@@ -4,6 +4,7 @@ import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
 import 'package:nibbles/src/common/components/controls/app_checkbox.dart';
+import 'package:nibbles/src/common/components/feedback/app_toast.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/services/meal_plan_service.dart';
 import 'package:nibbles/src/common/services/shopping_list_service.dart';
@@ -70,16 +71,13 @@ class _AddToShoppingListModalState
     setState(() => _submitting = false);
 
     if (result.isFailure) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Couldn't add items. Try again.")),
-      );
+      AppToast.error(context, "Couldn't add items. Try again.");
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${selected.length} items added to shopping list'),
-      ),
+    AppToast.success(
+      context,
+      '${selected.length} items added to shopping list',
     );
     Navigator.of(context).pop(true);
   }

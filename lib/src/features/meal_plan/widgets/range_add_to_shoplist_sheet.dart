@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_gradients.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
+import 'package:nibbles/src/common/components/feedback/app_toast.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/services/meal_plan_service.dart';
 import 'package:nibbles/src/common/services/shopping_list_service.dart';
@@ -125,16 +127,11 @@ class _RangeAddToShoplistSheetState
     if (!mounted) return;
     setState(() => _submitting = false);
 
-    final messenger = ScaffoldMessenger.of(context);
     if (result.isFailure) {
-      messenger.showSnackBar(
-        const SnackBar(content: Text("Couldn't add items. Try again.")),
-      );
+      AppToast.error(context, "Couldn't add items. Try again.");
       return;
     }
-    messenger.showSnackBar(
-      const SnackBar(content: Text('Added to shopping list.')),
-    );
+    AppToast.success(context, 'Added to shopping list.');
     Navigator.of(context).pop(true);
   }
 
@@ -159,12 +156,7 @@ class _RangeAddToShoplistSheetState
       builder: (context, scrollController) {
         return DecoratedBox(
           decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              stops: [0.19, 0.50],
-              colors: [AppColors.butterSoft, Color(0xFFF5F5F5)],
-            ),
+            gradient: AppGradients.backgroundMoreWhite,
             borderRadius: BorderRadius.vertical(
               top: Radius.circular(AppSizes.xl - 2),
             ),
@@ -296,7 +288,7 @@ class _Header extends StatelessWidget {
         ),
         InkWell(
           onTap: onClose,
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+          customBorder: const CircleBorder(),
           child: const Padding(
             padding: EdgeInsets.all(AppSizes.sm),
             child: Icon(
@@ -334,10 +326,14 @@ class _IngredientRow extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppSizes.radiusMd),
         child: Container(
-          padding: const EdgeInsets.all(AppSizes.sp12),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSizes.sp12,
+            vertical: AppSizes.sm,
+          ),
           decoration: BoxDecoration(
-            color: selected ? AppColors.butter : AppColors.cream,
+            color: AppColors.cream,
             borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+            boxShadow: AppSizes.shadowCard,
           ),
           child: Row(
             children: [
@@ -351,9 +347,11 @@ class _IngredientRow extends StatelessWidget {
                   ),
                 ),
               ),
-              const Padding(
-                padding: EdgeInsets.only(left: AppSizes.sm),
-                child: Icon(Icons.close, size: 18, color: AppColors.burgundy),
+              const SizedBox(width: AppSizes.sp12),
+              const Icon(
+                Icons.cancel,
+                size: AppSizes.iconMd,
+                color: AppColors.burgundy,
               ),
             ],
           ),
@@ -363,6 +361,8 @@ class _IngredientRow extends StatelessWidget {
   }
 }
 
+/// Circle checkbox mirroring the Shopping List rows (Figma 871:7708):
+/// forest ring, filled forest with a cream tick when selected.
 class _CheckboxIcon extends StatelessWidget {
   const _CheckboxIcon({required this.checked});
 
@@ -370,10 +370,18 @@ class _CheckboxIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Icon(
-      checked ? Icons.check_box : Icons.check_box_outline_blank,
-      size: 18,
-      color: AppColors.greenDeep,
+    return Container(
+      width: 30,
+      height: 30,
+      decoration: BoxDecoration(
+        color: checked ? AppColors.greenDeep : AppColors.cream,
+        shape: BoxShape.circle,
+        border: Border.all(color: AppColors.greenDeep, width: 1.5),
+      ),
+      alignment: Alignment.center,
+      child: checked
+          ? const Icon(Icons.check, size: 18, color: AppColors.onGreen)
+          : null,
     );
   }
 }
@@ -399,7 +407,7 @@ class _BottomActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final toggleLabel = anySelected ? 'Unselect All' : 'Select All';
+    final toggleLabel = anySelected ? 'Deselect' : 'Select All';
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSizes.sm,
@@ -410,23 +418,17 @@ class _BottomActions extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: FilledButton(
+            child: TextButton(
               onPressed: submitting ? null : onToggleAll,
-              style: FilledButton.styleFrom(
+              style: TextButton.styleFrom(
                 minimumSize: const Size.fromHeight(AppSizes.xxl),
-                backgroundColor: AppColors.butter,
-                disabledBackgroundColor: AppColors.butter.withValues(
-                  alpha: 0.5,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppSizes.radius2xl),
-                ),
-                foregroundColor: AppColors.greenDeep,
+                foregroundColor: AppColors.text,
+                disabledForegroundColor: AppColors.fgMuted,
               ),
               child: Text(
                 toggleLabel,
                 style: AppTypography.textTheme.bodyLarge?.copyWith(
-                  color: AppColors.greenDeep,
+                  color: submitting ? AppColors.fgMuted : AppColors.text,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -438,13 +440,12 @@ class _BottomActions extends StatelessWidget {
               onPressed: anySelected && !submitting ? onSubmit : null,
               style: FilledButton.styleFrom(
                 minimumSize: const Size.fromHeight(AppSizes.xxl),
-                backgroundColor: AppColors.greenDeep,
-                disabledBackgroundColor: AppColors.greenDeep.withValues(
-                  alpha: 0.5,
-                ),
+                backgroundColor: AppColors.lime,
+                disabledBackgroundColor: AppColors.lime.withValues(alpha: 0.5),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppSizes.radius2xl),
                 ),
+                foregroundColor: AppColors.greenDeep,
               ),
               child: submitting
                   ? const SizedBox(
@@ -452,13 +453,13 @@ class _BottomActions extends StatelessWidget {
                       width: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: AppColors.onGreen,
+                        color: AppColors.greenDeep,
                       ),
                     )
                   : Text(
                       'Add ($selectedCount)',
                       style: AppTypography.textTheme.bodyLarge?.copyWith(
-                        color: AppColors.onGreen,
+                        color: AppColors.greenDeep,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -480,6 +481,7 @@ Future<bool?> showRangeAddToShoplistSheet(
 }) {
   return showModalBottomSheet<bool>(
     context: context,
+    useRootNavigator: true,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     barrierColor: Colors.black.withValues(alpha: 0.5),

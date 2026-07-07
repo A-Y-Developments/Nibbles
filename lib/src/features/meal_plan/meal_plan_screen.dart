@@ -11,7 +11,7 @@ import 'package:nibbles/src/common/domain/entities/baby.dart';
 import 'package:nibbles/src/common/domain/entities/meal_plan_entry.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
-import 'package:nibbles/src/common/services/meal_plan_service.dart';
+import 'package:nibbles/src/features/meal_plan/add_meals_for_day.dart';
 import 'package:nibbles/src/features/meal_plan/ai/ai_loading_screen.dart';
 import 'package:nibbles/src/features/meal_plan/ai/meal_preferences_sheet.dart';
 import 'package:nibbles/src/features/meal_plan/map/map_meals_state.dart';
@@ -201,7 +201,7 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
         .read(mealPlanControllerProvider(widget.babyId))
         .valueOrNull;
     final key = DateTime.utc(day.year, day.month, day.day);
-    final wasExpanded = current?.expanded[key] ?? false;
+    final wasExpanded = current?.expanded[key] ?? true;
     notifier.toggleExpanded(day);
     final analytics = ref.read(analyticsProvider);
     final iso = _isoDate(day);
@@ -325,40 +325,8 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
     );
   }
 
-  Future<void> _onDayAdd(DateTime day) async {
-    final picked = await showBrowseMealSheet(
-      context,
-      babyId: widget.babyId,
-      startDate: day,
-      endDate: day,
-    );
-    if (picked == null || picked.isEmpty) return;
-    if (!mounted) return;
-
-    final assignments = [
-      for (final r in picked) RecipeAssignment(recipeId: r.id, dayOffset: 0),
-    ];
-    final ok = await ref
-        .read(mealPlanControllerProvider(widget.babyId).notifier)
-        .appendBulkPrep(startDate: day, endDate: day, assignments: assignments);
-    if (!ok) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Couldn't add to meal plan. Try again."),
-          ),
-        );
-      }
-      return;
-    }
-    final analytics = ref.read(analyticsProvider);
-    final iso = _isoDate(day);
-    for (final r in picked) {
-      unawaited(
-        analytics.logMealPlanRecipeAssigned(recipeId: r.id, dayOffsetIso: iso),
-      );
-    }
-  }
+  Future<void> _onDayAdd(DateTime day) =>
+      addMealsForDay(context, ref, babyId: widget.babyId, day: day);
 
   Future<void> _onScreenMenuSelected(_ScreenMenuAction action) async {
     final state = ref
@@ -425,9 +393,7 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
         .deleteActivePlan();
     if (!ok) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Couldn't delete plan. Try again.")),
-        );
+        AppToast.error(context, "Couldn't delete plan. Try again.");
       }
       return;
     }
@@ -446,9 +412,7 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
         .clearDay(day);
     if (!ok) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Couldn't clear meals. Try again.")),
-        );
+        AppToast.error(context, "Couldn't clear meals. Try again.");
       }
       return;
     }
@@ -460,6 +424,7 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
   Future<void> _openAddToShoppingList(DateTime date) async {
     await showModalBottomSheet<void>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
@@ -589,7 +554,7 @@ class _PopulatedView extends StatelessWidget {
                     entries: _entriesForDay(day),
                     recipes: state.recipes,
                     flaggedAllergenKeys: state.flaggedAllergenKeys,
-                    isExpanded: state.expanded[_expandedKey(day)] ?? false,
+                    isExpanded: state.expanded[_expandedKey(day)] ?? true,
                     onToggle: () => onToggleExpanded(day),
                     onAdd: () => onDayAdd(day),
                     onRecipeTap: onRecipeTap,
@@ -631,14 +596,11 @@ class _PopulatedView extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppSizes.radiusLg),
       ),
       items: const [
-        // First row carries the lime default-highlight (Figma 971:7826).
         PopupMenuItem<_ScreenMenuAction>(
           value: _ScreenMenuAction.addToShopList,
-          padding: EdgeInsets.zero,
           child: _ScreenMenuRow(
             icon: Icons.shopping_cart_outlined,
             label: 'Add to shop list',
-            highlight: true,
           ),
         ),
         PopupMenuItem<_ScreenMenuAction>(
@@ -679,43 +641,27 @@ class _NoFlashMenuTheme extends StatelessWidget {
   }
 }
 
-/// Row used inside the screen-level overflow popup. When [highlight] is true
-/// the entire row paints in lime (butter) with forest-deep text + icon —
-/// matches the default-active row in Figma 971:7826.
+/// Row used inside the screen-level overflow popup.
 class _ScreenMenuRow extends StatelessWidget {
-  const _ScreenMenuRow({
-    required this.icon,
-    required this.label,
-    this.highlight = false,
-  });
+  const _ScreenMenuRow({required this.icon, required this.label});
 
   final IconData icon;
   final String label;
-  final bool highlight;
 
   @override
   Widget build(BuildContext context) {
-    final fg = highlight ? AppColors.greenDeep : AppColors.fgStrong;
-    final row = Row(
+    return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: AppSizes.iconSm, color: fg),
+        Icon(icon, size: AppSizes.iconSm, color: AppColors.fgStrong),
         const SizedBox(width: AppSizes.sm),
         Text(
           label,
-          style: AppTypography.textTheme.bodyMedium?.copyWith(color: fg),
+          style: AppTypography.textTheme.bodyMedium?.copyWith(
+            color: AppColors.fgStrong,
+          ),
         ),
       ],
-    );
-    if (!highlight) return row;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.md,
-        vertical: AppSizes.sm,
-      ),
-      color: AppColors.butter,
-      child: row,
     );
   }
 }

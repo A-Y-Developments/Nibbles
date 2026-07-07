@@ -315,7 +315,10 @@ GoRouter goRouter(Ref ref) {
                     path: 'allergen/tracker',
                     name: AppRoute.allergenTracker.name,
                     parentNavigatorKey: rootNavigatorKey,
-                    builder: (context, state) => const AllergenTrackerScreen(),
+                    builder: (context, state) => AllergenTrackerScreen(
+                      initialSegmentIndex:
+                          state.uri.queryParameters['tab'] == 'big11' ? 1 : 0,
+                    ),
                     routes: [
                       GoRoute(
                         path: ':allergenKey',

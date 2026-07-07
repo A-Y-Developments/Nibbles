@@ -1,10 +1,9 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/components.dart';
+import 'package:nibbles/src/features/allergen/log/widgets/attachment_photo_image.dart';
 
 /// Result returned from [showAttachmentSheet] when the user taps Add.
 class AttachmentSheetResult {
@@ -30,11 +29,13 @@ class AttachmentSheetResult {
 Future<AttachmentSheetResult?> showAttachmentSheet(
   BuildContext context, {
   String? initialPhotoPath,
+  String? initialExistingPhotoPath,
   String? initialTitle,
   String? initialDescription,
 }) {
   return showModalBottomSheet<AttachmentSheetResult>(
     context: context,
+    useRootNavigator: true,
     isScrollControlled: true,
     backgroundColor: AppColors.surface,
     shape: const RoundedRectangleBorder(
@@ -46,6 +47,7 @@ Future<AttachmentSheetResult?> showAttachmentSheet(
       padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
       child: _AttachmentSheet(
         initialPhotoPath: initialPhotoPath,
+        initialExistingPhotoPath: initialExistingPhotoPath,
         initialTitle: initialTitle,
         initialDescription: initialDescription,
       ),
@@ -56,11 +58,13 @@ Future<AttachmentSheetResult?> showAttachmentSheet(
 class _AttachmentSheet extends StatefulWidget {
   const _AttachmentSheet({
     this.initialPhotoPath,
+    this.initialExistingPhotoPath,
     this.initialTitle,
     this.initialDescription,
   });
 
   final String? initialPhotoPath;
+  final String? initialExistingPhotoPath;
   final String? initialTitle;
   final String? initialDescription;
 
@@ -106,6 +110,7 @@ class _AttachmentSheetState extends State<_AttachmentSheet> {
   Future<ImageSource?> _pickSource() {
     return showModalBottomSheet<ImageSource>(
       context: context,
+      useRootNavigator: true,
       backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
@@ -173,7 +178,11 @@ class _AttachmentSheetState extends State<_AttachmentSheet> {
               ),
             ),
             const SizedBox(height: AppSizes.md),
-            _PhotoPreview(photoPath: _photoPath, onTap: _pickPhoto),
+            _PhotoPreview(
+              photoPath: _photoPath,
+              existingPhotoPath: widget.initialExistingPhotoPath,
+              onTap: _pickPhoto,
+            ),
             const SizedBox(height: AppSizes.md),
             const _FieldLabel('Title'),
             const SizedBox(height: AppSizes.sm),
@@ -235,23 +244,31 @@ class _FieldLabel extends StatelessWidget {
 }
 
 class _PhotoPreview extends StatelessWidget {
-  const _PhotoPreview({required this.photoPath, required this.onTap});
+  const _PhotoPreview({
+    required this.photoPath,
+    required this.existingPhotoPath,
+    required this.onTap,
+  });
 
   final String? photoPath;
+  final String? existingPhotoPath;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final radius = BorderRadius.circular(AppSizes.radiusLg);
+    final hasPhoto =
+        (photoPath != null && photoPath!.isNotEmpty) ||
+        (existingPhotoPath != null && existingPhotoPath!.isNotEmpty);
 
     // Button role + curated label so screen readers announce the tap target
     // (the inner "Tap to add photo" caption is absent once a photo is set, and
-    // an Image.file alone carries no accessible name). excludeSemantics is safe
-    // here — the InkWell wraps no other interactive children.
+    // the image preview alone carries no accessible name). excludeSemantics is
+    // safe here — the InkWell wraps no other interactive children.
     return Semantics(
       button: true,
-      label: photoPath != null ? 'Change photo' : 'Add photo',
+      label: hasPhoto ? 'Change photo' : 'Add photo',
       excludeSemantics: true,
       onTap: onTap,
       child: Material(
@@ -268,15 +285,12 @@ class _PhotoPreview extends StatelessWidget {
               borderRadius: radius,
             ),
             alignment: Alignment.center,
-            child: photoPath != null
-                ? ClipRRect(
+            child: hasPhoto
+                ? AttachmentPhotoImage(
+                    localPath: photoPath,
+                    existingRemotePath: existingPhotoPath,
+                    height: 195,
                     borderRadius: radius,
-                    child: Image.file(
-                      File(photoPath!),
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                      height: 195,
-                    ),
                   )
                 : Column(
                     mainAxisSize: MainAxisSize.min,

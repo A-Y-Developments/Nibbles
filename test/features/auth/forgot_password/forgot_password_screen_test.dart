@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -86,18 +88,40 @@ void main() {
     },
   );
 
-  testWidgets('tapping back pill pops / navigates to login route', (
+  testWidgets('tapping back pill pops back to the previous route', (
     tester,
   ) async {
-    await tester.pumpWidget(
-      _wrap(const ForgotPasswordScreen(), buildOverrides()),
+    final router = GoRouter(
+      initialLocation: AppRoute.login.path,
+      routes: [
+        GoRoute(
+          path: AppRoute.login.path,
+          name: AppRoute.login.name,
+          builder: (_, __) => const Scaffold(body: Text('Login stub')),
+        ),
+        GoRoute(
+          path: AppRoute.forgotPassword.path,
+          name: AppRoute.forgotPassword.name,
+          builder: (_, __) => const ForgotPasswordScreen(),
+        ),
+      ],
     );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: buildOverrides(),
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    unawaited(router.pushNamed(AppRoute.forgotPassword.name));
     await tester.pumpAndSettle();
 
     await tester.tap(find.byIcon(Icons.arrow_back_rounded));
     await tester.pumpAndSettle();
 
-    // With no back-stack canPop is false, so the screen routes to login.
+    // Real flow reaches this screen via push, so back must pop to login.
     expect(find.text('Login stub'), findsOneWidget);
   });
 

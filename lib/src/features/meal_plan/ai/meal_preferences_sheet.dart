@@ -68,6 +68,7 @@ Future<List<String>?> showMealPreferencesSheet(
 }) {
   return showModalBottomSheet<List<String>>(
     context: context,
+    useRootNavigator: true,
     isScrollControlled: true,
     useSafeArea: true,
     backgroundColor: AppColors.surface,

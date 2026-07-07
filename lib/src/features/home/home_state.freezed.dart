@@ -27,7 +27,8 @@ mixin _$HomeState {
   String? get currentAllergenKey => throw _privateConstructorUsedError;
   AllergenStatus get currentAllergenStatus =>
       throw _privateConstructorUsedError;
-  int get currentAllergenCleanCount => throw _privateConstructorUsedError;
+  List<bool> get currentAllergenReactionFlags =>
+      throw _privateConstructorUsedError;
 
   /// Create a copy of HomeState
   /// with the given fields replaced by the non-null parameter values.
@@ -50,7 +51,7 @@ abstract class $HomeStateCopyWith<$Res> {
     Map<String, int> allergenLogCounts,
     String? currentAllergenKey,
     AllergenStatus currentAllergenStatus,
-    int currentAllergenCleanCount,
+    List<bool> currentAllergenReactionFlags,
   });
 
   $BabyCopyWith<$Res>? get baby;
@@ -79,7 +80,7 @@ class _$HomeStateCopyWithImpl<$Res, $Val extends HomeState>
     Object? allergenLogCounts = null,
     Object? currentAllergenKey = freezed,
     Object? currentAllergenStatus = null,
-    Object? currentAllergenCleanCount = null,
+    Object? currentAllergenReactionFlags = null,
   }) {
     return _then(
       _value.copyWith(
@@ -115,10 +116,10 @@ class _$HomeStateCopyWithImpl<$Res, $Val extends HomeState>
                 ? _value.currentAllergenStatus
                 : currentAllergenStatus // ignore: cast_nullable_to_non_nullable
                       as AllergenStatus,
-            currentAllergenCleanCount: null == currentAllergenCleanCount
-                ? _value.currentAllergenCleanCount
-                : currentAllergenCleanCount // ignore: cast_nullable_to_non_nullable
-                      as int,
+            currentAllergenReactionFlags: null == currentAllergenReactionFlags
+                ? _value.currentAllergenReactionFlags
+                : currentAllergenReactionFlags // ignore: cast_nullable_to_non_nullable
+                      as List<bool>,
           )
           as $Val,
     );
@@ -157,7 +158,7 @@ abstract class _$$HomeStateImplCopyWith<$Res>
     Map<String, int> allergenLogCounts,
     String? currentAllergenKey,
     AllergenStatus currentAllergenStatus,
-    int currentAllergenCleanCount,
+    List<bool> currentAllergenReactionFlags,
   });
 
   @override
@@ -186,7 +187,7 @@ class __$$HomeStateImplCopyWithImpl<$Res>
     Object? allergenLogCounts = null,
     Object? currentAllergenKey = freezed,
     Object? currentAllergenStatus = null,
-    Object? currentAllergenCleanCount = null,
+    Object? currentAllergenReactionFlags = null,
   }) {
     return _then(
       _$HomeStateImpl(
@@ -222,10 +223,10 @@ class __$$HomeStateImplCopyWithImpl<$Res>
             ? _value.currentAllergenStatus
             : currentAllergenStatus // ignore: cast_nullable_to_non_nullable
                   as AllergenStatus,
-        currentAllergenCleanCount: null == currentAllergenCleanCount
-            ? _value.currentAllergenCleanCount
-            : currentAllergenCleanCount // ignore: cast_nullable_to_non_nullable
-                  as int,
+        currentAllergenReactionFlags: null == currentAllergenReactionFlags
+            ? _value._currentAllergenReactionFlags
+            : currentAllergenReactionFlags // ignore: cast_nullable_to_non_nullable
+                  as List<bool>,
       ),
     );
   }
@@ -244,12 +245,13 @@ class _$HomeStateImpl extends _HomeState {
     final Map<String, int> allergenLogCounts = const <String, int>{},
     this.currentAllergenKey,
     this.currentAllergenStatus = AllergenStatus.notStarted,
-    this.currentAllergenCleanCount = 0,
+    final List<bool> currentAllergenReactionFlags = const <bool>[],
   }) : _allMeals = allMeals,
        _allRecipes = allRecipes,
        _plannedDates = plannedDates,
        _allergenStatuses = allergenStatuses,
        _allergenLogCounts = allergenLogCounts,
+       _currentAllergenReactionFlags = currentAllergenReactionFlags,
        super._();
 
   @override
@@ -305,13 +307,19 @@ class _$HomeStateImpl extends _HomeState {
   @override
   @JsonKey()
   final AllergenStatus currentAllergenStatus;
+  final List<bool> _currentAllergenReactionFlags;
   @override
   @JsonKey()
-  final int currentAllergenCleanCount;
+  List<bool> get currentAllergenReactionFlags {
+    if (_currentAllergenReactionFlags is EqualUnmodifiableListView)
+      return _currentAllergenReactionFlags;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_currentAllergenReactionFlags);
+  }
 
   @override
   String toString() {
-    return 'HomeState(baby: $baby, allMeals: $allMeals, allRecipes: $allRecipes, plannedDates: $plannedDates, allergenStatuses: $allergenStatuses, allergenLogCounts: $allergenLogCounts, currentAllergenKey: $currentAllergenKey, currentAllergenStatus: $currentAllergenStatus, currentAllergenCleanCount: $currentAllergenCleanCount)';
+    return 'HomeState(baby: $baby, allMeals: $allMeals, allRecipes: $allRecipes, plannedDates: $plannedDates, allergenStatuses: $allergenStatuses, allergenLogCounts: $allergenLogCounts, currentAllergenKey: $currentAllergenKey, currentAllergenStatus: $currentAllergenStatus, currentAllergenReactionFlags: $currentAllergenReactionFlags)';
   }
 
   @override
@@ -341,11 +349,10 @@ class _$HomeStateImpl extends _HomeState {
                 other.currentAllergenKey == currentAllergenKey) &&
             (identical(other.currentAllergenStatus, currentAllergenStatus) ||
                 other.currentAllergenStatus == currentAllergenStatus) &&
-            (identical(
-                  other.currentAllergenCleanCount,
-                  currentAllergenCleanCount,
-                ) ||
-                other.currentAllergenCleanCount == currentAllergenCleanCount));
+            const DeepCollectionEquality().equals(
+              other._currentAllergenReactionFlags,
+              _currentAllergenReactionFlags,
+            ));
   }
 
   @override
@@ -359,7 +366,7 @@ class _$HomeStateImpl extends _HomeState {
     const DeepCollectionEquality().hash(_allergenLogCounts),
     currentAllergenKey,
     currentAllergenStatus,
-    currentAllergenCleanCount,
+    const DeepCollectionEquality().hash(_currentAllergenReactionFlags),
   );
 
   /// Create a copy of HomeState
@@ -381,7 +388,7 @@ abstract class _HomeState extends HomeState {
     final Map<String, int> allergenLogCounts,
     final String? currentAllergenKey,
     final AllergenStatus currentAllergenStatus,
-    final int currentAllergenCleanCount,
+    final List<bool> currentAllergenReactionFlags,
   }) = _$HomeStateImpl;
   const _HomeState._() : super._();
 
@@ -402,7 +409,7 @@ abstract class _HomeState extends HomeState {
   @override
   AllergenStatus get currentAllergenStatus;
   @override
-  int get currentAllergenCleanCount;
+  List<bool> get currentAllergenReactionFlags;
 
   /// Create a copy of HomeState
   /// with the given fields replaced by the non-null parameter values.

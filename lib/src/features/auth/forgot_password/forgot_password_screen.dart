@@ -6,7 +6,6 @@ import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/features/auth/forgot_password/forgot_password_controller.dart';
 import 'package:nibbles/src/features/auth/forgot_password/forgot_password_state.dart';
-import 'package:nibbles/src/routing/route_enums.dart';
 
 /// NIB-114 — Forgot password entry + error.
 ///
@@ -30,8 +29,7 @@ class ForgotPasswordScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(forgotPasswordControllerProvider);
 
-    void goBack() =>
-        context.canPop() ? context.pop() : context.goNamed(AppRoute.login.name);
+    void goBack() => context.pop();
 
     return GradientScaffold(
       body: SafeArea(

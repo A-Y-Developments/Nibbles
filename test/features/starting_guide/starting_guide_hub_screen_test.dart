@@ -2,8 +2,6 @@
 //
 // Asserts:
 //   * one [ArticleCard] is rendered per entry in [kStartingGuideArticles]
-//   * on mount the screen calls
-//     [LocalFlagService.markStartingGuideSeen] (mock-verified)
 //   * tapping a card pushes `/home/recipe/guide/:slug` with the right slug
 //     via GoRouter (asserted by a stub article-route that surfaces the slug)
 //
@@ -18,14 +16,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mocktail/mocktail.dart';
-import 'package:nibbles/src/common/services/local_flag_service.dart';
 import 'package:nibbles/src/features/starting_guide/constants/articles.dart';
 import 'package:nibbles/src/features/starting_guide/starting_guide_hub_screen.dart';
 import 'package:nibbles/src/features/starting_guide/widgets/article_card.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
-
-class _MockLocalFlagService extends Mock implements LocalFlagService {}
 
 class _NoopAnalyticsPlatform extends FirebaseAnalyticsPlatform {
   _NoopAnalyticsPlatform() : super();
@@ -73,11 +67,8 @@ GoRouter _makeRouter() => GoRouter(
   ],
 );
 
-Widget _buildSut({required LocalFlagService localFlagService}) {
-  return ProviderScope(
-    overrides: [localFlagServiceProvider.overrideWithValue(localFlagService)],
-    child: MaterialApp.router(routerConfig: _makeRouter()),
-  );
+Widget _buildSut() {
+  return ProviderScope(child: MaterialApp.router(routerConfig: _makeRouter()));
 }
 
 void main() {
@@ -87,22 +78,13 @@ void main() {
     FirebaseAnalyticsPlatform.instance = _NoopAnalyticsPlatform();
   });
 
-  late _MockLocalFlagService mockLocalFlagService;
-
-  setUp(() {
-    mockLocalFlagService = _MockLocalFlagService();
-    when(
-      () => mockLocalFlagService.markStartingGuideSeen(),
-    ).thenAnswer((_) async {});
-  });
-
   Future<void> pump(WidgetTester tester) async {
     tester.view.physicalSize = const Size(1080, 2400);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    await tester.pumpWidget(_buildSut(localFlagService: mockLocalFlagService));
+    await tester.pumpWidget(_buildSut());
     await tester.pumpAndSettle();
   }
 
@@ -129,16 +111,6 @@ void main() {
       // Figma 971:8642 — the hub header is title-only; there is no subtitle.
       expect(find.text('Starting Guide'), findsWidgets);
       expect(find.textContaining('Bite-sized reads'), findsNothing);
-    });
-  });
-
-  group('StartingGuideHubScreen — mark seen', () {
-    testWidgets('on mount calls LocalFlagService.markStartingGuideSeen', (
-      tester,
-    ) async {
-      await pump(tester);
-
-      verify(() => mockLocalFlagService.markStartingGuideSeen()).called(1);
     });
   });
 

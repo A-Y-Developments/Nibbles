@@ -103,6 +103,8 @@ void main() {
     required Set<String> flaggedKeys,
     Map<String, AllergenStatus>? statuses,
     Baby? baby,
+    DateTime? startDate,
+    DateTime? endDate,
   }) async {
     when(
       () => mockRecipeService.getAllRecipes(any()),
@@ -138,8 +140,8 @@ void main() {
                     pendingResult = showBrowseMealSheet(
                       context,
                       babyId: _babyId,
-                      startDate: DateTime(2026, 5, 30),
-                      endDate: DateTime(2026, 6, 5),
+                      startDate: startDate ?? DateTime(2026, 5, 30),
+                      endDate: endDate ?? DateTime(2026, 6, 5),
                     );
                   },
                   child: const Text('Open'),
@@ -255,6 +257,36 @@ void main() {
       expect(result, hasLength(1));
       expect(result!.single.id, _safeA.id);
     });
+
+    testWidgets(
+      'single-date entry: "Add" commits directly, skipping the review sheet',
+      (tester) async {
+        await openSheet(
+          tester,
+          recipes: const [_safeA, _safeB],
+          flaggedKeys: const {},
+          startDate: DateTime(2026, 5, 30),
+          endDate: DateTime(2026, 5, 30),
+        );
+
+        // Footer CTA reads "Add" (not "Next") when the day is fixed.
+        expect(find.text('Add'), findsOneWidget);
+        expect(find.text('Next'), findsNothing);
+
+        await tester.tap(find.text(_safeA.title).first);
+        await tester.pump();
+
+        await tester.tap(find.text('Add'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
+
+        // No review sheet appears — the picks pop straight back.
+        expect(find.text('Map Meals'), findsNothing);
+        final result = await pendingResult;
+        expect(result, hasLength(1));
+        expect(result!.single.id, _safeA.id);
+      },
+    );
 
     testWidgets(
       'ongoing-allergen carousel is hidden when no inProgress status exists',

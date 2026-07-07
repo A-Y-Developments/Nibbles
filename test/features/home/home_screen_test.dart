@@ -33,6 +33,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nibbles/src/common/components/cards/recipe_plan_row.dart';
 import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/common/domain/entities/baby.dart';
 import 'package:nibbles/src/common/domain/entities/meal_plan_entry.dart';
@@ -100,10 +101,8 @@ Map<String, AllergenStatus> _statuses({
 }
 
 /// 1. Empty — no meals, no allergen activity → hero shows the start CTA.
-HomeState _emptyState() => HomeState(
-  baby: _fakeBaby,
-  allergenStatuses: _statuses(),
-);
+HomeState _emptyState() =>
+    HomeState(baby: _fakeBaby, allergenStatuses: _statuses());
 
 /// 2. Ongoing — meal-prepped, current allergen in-progress.
 HomeState _ongoingState() => HomeState(
@@ -113,7 +112,7 @@ HomeState _ongoingState() => HomeState(
   allergenStatuses: _statuses(inProgress: 1),
   currentAllergenKey: kAllergenKeys.first,
   currentAllergenStatus: AllergenStatus.inProgress,
-  currentAllergenCleanCount: 2,
+  currentAllergenReactionFlags: List.filled(2, false),
 );
 
 /// 3. FinishedStartNext — meal-prepped, current allergen finished (safe).
@@ -124,7 +123,7 @@ HomeState _finishedState() => HomeState(
   allergenStatuses: _statuses(safe: 1),
   currentAllergenKey: kAllergenKeys.first,
   currentAllergenStatus: AllergenStatus.safe,
-  currentAllergenCleanCount: 3,
+  currentAllergenReactionFlags: List.filled(3, false),
 );
 
 /// 4. AllDone — every allergen introduced → no hero allergen widget.
@@ -143,15 +142,11 @@ HomeState _mealPreppedState() => HomeState(
   allergenStatuses: _statuses(inProgress: 1),
   currentAllergenKey: kAllergenKeys.first,
   currentAllergenStatus: AllergenStatus.inProgress,
-  currentAllergenCleanCount: 1,
+  currentAllergenReactionFlags: List.filled(1, false),
 );
 
 HomeDayView _dayView({int mealCount = 0, List<MealPlanEntry>? meals}) =>
-    HomeDayView(
-      meals: meals ?? const [],
-      mealCount: mealCount,
-      isToday: true,
-    );
+    HomeDayView(meals: meals ?? const [], mealCount: mealCount, isToday: true);
 
 // ---------------------------------------------------------------------------
 // Firebase no-op platform — drops every `Analytics.instance` call.
@@ -381,7 +376,9 @@ void main() {
       },
     );
 
-    testWidgets('mealCount >= target -> Add pill is absent', (tester) async {
+    testWidgets('mealCount >= target -> Add pill absent, no banner', (
+      tester,
+    ) async {
       await _pump(
         tester,
         overrides: _overrides(
@@ -399,7 +396,7 @@ void main() {
       expect(find.text('Add'), findsNothing);
       expect(
         find.text('Great job! Everything important is covered'),
-        findsOneWidget,
+        findsNothing,
       );
     });
   });
@@ -451,10 +448,7 @@ void main() {
     ) async {
       await _pump(
         tester,
-        overrides: _overrides(
-          state: _mealPreppedState(),
-          dayView: _dayView(),
-        ),
+        overrides: _overrides(state: _mealPreppedState(), dayView: _dayView()),
       );
 
       expect(find.byType(HomeNoMealsState), findsOneWidget);
@@ -538,7 +532,7 @@ void main() {
         ),
       );
 
-      await tester.tap(find.text('Breakfast'));
+      await tester.tap(find.byType(RecipePlanRow));
       await tester.pumpAndSettle();
 
       expect(find.text('RECIPE_DETAIL_STUB:recipe-aaa'), findsOneWidget);

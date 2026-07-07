@@ -3,6 +3,7 @@ import 'package:nibbles/gen/assets.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/domain/entities/allergen.dart';
+import 'package:nibbles/src/features/allergen/detail/widgets/detail_segment_bar.dart';
 import 'package:nibbles/src/features/allergen/tracker/widgets/allergen_icon_tile.dart';
 
 /// Burgundy hero card for the currently-ongoing allergen (Figma 1089:17373 —
@@ -11,20 +12,23 @@ import 'package:nibbles/src/features/allergen/tracker/widgets/allergen_icon_tile
 class AllergenExposureCard extends StatelessWidget {
   const AllergenExposureCard({
     required this.allergen,
-    required this.cleanLogCount,
+    required this.reactionFlags,
     required this.onTap,
     super.key,
   });
 
   final Allergen allergen;
-  final int cleanLogCount;
+
+  /// Per-exposure reaction flags, oldest-first. Drives both the "N/3 times"
+  /// count and the per-segment colouring.
+  final List<bool> reactionFlags;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final radius = BorderRadius.circular(AppSizes.radiusXl);
-    final clamped = cleanLogCount.clamp(0, 3);
+    final clamped = reactionFlags.length.clamp(0, 3);
 
     return Semantics(
       identifier: 'allergen_exposure_card_${allergen.key}',
@@ -83,7 +87,10 @@ class AllergenExposureCard extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: AppSizes.sm),
-                          _HeroSegmentBar(filledCount: clamped),
+                          DetailSegmentBar(
+                            reactionFlags: reactionFlags,
+                            onDark: true,
+                          ),
                         ],
                       ),
                     ),
@@ -109,35 +116,6 @@ class AllergenExposureCard extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _HeroSegmentBar extends StatelessWidget {
-  const _HeroSegmentBar({required this.filledCount});
-
-  final int filledCount;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: List<Widget>.generate(3, (i) {
-        final isFilled = i < filledCount;
-        return Expanded(
-          child: Padding(
-            padding: EdgeInsets.only(right: i == 2 ? 0 : AppSizes.xs),
-            child: Container(
-              height: 8,
-              decoration: BoxDecoration(
-                color: isFilled
-                    ? AppColors.lime
-                    : Colors.white.withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-              ),
-            ),
-          ),
-        );
-      }),
     );
   }
 }

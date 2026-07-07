@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -18,6 +16,7 @@ import 'package:nibbles/src/common/services/local_flag_service.dart';
 import 'package:nibbles/src/features/allergen/detail/allergen_detail_controller.dart';
 import 'package:nibbles/src/features/allergen/log/allergen_log_controller.dart';
 import 'package:nibbles/src/features/allergen/log/allergen_log_state.dart';
+import 'package:nibbles/src/features/allergen/log/widgets/attachment_photo_image.dart';
 import 'package:nibbles/src/features/allergen/log/widgets/attachment_sheet.dart';
 import 'package:nibbles/src/features/allergen/tracker/allergen_tracker_controller.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
@@ -140,6 +139,7 @@ class _ReactionLogSheetState extends ConsumerState<_ReactionLogSheet> {
     final result = await showAttachmentSheet(
       context,
       initialPhotoPath: state.photoPath,
+      initialExistingPhotoPath: state.existingPhotoPath,
       initialTitle: state.attachmentTitle,
       initialDescription: state.attachmentDescription,
     );
@@ -176,12 +176,7 @@ class _ReactionLogSheetState extends ConsumerState<_ReactionLogSheet> {
     if (!state.isSaved) return;
 
     if (state.photoUploadFailed) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Log saved, but photo upload failed.'),
-          duration: Duration(seconds: 3),
-        ),
-      );
+      AppToast.error(context, 'Log saved, but photo upload failed.');
     }
 
     // AL-08 reachability gate (NIB-128): if this save pushed every allergen to
@@ -295,9 +290,12 @@ class _ReactionLogSheetState extends ConsumerState<_ReactionLogSheet> {
                     const SizedBox(height: AppSizes.md),
                     const _SectionLabel('Notes'),
                     const SizedBox(height: AppSizes.sm),
-                    _NotesField(
+                    AppTextField(
+                      key: const Key('reaction_log_notes_field'),
                       controller: _notesCtrl,
                       onChanged: controller.setNotes,
+                      minLines: 1,
+                      maxLines: 3,
                       hintText: state.hadReaction
                           ? 'Describe the reaction (what, when, how long)…'
                           : 'My baby loves it, no reaction',
@@ -307,6 +305,9 @@ class _ReactionLogSheetState extends ConsumerState<_ReactionLogSheet> {
                     const SizedBox(height: AppSizes.sm),
                     _AttachmentBlock(
                       localPhotoPath: state.photoPath,
+                      existingPhotoPath: state.existingPhotoPath,
+                      attachmentTitle: state.attachmentTitle,
+                      attachmentDescription: state.attachmentDescription,
                       hasAttachment: _hasAttachment(state),
                       onOpenSheet: () =>
                           _openAttachmentSheet(controller, state),
@@ -432,52 +433,6 @@ class _DateField extends StatelessWidget {
                 color: hasValue ? AppColors.fgStrong : AppColors.fgFaint,
               ),
             ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _NotesField extends StatelessWidget {
-  const _NotesField({
-    required this.controller,
-    required this.onChanged,
-    required this.hintText,
-  });
-
-  final TextEditingController controller;
-  final ValueChanged<String> onChanged;
-  final String hintText;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.bgInput,
-        borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-        border: Border.all(color: AppColors.borderSoft),
-      ),
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.fieldPaddingH,
-        vertical: AppSizes.sm + 2,
-      ),
-      child: TextField(
-        key: const Key('reaction_log_notes_field'),
-        controller: controller,
-        minLines: 1,
-        maxLines: 3,
-        onChanged: onChanged,
-        cursorColor: AppColors.greenDeep,
-        style: AppTypography.textTheme.bodyLarge?.copyWith(
-          color: AppColors.fgStrong,
-        ),
-        decoration: InputDecoration(
-          isCollapsed: true,
-          border: InputBorder.none,
-          hintText: hintText,
-          hintStyle: AppTypography.textTheme.bodyLarge?.copyWith(
-            color: AppColors.fgFaint,
           ),
         ),
       ),
@@ -631,36 +586,46 @@ class _SeverityCard extends StatelessWidget {
   }
 }
 
-class _AttachmentBlock extends StatelessWidget {
+class _AttachmentBlock extends ConsumerWidget {
   const _AttachmentBlock({
     required this.localPhotoPath,
+    required this.existingPhotoPath,
+    required this.attachmentTitle,
+    required this.attachmentDescription,
     required this.hasAttachment,
     required this.onOpenSheet,
   });
 
   final String? localPhotoPath;
+  final String? existingPhotoPath;
+  final String? attachmentTitle;
+  final String? attachmentDescription;
   final bool hasAttachment;
   final VoidCallback onOpenSheet;
 
   @override
-  Widget build(BuildContext context) {
-    final hasLocalPhoto = localPhotoPath != null && localPhotoPath!.isNotEmpty;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final hasPhoto =
+        (localPhotoPath != null && localPhotoPath!.isNotEmpty) ||
+        (existingPhotoPath != null && existingPhotoPath!.isNotEmpty);
+    final title = attachmentTitle?.trim();
+    final description = attachmentDescription?.trim();
+    final hasTitle = title != null && title.isNotEmpty;
+    final hasDescription = description != null && description.isNotEmpty;
+
     return AppCard(
       variant: AppCardVariant.dashed,
       padding: const EdgeInsets.all(AppSizes.md),
       child: Column(
         children: [
-          if (hasLocalPhoto)
-            ClipRRect(
+          if (hasPhoto)
+            AttachmentPhotoImage(
+              localPath: localPhotoPath,
+              existingRemotePath: existingPhotoPath,
+              height: 160,
               borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-              child: Image.file(
-                File(localPhotoPath!),
-                height: 160,
-                width: double.infinity,
-                fit: BoxFit.cover,
-              ),
             )
-          else ...[
+          else if (!hasAttachment) ...[
             Container(
               width: 40,
               height: 40,
@@ -683,6 +648,28 @@ class _AttachmentBlock extends StatelessWidget {
               textAlign: TextAlign.center,
               style: AppTypography.textTheme.bodyLarge?.copyWith(
                 color: AppColors.fgFaint,
+              ),
+            ),
+          ],
+          if (hasTitle || hasDescription) ...[
+            if (hasPhoto) const SizedBox(height: AppSizes.sm),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (hasTitle) Text(title, style: AppTypography.headline),
+                  if (hasTitle && hasDescription)
+                    const SizedBox(height: AppSizes.sp2),
+                  if (hasDescription)
+                    Text(
+                      description,
+                      style: AppTypography.textTheme.bodyLarge?.copyWith(
+                        color: AppColors.fgFaint,
+                      ),
+                    ),
+                ],
               ),
             ),
           ],

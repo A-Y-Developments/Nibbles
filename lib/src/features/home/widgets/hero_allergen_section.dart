@@ -22,7 +22,7 @@ class HeroAllergenSection extends StatelessWidget {
     required this.heroState,
     required this.allergenKey,
     required this.displayName,
-    required this.cleanCount,
+    required this.reactionFlags,
     required this.onStartTracker,
     required this.onOpenDetail,
     super.key,
@@ -31,7 +31,7 @@ class HeroAllergenSection extends StatelessWidget {
   final HomeAllergenHeroState heroState;
   final String? allergenKey;
   final String displayName;
-  final int cleanCount;
+  final List<bool> reactionFlags;
   final VoidCallback onStartTracker;
   final VoidCallback onOpenDetail;
 
@@ -64,7 +64,7 @@ class HeroAllergenSection extends StatelessWidget {
         OngoingAllergenCard(
           allergenKey: key,
           displayName: displayName,
-          cleanCount: cleanCount,
+          reactionFlags: reactionFlags,
           showStartButton: showStart,
           onTap: onOpenDetail,
           onStart: onStartTracker,

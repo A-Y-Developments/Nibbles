@@ -183,14 +183,23 @@ void main() {
       await tester.pump();
 
       await tester.tap(find.byKey(const Key('delete_account_continue_button')));
+      await tester.pumpAndSettle();
+
+      // Continue now opens a confirm dialog first — nothing fires until the
+      // user confirms. Confirm to reach the destructive call.
+      expect(
+        find.byKey(const Key('delete_account_confirm_dialog')),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const Key('delete_account_confirm_button')));
       // Single pump — no `pumpAndSettle`. `_onContinue` fires
-      // `logAccountDeletionStarted` synchronously BEFORE the await, then
+      // `logAccountDeletionStarted` synchronously after the confirm, then
       // hits the parked future on `requestAccountDeletion`, so the modal
       // never tries to pop and nothing settles forever.
       await tester.pump();
 
-      // Intent event fires BEFORE the destructive call (controller is verified
-      // via the repository mock).
+      // Intent event fires only after confirm, BEFORE the destructive call
+      // (controller is verified via the repository mock).
       expect(fakeAnalytics.eventNames, contains('account_deletion_started'));
       final startedEvt = fakeAnalytics.calls.firstWhere(
         (c) => c.name == 'account_deletion_started',
@@ -201,6 +210,46 @@ void main() {
       verify(
         () => mockAccountRepo.requestAccountDeletion(_firstReasonLabel),
       ).called(1);
+    },
+    timeout: _testTimeout,
+  );
+
+  testWidgets(
+    'cancelling the confirm dialog aborts — no delete, no analytics',
+    (tester) async {
+      await _setTallSurface(tester);
+      await tester.pumpWidget(_wrap(overrides()));
+      await _openSheet(tester);
+
+      await tester.tap(find.byKey(const Key('delete_reason_0')));
+      await tester.pump();
+
+      await tester.ensureVisible(
+        find.byKey(const Key('delete_account_continue_button')),
+      );
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('delete_account_continue_button')));
+      await tester.pumpAndSettle();
+
+      // Confirm dialog is up — dismiss it via Cancel.
+      expect(
+        find.byKey(const Key('delete_account_confirm_dialog')),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const Key('delete_account_confirm_cancel')));
+      await tester.pumpAndSettle();
+
+      // Dialog gone, sheet still up, nothing destructive ran.
+      expect(
+        find.byKey(const Key('delete_account_confirm_dialog')),
+        findsNothing,
+      );
+      expect(find.text(_headingText), findsOneWidget);
+      verifyNever(() => mockAccountRepo.requestAccountDeletion(any()));
+      expect(
+        fakeAnalytics.eventNames,
+        isNot(contains('account_deletion_started')),
+      );
     },
     timeout: _testTimeout,
   );

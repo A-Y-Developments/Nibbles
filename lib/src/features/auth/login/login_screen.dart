@@ -113,7 +113,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         identifier: 'login_forgot_password_link',
                         child: TextButton(
                           onPressed: () =>
-                              context.goNamed(AppRoute.forgotPassword.name),
+                              context.pushNamed(AppRoute.forgotPassword.name),
                           child: const Text(
                             'Forgot password?',
                             style: TextStyle(
@@ -135,7 +135,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ? null
                           : controller.submit,
                     ),
-                    const Spacer(),
                     const SizedBox(height: AppSizes.md),
                     const _OrDivider(),
                     const SizedBox(height: AppSizes.md),

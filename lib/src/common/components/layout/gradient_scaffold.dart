@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/src/app/themes/app_gradients.dart';
 
+enum GradientBackgroundVariant { standard, moreWhite }
+
 class GradientScaffold extends StatelessWidget {
   const GradientScaffold({
     required this.body,
@@ -12,6 +14,7 @@ class GradientScaffold extends StatelessWidget {
     this.resizeToAvoidBottomInset,
     this.extendBody = false,
     this.extendBodyBehindAppBar = false,
+    this.variant = GradientBackgroundVariant.moreWhite,
   });
 
   final Widget body;
@@ -22,11 +25,16 @@ class GradientScaffold extends StatelessWidget {
   final bool? resizeToAvoidBottomInset;
   final bool extendBody;
   final bool extendBodyBehindAppBar;
+  final GradientBackgroundVariant variant;
 
   @override
   Widget build(BuildContext context) {
+    final gradient = switch (variant) {
+      GradientBackgroundVariant.standard => AppGradients.background,
+      GradientBackgroundVariant.moreWhite => AppGradients.backgroundMoreWhite,
+    };
     return DecoratedBox(
-      decoration: const BoxDecoration(gradient: AppGradients.background),
+      decoration: BoxDecoration(gradient: gradient),
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: appBar,

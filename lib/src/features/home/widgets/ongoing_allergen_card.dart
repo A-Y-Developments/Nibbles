@@ -7,18 +7,19 @@ import 'package:nibbles/src/features/allergen/detail/widgets/detail_segment_bar.
 import 'package:nibbles/src/features/allergen/tracker/widgets/allergen_icon_tile.dart';
 import 'package:nibbles/src/features/home/widgets/start_allergen_button.dart';
 
-/// Burgundy "ongoing allergen" card for the Home hero.
+/// Burgundy "ongoing allergen" card for the Home hero — matches the
+/// tracker's `AllergenExposureCard` styling.
 ///
 /// Shows the actively-introduced allergen (icon + name + `X/3 times`), a
 /// 3-segment progress bar, and — when [showStartButton] is true (the
-/// finished-start-next hero state) — an inset [StartAllergenButton]. The row
-/// and its chevron both invoke [onTap] (allergen detail); [onStart] drives
-/// the inset button (allergen tracker).
+/// finished-start-next hero state) — an inset [StartAllergenButton]. The
+/// whole row (icon, text, progress bar, chevron) invokes [onTap] (allergen
+/// detail); [onStart] drives the inset button (allergen tracker).
 class OngoingAllergenCard extends StatelessWidget {
   const OngoingAllergenCard({
     required this.allergenKey,
     required this.displayName,
-    required this.cleanCount,
+    required this.reactionFlags,
     required this.onTap,
     this.showStartButton = false,
     this.onStart,
@@ -27,7 +28,9 @@ class OngoingAllergenCard extends StatelessWidget {
 
   final String allergenKey;
   final String displayName;
-  final int cleanCount;
+
+  /// Per-exposure reaction flags, oldest-first — drives "N/3 times" + segments.
+  final List<bool> reactionFlags;
   final bool showStartButton;
   final VoidCallback onTap;
   final VoidCallback? onStart;
@@ -36,8 +39,8 @@ class OngoingAllergenCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final clamped = cleanCount.clamp(0, _target);
-    final radius = BorderRadius.circular(AppSizes.radiusFull);
+    final clamped = reactionFlags.length.clamp(0, _target);
+    final radius = BorderRadius.circular(AppSizes.radiusXl);
 
     return Material(
       color: AppColors.burgundyDark,
@@ -46,14 +49,19 @@ class OngoingAllergenCard extends StatelessWidget {
       child: Stack(
         children: [
           Positioned(
-            right: -12,
-            bottom: -12,
+            right: -30,
+            top: -24,
             child: Opacity(
-              opacity: 0.06,
-              child: Assets.images.allergen.allergenBlob.image(
-                width: 120,
-                height: 120,
-                fit: BoxFit.contain,
+              opacity: 0.5,
+              child: ColorFiltered(
+                colorFilter: const ColorFilter.mode(
+                  AppColors.cardBurgundy,
+                  BlendMode.srcIn,
+                ),
+                child: Assets.images.allergen.allergenBlob.image(
+                  width: 200,
+                  fit: BoxFit.contain,
+                ),
               ),
             ),
           ),
@@ -73,7 +81,10 @@ class OngoingAllergenCard extends StatelessWidget {
                     borderRadius: radius,
                     child: Row(
                       children: [
-                        const AllergenIconTile(backing: Colors.white10),
+                        AllergenIconTile(
+                          backing: Colors.white.withValues(alpha: 0.10),
+                          borderColor: AppColors.cream.withValues(alpha: 0.45),
+                        ),
                         const SizedBox(width: AppSizes.sp12),
                         Expanded(
                           child: Column(
@@ -88,12 +99,17 @@ class OngoingAllergenCard extends StatelessWidget {
                               const SizedBox(height: AppSizes.sp2),
                               Text(
                                 '$clamped/$_target times',
-                                style: AppTypography.textTheme.bodySmall
+                                style: AppTypography.textTheme.bodyMedium
                                     ?.copyWith(
                                       color: AppColors.cream.withValues(
                                         alpha: 0.7,
                                       ),
                                     ),
+                              ),
+                              const SizedBox(height: AppSizes.sm),
+                              DetailSegmentBar(
+                                reactionFlags: reactionFlags,
+                                onDark: true,
                               ),
                             ],
                           ),
@@ -104,8 +120,6 @@ class OngoingAllergenCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: AppSizes.md),
-                DetailSegmentBar(introducedCount: clamped, onDark: true),
                 if (showStartButton) ...[
                   const SizedBox(height: AppSizes.md),
                   StartAllergenButton(
@@ -136,7 +150,7 @@ class _ChevronButton extends StatelessWidget {
       ),
       alignment: Alignment.center,
       child: const Icon(
-        Icons.chevron_right,
+        Icons.chevron_right_rounded,
         size: AppSizes.iconMd,
         color: AppColors.cream,
       ),

@@ -1,5 +1,6 @@
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/domain/entities/allergen_log.dart';
+import 'package:nibbles/src/common/domain/entities/meal_plan.dart';
 import 'package:nibbles/src/common/domain/entities/meal_plan_entry.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
 import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
@@ -35,16 +36,14 @@ class HomeController extends _$HomeController {
     final babyFut = ref.read(babyProfileServiceProvider).getBaby();
     final logsFut = ref.read(allergenServiceProvider).getLogs(babyId);
     final stateFut = ref.read(allergenServiceProvider).getProgramState(babyId);
-    final currentFut = ref
-        .read(allergenServiceProvider)
-        .getCurrentAllergen(babyId);
     final mealsFut = ref.read(mealPlanServiceProvider).getAllEntries(babyId);
+    final planFut = ref.read(mealPlanServiceProvider).getActivePlan(babyId);
 
     final baby = await babyFut;
     final logsResult = await logsFut;
     final stateResult = await stateFut;
-    final currentResult = await currentFut;
     final mealsResult = await mealsFut;
+    final planResult = await planFut;
 
     if (baby == null) return const HomeState();
 
@@ -71,13 +70,47 @@ class HomeController extends _$HomeController {
             .length,
     };
 
-    final currentKey = currentResult.dataOrNull?.key;
+    final inProgressKey = kAllergenKeys.firstWhere(
+      (key) => statuses[key] == AllergenStatus.inProgress,
+      orElse: () => '',
+    );
+    final selectedKey = stateResult.dataOrNull?.selectedAllergenKey;
+    final mostRecentLoggedKey = allLogs.isEmpty
+        ? null
+        : ([...allLogs]..sort((a, b) {
+                final byDate = a.logDate.compareTo(b.logDate);
+                return byDate != 0
+                    ? byDate
+                    : a.createdAt.compareTo(b.createdAt);
+              }))
+              .last
+              .allergenKey;
+    // Same priority as the tracker's _displayAllergen (selected → inProgress →
+    // most-recent-log). The legacy program current_allergen_key is deliberately
+    // excluded — "Start Introduce" never advances it, so it surfaces a stale
+    // allergen and makes Home disagree with the tracker.
+    final currentKey = (selectedKey != null && selectedKey.isNotEmpty)
+        ? selectedKey
+        : inProgressKey.isNotEmpty
+        ? inProgressKey
+        : mostRecentLoggedKey;
     final currentStatus = currentKey == null
         ? AllergenStatus.notStarted
         : statuses[currentKey] ?? AllergenStatus.notStarted;
-    final currentClean = currentKey == null ? 0 : logCounts[currentKey] ?? 0;
+    final currentReactionFlags = currentKey == null
+        ? const <bool>[]
+        : (() {
+            final logs = [...?logsByKey[currentKey]]
+              ..sort((a, b) {
+                final byDate = a.logDate.compareTo(b.logDate);
+                return byDate != 0
+                    ? byDate
+                    : a.createdAt.compareTo(b.createdAt);
+              });
+            return logs.map((l) => l.hadReaction).toList(growable: false);
+          })();
 
-    final plannedDates = _plannedDates(allMeals);
+    final plannedDates = _plannedDates(planResult.dataOrNull, allMeals);
     final recipes = await _hydrateRecipes(allMeals);
 
     return HomeState(
@@ -89,18 +122,44 @@ class HomeController extends _$HomeController {
       allergenLogCounts: logCounts,
       currentAllergenKey: currentKey,
       currentAllergenStatus: currentStatus,
-      currentAllergenCleanCount: currentClean,
+      currentAllergenReactionFlags: currentReactionFlags,
     );
   }
 
-  /// Sorted, unique date-only days that carry at least one meal.
-  List<DateTime> _plannedDates(List<MealPlanEntry> entries) {
-    final days = <DateTime>{
-      for (final e in entries)
-        DateTime(e.planDate.year, e.planDate.month, e.planDate.day),
-    };
-    return days.toList()..sort();
+  /// The date strip's day list — the full contiguous range the user *picked*
+  /// in meal prep, not just the days that carry a meal. When an active [plan]
+  /// exists the range is `plan.startDate..plan.endDate` (a picked 8–15 range
+  /// shows all 8 days even if only 8–11 are filled); the end is extended to
+  /// cover any stray entry landing past it. With no plan (legacy entries), it
+  /// falls back to the min..max of days that have meals. Empty ⇔ meal prep is
+  /// not set up.
+  List<DateTime> _plannedDates(MealPlan? plan, List<MealPlanEntry> entries) {
+    final mealDays = [for (final e in entries) _dateOnly(e.planDate)];
+
+    final DateTime start;
+    var end = DateTime(0);
+    if (plan != null) {
+      start = _dateOnly(plan.startDate);
+      end = _dateOnly(plan.endDate);
+      for (final d in mealDays) {
+        if (d.isAfter(end)) end = d;
+      }
+    } else {
+      if (mealDays.isEmpty) return const <DateTime>[];
+      start = mealDays.reduce((a, b) => a.isBefore(b) ? a : b);
+      end = mealDays.reduce((a, b) => a.isAfter(b) ? a : b);
+    }
+
+    final out = <DateTime>[];
+    var day = start;
+    while (!day.isAfter(end)) {
+      out.add(day);
+      day = DateTime(day.year, day.month, day.day + 1);
+    }
+    return out;
   }
+
+  static DateTime _dateOnly(DateTime dt) => DateTime(dt.year, dt.month, dt.day);
 
   /// Resolve each unique `recipeId` referenced by [entries] to its [Recipe].
   /// Failed lookups are silently skipped (P3).

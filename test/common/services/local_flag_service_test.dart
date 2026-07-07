@@ -33,7 +33,6 @@ void main() {
         ..setOnboardingBabySetupDone()
         ..setOnboardingDone()
         ..setProgramCompletionShown('baby-001');
-      await sut.markStartingGuideSeen();
       await sut.setAccountDeleted();
 
       // Sanity — the box really did have entries.
@@ -47,7 +46,6 @@ void main() {
       expect(sut.isOnboardingBabySetupDone(), isFalse);
       expect(sut.isOnboardingDone(), isFalse);
       expect(sut.isProgramCompletionShown('baby-001'), isFalse);
-      expect(sut.isStartingGuideSeen(), isFalse);
       expect(sut.isAccountDeleted(), isFalse);
     });
   });

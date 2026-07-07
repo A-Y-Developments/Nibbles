@@ -284,100 +284,88 @@ void main() {
   });
 
   group('MealPlanScreen single-day Add flow', () {
-    testWidgets(
-      'day-card Add pill → BrowseMealSheet returns [recipe] → '
-      'appendMealsToRange called with startDate == endDate + plan id',
-      (tester) async {
-        final today = _today();
-        stubBoot(plan: _planFrom(today), entries: [_entry(today)]);
-        const sheetRecipe = Recipe(
-          id: 'recipe-sheet',
-          title: 'Avocado Mash',
-          ageRange: '6m+',
-          allergenTags: [],
-          ingredients: [],
-          steps: [],
-          howToServe: 'Serve.',
-        );
-        when(
-          () => mockRecipeService.getAllRecipes(any()),
-        ).thenAnswer((_) async => const Result.success([sheetRecipe]));
-        when(() => mockAllergenService.getAllergenStatuses(any())).thenAnswer(
-          (_) async => const Result.success({
-            'peanut': AllergenStatus.safe,
-            'egg': AllergenStatus.safe,
-            'dairy': AllergenStatus.safe,
-            'tree_nuts': AllergenStatus.safe,
-            'sesame': AllergenStatus.safe,
-            'soy': AllergenStatus.safe,
-            'wheat': AllergenStatus.safe,
-            'fish': AllergenStatus.safe,
-            'shellfish': AllergenStatus.safe,
-          }),
-        );
-        when(
-          () => mockMealPlanService.appendMealsToRange(
-            babyId: any(named: 'babyId'),
-            startDate: any(named: 'startDate'),
-            endDate: any(named: 'endDate'),
-            assignments: any(named: 'assignments'),
-            mealPlanId: any(named: 'mealPlanId'),
-          ),
-        ).thenAnswer((_) async => const Result.success(<MealPlanEntry>[]));
+    testWidgets('day-card Add pill → BrowseMealSheet returns [recipe] → '
+        'appendMealsToRange called with startDate == endDate + plan id', (
+      tester,
+    ) async {
+      final today = _today();
+      stubBoot(plan: _planFrom(today), entries: [_entry(today)]);
+      const sheetRecipe = Recipe(
+        id: 'recipe-sheet',
+        title: 'Avocado Mash',
+        ageRange: '6m+',
+        allergenTags: [],
+        ingredients: [],
+        steps: [],
+        howToServe: 'Serve.',
+      );
+      when(
+        () => mockRecipeService.getAllRecipes(any()),
+      ).thenAnswer((_) async => const Result.success([sheetRecipe]));
+      when(() => mockAllergenService.getAllergenStatuses(any())).thenAnswer(
+        (_) async => const Result.success({
+          'peanut': AllergenStatus.safe,
+          'egg': AllergenStatus.safe,
+          'dairy': AllergenStatus.safe,
+          'tree_nuts': AllergenStatus.safe,
+          'sesame': AllergenStatus.safe,
+          'soy': AllergenStatus.safe,
+          'wheat': AllergenStatus.safe,
+          'fish': AllergenStatus.safe,
+          'shellfish': AllergenStatus.safe,
+        }),
+      );
+      when(
+        () => mockMealPlanService.appendMealsToRange(
+          babyId: any(named: 'babyId'),
+          startDate: any(named: 'startDate'),
+          endDate: any(named: 'endDate'),
+          assignments: any(named: 'assignments'),
+          mealPlanId: any(named: 'mealPlanId'),
+        ),
+      ).thenAnswer((_) async => const Result.success(<MealPlanEntry>[]));
 
-        await pumpScreen(tester);
+      await pumpScreen(tester);
 
-        final firstCard = find.byType(DayAccordionCard).first;
-        final chevron = find
-            .descendant(
-              of: firstCard,
-              matching: find.byIcon(Icons.keyboard_arrow_down),
-            )
-            .first;
-        await tester.tap(chevron);
-        await tester.pumpAndSettle();
+      // Day cards default to expanded, so the "Add" pill is already visible.
+      final firstCard = find.byType(DayAccordionCard).first;
+      final addPill = find
+          .descendant(of: firstCard, matching: find.text('Add'))
+          .first;
+      await tester.tap(addPill);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+      await tester.pump();
+      await tester.pump();
 
-        final addPill = find
-            .descendant(of: firstCard, matching: find.text('Add'))
-            .first;
-        await tester.tap(addPill);
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 350));
-        await tester.pump();
-        await tester.pump();
+      // Select the recipe in the master list.
+      await tester.tap(find.text(sheetRecipe.title).first);
+      await tester.pump();
 
-        // Select the recipe in the master list.
-        await tester.tap(find.text(sheetRecipe.title).first);
-        await tester.pump();
+      // Single-date entry commits directly via "Add" — no review sheet.
+      expect(find.text('Map Meals'), findsNothing);
+      await tester.tap(find.text('Add').last);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump();
 
-        // Browse → review: "Next" then confirm with "Map Meals".
-        await tester.tap(find.text('Next'));
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 350));
-        await tester.pump();
-        await tester.tap(find.text('Map Meals'));
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 400));
-        await tester.pump();
-
-        final captured = verify(
-          () => mockMealPlanService.appendMealsToRange(
-            babyId: _babyId,
-            startDate: captureAny(named: 'startDate'),
-            endDate: captureAny(named: 'endDate'),
-            assignments: captureAny(named: 'assignments'),
-            mealPlanId: 'plan-1',
-          ),
-        ).captured;
-        expect(captured, hasLength(3));
-        final startDate = captured[0] as DateTime;
-        final endDate = captured[1] as DateTime;
-        expect(startDate, endDate, reason: 'single-day range');
-        expect(startDate, today);
-        final assignments = captured[2] as List<dynamic>;
-        expect(assignments, hasLength(1));
-      },
-    );
+      final captured = verify(
+        () => mockMealPlanService.appendMealsToRange(
+          babyId: _babyId,
+          startDate: captureAny(named: 'startDate'),
+          endDate: captureAny(named: 'endDate'),
+          assignments: captureAny(named: 'assignments'),
+          mealPlanId: 'plan-1',
+        ),
+      ).captured;
+      expect(captured, hasLength(3));
+      final startDate = captured[0] as DateTime;
+      final endDate = captured[1] as DateTime;
+      expect(startDate, endDate, reason: 'single-day range');
+      expect(startDate, today);
+      final assignments = captured[2] as List<dynamic>;
+      expect(assignments, hasLength(1));
+    });
   });
 
   group('MealPlanScreen delete-plan flow', () {
@@ -397,10 +385,7 @@ void main() {
         await tester.tap(find.text('Clear current plan'));
         await tester.pumpAndSettle();
 
-        expect(
-          find.text('Are you sure you want to delete?'),
-          findsOneWidget,
-        );
+        expect(find.text('Are you sure you want to delete?'), findsOneWidget);
 
         await tester.tap(find.text('Yes'));
         await tester.pump();

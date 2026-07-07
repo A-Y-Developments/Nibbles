@@ -1,14 +1,14 @@
 // NIB-136: widget tests for the range-scoped Add to Shoplist bottom sheet.
 //
 // Covers the two captured Figma states (shoplist-03 most-selected / -04 all
-// unselected), the Select All / Unselect All toggle, and the submit success
+// unselected), the Select All / Deselect toggle, and the submit success
 // + failure paths.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/common/components/feedback/app_toast.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/services/meal_plan_service.dart';
@@ -114,17 +114,17 @@ void main() {
       for (final name in _ingredients) {
         expect(find.text(name), findsOneWidget);
       }
-      // Baseline = all selected → toggle reads "Unselect All", Add (N=count).
-      expect(find.text('Unselect All'), findsOneWidget);
+      // Baseline = all selected → toggle reads "Deselect", Add (N=count).
+      expect(find.text('Deselect'), findsOneWidget);
       expect(find.text('Add (${_ingredients.length})'), findsOneWidget);
-      // Figma 971:7908 — the toggle is a butter-filled button (not outlined).
-      final toggleBtn = tester.widget<FilledButton>(
+      // Redesign: the toggle is now a secondary TextButton (not a filled pill).
+      expect(
         find.ancestor(
-          of: find.text('Unselect All'),
-          matching: find.byType(FilledButton),
+          of: find.text('Deselect'),
+          matching: find.byType(TextButton),
         ),
+        findsOneWidget,
       );
-      expect(toggleBtn.style?.backgroundColor?.resolve({}), AppColors.butter);
       // Range fetch invoked with the range bounds.
       verify(
         () => mealPlanService.getRangeIngredientNames(_babyId, _start, _end),
@@ -137,7 +137,7 @@ void main() {
   // ---------------------------------------------------------------------------
 
   testWidgets(
-    'tapping Unselect All clears every pill and CTA becomes Add (0) disabled '
+    'tapping Deselect clears every pill and CTA becomes Add (0) disabled '
     '(shoplist-04 state)',
     (tester) async {
       when(
@@ -151,7 +151,7 @@ void main() {
       );
       await tester.pump();
 
-      await tester.tap(find.text('Unselect All'));
+      await tester.tap(find.text('Deselect'));
       await tester.pump();
 
       // After clearing: toggle flips to 'Select All', CTA count drops to 0.
@@ -183,12 +183,12 @@ void main() {
     await tester.pump();
 
     // Clear → re-select.
-    await tester.tap(find.text('Unselect All'));
+    await tester.tap(find.text('Deselect'));
     await tester.pump();
     await tester.tap(find.text('Select All'));
     await tester.pump();
 
-    expect(find.text('Unselect All'), findsOneWidget);
+    expect(find.text('Deselect'), findsOneWidget);
     expect(find.text('Add (${_ingredients.length})'), findsOneWidget);
   });
 
@@ -216,8 +216,8 @@ void main() {
     await tester.pump();
 
     expect(find.text('Add (${_ingredients.length - 1})'), findsOneWidget);
-    // 'Unselect All' still shown — at least one selected.
-    expect(find.text('Unselect All'), findsOneWidget);
+    // 'Deselect' still shown — at least one selected.
+    expect(find.text('Deselect'), findsOneWidget);
   });
 
   // ---------------------------------------------------------------------------
@@ -243,7 +243,8 @@ void main() {
 
     await tester.tap(find.text('Add (${_ingredients.length})'));
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 350));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 700));
 
     final captured =
         verify(
@@ -253,6 +254,11 @@ void main() {
     expect(captured, equals(_ingredients));
     expect(find.text('Added to shopping list.'), findsOneWidget);
     expect(find.text('Add to Shoplist'), findsNothing);
+
+    // AppToast starts a 3s auto-dismiss Timer; must advance past it before
+    // the test ends.
+    await tester.pump(kAppToastDuration + const Duration(milliseconds: 700));
+    await tester.pump(const Duration(milliseconds: 700));
   });
 
   // ---------------------------------------------------------------------------
@@ -278,11 +284,17 @@ void main() {
 
     await tester.tap(find.text('Add (${_ingredients.length})'));
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 350));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 700));
 
     expect(find.text("Couldn't add items. Try again."), findsOneWidget);
     // Sheet remains open after failure.
     expect(find.text('Add to Shoplist'), findsOneWidget);
+
+    // AppToast starts a 3s auto-dismiss Timer; must advance past it before
+    // the test ends.
+    await tester.pump(kAppToastDuration + const Duration(milliseconds: 700));
+    await tester.pump(const Duration(milliseconds: 700));
   });
 
   // ---------------------------------------------------------------------------
@@ -305,7 +317,7 @@ void main() {
 
     expect(find.text('Could not load ingredients.'), findsOneWidget);
     expect(find.textContaining('Add ('), findsNothing);
-    expect(find.text('Unselect All'), findsNothing);
+    expect(find.text('Deselect'), findsNothing);
     expect(find.text('Select All'), findsNothing);
   });
 }

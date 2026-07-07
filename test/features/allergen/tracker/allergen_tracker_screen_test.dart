@@ -20,10 +20,12 @@ import 'package:nibbles/src/common/domain/enums/emoji_taste.dart';
 import 'package:nibbles/src/common/domain/enums/gender.dart';
 import 'package:nibbles/src/common/services/allergen_service.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
+import 'package:nibbles/src/features/allergen/detail/widgets/detail_contextual_banner.dart';
 import 'package:nibbles/src/features/allergen/tracker/allergen_tracker_screen.dart';
 import 'package:nibbles/src/features/allergen/tracker/widgets/allergen_exposure_card.dart';
 import 'package:nibbles/src/features/allergen/tracker/widgets/allergen_progress_card.dart';
 import 'package:nibbles/src/features/allergen/tracker/widgets/start_introduce_card.dart';
+import 'package:nibbles/src/features/home/widgets/start_allergen_button.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 
 class _MockAllergenService extends Mock implements AllergenService {}
@@ -94,6 +96,16 @@ AllergenLog _makeLog({
 class _PushRecorder {
   String? lastName;
   Map<String, String>? lastPathParams;
+}
+
+/// Tall viewport so the whole Ongoing sliver (card, banner, log feed and the
+/// bottom Start New CTA) builds — the default 600px height leaves the CTA and
+/// add button unbuilt below the fold.
+void _useTallView(WidgetTester tester) {
+  tester.view.physicalSize = const Size(1200, 3200);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
 }
 
 void main() {
@@ -302,6 +314,7 @@ void main() {
       'Ongoing tab keeps the exposure hero + logs after an unsafe reaction '
       'flags the allergen (feed does not vanish)',
       (tester) async {
+        _useTallView(tester);
         // milk had an unsafe reaction → status flagged, no other inProgress
         // allergen and no active selection. The board must still surface milk
         // and its log via the most-recent-log fallback.
@@ -440,5 +453,93 @@ void main() {
         verify(() => mockService.getAllergenStatuses(any())).called(1);
       },
     );
+  });
+
+  // ---------------------------------------------------------------------------
+  // Ongoing tab — finished-state gating (banner + disabled add + Start New).
+  // ---------------------------------------------------------------------------
+
+  group('AllergenTrackerScreen — finished-state gating', () {
+    testWidgets(
+      'flagged ongoing allergen: contextual banner shows, add-reaction is '
+      'disabled, and a Start New Allergen CTA appears',
+      (tester) async {
+        _useTallView(tester);
+        stubReads(
+          statuses: {
+            'milk': AllergenStatus.flagged,
+            for (final a in _allergens.where((a) => a.key != 'milk'))
+              a.key: AllergenStatus.notStarted,
+          },
+          logs: [_makeLog(id: 'm1', allergenKey: 'milk', hadReaction: true)],
+        );
+
+        await tester.pumpWidget(buildSubject(_PushRecorder()));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(DetailContextualBanner), findsOneWidget);
+        expect(find.byType(StartAllergenButton), findsOneWidget);
+
+        // Add-reaction disabled → its InkWell has a null onTap.
+        final addButton = tester.widget<InkWell>(
+          find.widgetWithIcon(InkWell, Icons.add_rounded),
+        );
+        expect(addButton.onTap, isNull);
+      },
+    );
+
+    testWidgets(
+      'in-progress ongoing allergen: add-reaction enabled, no Start New CTA',
+      (tester) async {
+        _useTallView(tester);
+        stubReads(
+          statuses: {
+            'milk': AllergenStatus.inProgress,
+            for (final a in _allergens.where((a) => a.key != 'milk'))
+              a.key: AllergenStatus.notStarted,
+          },
+          logs: [_makeLog(id: 'm1', allergenKey: 'milk')],
+        );
+
+        await tester.pumpWidget(buildSubject(_PushRecorder()));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(StartAllergenButton), findsNothing);
+
+        // Add-reaction enabled → its InkWell has a non-null onTap.
+        final addButton = tester.widget<InkWell>(
+          find.widgetWithIcon(InkWell, Icons.add_rounded),
+        );
+        expect(addButton.onTap, isNotNull);
+      },
+    );
+
+    testWidgets('Start New Allergen jumps to the Big 11 picker', (
+      tester,
+    ) async {
+      _useTallView(tester);
+      stubReads(
+        statuses: {
+          'milk': AllergenStatus.safe,
+          for (final a in _allergens.where((a) => a.key != 'milk'))
+            a.key: AllergenStatus.notStarted,
+        },
+        logs: [
+          _makeLog(id: 'm1', allergenKey: 'milk'),
+          _makeLog(id: 'm2', allergenKey: 'milk'),
+          _makeLog(id: 'm3', allergenKey: 'milk'),
+        ],
+      );
+
+      await tester.pumpWidget(buildSubject(_PushRecorder()));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byType(StartAllergenButton));
+      await tester.pumpAndSettle();
+
+      // Big 11 grouped sections are now visible (tab switched locally).
+      expect(find.text('Already Tried'), findsOneWidget);
+      expect(find.byType(AllergenProgressCard), findsWidgets);
+    });
   });
 }

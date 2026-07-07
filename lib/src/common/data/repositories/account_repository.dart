@@ -28,13 +28,20 @@ class AccountRepositoryImpl implements AccountRepository {
   @override
   Future<Result<void>> requestAccountDeletion(String reason) async {
     try {
-      await _supabase.rpc<void>(
-        'request_account_deletion',
-        params: {'p_reason': reason},
+      // `delete-account` Edge Function hard-deletes the auth user (service role)
+      // → cascades all user + baby-scoped data. Throws FunctionException on any
+      // non-2xx; its `details` carries the `{ "error": ... }` body.
+      await _supabase.functions.invoke(
+        'delete-account',
+        body: {'reason': reason},
       );
       return const Result.success(null);
-    } on PostgrestException catch (e) {
-      return Result.failure(ServerException(e.message));
+    } on FunctionException catch (e) {
+      final details = e.details;
+      final message = details is Map && details['error'] is String
+          ? details['error'] as String
+          : 'Account deletion failed. Please try again.';
+      return Result.failure(ServerException(message));
     } on Object {
       return const Result.failure(UnknownException());
     }

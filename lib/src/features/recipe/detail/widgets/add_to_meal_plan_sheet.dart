@@ -1,37 +1,63 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
 import 'package:nibbles/src/common/components/buttons/app_round_button.dart';
+import 'package:nibbles/src/common/components/cards/recipe_plan_row.dart';
+import 'package:nibbles/src/common/components/feedback/app_toast.dart';
+import 'package:nibbles/src/common/domain/entities/meal_plan_entry.dart';
+import 'package:nibbles/src/common/domain/entities/recipe.dart';
+import 'package:nibbles/src/common/services/meal_plan_service.dart';
+import 'package:nibbles/src/features/meal_plan/meal_plan_controller.dart';
+import 'package:nibbles/src/features/meal_plan/widgets/meal_plan_date_range_form.dart';
+import 'package:nibbles/src/logging/analytics.dart';
 
-/// Shows the multi-day Add-to-Meal-Plan bottom sheet (Figma 971:9346 / 971:9481).
+/// Shows the plan-aware Add-to-Meal-Plan bottom sheet (Figma 971:8053
+/// "Select Period Date" + 971:9467 "Meal Plan").
 ///
-/// The sheet renders day-by-day accordion cards for the next 14 days starting
-/// today. Each day card shows a date label (e.g. `Tuesday, 14 Apr`) and two
-/// forest-dark square chips: `more_horiz` (placeholder) and `keyboard_arrow_*`
-/// (toggles expand). The expanded body shows an "Add" lime pill — tapping it
-/// marks that day as selected (lime-filled card). The bottom forest-dark CTA
-/// label flips to `X Days Selected` once at least one day is picked.
+/// Renders as a single modal instance with two internal steps, keyed off
+/// `mealPlanControllerProvider(babyId)`:
+///  * Step 1 ("Select Period Date") only shows when the baby has no active
+///    meal-plan period yet. Submitting it creates the plan, and the SAME
+///    sheet instance swaps to Step 2 once the plan resolves.
+///  * Step 2 ("Meal Plan") renders one accordion section per date in the
+///    plan's window. Tapping "Add" for a date stacks a new pending pick of
+///    [recipe] for that date (duplicates allowed); the bottom CTA saves every
+///    pending pick as a single bulk append.
 ///
-/// Returns the set of selected dates on confirm, or `null` on cancel.
-Future<Set<DateTime>?> showAddToMealPlanSheet(
+/// Returns `true` once something has been saved, or `null`/`false` when the
+/// sheet is dismissed without saving.
+Future<bool?> showAddToMealPlanSheet(
   BuildContext context, {
   required String babyId,
+  required Recipe recipe,
 }) {
-  return showModalBottomSheet<Set<DateTime>>(
+  return showModalBottomSheet<bool>(
     context: context,
+    useRootNavigator: true,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     barrierColor: Colors.black.withValues(alpha: 0.5),
-    builder: (_) => const _AddToMealPlanSheet(),
+    builder: (_) => _AddToMealPlanSheet(babyId: babyId, recipe: recipe),
   );
 }
 
 DateTime _dateOnly(DateTime dt) => DateTime(dt.year, dt.month, dt.day);
 
-/// Number of day rows shown (2 weeks ahead).
-const int _kDayCount = 14;
+List<DateTime> _daysBetween(DateTime start, DateTime end) {
+  final days = <DateTime>[];
+  var cursor = _dateOnly(start);
+  final last = _dateOnly(end);
+  while (!cursor.isAfter(last)) {
+    days.add(cursor);
+    cursor = cursor.add(const Duration(days: 1));
+  }
+  return days;
+}
 
 const List<String> _kWeekdayFull = <String>[
   'Monday',
@@ -62,52 +88,201 @@ const List<String> _kMonthShort = <String>[
 String _formatDate(DateTime d) =>
     '${_kWeekdayFull[d.weekday - 1]}, ${d.day} ${_kMonthShort[d.month - 1]}';
 
-class _AddToMealPlanSheet extends StatefulWidget {
-  const _AddToMealPlanSheet();
+class _AddToMealPlanSheet extends ConsumerStatefulWidget {
+  const _AddToMealPlanSheet({required this.babyId, required this.recipe});
+
+  final String babyId;
+  final Recipe recipe;
 
   @override
-  State<_AddToMealPlanSheet> createState() => _AddToMealPlanSheetState();
+  ConsumerState<_AddToMealPlanSheet> createState() =>
+      _AddToMealPlanSheetState();
 }
 
-class _AddToMealPlanSheetState extends State<_AddToMealPlanSheet> {
-  final Set<DateTime> _selected = <DateTime>{};
-  late final DateTime _today;
-  late final List<DateTime> _days;
-  late int _expandedIndex;
+class _AddToMealPlanSheetState extends ConsumerState<_AddToMealPlanSheet> {
+  final Set<DateTime> _collapsedDays = <DateTime>{};
+  final List<MealPlanEntry> _pendingEntries = <MealPlanEntry>[];
+  bool _isSaving = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _today = _dateOnly(DateTime.now());
-    _days = List<DateTime>.generate(
-      _kDayCount,
-      (i) => _today.add(Duration(days: i)),
-    );
-    // Default-expand the first day so the "Add" pill is reachable.
-    _expandedIndex = 0;
-  }
+  int get _distinctPendingDayCount =>
+      _pendingEntries.map((e) => _dateOnly(e.planDate)).toSet().length;
 
-  void _toggleDay(DateTime day) {
-    final normalized = _dateOnly(day);
+  void _addPending(DateTime day) {
+    final index = _pendingEntries.length;
     setState(() {
-      if (_selected.contains(normalized)) {
-        _selected.remove(normalized);
-      } else {
-        _selected.add(normalized);
-      }
+      _pendingEntries.add(
+        MealPlanEntry(
+          id: 'pending-${widget.babyId}-$index',
+          babyId: widget.babyId,
+          recipeId: widget.recipe.id,
+          planDate: day,
+        ),
+      );
     });
   }
 
-  void _toggleExpanded(int index) {
+  void _toggleCollapsed(DateTime day) {
     setState(() {
-      _expandedIndex = _expandedIndex == index ? -1 : index;
+      if (!_collapsedDays.remove(day)) _collapsedDays.add(day);
     });
+  }
+
+  Future<void> _handleCreatePlan(DateTimeRange range) async {
+    final ok = await ref
+        .read(mealPlanControllerProvider(widget.babyId).notifier)
+        .createPlan(range.start, range.end);
+    if (!mounted) return;
+    if (!ok) {
+      AppToast.error(context, "Couldn't create your meal plan. Try again.");
+    }
+  }
+
+  Future<void> _handleSave(DateTime windowStart, DateTime windowEnd) async {
+    if (_pendingEntries.isEmpty || _isSaving) return;
+    setState(() => _isSaving = true);
+
+    final assignments = _pendingEntries
+        .map(
+          (entry) => RecipeAssignment(
+            recipeId: entry.recipeId,
+            dayOffset: _dateOnly(entry.planDate).difference(windowStart).inDays,
+          ),
+        )
+        .toList();
+    final dayCount = _distinctPendingDayCount;
+
+    final ok = await ref
+        .read(mealPlanControllerProvider(widget.babyId).notifier)
+        .appendBulkPrep(
+          startDate: windowStart,
+          endDate: windowEnd,
+          assignments: assignments,
+        );
+
+    if (!mounted) return;
+
+    if (ok) {
+      unawaited(
+        Analytics.instance.logRecipeAddedToMealPlan(
+          recipeId: widget.recipe.id,
+          dayCount: dayCount,
+        ),
+      );
+      Navigator.of(context).pop(true);
+    } else {
+      setState(() => _isSaving = false);
+      AppToast.error(context, "Couldn't add to meal plan. Try again.");
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final asyncState = ref.watch(mealPlanControllerProvider(widget.babyId));
+
+    return asyncState.when(
+      loading: () => _SheetShell(
+        title: 'Meal Plan',
+        onClose: () => Navigator.of(context).pop(),
+        child: const SizedBox(
+          height: 200,
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      ),
+      error: (error, _) => _SheetShell(
+        title: 'Meal Plan',
+        onClose: () => Navigator.of(context).pop(),
+        child: const SizedBox(
+          height: 200,
+          child: Center(child: Text("Couldn't load your meal plan.")),
+        ),
+      ),
+      data: (state) {
+        if (state.plan == null) {
+          return _SheetShell(
+            title: 'Select Period Date',
+            onClose: () => Navigator.of(context).pop(),
+            child: SingleChildScrollView(
+              child: MealPlanDateRangeForm(
+                ctaLabel: 'Continue',
+                onSubmit: _handleCreatePlan,
+              ),
+            ),
+          );
+        }
+
+        final windowStart = state.windowStart;
+        final windowEnd = state.windowEnd;
+        final days = _daysBetween(windowStart, windowEnd);
+        final recipes = <String, Recipe>{
+          ...state.recipes,
+          widget.recipe.id: widget.recipe,
+        };
+        final count = _distinctPendingDayCount;
+        final ctaLabel = count == 0
+            ? 'Add to Meal Plan'
+            : '$count ${count == 1 ? 'Day' : 'Days'} Selected';
+
+        return _SheetShell(
+          title: 'Meal Plan',
+          onClose: () => Navigator.of(context).pop(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: ListView.separated(
+                  padding: EdgeInsets.zero,
+                  itemCount: days.length,
+                  separatorBuilder: (_, __) =>
+                      const SizedBox(height: AppSizes.sp12),
+                  itemBuilder: (context, index) {
+                    final day = days[index];
+                    final dayEntries = state.entries
+                        .where((e) => _dateOnly(e.planDate) == day)
+                        .toList();
+                    final dayPending = _pendingEntries
+                        .where((e) => _dateOnly(e.planDate) == day)
+                        .toList();
+                    return _DaySection(
+                      key: ValueKey(day),
+                      day: day,
+                      isExpanded: !_collapsedDays.contains(day),
+                      rows: [...dayEntries, ...dayPending],
+                      recipes: recipes,
+                      onToggle: () => _toggleCollapsed(day),
+                      onAdd: () => _addPending(day),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: AppSizes.sp12),
+              AppPillButton(
+                label: ctaLabel,
+                onPressed: count == 0 || _isSaving
+                    ? null
+                    : () => _handleSave(windowStart, windowEnd),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _SheetShell extends StatelessWidget {
+  const _SheetShell({
+    required this.title,
+    required this.onClose,
+    required this.child,
+  });
+
+  final String title;
+  final VoidCallback onClose;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
-    final count = _selected.length;
 
     return Padding(
       padding: EdgeInsets.only(top: media.padding.top + AppSizes.xxl),
@@ -127,35 +302,11 @@ class _AddToMealPlanSheetState extends State<_AddToMealPlanSheet> {
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _SheetHeader(onClose: () => Navigator.of(context).pop()),
+                _SheetHeader(title: title, onClose: onClose),
                 const SizedBox(height: AppSizes.sp12),
-                _SelectedCounter(count: count),
-                const SizedBox(height: AppSizes.sp12),
-                Flexible(
-                  child: ListView.separated(
-                    padding: EdgeInsets.zero,
-                    itemCount: _days.length,
-                    separatorBuilder: (_, __) =>
-                        const SizedBox(height: AppSizes.sp12),
-                    itemBuilder: (context, index) {
-                      final day = _days[index];
-                      final isSelected = _selected.contains(day);
-                      return _DayAccordion(
-                        day: day,
-                        isSelected: isSelected,
-                        isExpanded: _expandedIndex == index,
-                        onHeaderTap: () => _toggleExpanded(index),
-                        onAddTap: () => _toggleDay(day),
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(height: AppSizes.sp12),
-                _ConfirmCta(
-                  count: count,
-                  onConfirm: () => Navigator.of(context).pop(_selected),
-                ),
+                Flexible(child: child),
               ],
             ),
           ),
@@ -166,25 +317,18 @@ class _AddToMealPlanSheetState extends State<_AddToMealPlanSheet> {
 }
 
 class _SheetHeader extends StatelessWidget {
-  const _SheetHeader({required this.onClose});
+  const _SheetHeader({required this.title, required this.onClose});
 
+  final String title;
   final VoidCallback onClose;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        AppRoundButton(
-          icon: const Icon(Icons.arrow_back),
-          tone: AppRoundButtonTone.ghost,
-          size: AppRoundButtonSize.small,
-          onPressed: onClose,
-          semanticLabel: 'Back',
-        ),
-        const SizedBox(width: AppSizes.sp12),
         Expanded(
           child: Text(
-            'Meal Plan',
+            title,
             style: AppTypography.textTheme.titleLarge?.copyWith(
               color: AppColors.fgStrong,
               fontWeight: FontWeight.w700,
@@ -202,43 +346,23 @@ class _SheetHeader extends StatelessWidget {
   }
 }
 
-class _SelectedCounter extends StatelessWidget {
-  const _SelectedCounter({required this.count});
-
-  final int count;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSizes.sm),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: Text(
-          '$count selected',
-          style: AppTypography.textTheme.titleSmall?.copyWith(
-            color: AppColors.fgStrong,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _DayAccordion extends StatelessWidget {
-  const _DayAccordion({
+class _DaySection extends StatelessWidget {
+  const _DaySection({
     required this.day,
-    required this.isSelected,
     required this.isExpanded,
-    required this.onHeaderTap,
-    required this.onAddTap,
+    required this.rows,
+    required this.recipes,
+    required this.onToggle,
+    required this.onAdd,
+    super.key,
   });
 
   final DateTime day;
-  final bool isSelected;
   final bool isExpanded;
-  final VoidCallback onHeaderTap;
-  final VoidCallback onAddTap;
+  final List<MealPlanEntry> rows;
+  final Map<String, Recipe> recipes;
+  final VoidCallback onToggle;
+  final VoidCallback onAdd;
 
   @override
   Widget build(BuildContext context) {
@@ -254,12 +378,7 @@ class _DayAccordion extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _DayHeader(
-            day: day,
-            isSelected: isSelected,
-            isExpanded: isExpanded,
-            onTap: onHeaderTap,
-          ),
+          _DayHeader(day: day, isExpanded: isExpanded, onTap: onToggle),
           AnimatedSize(
             duration: const Duration(milliseconds: 180),
             curve: Curves.easeOut,
@@ -272,11 +391,20 @@ class _DayAccordion extends StatelessWidget {
                       AppSizes.sp12,
                       AppSizes.sp12,
                     ),
-                    child: AppPillButton(
-                      label: isSelected ? 'Added' : 'Add',
-                      size: AppPillButtonSize.small,
-                      variant: AppPillButtonVariant.ghost,
-                      onPressed: onAddTap,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        for (final row in rows) ...[
+                          RecipePlanRow(recipe: recipes[row.recipeId]),
+                          const SizedBox(height: AppSizes.xs),
+                        ],
+                        AppPillButton(
+                          label: 'Add',
+                          size: AppPillButtonSize.small,
+                          variant: AppPillButtonVariant.ghost,
+                          onPressed: onAdd,
+                        ),
+                      ],
                     ),
                   )
                 : const SizedBox.shrink(),
@@ -290,13 +418,11 @@ class _DayAccordion extends StatelessWidget {
 class _DayHeader extends StatelessWidget {
   const _DayHeader({
     required this.day,
-    required this.isSelected,
     required this.isExpanded,
     required this.onTap,
   });
 
   final DateTime day;
-  final bool isSelected;
   final bool isExpanded;
   final VoidCallback onTap;
 
@@ -315,31 +441,19 @@ class _DayHeader extends StatelessWidget {
             child: Row(
               children: [
                 Expanded(
-                  child: Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          _formatDate(day),
-                          style: AppTypography.textTheme.titleSmall?.copyWith(
-                            color: AppColors.fgStrong,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (isSelected) ...[
-                        const SizedBox(width: AppSizes.sm),
-                        const _SelectedDayBadge(),
-                      ],
-                    ],
+                  child: Text(
+                    _formatDate(day),
+                    style: AppTypography.textTheme.titleSmall?.copyWith(
+                      color: AppColors.fgStrong,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                ExcludeSemantics(
-                  child: _DayChip(
-                    icon: isExpanded
-                        ? Icons.keyboard_arrow_up
-                        : Icons.keyboard_arrow_down,
-                  ),
+                _DayChip(
+                  icon: isExpanded
+                      ? Icons.keyboard_arrow_up
+                      : Icons.keyboard_arrow_down,
                 ),
               ],
             ),
@@ -350,35 +464,9 @@ class _DayHeader extends StatelessWidget {
   }
 }
 
-/// Lime-fill pill shown next to a selected day's date.
-class _SelectedDayBadge extends StatelessWidget {
-  const _SelectedDayBadge();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.sm,
-        vertical: AppSizes.sp2,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.butter,
-        borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-      ),
-      child: Text(
-        'Added',
-        style: AppTypography.textTheme.labelSmall?.copyWith(
-          color: AppColors.greenDeep,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-  }
-}
-
-/// Forest-dark rounded-square chip — visual match to Figma 898:15848 +
-/// 898:15849 (more_horiz and chevron buttons in each day-row header).
-/// Decorative; pointer events fall through to the wrapping header InkWell.
+/// Forest-dark rounded-square chip — visual match to Figma 898:15849 (chevron
+/// button in each day-section header). Decorative; pointer events fall
+/// through to the wrapping header InkWell.
 class _DayChip extends StatelessWidget {
   const _DayChip({required this.icon});
 
@@ -394,24 +482,6 @@ class _DayChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppSizes.radiusMd),
       ),
       child: Icon(icon, color: AppColors.onGreen, size: AppSizes.iconSm),
-    );
-  }
-}
-
-class _ConfirmCta extends StatelessWidget {
-  const _ConfirmCta({required this.count, required this.onConfirm});
-
-  final int count;
-  final VoidCallback onConfirm;
-
-  @override
-  Widget build(BuildContext context) {
-    final label = count == 0
-        ? 'Add to Meal Plan'
-        : '$count ${count == 1 ? 'Day' : 'Days'} Selected';
-    return AppPillButton(
-      label: label,
-      onPressed: count == 0 ? null : onConfirm,
     );
   }
 }

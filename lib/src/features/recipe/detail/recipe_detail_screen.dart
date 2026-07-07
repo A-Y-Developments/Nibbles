@@ -9,7 +9,6 @@ import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/features/recipe/detail/recipe_detail_controller.dart';
 import 'package:nibbles/src/features/recipe/detail/recipe_detail_state.dart';
-import 'package:nibbles/src/features/recipe/detail/widgets/add_to_meal_plan_cta.dart';
 import 'package:nibbles/src/features/recipe/detail/widgets/add_to_meal_plan_sheet.dart';
 import 'package:nibbles/src/features/recipe/detail/widgets/add_to_shopping_list_sheet.dart';
 import 'package:nibbles/src/features/recipe/detail/widgets/contains_allergens_card.dart';
@@ -18,10 +17,6 @@ import 'package:nibbles/src/features/recipe/detail/widgets/recipe_steps_card.dar
 import 'package:nibbles/src/features/recipe/detail/widgets/recipe_storage_row.dart';
 import 'package:nibbles/src/features/recipe/detail/widgets/recipe_tip_card.dart';
 import 'package:nibbles/src/logging/analytics.dart';
-
-/// How long the success-toast stays on screen before auto-dismissing.
-@visibleForTesting
-const Duration kAddedToMealPlanToastDuration = Duration(seconds: 3);
 
 class RecipeDetailScreen extends ConsumerStatefulWidget {
   const RecipeDetailScreen({required this.recipeId, super.key});
@@ -147,43 +142,16 @@ class _RecipeContent extends ConsumerStatefulWidget {
 }
 
 class _RecipeContentState extends ConsumerState<_RecipeContent> {
-  bool _showSuccessBanner = false;
-  Timer? _toastTimer;
-
-  @override
-  void dispose() {
-    _toastTimer?.cancel();
-    super.dispose();
-  }
-
-  void _showToast() {
-    _toastTimer?.cancel();
-    setState(() => _showSuccessBanner = true);
-    _toastTimer = Timer(kAddedToMealPlanToastDuration, () {
-      if (!mounted) return;
-      setState(() => _showSuccessBanner = false);
-    });
-  }
-
   Future<void> _handleAddToMealPlan() async {
-    final dates = await showAddToMealPlanSheet(context, babyId: widget.babyId);
-    if (dates == null || dates.isEmpty) return;
-    if (!mounted) return;
-
-    final controller = ref.read(
-      recipeDetailControllerProvider(widget.babyId, widget.recipeId).notifier,
+    final saved = await showAddToMealPlanSheet(
+      context,
+      babyId: widget.babyId,
+      recipe: widget.state.recipe,
     );
-    final addResult = await controller.assignToMealPlan(dates);
-
+    if (saved != true) return;
     if (!mounted) return;
 
-    if (addResult.isSuccess) {
-      _showToast();
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Couldn't add to meal plan. Try again.")),
-      );
-    }
+    AppToast.success(context, 'Successfully added to meal plan');
   }
 
   Future<void> _handleAddToShoppingList() async {
@@ -203,20 +171,16 @@ class _RecipeContentState extends ConsumerState<_RecipeContent> {
     if (!mounted) return;
 
     if (result.isSuccess) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Added to shopping list.')));
+      AppToast.success(context, 'Added to shopping list.');
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Couldn't add items. Try again.")),
-      );
+      AppToast.error(context, "Couldn't add items. Try again.");
     }
   }
 
   Future<void> _handleOverflow() async {
-    final messenger = ScaffoldMessenger.of(context);
     final choice = await showModalBottomSheet<_OverflowAction>(
       context: context,
+      useRootNavigator: true,
       backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
@@ -240,6 +204,15 @@ class _RecipeContentState extends ConsumerState<_RecipeContent> {
             const SizedBox(height: AppSizes.sm),
             ListTile(
               leading: const Icon(
+                Icons.restaurant_outlined,
+                color: AppColors.greenDeep,
+              ),
+              title: const Text('Add to Meal Plan'),
+              onTap: () =>
+                  Navigator.of(sheetContext).pop(_OverflowAction.addToMealPlan),
+            ),
+            ListTile(
+              leading: const Icon(
                 Icons.shopping_basket_outlined,
                 color: AppColors.greenDeep,
               ),
@@ -255,9 +228,10 @@ class _RecipeContentState extends ConsumerState<_RecipeContent> {
     );
 
     if (!mounted || choice == null) return;
-    messenger.hideCurrentSnackBar();
 
     switch (choice) {
+      case _OverflowAction.addToMealPlan:
+        await _handleAddToMealPlan();
       case _OverflowAction.addToShoppingList:
         await _handleAddToShoppingList();
     }
@@ -270,106 +244,103 @@ class _RecipeContentState extends ConsumerState<_RecipeContent> {
     final hasStorage = state.storageNote != null || state.freezerNote != null;
 
     return SafeArea(
-      child: Stack(
+      child: Column(
         children: [
-          Column(
-            children: [
-              _TopBar(
-                onBack: () => Navigator.of(context).maybePop(),
-                onOverflow: _handleOverflow,
-              ),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.only(
-                    bottom: AppSizes.buttonHeight + AppSizes.xxl,
+          _TopBar(
+            onBack: () => Navigator.of(context).maybePop(),
+            onOverflow: _handleOverflow,
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(bottom: AppSizes.xxl),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  RecipeHeroBanner(
+                    imageUrl: recipe.thumbnailUrl,
+                    title: recipe.title,
+                    ageRange: recipe.ageRange,
+                    nutritionTags: recipe.nutritionTags,
+                    makes: recipe.makes,
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      RecipeHeroBanner(
-                        imageUrl: recipe.thumbnailUrl,
-                        title: recipe.title,
-                        ageRange: recipe.ageRange,
-                        nutritionTags: recipe.nutritionTags,
-                        makes: recipe.makes,
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(
-                          AppSizes.md,
-                          AppSizes.md,
-                          AppSizes.md,
-                          0,
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSizes.md,
+                      AppSizes.md,
+                      AppSizes.md,
+                      0,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (recipe.allergenTags.isNotEmpty) ...[
+                          ContainsAllergensCard(
+                            allergenTags: recipe.allergenTags,
+                          ),
+                          const SizedBox(height: AppSizes.md),
+                        ],
+                        RecipeStepsCard(
+                          ingredients: recipe.ingredients,
+                          steps: recipe.steps,
+                          utensils: state.utensils ?? const [],
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                        if (hasStorage) ...[
+                          const SizedBox(height: AppSizes.md),
+                          RecipeStorageRow(
+                            storageNote: state.storageNote,
+                            freezerNote: state.freezerNote,
+                          ),
+                        ],
+                        if (state.textureTip != null) ...[
+                          const SizedBox(height: AppSizes.md),
+                          RecipeTipCard(
+                            kind: RecipeTipKind.textureTip,
+                            body: state.textureTip,
+                          ),
+                        ],
+                        if (state.whyThisMeal != null) ...[
+                          const SizedBox(height: AppSizes.md),
+                          RecipeTipCard(
+                            kind: RecipeTipKind.whyThisMeal,
+                            body: state.whyThisMeal,
+                          ),
+                        ],
+                        const SizedBox(height: AppSizes.md),
+                        Row(
                           children: [
-                            if (recipe.allergenTags.isNotEmpty) ...[
-                              ContainsAllergensCard(
-                                allergenTags: recipe.allergenTags,
+                            Expanded(
+                              child: AppPillButton(
+                                label: 'Add to Meal Plan',
+                                onPressed: _handleAddToMealPlan,
+                                identifier: 'recipe_detail_add_to_meal_plan',
                               ),
-                              const SizedBox(height: AppSizes.md),
-                            ],
-                            RecipeStepsCard(
-                              ingredients: recipe.ingredients,
-                              steps: recipe.steps,
-                              utensils: state.utensils ?? const [],
                             ),
-                            if (hasStorage) ...[
-                              const SizedBox(height: AppSizes.md),
-                              RecipeStorageRow(
-                                storageNote: state.storageNote,
-                                freezerNote: state.freezerNote,
+                            const SizedBox(width: AppSizes.sm),
+                            Expanded(
+                              child: AppPillButton(
+                                label: 'Add to Shopping List',
+                                variant: AppPillButtonVariant.secondary,
+                                onPressed: _handleAddToShoppingList,
+                                identifier:
+                                    'recipe_detail_add_to_shopping_list',
                               ),
-                            ],
-                            if (state.textureTip != null) ...[
-                              const SizedBox(height: AppSizes.md),
-                              RecipeTipCard(
-                                kind: RecipeTipKind.textureTip,
-                                body: state.textureTip,
-                              ),
-                            ],
-                            if (state.whyThisMeal != null) ...[
-                              const SizedBox(height: AppSizes.md),
-                              RecipeTipCard(
-                                kind: RecipeTipKind.whyThisMeal,
-                                body: state.whyThisMeal,
-                              ),
-                            ],
+                            ),
                           ],
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ),
-            ],
-          ),
-          Positioned(
-            left: AppSizes.md,
-            bottom: AppSizes.md,
-            child: AppPillButton(
-              label: 'Add to Meal Plan',
-              expand: false,
-              onPressed: state.isAddingToMealPlan ? null : _handleAddToMealPlan,
-              identifier: 'recipe_detail_add_to_meal_plan',
-            ),
-          ),
-          if (_showSuccessBanner)
-            const Positioned(
-              top: AppSizes.md,
-              left: 0,
-              right: 0,
-              child: AddToMealPlanSuccessBanner(
-                message: 'Successfully added to meal plan',
+                ],
               ),
             ),
+          ),
         ],
       ),
     );
   }
 }
 
-enum _OverflowAction { addToShoppingList }
+enum _OverflowAction { addToMealPlan, addToShoppingList }
 
 class _TopBar extends StatelessWidget {
   const _TopBar({required this.onBack, required this.onOverflow});

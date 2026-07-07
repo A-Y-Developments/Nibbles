@@ -35,7 +35,6 @@ class ShopRow extends StatelessWidget {
 
   // Kit-spec sizes (.shop-row__cb / .shop-row__del).
   static const double _affordance = 22;
-  static const double _cbRadius = 6;
   static const double _checkGlyphSize = 13;
   static const double _delGlyphSize = 14;
 
@@ -104,7 +103,7 @@ class _ShopRowCheckbox extends StatelessWidget {
           height: ShopRow._affordance,
           decoration: BoxDecoration(
             color: value ? AppColors.greenDeep : AppColors.surface,
-            borderRadius: BorderRadius.circular(ShopRow._cbRadius),
+            shape: BoxShape.circle,
             border: Border.all(color: AppColors.greenDeep, width: 1.5),
           ),
           child: value

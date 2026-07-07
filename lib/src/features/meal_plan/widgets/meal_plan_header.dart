@@ -89,9 +89,9 @@ class MealPlanOverflowButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: AppColors.greenDeep,
-      borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+      shape: const CircleBorder(),
       child: InkWell(
-        borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+        customBorder: const CircleBorder(),
         onTap: onTap,
         child: const SizedBox(
           width: AppSizes.roundButtonSm,

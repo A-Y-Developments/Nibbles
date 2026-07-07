@@ -9,13 +9,14 @@
 //       * calls SubscriptionService.openManagementPage (via the injected
 //         launcher fn — never hits the platform channel).
 //       * pops the sheet on success.
-//   - URL-open failure surfaces the P2 SnackBar and keeps the sheet open.
+//   - URL-open failure surfaces the P2 toast and keeps the sheet open.
 //   - Cancel and close (X) pop the sheet without launching anything.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
+import 'package:nibbles/src/common/components/feedback/app_toast.dart';
 import 'package:nibbles/src/common/services/subscription_service.dart';
 import 'package:nibbles/src/features/subscription/cancel/cancel_reason.dart';
 import 'package:nibbles/src/features/subscription/cancel/cancel_subscription_overlay.dart';
@@ -189,7 +190,7 @@ void main() {
   );
 
   testWidgets(
-    'URL-open failure surfaces P2 SnackBar and keeps sheet open',
+    'URL-open failure surfaces P2 toast and keeps sheet open',
     (tester) async {
       launcher.result = false;
       await _setTallSurface(tester);
@@ -216,6 +217,11 @@ void main() {
         find.text("Couldn't open subscription settings. Try again."),
         findsOneWidget,
       );
+
+      // Drain the toast's auto-dismiss Timer so it doesn't leak past the
+      // test's teardown.
+      await tester.pump(kAppToastDuration + const Duration(milliseconds: 700));
+      await tester.pump(const Duration(milliseconds: 700));
     },
     timeout: _testTimeout,
   );

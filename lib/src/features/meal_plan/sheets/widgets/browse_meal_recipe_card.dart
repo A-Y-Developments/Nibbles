@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:nibbles/gen/assets.gen.dart';
 import 'package:nibbles/src/app/constants/allergen_emoji.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
@@ -134,7 +135,7 @@ class _NutritionChips extends StatelessWidget {
         Flexible(child: AppChip(label: tags.first)),
         if (extra > 0) ...[
           const SizedBox(width: AppSizes.xs),
-          AppChip(label: '+$extra', tone: AppChipTone.mute),
+          AppChip(label: '$extra', icon: const Icon(Icons.add, size: 12)),
         ],
       ],
     );
@@ -152,39 +153,27 @@ class _Thumbnail extends StatelessWidget {
     const width = BrowseMealRecipeCard._cardWidth;
 
     if (url == null || url!.isEmpty) {
-      return Container(
-        width: width,
-        height: height,
-        color: AppColors.surfaceVariant,
-        child: const Icon(
-          Icons.restaurant_outlined,
-          color: AppColors.hint,
-          size: AppSizes.iconLg,
-        ),
-      );
+      return _fallback(width, height);
+    }
+    if (url!.startsWith('assets/')) {
+      return Image.asset(url!, width: width, height: height, fit: BoxFit.cover);
     }
     return CachedNetworkImage(
       imageUrl: url!,
       width: width,
       height: height,
       fit: BoxFit.cover,
-      placeholder: (_, __) => Container(
-        width: width,
-        height: height,
-        color: AppColors.surfaceVariant,
-      ),
-      errorWidget: (_, __, ___) => Container(
-        width: width,
-        height: height,
-        color: AppColors.surfaceVariant,
-        child: const Icon(
-          Icons.restaurant_outlined,
-          color: AppColors.hint,
-          size: AppSizes.iconLg,
-        ),
-      ),
+      placeholder: (_, __) =>
+          Container(width: width, height: height, color: AppColors.tan20),
+      errorWidget: (_, __, ___) => _fallback(width, height),
     );
   }
+
+  Widget _fallback(double width, double height) => Assets
+      .images
+      .recipe
+      .mockRecipe
+      .image(width: width, height: height, fit: BoxFit.cover);
 }
 
 class _SelectIndicator extends StatelessWidget {
@@ -275,7 +264,7 @@ class BrowseMealRecipeRow extends StatelessWidget {
           child: Row(
             children: [
               ClipRRect(
-                borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+                borderRadius: BorderRadius.circular(AppSizes.radiusMd),
                 child: _RowThumbnail(url: recipe.thumbnailUrl),
               ),
               const SizedBox(width: AppSizes.md),
@@ -337,41 +326,33 @@ class _RowThumbnail extends StatelessWidget {
 
   final String? url;
 
+  static const double _w = 90;
+  static const double _h = 76;
+
   @override
   Widget build(BuildContext context) {
-    const size = 56.0;
-
     if (url == null || url!.isEmpty) {
-      return Container(
-        width: size,
-        height: size,
-        color: AppColors.surfaceVariant,
-        child: const Icon(
-          Icons.restaurant_outlined,
-          color: AppColors.hint,
-          size: AppSizes.iconMd,
-        ),
-      );
+      return _fallback();
+    }
+    if (url!.startsWith('assets/')) {
+      return Image.asset(url!, width: _w, height: _h, fit: BoxFit.cover);
     }
     return CachedNetworkImage(
       imageUrl: url!,
-      width: size,
-      height: size,
+      width: _w,
+      height: _h,
       fit: BoxFit.cover,
       placeholder: (_, __) =>
-          Container(width: size, height: size, color: AppColors.surfaceVariant),
-      errorWidget: (_, __, ___) => Container(
-        width: size,
-        height: size,
-        color: AppColors.surfaceVariant,
-        child: const Icon(
-          Icons.restaurant_outlined,
-          color: AppColors.hint,
-          size: AppSizes.iconMd,
-        ),
-      ),
+          Container(width: _w, height: _h, color: AppColors.tan20),
+      errorWidget: (_, __, ___) => _fallback(),
     );
   }
+
+  Widget _fallback() => Assets.images.recipe.mockRecipe.image(
+    width: _w,
+    height: _h,
+    fit: BoxFit.cover,
+  );
 }
 
 String _formatFlaggedTags(List<String> tags) => tags
@@ -395,7 +376,7 @@ class _RowSelectIndicator extends StatelessWidget {
       height: AppSizes.checkbox,
       decoration: BoxDecoration(
         color: fill,
-        borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+        shape: BoxShape.circle,
         border: Border.all(color: border),
       ),
       child: selected

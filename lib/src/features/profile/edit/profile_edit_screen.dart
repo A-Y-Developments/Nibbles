@@ -299,9 +299,7 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
     final message = result.emailChanged
         ? 'Please check your inbox to confirm the new email.'
         : 'Profile updated.';
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    AppToast.success(context, message);
     context.pop();
   }
 }
@@ -324,7 +322,7 @@ class _EditHeader extends StatelessWidget {
       child: Row(
         children: [
           AppRoundButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded),
+            icon: const Icon(Icons.arrow_back_rounded),
             onPressed: onBack,
             tone: AppRoundButtonTone.ghost,
             size: AppRoundButtonSize.small,

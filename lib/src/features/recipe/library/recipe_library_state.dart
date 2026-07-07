@@ -17,8 +17,6 @@ part 'recipe_library_state.freezed.dart';
 /// [flaggedAllergenKeys] drives the 'Not safe' visual treatment on cards
 /// whose `allergenTags` intersect with a baby's flagged-allergen set.
 ///
-/// [isStartingGuideSeen] gates the first-launch 'Read Guide' banner.
-///
 /// [searchQuery] is the trimmed search input from the header pill. When
 /// non-empty the screen collapses category rows into a flat
 /// `RecipeSearchResults` list driven by [filteredRecipes]; when empty
@@ -29,7 +27,6 @@ class RecipeLibraryState with _$RecipeLibraryState {
     required Map<String, List<Recipe>> recipesByCategory,
     String? ongoingAllergenKey,
     @Default(<String>{}) Set<String> flaggedAllergenKeys,
-    @Default(false) bool isStartingGuideSeen,
     @Default('') String searchQuery,
   }) = _RecipeLibraryState;
 

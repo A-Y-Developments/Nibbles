@@ -215,11 +215,7 @@ class _ProfileContent extends ConsumerWidget {
           unawaited(ref.read(analyticsProvider).logLogout());
         // GoRouter redirect handles navigation to /auth/login.
         case Failure():
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("Couldn't sign out. Please try again."),
-            ),
-          );
+          AppToast.error(context, "Couldn't sign out. Please try again.");
       }
     }
   }

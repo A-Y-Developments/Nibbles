@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
 import 'package:nibbles/src/common/components/controls/app_sliding_segmented_control.dart';
+import 'package:nibbles/src/common/components/feedback/app_toast.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/domain/entities/shopping_list_item.dart';
@@ -214,6 +215,11 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text("Couldn't delete item. Try again."), findsOneWidget);
+
+      // AppToast starts a 3s auto-dismiss Timer; must advance past it before
+      // the test ends.
+      await tester.pump(kAppToastDuration + const Duration(milliseconds: 700));
+      await tester.pump(const Duration(milliseconds: 700));
     });
   });
 
@@ -314,6 +320,11 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Copied to clipboard'), findsOneWidget);
+
+      // AppToast starts a 3s auto-dismiss Timer; must advance past it before
+      // the test ends.
+      await tester.pump(kAppToastDuration + const Duration(milliseconds: 700));
+      await tester.pump(const Duration(milliseconds: 700));
     });
 
     testWidgets('Copy to Clipboard shows error snackbar when clipboard fails', (
@@ -348,17 +359,24 @@ void main() {
             if (call.method == 'Clipboard.getData') return {'text': ''};
             return null;
           });
+
+      // AppToast starts a 3s auto-dismiss Timer; must advance past it before
+      // the test ends.
+      await tester.pump(kAppToastDuration + const Duration(milliseconds: 700));
+      await tester.pump(const Duration(milliseconds: 700));
     });
   });
 
   // ---------------------------------------------------------------------------
-  // Add flow via the "+" chip → Add Ingredients sheet — Figma 971:9872
+  // Add flow via the "+" chip → inline editable row at the top of the list
+  // (Reminders-style direct add, no modal sheet).
   //   Optimistic insert (appears immediately) then reconcile with the server,
-  //   and P2 toast on add failure.
+  //   and P2 toast on add failure. Return commits and keeps the row open for
+  //   continuous entry.
   // ---------------------------------------------------------------------------
 
   group('ShoppingListScreen - add', () {
-    testWidgets('adding via the sheet inserts optimistically then reconciles', (
+    testWidgets('adding inline inserts optimistically then reconciles', (
       tester,
     ) async {
       final backing = <ShoppingListItem>[];
@@ -377,7 +395,7 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.enterText(find.byType(TextField), 'Carrots');
-      await tester.tap(find.text('Add'));
+      await tester.testTextInput.receiveAction(TextInputAction.done);
 
       // Optimistic: the row is present before the server refetch settles.
       await tester.pump();
@@ -389,10 +407,24 @@ void main() {
       verify(() => mockService.addManualItem(_babyId, 'Carrots')).called(1);
     });
 
-    testWidgets('add failure surfaces P2 toast', (tester) async {
-      when(() => mockService.addManualItem(any(), any())).thenAnswer(
-        (_) async => const Result.failure(UnknownException('boom')),
-      );
+    testWidgets('the row stays open after commit for continuous entry', (
+      tester,
+    ) async {
+      final backing = <ShoppingListItem>[];
+      when(
+        () => mockService.getItems(any()),
+      ).thenAnswer((_) async => Result.success(List.of(backing)));
+      when(() => mockService.addManualItem(any(), any())).thenAnswer((
+        invocation,
+      ) async {
+        backing.add(
+          _makeItem(
+            id: 'server-${backing.length + 1}',
+            name: invocation.positionalArguments[1] as String,
+          ),
+        );
+        return const Result.success(null);
+      });
 
       await tester.pumpWidget(_buildSut(mockService));
       await tester.pumpAndSettle();
@@ -401,10 +433,45 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.enterText(find.byType(TextField), 'Carrots');
-      await tester.tap(find.text('Add'));
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+
+      // Field is still present and empty, ready for the next item.
+      expect(find.byType(TextField), findsOneWidget);
+      expect(
+        tester.widget<TextField>(find.byType(TextField)).controller!.text,
+        '',
+      );
+
+      await tester.enterText(find.byType(TextField), 'Bananas');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Carrots'), findsOneWidget);
+      expect(find.text('Bananas'), findsOneWidget);
+    });
+
+    testWidgets('add failure surfaces P2 toast', (tester) async {
+      when(
+        () => mockService.addManualItem(any(), any()),
+      ).thenAnswer((_) async => const Result.failure(UnknownException('boom')));
+
+      await tester.pumpWidget(_buildSut(mockService));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.add));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField), 'Carrots');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
       await tester.pumpAndSettle();
 
       expect(find.text("Couldn't add items. Try again."), findsOneWidget);
+
+      // AppToast starts a 3s auto-dismiss Timer; must advance past it before
+      // the test ends.
+      await tester.pump(kAppToastDuration + const Duration(milliseconds: 700));
+      await tester.pump(const Duration(milliseconds: 700));
     });
   });
 

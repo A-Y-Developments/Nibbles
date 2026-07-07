@@ -7,7 +7,6 @@ import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/common/domain/entities/shopping_list_item.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/features/shopping_list/shopping_list_controller.dart';
-import 'package:nibbles/src/features/shopping_list/widgets/add_ingredient_card.dart';
 import 'package:nibbles/src/features/shopping_list/widgets/clear_all_confirm_sheet.dart';
 import 'package:nibbles/src/features/shopping_list/widgets/shopping_list_menu.dart';
 import 'package:nibbles/src/features/shopping_list/widgets/swipe_reveal_row.dart';
@@ -30,8 +29,10 @@ import 'package:nibbles/src/features/shopping_list/widgets/swipe_reveal_row.dart
 ///
 /// Per-row trailing close-X commits delete directly (no confirm modal).
 /// Swipe-left reveals a burgundy Delete pill; tap commits delete.
-/// "+" chip opens the Add Ingredients bottom sheet over the keyboard
-/// (NIB-81 — frames 971:9872 / 971:9915).
+/// "+" chip inserts an inline editable row at the top of the List tab
+/// (Reminders-style direct add — no modal sheet). Return commits the item
+/// and keeps the row open for continuous entry; tapping away or submitting
+/// empty closes it.
 class ShoppingListScreen extends ConsumerWidget {
   const ShoppingListScreen({super.key});
 
@@ -79,6 +80,7 @@ class _ShoppingListBody extends ConsumerStatefulWidget {
 
 class _ShoppingListBodyState extends ConsumerState<_ShoppingListBody> {
   int _selectedTab = 0; // 0 = List, 1 = Bought
+  bool _isAddingItem = false;
 
   // Controller that tracks which row (by id) currently has its swipe
   // reveal open. Allows tap-outside-to-close and one-open-at-a-time.
@@ -86,12 +88,21 @@ class _ShoppingListBodyState extends ConsumerState<_ShoppingListBody> {
 
   final TextEditingController _addController = TextEditingController();
   final FocusNode _addFocusNode = FocusNode();
+  final ScrollController _listScrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _addFocusNode.addListener(_handleAddFocusChange);
+  }
 
   @override
   void dispose() {
+    _addFocusNode.removeListener(_handleAddFocusChange);
     _swipeController.dispose();
     _addController.dispose();
     _addFocusNode.dispose();
+    _listScrollController.dispose();
     super.dispose();
   }
 
@@ -109,7 +120,11 @@ class _ShoppingListBodyState extends ConsumerState<_ShoppingListBody> {
         .read(shoppingListControllerProvider(widget.babyId).notifier)
         .copyToClipboard();
     if (!mounted) return;
-    _showToast(ok ? 'Copied to clipboard' : "Couldn't copy. Try again.");
+    if (ok) {
+      _showToast('Copied to clipboard', isError: false);
+    } else {
+      _showToast("Couldn't copy. Try again.");
+    }
   }
 
   Future<void> _runWrite(
@@ -124,12 +139,12 @@ class _ShoppingListBodyState extends ConsumerState<_ShoppingListBody> {
     }
   }
 
-  void _showToast(String message) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(content: Text(message), duration: const Duration(seconds: 3)),
-      );
+  void _showToast(String message, {bool isError = true}) {
+    if (isError) {
+      AppToast.error(context, message);
+    } else {
+      AppToast.success(context, message);
+    }
   }
 
   Future<void> _delete(String itemId, {required String via}) async {
@@ -166,22 +181,58 @@ class _ShoppingListBodyState extends ConsumerState<_ShoppingListBody> {
     }
   }
 
-  void _openAddCard() {
+  void _startAddingItem() {
     _swipeController.close();
-    showAddIngredientSheet(
-      context,
-      controller: _addController,
-      focusNode: _addFocusNode,
-      onAdd: _submitAdd,
-    ).whenComplete(_addController.clear);
+    setState(() {
+      _selectedTab = 0;
+      _isAddingItem = true;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _addFocusNode.requestFocus();
+      if (_listScrollController.hasClients) {
+        _listScrollController.animateTo(
+          0,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+        );
+      }
+    });
   }
 
-  Future<void> _submitAdd() async {
+  void _handleAddFocusChange() {
+    if (!_addFocusNode.hasFocus) _endAdding();
+  }
+
+  void _handleAddEditingComplete() {
+    if (_addController.text.trim().isEmpty) {
+      _addFocusNode.unfocus();
+    } else {
+      _commitAndContinueAdding();
+    }
+  }
+
+  /// Commits the typed item and keeps the row open (Reminders-style
+  /// continuous entry) — focus never leaves the field, so the keyboard
+  /// stays up for the next item.
+  Future<void> _commitAndContinueAdding() async {
     final raw = _addController.text;
     if (raw.trim().isEmpty) return;
     _addController.clear();
-    if (mounted) Navigator.of(context).pop();
+    await _submitItem(raw);
+  }
 
+  /// Tapping away or dismissing the keyboard ends the add session — commits
+  /// a non-empty draft, otherwise just closes the empty row.
+  void _endAdding() {
+    if (!_isAddingItem) return;
+    final raw = _addController.text;
+    _addController.clear();
+    setState(() => _isAddingItem = false);
+    if (raw.trim().isNotEmpty) _submitItem(raw);
+  }
+
+  Future<void> _submitItem(String raw) async {
     try {
       await ref
           .read(shoppingListControllerProvider(widget.babyId).notifier)
@@ -202,10 +253,13 @@ class _ShoppingListBodyState extends ConsumerState<_ShoppingListBody> {
       bottom: false,
       child: Stack(
         children: [
-          // Tap anywhere outside the add card / open swipe row to dismiss them.
+          // Tap anywhere outside the add row / open swipe row to dismiss them.
           GestureDetector(
             behavior: HitTestBehavior.translucent,
-            onTap: _swipeController.close,
+            onTap: () {
+              _swipeController.close();
+              _addFocusNode.unfocus();
+            },
             child: Padding(
               padding: const EdgeInsets.fromLTRB(
                 AppSizes.md,
@@ -216,7 +270,7 @@ class _ShoppingListBodyState extends ConsumerState<_ShoppingListBody> {
               child: Column(
                 children: [
                   _ShoppingListHeader(
-                    onAddPressed: _openAddCard,
+                    onAddPressed: _startAddingItem,
                     onMenuSelected: (action) {
                       switch (action) {
                         case ShoppingListMenuAction.copy:
@@ -230,7 +284,10 @@ class _ShoppingListBodyState extends ConsumerState<_ShoppingListBody> {
                   AppSlidingSegmentedControl(
                     segments: const ['List', 'Bought'],
                     selectedIndex: _selectedTab,
-                    onChanged: (i) => setState(() => _selectedTab = i),
+                    onChanged: (i) {
+                      _endAdding();
+                      setState(() => _selectedTab = i);
+                    },
                   ),
                   const SizedBox(height: AppSizes.sp12),
                   Expanded(
@@ -246,12 +303,22 @@ class _ShoppingListBodyState extends ConsumerState<_ShoppingListBody> {
                           ? _ItemsList(
                               items: state.listItems,
                               swipeController: _swipeController,
+                              scrollController: _listScrollController,
                               onToggle: _check,
                               onDelete: _delete,
+                              addRow: _isAddingItem
+                                  ? _AddItemRow(
+                                      controller: _addController,
+                                      focusNode: _addFocusNode,
+                                      onEditingComplete:
+                                          _handleAddEditingComplete,
+                                    )
+                                  : null,
                             )
                           : _ItemsList(
                               items: state.boughtItems,
                               swipeController: _swipeController,
+                              scrollController: _listScrollController,
                               onToggle: _uncheck,
                               onDelete: _delete,
                             ),
@@ -361,9 +428,9 @@ class _AddChip extends StatelessWidget {
         child: Container(
           width: 40,
           height: 40,
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             color: AppColors.greenDeep,
-            borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+            shape: BoxShape.circle,
           ),
           alignment: Alignment.center,
           child: const Icon(
@@ -389,9 +456,9 @@ class _OverflowChip extends StatelessWidget {
     return Container(
       width: 40,
       height: 40,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppColors.greenDeep,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+        shape: BoxShape.circle,
       ),
       alignment: Alignment.center,
       child: const Icon(
@@ -412,26 +479,33 @@ class _ItemsList extends StatelessWidget {
   const _ItemsList({
     required this.items,
     required this.swipeController,
+    required this.scrollController,
     required this.onToggle,
     required this.onDelete,
+    this.addRow,
   });
 
   final List<ShoppingListItem> items;
   final SwipeRevealController swipeController;
+  final ScrollController scrollController;
   final ValueChanged<String> onToggle;
   final void Function(String itemId, {required String via}) onDelete;
+  final Widget? addRow;
 
   @override
   Widget build(BuildContext context) {
-    if (items.isEmpty) {
+    if (items.isEmpty && addRow == null) {
       return const _EmptyState();
     }
+    final hasAddRow = addRow != null;
     return ListView.separated(
+      controller: scrollController,
       padding: const EdgeInsets.only(bottom: AppSizes.md),
-      itemCount: items.length,
+      itemCount: items.length + (hasAddRow ? 1 : 0),
       separatorBuilder: (_, __) => const SizedBox(height: AppSizes.sp12),
-      itemBuilder: (_, index) {
-        final item = items[index];
+      itemBuilder: (_, i) {
+        if (hasAddRow && i == 0) return addRow!;
+        final item = items[hasAddRow ? i - 1 : i];
         // Optimistic placeholder id=='' would collide if multiple are pending;
         // fall back to a createdAt-based key.
         final rowKey = item.id.isNotEmpty
@@ -449,6 +523,83 @@ class _ItemsList extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Inline add row — always the first item in the List tab while adding.
+// Same card chrome as a normal row; a hollow (draft) circle stands in for
+// the checkbox and a borderless TextField replaces the label.
+// ---------------------------------------------------------------------------
+
+class _AddItemRow extends StatelessWidget {
+  const _AddItemRow({
+    required this.controller,
+    required this.focusNode,
+    required this.onEditingComplete,
+  });
+
+  final TextEditingController controller;
+  final FocusNode focusNode;
+
+  /// Driven via [TextField.onEditingComplete] rather than `onSubmitted` —
+  /// supplying `onEditingComplete` opts out of Flutter's default behavior of
+  /// auto-unfocusing on [TextInputAction.done], which is what let us keep the
+  /// keyboard up for continuous entry.
+  final VoidCallback onEditingComplete;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSizes.sp12,
+        vertical: AppSizes.sm,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.cream,
+        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+        boxShadow: AppSizes.shadowCard,
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: AppSizes.xxl,
+            height: AppSizes.xxl,
+            child: Center(
+              child: Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: AppColors.cream,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.borderSoft, width: 1.5),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSizes.sp12),
+          Expanded(
+            child: TextField(
+              controller: controller,
+              focusNode: focusNode,
+              autofocus: true,
+              onEditingComplete: onEditingComplete,
+              textInputAction: TextInputAction.done,
+              style: AppTypography.textTheme.bodyLarge,
+              cursorColor: AppColors.greenDeep,
+              decoration: InputDecoration(
+                isCollapsed: true,
+                border: InputBorder.none,
+                hintText: 'Add item',
+                hintStyle: AppTypography.textTheme.bodyLarge?.copyWith(
+                  color: AppColors.fgFaint,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -554,7 +705,7 @@ class _SquareCheckbox extends StatelessWidget {
             height: size,
             decoration: BoxDecoration(
               color: value ? AppColors.greenDeep : AppColors.cream,
-              borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+              shape: BoxShape.circle,
               border: Border.all(color: AppColors.greenDeep, width: 1.5),
             ),
             alignment: Alignment.center,

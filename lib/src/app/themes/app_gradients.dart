@@ -10,4 +10,11 @@ abstract final class AppGradients {
     stops: [0.19168, 0.5],
     colors: [AppColors.butterSoft, Color(0xFFF5F5F5)],
   );
+
+  static const LinearGradient backgroundMoreWhite = LinearGradient(
+    begin: Alignment(-0.460, -0.888),
+    end: Alignment(0.460, 0.888),
+    stops: [0.19168, 0.5],
+    colors: [Color(0xFFFCFADE), Color(0xFFF4F4F4)],
+  );
 }

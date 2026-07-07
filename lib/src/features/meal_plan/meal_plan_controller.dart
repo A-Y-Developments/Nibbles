@@ -210,6 +210,17 @@ class MealPlanController extends _$MealPlanController {
     return true;
   }
 
+  /// Creates a plan for `[start, end]`, replacing any existing plan.
+  /// Returns false on failure — caller should show P2 toast.
+  Future<bool> createPlan(DateTime start, DateTime end) async {
+    final result = await ref
+        .read(mealPlanServiceProvider)
+        .createPlan(_babyId, start, end);
+    if (result.isFailure) return false;
+    ref.invalidateSelf();
+    return true;
+  }
+
   /// Deletes the active plan (cascades its entries), returning the planner to
   /// the empty state. Returns false on failure — caller shows a P2 toast.
   Future<bool> deleteActivePlan() async {

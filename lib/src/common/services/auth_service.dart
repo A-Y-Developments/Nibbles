@@ -97,7 +97,12 @@ class AuthService extends _$AuthService {
     final result = await _repo.signOut();
     if (result.isSuccess) {
       try {
-        await Purchases.logOut();
+        // Guard on isConfigured: calling logOut before Purchases.configure
+        // raises a native (uncatchable) fatalError. RevenueCat isn't configured
+        // while M2/subscriptions are deferred, so skip logOut entirely then.
+        if (await Purchases.isConfigured) {
+          await Purchases.logOut();
+        }
       } on Object {
         // RevenueCat logOut is best-effort — don't block sign out
       }

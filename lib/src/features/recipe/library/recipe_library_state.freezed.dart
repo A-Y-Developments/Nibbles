@@ -21,7 +21,6 @@ mixin _$RecipeLibraryState {
       throw _privateConstructorUsedError;
   String? get ongoingAllergenKey => throw _privateConstructorUsedError;
   Set<String> get flaggedAllergenKeys => throw _privateConstructorUsedError;
-  bool get isStartingGuideSeen => throw _privateConstructorUsedError;
   String get searchQuery => throw _privateConstructorUsedError;
 
   /// Create a copy of RecipeLibraryState
@@ -42,7 +41,6 @@ abstract class $RecipeLibraryStateCopyWith<$Res> {
     Map<String, List<Recipe>> recipesByCategory,
     String? ongoingAllergenKey,
     Set<String> flaggedAllergenKeys,
-    bool isStartingGuideSeen,
     String searchQuery,
   });
 }
@@ -65,7 +63,6 @@ class _$RecipeLibraryStateCopyWithImpl<$Res, $Val extends RecipeLibraryState>
     Object? recipesByCategory = null,
     Object? ongoingAllergenKey = freezed,
     Object? flaggedAllergenKeys = null,
-    Object? isStartingGuideSeen = null,
     Object? searchQuery = null,
   }) {
     return _then(
@@ -82,10 +79,6 @@ class _$RecipeLibraryStateCopyWithImpl<$Res, $Val extends RecipeLibraryState>
                 ? _value.flaggedAllergenKeys
                 : flaggedAllergenKeys // ignore: cast_nullable_to_non_nullable
                       as Set<String>,
-            isStartingGuideSeen: null == isStartingGuideSeen
-                ? _value.isStartingGuideSeen
-                : isStartingGuideSeen // ignore: cast_nullable_to_non_nullable
-                      as bool,
             searchQuery: null == searchQuery
                 ? _value.searchQuery
                 : searchQuery // ignore: cast_nullable_to_non_nullable
@@ -109,7 +102,6 @@ abstract class _$$RecipeLibraryStateImplCopyWith<$Res>
     Map<String, List<Recipe>> recipesByCategory,
     String? ongoingAllergenKey,
     Set<String> flaggedAllergenKeys,
-    bool isStartingGuideSeen,
     String searchQuery,
   });
 }
@@ -131,7 +123,6 @@ class __$$RecipeLibraryStateImplCopyWithImpl<$Res>
     Object? recipesByCategory = null,
     Object? ongoingAllergenKey = freezed,
     Object? flaggedAllergenKeys = null,
-    Object? isStartingGuideSeen = null,
     Object? searchQuery = null,
   }) {
     return _then(
@@ -148,10 +139,6 @@ class __$$RecipeLibraryStateImplCopyWithImpl<$Res>
             ? _value._flaggedAllergenKeys
             : flaggedAllergenKeys // ignore: cast_nullable_to_non_nullable
                   as Set<String>,
-        isStartingGuideSeen: null == isStartingGuideSeen
-            ? _value.isStartingGuideSeen
-            : isStartingGuideSeen // ignore: cast_nullable_to_non_nullable
-                  as bool,
         searchQuery: null == searchQuery
             ? _value.searchQuery
             : searchQuery // ignore: cast_nullable_to_non_nullable
@@ -168,7 +155,6 @@ class _$RecipeLibraryStateImpl extends _RecipeLibraryState {
     required final Map<String, List<Recipe>> recipesByCategory,
     this.ongoingAllergenKey,
     final Set<String> flaggedAllergenKeys = const <String>{},
-    this.isStartingGuideSeen = false,
     this.searchQuery = '',
   }) : _recipesByCategory = recipesByCategory,
        _flaggedAllergenKeys = flaggedAllergenKeys,
@@ -197,14 +183,11 @@ class _$RecipeLibraryStateImpl extends _RecipeLibraryState {
 
   @override
   @JsonKey()
-  final bool isStartingGuideSeen;
-  @override
-  @JsonKey()
   final String searchQuery;
 
   @override
   String toString() {
-    return 'RecipeLibraryState(recipesByCategory: $recipesByCategory, ongoingAllergenKey: $ongoingAllergenKey, flaggedAllergenKeys: $flaggedAllergenKeys, isStartingGuideSeen: $isStartingGuideSeen, searchQuery: $searchQuery)';
+    return 'RecipeLibraryState(recipesByCategory: $recipesByCategory, ongoingAllergenKey: $ongoingAllergenKey, flaggedAllergenKeys: $flaggedAllergenKeys, searchQuery: $searchQuery)';
   }
 
   @override
@@ -222,8 +205,6 @@ class _$RecipeLibraryStateImpl extends _RecipeLibraryState {
               other._flaggedAllergenKeys,
               _flaggedAllergenKeys,
             ) &&
-            (identical(other.isStartingGuideSeen, isStartingGuideSeen) ||
-                other.isStartingGuideSeen == isStartingGuideSeen) &&
             (identical(other.searchQuery, searchQuery) ||
                 other.searchQuery == searchQuery));
   }
@@ -234,7 +215,6 @@ class _$RecipeLibraryStateImpl extends _RecipeLibraryState {
     const DeepCollectionEquality().hash(_recipesByCategory),
     ongoingAllergenKey,
     const DeepCollectionEquality().hash(_flaggedAllergenKeys),
-    isStartingGuideSeen,
     searchQuery,
   );
 
@@ -255,7 +235,6 @@ abstract class _RecipeLibraryState extends RecipeLibraryState {
     required final Map<String, List<Recipe>> recipesByCategory,
     final String? ongoingAllergenKey,
     final Set<String> flaggedAllergenKeys,
-    final bool isStartingGuideSeen,
     final String searchQuery,
   }) = _$RecipeLibraryStateImpl;
   const _RecipeLibraryState._() : super._();
@@ -266,8 +245,6 @@ abstract class _RecipeLibraryState extends RecipeLibraryState {
   String? get ongoingAllergenKey;
   @override
   Set<String> get flaggedAllergenKeys;
-  @override
-  bool get isStartingGuideSeen;
   @override
   String get searchQuery;
 

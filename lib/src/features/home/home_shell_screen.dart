@@ -73,6 +73,7 @@ class _HomeShellScreenState extends ConsumerState<HomeShellScreen> {
         ),
         child: NavigationBar(
           height: AppSizes.bottomNavHeight,
+          labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
           selectedIndex: widget.navigationShell.currentIndex,
           onDestinationSelected: (index) => widget.navigationShell.goBranch(
             index,

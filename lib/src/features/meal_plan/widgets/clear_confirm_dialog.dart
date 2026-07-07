@@ -17,6 +17,7 @@ Future<bool?> showClearMealPlanConfirm(
 }) {
   return showModalBottomSheet<bool>(
     context: context,
+    useRootNavigator: true,
     backgroundColor: AppColors.cream,
     isScrollControlled: true,
     shape: const RoundedRectangleBorder(

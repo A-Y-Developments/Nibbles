@@ -18,6 +18,7 @@ import 'package:nibbles/src/features/home/widgets/home_header.dart';
 import 'package:nibbles/src/features/home/widgets/home_hero_card.dart';
 import 'package:nibbles/src/features/home/widgets/home_no_meals_state.dart';
 import 'package:nibbles/src/features/home/widgets/todays_meals_card.dart';
+import 'package:nibbles/src/features/meal_plan/add_meals_for_day.dart';
 import 'package:nibbles/src/logging/analytics.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 
@@ -149,11 +150,19 @@ class _HomeContent extends ConsumerWidget {
     'Dec',
   ];
 
-  void _openMealPlan(BuildContext context) =>
-      context.goNamed(AppRoute.mealPlan.name);
+  /// Direct-add a meal to the day the date strip currently has selected. The
+  /// Browse Meal sheet is single-date, so it commits without a map/confirm
+  /// step. Home reads meals via its own controller, so refresh it on success.
+  Future<void> _onAddMeal(BuildContext context, WidgetRef ref) async {
+    final day = ref.read(selectedHomeDateProvider);
+    final added = await addMealsForDay(context, ref, babyId: babyId, day: day);
+    if (added > 0) ref.invalidate(homeControllerProvider(babyId));
+  }
 
-  void _openTracker(BuildContext context) =>
-      context.pushNamed(AppRoute.allergenTracker.name);
+  Future<void> _openTracker(BuildContext context, WidgetRef ref) async {
+    await context.pushNamed(AppRoute.allergenTracker.name);
+    ref.invalidate(homeControllerProvider(babyId));
+  }
 
   void _openAllergenDetail(BuildContext context) {
     final key = state.currentAllergenKey;
@@ -188,55 +197,60 @@ class _HomeContent extends ConsumerWidget {
           onRefresh: onRefresh,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: EdgeInsets.fromLTRB(
-              AppSizes.pagePaddingH,
-              AppSizes.pagePaddingV + topInset,
-              AppSizes.pagePaddingH,
-              AppSizes.pagePaddingV,
+            padding: EdgeInsets.only(
+              top: AppSizes.pagePaddingV + topInset,
+              bottom: AppSizes.pagePaddingV,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                HomeHeader(
-                  babyName: baby.name,
-                  ageMonths: ageMonths,
-                  onAvatarTap: () => context.pushNamed(AppRoute.profile.name),
-                  onTodayTap: () =>
-                      ref.read(selectedHomeDateProvider.notifier).state =
-                          homeDateOnly(DateTime.now()),
+                _hPad(
+                  HomeHeader(
+                    babyName: baby.name,
+                    ageMonths: ageMonths,
+                    onAvatarTap: () => context.pushNamed(AppRoute.profile.name),
+                    onTodayTap: () =>
+                        ref.read(selectedHomeDateProvider.notifier).state =
+                            homeDateOnly(DateTime.now()),
+                  ),
+                ),
+                const SizedBox(height: AppSizes.md),
+                _hPad(
+                  HomeHeroCard(
+                    babyName: baby.name,
+                    ageMonths: ageMonths,
+                    dateOfBirth: baby.dateOfBirth,
+                    mealCount: dayView.mealCount,
+                    mealTarget: dayView.mealTarget,
+                    introducedCount: state.introducedCount,
+                    ironRich: dayView.ironRich,
+                    hasActiveProgramAllergen: state.hasActiveProgramAllergen,
+                    heroState: state.allergenHeroState,
+                    allergenKey: key,
+                    allergenDisplayName: key == null
+                        ? ''
+                        : AllergenEmoji.displayName(key),
+                    allergenReactionFlags: state.currentAllergenReactionFlags,
+                    onStartTracker: () => _openTracker(context, ref),
+                    onOpenDetail: () => _openAllergenDetail(context),
+                  ),
                 ),
                 if (state.mealPrepSetUp) ...[
                   const SizedBox(height: AppSizes.md),
                   WeekStrip(
                     days: _buildWeekDays(state.plannedDates, selected),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSizes.pagePaddingH,
+                    ),
                     onDaySelected: (i) =>
                         ref.read(selectedHomeDateProvider.notifier).state =
                             state.plannedDates[i],
                   ),
                 ],
                 const SizedBox(height: AppSizes.md),
-                HomeHeroCard(
-                  babyName: baby.name,
-                  ageMonths: ageMonths,
-                  dateOfBirth: baby.dateOfBirth,
-                  mealCount: dayView.mealCount,
-                  mealTarget: dayView.mealTarget,
-                  introducedCount: state.introducedCount,
-                  ironRich: dayView.ironRich,
-                  hasActiveProgramAllergen: state.hasActiveProgramAllergen,
-                  heroState: state.allergenHeroState,
-                  allergenKey: key,
-                  allergenDisplayName: key == null
-                      ? ''
-                      : AllergenEmoji.displayName(key),
-                  allergenCleanCount: state.currentAllergenCleanCount,
-                  onStartTracker: () => _openTracker(context),
-                  onOpenDetail: () => _openAllergenDetail(context),
-                ),
-                const SizedBox(height: AppSizes.sp40),
-                _mealsSection(context, dayView),
+                _hPad(_mealsSection(context, ref, dayView)),
                 const SizedBox(height: AppSizes.md),
-                HelpfulGuidanceCard(tips: dayView.guidance),
+                _hPad(HelpfulGuidanceCard(tips: dayView.guidance)),
                 const SizedBox(height: AppSizes.xl),
               ],
             ),
@@ -246,7 +260,16 @@ class _HomeContent extends ConsumerWidget {
     );
   }
 
-  Widget _mealsSection(BuildContext context, HomeDayView dayView) {
+  Widget _hPad(Widget child) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: AppSizes.pagePaddingH),
+    child: child,
+  );
+
+  Widget _mealsSection(
+    BuildContext context,
+    WidgetRef ref,
+    HomeDayView dayView,
+  ) {
     if (!state.mealPrepSetUp) {
       return ReadyToStartCard(
         babyName: state.baby?.name,
@@ -256,7 +279,7 @@ class _HomeContent extends ConsumerWidget {
     if (dayView.meals.isEmpty) {
       return HomeNoMealsState(
         babyName: state.baby?.name,
-        onAddMeal: () => _openMealPlan(context),
+        onAddMeal: () => _onAddMeal(context, ref),
       );
     }
     return TodaysMealsCard(
@@ -264,7 +287,7 @@ class _HomeContent extends ConsumerWidget {
       recipes: dayView.recipes,
       mealCount: dayView.mealCount,
       mealTarget: dayView.mealTarget,
-      onAdd: () => _openMealPlan(context),
+      onAdd: () => _onAddMeal(context, ref),
     );
   }
 

@@ -13,7 +13,6 @@ import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
 import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
 import 'package:nibbles/src/common/services/allergen_service.dart';
-import 'package:nibbles/src/common/services/local_flag_service.dart';
 import 'package:nibbles/src/common/services/recipe_service.dart';
 import 'package:nibbles/src/features/recipe/library/recipe_library_controller.dart';
 
@@ -37,8 +36,6 @@ class _NoopAnalyticsPlatform extends FirebaseAnalyticsPlatform {
 class _MockRecipeService extends Mock implements RecipeService {}
 
 class _MockAllergenService extends Mock implements AllergenService {}
-
-class _MockLocalFlagService extends Mock implements LocalFlagService {}
 
 const _babyId = 'baby-1';
 const _recipe = Recipe(
@@ -70,7 +67,6 @@ const _statuses = <String, AllergenStatus>{
 void main() {
   late _MockRecipeService recipeSvc;
   late _MockAllergenService allergenSvc;
-  late _MockLocalFlagService localFlags;
 
   setUpAll(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
@@ -82,7 +78,6 @@ void main() {
   setUp(() {
     recipeSvc = _MockRecipeService();
     allergenSvc = _MockAllergenService();
-    localFlags = _MockLocalFlagService();
   });
 
   ProviderContainer container() {
@@ -90,7 +85,6 @@ void main() {
       overrides: [
         recipeServiceProvider.overrideWithValue(recipeSvc),
         allergenServiceProvider.overrideWithValue(allergenSvc),
-        localFlagServiceProvider.overrideWithValue(localFlags),
       ],
     );
     addTearDown(c.dispose);
@@ -101,7 +95,6 @@ void main() {
     Map<String, List<Recipe>> categories = _categories,
     Map<String, AllergenStatus> statuses = _statuses,
     Set<String> flagged = _flagged,
-    bool guideSeen = false,
   }) {
     when(
       () => recipeSvc.getRecipesByCategory(any()),
@@ -112,7 +105,6 @@ void main() {
     when(
       () => recipeSvc.getFlaggedAllergenKeys(any()),
     ).thenAnswer((_) async => Result.success(flagged));
-    when(localFlags.isStartingGuideSeen).thenReturn(guideSeen);
   }
 
   void stubFailedBuild({
@@ -135,7 +127,6 @@ void main() {
           ? const Result.failure(NetworkException())
           : const Result.success(_flagged),
     );
-    when(localFlags.isStartingGuideSeen).thenReturn(false);
   }
 
   group('build() — happy path', () {
@@ -148,7 +139,6 @@ void main() {
 
       expect(state.recipesByCategory, _categories);
       expect(state.flaggedAllergenKeys, isEmpty);
-      expect(state.isStartingGuideSeen, false);
       expect(state.ongoingAllergenKey, isNull);
     });
 
@@ -180,15 +170,14 @@ void main() {
       expect(state.ongoingAllergenKey, 'peanut');
     });
 
-    test('propagates flagged allergen keys and guideSeen flag', () async {
-      stubHappyBuild(flagged: {'peanut'}, guideSeen: true);
+    test('propagates flagged allergen keys', () async {
+      stubHappyBuild(flagged: {'peanut'});
 
       final state = await container().read(
         recipeLibraryControllerProvider(_babyId).future,
       );
 
       expect(state.flaggedAllergenKeys, {'peanut'});
-      expect(state.isStartingGuideSeen, true);
     });
   });
 
@@ -233,37 +222,6 @@ void main() {
           .read(recipeLibraryControllerProvider(_babyId))
           .valueOrNull;
       expect(state?.recipesByCategory, _categories);
-    });
-  });
-
-  group('markStartingGuideSeen()', () {
-    test('updates state and calls service when not yet seen', () async {
-      stubHappyBuild();
-      when(localFlags.markStartingGuideSeen).thenAnswer((_) async {});
-
-      final c = container();
-      await c.read(recipeLibraryControllerProvider(_babyId).future);
-      await c
-          .read(recipeLibraryControllerProvider(_babyId).notifier)
-          .markStartingGuideSeen();
-
-      final state = c
-          .read(recipeLibraryControllerProvider(_babyId))
-          .valueOrNull;
-      expect(state?.isStartingGuideSeen, true);
-      verify(localFlags.markStartingGuideSeen).called(1);
-    });
-
-    test('is a no-op when guide is already seen', () async {
-      stubHappyBuild(guideSeen: true);
-
-      final c = container();
-      await c.read(recipeLibraryControllerProvider(_babyId).future);
-      await c
-          .read(recipeLibraryControllerProvider(_babyId).notifier)
-          .markStartingGuideSeen();
-
-      verifyNever(localFlags.markStartingGuideSeen);
     });
   });
 

@@ -195,9 +195,7 @@ void main() {
       expect(state.plan, isNull);
       expect(state.entries, isEmpty);
       // getEntriesForPlan is not called when there is no plan.
-      verifyNever(
-        () => mockMealPlanService.getEntriesForPlan(any()),
-      );
+      verifyNever(() => mockMealPlanService.getEntriesForPlan(any()));
     });
 
     test('getEntriesForPlan is invoked with the active plan id', () async {
@@ -205,9 +203,7 @@ void main() {
       final container = buildContainer();
       await container.read(mealPlanControllerProvider(_babyId).future);
 
-      verify(
-        () => mockMealPlanService.getEntriesForPlan('plan-1'),
-      ).called(1);
+      verify(() => mockMealPlanService.getEntriesForPlan('plan-1')).called(1);
     });
 
     test('window end extends to cover an entry past the plan end', () async {
@@ -252,9 +248,7 @@ void main() {
 
     test('getEntriesForPlan failure surfaces AsyncError', () async {
       stubHappy();
-      when(
-        () => mockMealPlanService.getEntriesForPlan(any()),
-      ).thenAnswer(
+      when(() => mockMealPlanService.getEntriesForPlan(any())).thenAnswer(
         (_) async => const Result.failure(ServerException('db down')),
       );
 
@@ -449,6 +443,52 @@ void main() {
       final ok = await container
           .read(mealPlanControllerProvider(_babyId).notifier)
           .clearDay(DateTime(2026, 5, 30));
+
+      expect(ok, isFalse);
+      verify(() => mockMealPlanService.getActivePlan(any())).called(1);
+    });
+  });
+
+  group('MealPlanController.createPlan', () {
+    test('returns true on success and invalidates self', () async {
+      stubHappy(hasPlan: false);
+      when(
+        () => mockMealPlanService.createPlan(any(), any(), any()),
+      ).thenAnswer((_) async => Result.success(_defaultPlan));
+
+      final container = buildContainer();
+      await container.read(mealPlanControllerProvider(_babyId).future);
+
+      final ok = await container
+          .read(mealPlanControllerProvider(_babyId).notifier)
+          .createPlan(DateTime(2026, 5, 30), DateTime(2026, 6, 5));
+      await container.read(mealPlanControllerProvider(_babyId).future);
+
+      expect(ok, isTrue);
+      verify(
+        () => mockMealPlanService.createPlan(
+          _babyId,
+          DateTime(2026, 5, 30),
+          DateTime(2026, 6, 5),
+        ),
+      ).called(1);
+      verify(() => mockMealPlanService.getActivePlan(any())).called(2);
+    });
+
+    test('returns false on failure and does NOT invalidate self', () async {
+      stubHappy(hasPlan: false);
+      when(
+        () => mockMealPlanService.createPlan(any(), any(), any()),
+      ).thenAnswer(
+        (_) async => const Result.failure(ServerException('db down')),
+      );
+
+      final container = buildContainer();
+      await container.read(mealPlanControllerProvider(_babyId).future);
+
+      final ok = await container
+          .read(mealPlanControllerProvider(_babyId).notifier)
+          .createPlan(DateTime(2026, 5, 30), DateTime(2026, 6, 5));
 
       expect(ok, isFalse);
       verify(() => mockMealPlanService.getActivePlan(any())).called(1);

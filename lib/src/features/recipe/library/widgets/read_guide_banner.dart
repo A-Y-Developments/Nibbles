@@ -8,10 +8,10 @@ import 'package:nibbles/src/app/themes/app_sizes.dart';
 /// `banner_starting_solids.svg` as vector outlines (shadow included), so the
 /// whole banner is rendered as one crisp asset.
 ///
-/// Visibility is gated upstream by `LocalFlagService.isStartingGuideSeen()`.
-/// The banner is a pure presentation widget — the entire surface is tappable
-/// (mirroring the baked 'Read Guide' CTA); tapping fires [onTap] and the
-/// caller marks the flag and routes to the Starting Guide.
+/// Always visible on the Recipe Library screen. The banner is a pure
+/// presentation widget — the entire surface is tappable (mirroring the baked
+/// 'Read Guide' CTA); tapping fires [onTap] and the caller routes to the
+/// Starting Guide.
 class ReadGuideBanner extends StatelessWidget {
   const ReadGuideBanner({required this.onTap, super.key});
 

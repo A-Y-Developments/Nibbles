@@ -24,14 +24,15 @@ class HomeState with _$HomeState {
     @Default(<String, int>{}) Map<String, int> allergenLogCounts,
     String? currentAllergenKey,
     @Default(AllergenStatus.notStarted) AllergenStatus currentAllergenStatus,
-    @Default(0) int currentAllergenCleanCount,
+    @Default(<bool>[]) List<bool> currentAllergenReactionFlags,
   }) = _HomeState;
 
   const HomeState._();
 
-  /// True once the baby has any planned meal at all — drives the date strip
-  /// vs. the "Create First Meal" CTA.
-  bool get mealPrepSetUp => allMeals.isNotEmpty;
+  /// True once the baby has a picked meal-prep range (or legacy meals) — drives
+  /// the date strip vs. the "Create First Meal" CTA. Based on [plannedDates]
+  /// (the picked range) so a set-but-unfilled plan still shows the strip.
+  bool get mealPrepSetUp => plannedDates.isNotEmpty;
 
   /// Count of allergens in [AllergenStatus.safe].
   int get safeCount =>

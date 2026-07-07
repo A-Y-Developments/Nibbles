@@ -274,7 +274,7 @@ class _MapMealsAppBar extends StatelessWidget implements PreferredSizeWidget {
       elevation: 0,
       scrolledUnderElevation: 0,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: AppColors.fgDefault),
+        icon: const Icon(Icons.arrow_back_rounded, color: AppColors.fgDefault),
         tooltip: 'Back',
         onPressed: () => Navigator.of(context).maybePop(),
       ),

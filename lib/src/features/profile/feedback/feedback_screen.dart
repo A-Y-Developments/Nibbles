@@ -24,7 +24,7 @@ import 'package:nibbles/src/logging/analytics.dart';
 ///   flash), then swaps to "Feedback sent" before the screen auto-dismisses
 ///   back to Profile.
 ///
-/// Failure stays P2 — a SnackBar prompts a retry on the entry screen and the
+/// Failure stays P2 — a toast prompts a retry on the entry screen and the
 /// controller logs a non-fatal Crashlytics breadcrumb.
 class FeedbackScreen extends ConsumerStatefulWidget {
   const FeedbackScreen({super.key});
@@ -105,7 +105,6 @@ class _FeedbackScreenState extends ConsumerState<FeedbackScreen> {
   }
 
   Future<void> _submit() async {
-    final messenger = ScaffoldMessenger.of(context);
     final controller = ref.read(feedbackControllerProvider.notifier);
 
     _showSent = false;
@@ -117,9 +116,7 @@ class _FeedbackScreenState extends ConsumerState<FeedbackScreen> {
 
     if (!ok) {
       // P2 — non-blocking toast; user can retry without leaving the screen.
-      messenger.showSnackBar(
-        const SnackBar(content: Text("Couldn't send feedback. Try again.")),
-      );
+      AppToast.error(context, "Couldn't send feedback. Try again.");
       return;
     }
 
@@ -282,7 +279,7 @@ class _FeedbackHeader extends StatelessWidget {
       child: Row(
         children: [
           AppRoundButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded),
+            icon: const Icon(Icons.arrow_back_rounded),
             onPressed: onBack,
             tone: AppRoundButtonTone.ghost,
             size: AppRoundButtonSize.small,

@@ -5,7 +5,7 @@ import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
 import 'package:nibbles/src/common/components/cards/app_card.dart';
-import 'package:nibbles/src/common/components/chips/app_chip.dart';
+import 'package:nibbles/src/common/components/cards/recipe_plan_row.dart';
 import 'package:nibbles/src/common/domain/entities/meal_plan_entry.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
 
@@ -242,11 +242,11 @@ class _DayCardChip extends StatelessWidget {
     );
     return Material(
       color: AppColors.greenDeep,
-      borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+      shape: const CircleBorder(),
       child: onTap == null
           ? box
           : InkWell(
-              borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+              customBorder: const CircleBorder(),
               onTap: onTap,
               child: box,
             ),
@@ -310,146 +310,17 @@ class _RecipeList extends StatelessWidget {
       children: [
         for (var i = 0; i < entries.length; i++) ...[
           if (i != 0) const SizedBox(height: AppSizes.xs),
-          _RecipeRow(
-            entry: entries[i],
+          RecipePlanRow(
             recipe: recipes[entries[i].recipeId],
-            flaggedAllergenKeys: flaggedAllergenKeys,
             onTap: () => onRecipeTap(entries[i].recipeId),
+            flaggedAllergenNames:
+                (recipes[entries[i].recipeId]?.allergenTags ?? const <String>[])
+                    .where(flaggedAllergenKeys.contains)
+                    .map(AllergenEmoji.displayName)
+                    .toList(),
           ),
         ],
       ],
-    );
-  }
-}
-
-class _RecipeRow extends StatelessWidget {
-  const _RecipeRow({
-    required this.entry,
-    required this.recipe,
-    required this.flaggedAllergenKeys,
-    required this.onTap,
-  });
-
-  final MealPlanEntry entry;
-  final Recipe? recipe;
-  final Set<String> flaggedAllergenKeys;
-  final VoidCallback onTap;
-
-  static const _maxNutritionTags = 2;
-
-  @override
-  Widget build(BuildContext context) {
-    final title = recipe?.title ?? '…';
-    final ageRange = recipe?.ageRange;
-    final nutrition = (recipe?.nutritionTags ?? const <String>[])
-        .take(_maxNutritionTags)
-        .toList();
-
-    // Preserve the flagged-allergen safety cue in the semantics label even
-    // though the visible chips now surface nutrition + age.
-    final flaggedNames = (recipe?.allergenTags ?? const <String>[])
-        .where(flaggedAllergenKeys.contains)
-        .map(AllergenEmoji.displayName)
-        .toList();
-    final semanticsLabel = flaggedNames.isEmpty
-        ? title
-        : '$title, flagged: ${flaggedNames.join(', ')}';
-
-    return Semantics(
-      button: true,
-      label: semanticsLabel,
-      excludeSemantics: true,
-      onTap: onTap,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSizes.sp12,
-            vertical: AppSizes.sm,
-          ),
-          decoration: BoxDecoration(
-            color: AppColors.butterSoft,
-            borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          ),
-          child: Row(
-            children: [
-              _Thumbnail(url: recipe?.thumbnailUrl),
-              const SizedBox(width: AppSizes.sp12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      title,
-                      style: AppTypography.textTheme.labelMedium,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (ageRange != null || nutrition.isNotEmpty) ...[
-                      const SizedBox(height: AppSizes.xs),
-                      Wrap(
-                        spacing: AppSizes.xs,
-                        runSpacing: AppSizes.xs,
-                        children: [
-                          for (final tag in nutrition)
-                            AppChip(label: tag),
-                          if (ageRange != null)
-                            AppChip(label: ageRange, tone: AppChipTone.mute),
-                        ],
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Thumbnail extends StatelessWidget {
-  const _Thumbnail({this.url});
-
-  final String? url;
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-      child: url != null
-          ? Image.network(
-              url!,
-              width: AppSizes.avatarSm,
-              height: AppSizes.avatarSm,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => const _ThumbnailPlaceholder(),
-            )
-          : const _ThumbnailPlaceholder(),
-    );
-  }
-}
-
-class _ThumbnailPlaceholder extends StatelessWidget {
-  const _ThumbnailPlaceholder();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: AppSizes.avatarSm,
-      height: AppSizes.avatarSm,
-      decoration: BoxDecoration(
-        color: AppColors.surfaceVariant,
-        borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-      ),
-      child: const Icon(
-        Icons.restaurant,
-        size: AppSizes.iconSm,
-        color: AppColors.fgFaint,
-      ),
     );
   }
 }

@@ -6,6 +6,7 @@ import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
+import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
 import 'package:nibbles/src/features/allergen/detail/allergen_detail_controller.dart';
 import 'package:nibbles/src/features/allergen/detail/allergen_detail_state.dart';
 import 'package:nibbles/src/features/allergen/detail/widgets/detail_contextual_banner.dart';
@@ -13,6 +14,7 @@ import 'package:nibbles/src/features/allergen/detail/widgets/detail_header_card.
 import 'package:nibbles/src/features/allergen/detail/widgets/log_entry_card.dart';
 import 'package:nibbles/src/features/allergen/detail/widgets/reaction_log_header.dart';
 import 'package:nibbles/src/features/allergen/log/reaction_log_sheet.dart';
+import 'package:nibbles/src/features/home/widgets/start_allergen_button.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
 
 class AllergenDetailScreen extends ConsumerWidget {
@@ -74,7 +76,15 @@ class _AllergenDetailView extends ConsumerWidget {
   final AllergenDetailState state;
   final String allergenKey;
 
-  int get _cleanLogCount => state.logs.where((l) => !l.hadReaction).length;
+  /// Per-exposure reaction flags, oldest-first — feeds the header count + bar.
+  List<bool> get _reactionFlags {
+    final sorted = [...state.logs]
+      ..sort((a, b) {
+        final byDate = a.logDate.compareTo(b.logDate);
+        return byDate != 0 ? byDate : a.createdAt.compareTo(b.createdAt);
+      });
+    return sorted.map((l) => l.hadReaction).toList(growable: false);
+  }
 
   Future<void> _onAddPressed(BuildContext context, WidgetRef ref) async {
     final saved = await showReactionLogSheet(
@@ -89,6 +99,9 @@ class _AllergenDetailView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final hasLogs = state.logs.isNotEmpty;
+    final finished =
+        state.status == AllergenStatus.safe ||
+        state.status == AllergenStatus.flagged;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -97,7 +110,7 @@ class _AllergenDetailView extends ConsumerWidget {
           AllergenDetailHeader(
             name: state.allergen.name,
             status: state.status,
-            cleanLogCount: _cleanLogCount,
+            reactionFlags: _reactionFlags,
             firstIntroduced: state.firstIntroduced,
             lastGiven: state.lastGiven,
             onBack: () => context.pop(),
@@ -115,6 +128,7 @@ class _AllergenDetailView extends ConsumerWidget {
                   ),
                   children: [
                     ReactionLogHeader(
+                      enabled: !finished,
                       onAddPressed: () => _onAddPressed(context, ref),
                     ),
                     const SizedBox(height: AppSizes.sm),
@@ -140,6 +154,15 @@ class _AllergenDetailView extends ConsumerWidget {
                       status: state.status,
                       allergenName: state.allergen.name,
                     ),
+                    if (finished) ...[
+                      const SizedBox(height: AppSizes.lg),
+                      StartAllergenButton(
+                        onPressed: () => context.pushNamed(
+                          AppRoute.allergenTracker.name,
+                          queryParameters: const {'tab': 'big11'},
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ],

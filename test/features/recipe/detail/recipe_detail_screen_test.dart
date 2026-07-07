@@ -8,8 +8,11 @@
 //     (no per-allergen chips in this redesign)
 //   * the storage / freezer / tip cards are HIDDEN when every state getter is
 //     null, and render when overridden non-null via a `_FakeDetailState`
-//   * the floating CTA tap opens the multi-day Add-to-Meal-Plan sheet
-//   * the success toast is reachable and shows verbatim Figma copy
+//   * the Add to Meal Plan CTA tap opens the multi-day Add-to-Meal-Plan sheet
+//
+// The post-save success/error toast is covered by the shared AppToast
+// widget tests (test/common/components/feedback/app_toast_test.dart), not
+// here — this screen just calls AppToast.success/.error.
 //
 // Firebase platform-interface packages are transitive deps; the public barrels
 // don't re-export FirebaseAnalyticsPlatform/setupFirebaseCoreMocks. Test-only.
@@ -25,10 +28,11 @@ import 'package:nibbles/src/common/domain/entities/ingredient.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
 import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
+import 'package:nibbles/src/features/meal_plan/meal_plan_controller.dart';
+import 'package:nibbles/src/features/meal_plan/meal_plan_state.dart';
 import 'package:nibbles/src/features/recipe/detail/recipe_detail_controller.dart';
 import 'package:nibbles/src/features/recipe/detail/recipe_detail_screen.dart';
 import 'package:nibbles/src/features/recipe/detail/recipe_detail_state.dart';
-import 'package:nibbles/src/features/recipe/detail/widgets/add_to_meal_plan_cta.dart';
 import 'package:nibbles/src/features/recipe/detail/widgets/contains_allergens_card.dart';
 import 'package:nibbles/src/features/recipe/detail/widgets/recipe_banner_card.dart';
 import 'package:nibbles/src/features/recipe/detail/widgets/recipe_hero_banner.dart';
@@ -92,7 +96,6 @@ class _FakeDetailState implements RecipeDetailState {
     required this.recipe,
     required this.currentAllergenKey,
     this.allergenStatuses = const {},
-    this.isAddingToMealPlan = false,
     this.isAddingToShoppingList = false,
     this.storage,
     this.freezer,
@@ -109,9 +112,6 @@ class _FakeDetailState implements RecipeDetailState {
 
   @override
   final Map<String, AllergenStatus> allergenStatuses;
-
-  @override
-  final bool isAddingToMealPlan;
 
   @override
   final bool isAddingToShoppingList;
@@ -152,6 +152,19 @@ class _FakeRecipeDetailController extends RecipeDetailController {
       _state;
 }
 
+/// Fake with no active plan — the Add-to-Meal-Plan sheet's Step 1
+/// ("Select Period Date") is what the CTA tap flow asserts against below.
+final _emptyMealPlanState = MealPlanState(
+  windowStart: DateTime(2026),
+  windowEnd: DateTime(2026),
+  entries: const [],
+);
+
+class _FakeMealPlanController extends MealPlanController {
+  @override
+  Future<MealPlanState> build(String babyId) async => _emptyMealPlanState;
+}
+
 Widget _buildSut({required RecipeDetailState state, required String recipeId}) {
   return ProviderScope(
     overrides: [
@@ -160,6 +173,9 @@ Widget _buildSut({required RecipeDetailState state, required String recipeId}) {
         _babyId,
         recipeId,
       ).overrideWith(() => _FakeRecipeDetailController(state)),
+      mealPlanControllerProvider(
+        _babyId,
+      ).overrideWith(_FakeMealPlanController.new),
     ],
     child: MaterialApp(home: RecipeDetailScreen(recipeId: recipeId)),
   );
@@ -211,8 +227,9 @@ void main() {
       // Ingredients + Method section headers.
       expect(find.text('Ingredients'), findsOneWidget);
       expect(find.text('Method'), findsOneWidget);
-      // Floating CTA at bottom.
+      // CTA row below the content list.
       expect(find.text('Add to Meal Plan'), findsOneWidget);
+      expect(find.text('Add to Shopping List'), findsOneWidget);
     });
 
     testWidgets(
@@ -331,8 +348,31 @@ void main() {
     });
   });
 
-  group('RecipeDetailScreen — floating CTA flow', () {
-    testWidgets('tap on Add to Meal Plan CTA opens the multi-day sheet', (
+  group('RecipeDetailScreen — CTA row flow', () {
+    testWidgets(
+      'tap on Add to Meal Plan CTA opens the plan-aware sheet, defaulting '
+      "to Select Period Date when there's no active plan",
+      (tester) async {
+        const state = RecipeDetailState(
+          recipe: _recipe,
+          currentAllergenKey: 'peanut',
+        );
+
+        await _pump(tester, state: state);
+
+        await tester.tap(find.text('Add to Meal Plan'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 350));
+
+        // Fake mealPlanControllerProvider has no active plan → the sheet
+        // opens on Step 1 ("Select Period Date", Figma 971:8053).
+        expect(find.text('Select Period Date'), findsOneWidget);
+      },
+    );
+  });
+
+  group('RecipeDetailScreen — overflow menu', () {
+    testWidgets('shows Add to Meal Plan and Add to Shopping List options', (
       tester,
     ) async {
       const state = RecipeDetailState(
@@ -342,47 +382,52 @@ void main() {
 
       await _pump(tester, state: state);
 
-      await tester.tap(find.text('Add to Meal Plan'));
+      await tester.tap(find.byIcon(Icons.more_horiz));
+      await tester.pumpAndSettle();
+
+      expect(find.widgetWithText(ListTile, 'Add to Meal Plan'), findsOneWidget);
+      expect(
+        find.widgetWithText(ListTile, 'Add to Shopping List'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('tapping Add to Meal Plan opens the plan-aware sheet', (
+      tester,
+    ) async {
+      const state = RecipeDetailState(
+        recipe: _recipe,
+        currentAllergenKey: 'peanut',
+      );
+
+      await _pump(tester, state: state);
+
+      await tester.tap(find.byIcon(Icons.more_horiz));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(ListTile, 'Add to Meal Plan'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 350));
 
-      // The multi-day sheet renders a verbatim 'Meal Plan' title and the
-      // initial 'X selected' counter (Figma 971:9346) — both unique to that
-      // sheet.
-      expect(find.text('Meal Plan'), findsOneWidget);
-      expect(find.text('0 selected'), findsOneWidget);
+      expect(find.text('Select Period Date'), findsOneWidget);
     });
-  });
 
-  group('RecipeDetailScreen — success-toast state (Figma node 1474:53362)', () {
-    testWidgets(
-      'AddToMealPlanSuccessBanner renders verbatim Figma copy when shown',
-      (tester) async {
-        // The banner widget is invoked unconditionally — the screen-level
-        // toggle is driven by a private timer that only fires after the
-        // controller's `assignToMealPlan` returns success. Cover the widget
-        // directly to assert verbatim copy.
-        await tester.pumpWidget(
-          const MaterialApp(
-            home: Scaffold(
-              body: AddToMealPlanSuccessBanner(
-                message: 'Succesfully added to meal plan',
-              ),
-            ),
-          ),
-        );
+    testWidgets('tapping Add to Shopping List opens the shoplist sheet', (
+      tester,
+    ) async {
+      const state = RecipeDetailState(
+        recipe: _recipe,
+        currentAllergenKey: 'peanut',
+      );
 
-        expect(find.byType(AddToMealPlanSuccessBanner), findsOneWidget);
-        // Verbatim "Succesfully" — sic, matches Figma. Flagged in the PR for
-        // a copy review with the PO.
-        expect(find.text('Succesfully added to meal plan'), findsOneWidget);
-      },
-    );
+      await _pump(tester, state: state);
 
-    test('toast duration default is 3 seconds', () {
-      // Exposed as a @visibleForTesting top-level constant so the auto-dismiss
-      // duration is locked in tests.
-      expect(kAddedToMealPlanToastDuration, const Duration(seconds: 3));
+      await tester.tap(find.byIcon(Icons.more_horiz));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(ListTile, 'Add to Shopping List'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+
+      expect(find.text('Add to Shoplist'), findsOneWidget);
     });
   });
 

@@ -24,6 +24,7 @@ export 'controls/app_switch.dart';
 export 'controls/calendar_date_picker_sheet.dart';
 export 'controls/radio_pill.dart';
 export 'feedback/animated_ellipsis_text.dart';
+export 'feedback/app_toast.dart';
 export 'feedback/empty_state.dart';
 export 'feedback/loading_confirmation.dart';
 export 'inputs/app_search_field.dart';
