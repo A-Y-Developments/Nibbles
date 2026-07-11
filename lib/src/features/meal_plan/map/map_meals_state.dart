@@ -68,10 +68,27 @@ class MapMealsState with _$MapMealsState {
     ];
   }
 
+  /// Number of meals assigned to an arbitrary [day].
+  int assignedCountForDay(DateTime day) =>
+      assignments[_dateOnly(day)]?.length ?? 0;
+
   /// Number of meals assigned to [selectedDay] — the "k" in "Meals for
   /// {Weekday} (k/N)".
-  int assignedCountForSelectedDay() =>
-      assignments[_dateOnly(selectedDay)]?.length ?? 0;
+  int assignedCountForSelectedDay() => assignedCountForDay(selectedDay);
+
+  /// First day AFTER [selectedDay] (within the window) whose slots are not yet
+  /// full — drives auto-advance when the current day fills up. Returns null if
+  /// every later day is already full or [mealsPerDay] is non-positive.
+  DateTime? nextIncompleteDay(int mealsPerDay) {
+    if (mealsPerDay <= 0) return null;
+    final end = _dateOnly(endDate);
+    var day = _dateOnly(selectedDay).add(const Duration(days: 1));
+    while (!day.isAfter(end)) {
+      if (assignedCountForDay(day) < mealsPerDay) return day;
+      day = day.add(const Duration(days: 1));
+    }
+    return null;
+  }
 
   /// Days whose assigned count meets or exceeds the per-day target — drives
   /// the day-chip ✓ / "full" variant (frame 971:8441). A [mealsPerDay] of 0

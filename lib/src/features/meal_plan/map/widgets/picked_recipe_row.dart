@@ -1,12 +1,8 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:nibbles/gen/assets.gen.dart';
-import 'package:nibbles/src/app/constants/allergen_emoji.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
-import 'package:nibbles/src/app/themes/app_typography.dart';
-import 'package:nibbles/src/common/components/chips/app_chip.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
+import 'package:nibbles/src/features/meal_plan/map/widgets/meal_recipe_card.dart';
 
 /// A single reusable picked-recipe row for the Map Meals Plan screen (NIB-95).
 ///
@@ -22,7 +18,14 @@ class PickedRecipeRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final card = _RowCard(recipe: recipe);
+    final card = MealRecipeCard(
+      recipe: recipe,
+      trailing: const Icon(
+        Icons.drag_indicator,
+        color: AppColors.fgFaint,
+        size: AppSizes.iconMd,
+      ),
+    );
     return Semantics(
       button: true,
       label: '${recipe.title}. Drag or tap to add to the selected day',
@@ -57,134 +60,17 @@ class _DragFeedback extends StatelessWidget {
         color: Colors.transparent,
         child: SizedBox(
           width: 240,
-          child: _RowCard(recipe: recipe, elevated: true),
-        ),
-      ),
-    );
-  }
-}
-
-class _RowCard extends StatelessWidget {
-  const _RowCard({required this.recipe, this.elevated = false});
-
-  final Recipe recipe;
-  final bool elevated;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSizes.sp12),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-        border: Border.all(color: AppColors.borderSoft),
-        boxShadow: elevated
-            ? const [
-                BoxShadow(
-                  color: Color(0x33000000),
-                  blurRadius: 16,
-                  offset: Offset(0, 8),
-                ),
-              ]
-            : null,
-      ),
-      child: Row(
-        children: [
-          _Thumbnail(url: recipe.thumbnailUrl),
-          const SizedBox(width: AppSizes.sp12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  recipe.title,
-                  style: AppTypography.bodyBold,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                if (recipe.allergenTags.isNotEmpty) ...[
-                  const SizedBox(height: AppSizes.xs),
-                  _TagsRow(tags: recipe.allergenTags),
-                ],
-              ],
+          child: MealRecipeCard(
+            recipe: recipe,
+            elevated: true,
+            trailing: const Icon(
+              Icons.drag_indicator,
+              color: AppColors.fgFaint,
+              size: AppSizes.iconMd,
             ),
           ),
-          const SizedBox(width: AppSizes.sm),
-          const Icon(
-            Icons.drag_indicator,
-            color: AppColors.fgFaint,
-            size: AppSizes.iconMd,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Thumbnail extends StatelessWidget {
-  const _Thumbnail({required this.url});
-
-  final String? url;
-
-  Widget _placeholder() => Assets.images.recipe.mockRecipe.image(
-    width: AppSizes.iconXl,
-    height: AppSizes.iconXl,
-    fit: BoxFit.cover,
-  );
-
-  @override
-  Widget build(BuildContext context) {
-    Widget child;
-    if (url == null || url!.isEmpty) {
-      child = _placeholder();
-    } else if (url!.startsWith('assets/')) {
-      child = Image.asset(
-        url!,
-        width: AppSizes.iconXl,
-        height: AppSizes.iconXl,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _placeholder(),
-      );
-    } else {
-      child = CachedNetworkImage(
-        imageUrl: url!,
-        width: AppSizes.iconXl,
-        height: AppSizes.iconXl,
-        fit: BoxFit.cover,
-        placeholder: (_, __) => _placeholder(),
-        errorWidget: (_, __, ___) => _placeholder(),
-      );
-    }
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-      child: child,
-    );
-  }
-}
-
-class _TagsRow extends StatelessWidget {
-  const _TagsRow({required this.tags});
-
-  final List<String> tags;
-
-  @override
-  Widget build(BuildContext context) {
-    final first = tags.first;
-    final overflow = tags.length - 1;
-    return Row(
-      children: [
-        Flexible(
-          child: AppChip(
-            label: AllergenEmoji.displayName(first),
-            emoji: AllergenEmoji.get(first),
-          ),
         ),
-        if (overflow > 0) ...[
-          const SizedBox(width: AppSizes.xs),
-          AppChip(label: '$overflow', icon: const Icon(Icons.add, size: 12)),
-        ],
-      ],
+      ),
     );
   }
 }

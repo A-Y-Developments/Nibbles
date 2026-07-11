@@ -156,14 +156,14 @@ void main() {
       final args = makeArgs();
       final notifier = container.read(mapMealsControllerProvider(args).notifier)
         ..selectDay(DateTime(2026, 5, 31))
-        ..assignToSelectedDay('r-A');
+        ..assignToSelectedDay('r-A', 99);
 
       var state = container.read(mapMealsControllerProvider(args));
       expect(state.assignments[DateTime(2026, 5, 31)], ['r-A']);
 
       notifier
         ..selectDay(DateTime(2026, 6, 3))
-        ..assignToSelectedDay('r-A');
+        ..assignToSelectedDay('r-A', 99);
 
       state = container.read(mapMealsControllerProvider(args));
       expect(
@@ -184,11 +184,68 @@ void main() {
       final args = makeArgs();
       container.read(mapMealsControllerProvider(args).notifier)
         ..selectDay(DateTime(2026, 5, 31))
-        ..assignToSelectedDay('r-A')
-        ..assignToSelectedDay('r-A');
+        ..assignToSelectedDay('r-A', 3)
+        ..assignToSelectedDay('r-A', 3);
 
       final state = container.read(mapMealsControllerProvider(args));
       expect(state.assignments[DateTime(2026, 5, 31)], ['r-A', 'r-A']);
+    });
+  });
+
+  group('MapMealsController auto-advance', () {
+    test(
+      'filling the selected day advances to the next day (mealsPerDay=1)',
+      () {
+        final container = buildContainer();
+        final args = makeArgs(start: DateTime(2026, 5, 30));
+        container
+            .read(mapMealsControllerProvider(args).notifier)
+            .assignToSelectedDay('r-A', 1);
+
+        final state = container.read(mapMealsControllerProvider(args));
+        expect(state.selectedDay, DateTime(2026, 5, 31));
+        expect(state.assignments[DateTime(2026, 5, 30)], ['r-A']);
+      },
+    );
+
+    test('advance skips days that are already full', () {
+      final container = buildContainer();
+      final args = makeArgs(start: DateTime(2026, 5, 30));
+      container.read(mapMealsControllerProvider(args).notifier)
+        // Fill 5/31 first so it must be skipped.
+        ..selectDay(DateTime(2026, 5, 31))
+        ..assignToSelectedDay('r-B', 1)
+        // Back to 5/30 and fill it → should skip full 5/31 → land on 6/1.
+        ..selectDay(DateTime(2026, 5, 30))
+        ..assignToSelectedDay('r-A', 1);
+
+      final state = container.read(mapMealsControllerProvider(args));
+      expect(state.selectedDay, DateTime(2026, 6));
+    });
+
+    test('mealsPerDay=2 advances only once the day is truly full', () {
+      final container = buildContainer();
+      final args = makeArgs(start: DateTime(2026, 5, 30));
+      final notifier = container.read(mapMealsControllerProvider(args).notifier)
+        ..assignToSelectedDay('r-A', 2);
+
+      var state = container.read(mapMealsControllerProvider(args));
+      expect(state.selectedDay, DateTime(2026, 5, 30), reason: '1/2 → stay');
+
+      notifier.assignToSelectedDay('r-B', 2);
+      state = container.read(mapMealsControllerProvider(args));
+      expect(state.selectedDay, DateTime(2026, 5, 31), reason: '2/2 → advance');
+    });
+
+    test('no advance when the selected day is the last one in the window', () {
+      final container = buildContainer();
+      final args = makeArgs(start: DateTime(2026, 5, 30));
+      container.read(mapMealsControllerProvider(args).notifier)
+        ..selectDay(DateTime(2026, 6, 5))
+        ..assignToSelectedDay('r-A', 1);
+
+      final state = container.read(mapMealsControllerProvider(args));
+      expect(state.selectedDay, DateTime(2026, 6, 5));
     });
   });
 
@@ -199,8 +256,8 @@ void main() {
       final args = makeArgs();
       final notifier = container.read(mapMealsControllerProvider(args).notifier)
         ..selectDay(DateTime(2026, 5, 31))
-        ..assignToSelectedDay('r-A')
-        ..assignToSelectedDay('r-B')
+        ..assignToSelectedDay('r-A', 99)
+        ..assignToSelectedDay('r-B', 99)
         ..unassignFromSelectedDayAt(0);
 
       var state = container.read(mapMealsControllerProvider(args));
@@ -223,56 +280,59 @@ void main() {
   }
 
   group('MapMealsController.commit', () {
-    test('success: creates the plan, then appends assignments →'
-        ' RecipeAssignment(dayOffset) carrying mealPlanId, and returns true',
-        () async {
-      final args = makeArgs();
-      stubCreatePlanSuccess();
-      when(
-        () => mockMealPlanService.appendMealsToRange(
-          babyId: any(named: 'babyId'),
-          startDate: any(named: 'startDate'),
-          endDate: any(named: 'endDate'),
-          mealPlanId: any(named: 'mealPlanId'),
-          assignments: any(named: 'assignments'),
-        ),
-      ).thenAnswer((_) async => const Result.success([]));
+    test(
+      'success: creates the plan, then appends assignments →'
+      ' RecipeAssignment(dayOffset) carrying mealPlanId, and returns true',
+      () async {
+        final args = makeArgs();
+        stubCreatePlanSuccess();
+        when(
+          () => mockMealPlanService.appendMealsToRange(
+            babyId: any(named: 'babyId'),
+            startDate: any(named: 'startDate'),
+            endDate: any(named: 'endDate'),
+            mealPlanId: any(named: 'mealPlanId'),
+            assignments: any(named: 'assignments'),
+          ),
+        ).thenAnswer((_) async => const Result.success([]));
 
-      final container = buildContainer();
-      final notifier = container.read(mapMealsControllerProvider(args).notifier)
-        // r-A → start (offset 0)
-        ..assignToSelectedDay('r-A')
-        // r-B → start + 3 days (offset 3)
-        ..selectDay(DateTime(2026, 6, 2))
-        ..assignToSelectedDay('r-B');
+        final container = buildContainer();
+        final notifier =
+            container.read(mapMealsControllerProvider(args).notifier)
+              // r-A → start (offset 0)
+              ..assignToSelectedDay('r-A', 99)
+              // r-B → start + 3 days (offset 3)
+              ..selectDay(DateTime(2026, 6, 2))
+              ..assignToSelectedDay('r-B', 99);
 
-      final ok = await notifier.commit();
+        final ok = await notifier.commit();
 
-      expect(ok, isTrue);
-      verify(
-        () => mockMealPlanService.createPlan(
-          _babyId,
-          DateTime(2026, 5, 30),
-          DateTime(2026, 6, 5),
-        ),
-      ).called(1);
-      final captured =
-          verify(
-                () => mockMealPlanService.appendMealsToRange(
-                  babyId: _babyId,
-                  startDate: DateTime(2026, 5, 30),
-                  endDate: DateTime(2026, 6, 5),
-                  mealPlanId: 'plan-001',
-                  assignments: captureAny(named: 'assignments'),
-                ),
-              ).captured.single
-              as List<RecipeAssignment>;
-      expect(captured, hasLength(2));
-      final byId = {for (final a in captured) a.recipeId: a.dayOffset};
-      expect(byId['r-A'], 0);
-      expect(byId['r-B'], 3);
-      expect(recorderCalls, isEmpty);
-    });
+        expect(ok, isTrue);
+        verify(
+          () => mockMealPlanService.createPlan(
+            _babyId,
+            DateTime(2026, 5, 30),
+            DateTime(2026, 6, 5),
+          ),
+        ).called(1);
+        final captured =
+            verify(
+                  () => mockMealPlanService.appendMealsToRange(
+                    babyId: _babyId,
+                    startDate: DateTime(2026, 5, 30),
+                    endDate: DateTime(2026, 6, 5),
+                    mealPlanId: 'plan-001',
+                    assignments: captureAny(named: 'assignments'),
+                  ),
+                ).captured.single
+                as List<RecipeAssignment>;
+        expect(captured, hasLength(2));
+        final byId = {for (final a in captured) a.recipeId: a.dayOffset};
+        expect(byId['r-A'], 0);
+        expect(byId['r-B'], 3);
+        expect(recorderCalls, isEmpty);
+      },
+    );
 
     test('failure: sets errorMessage, returns false, records non-fatal via '
         'injected MealPrepCrashRecorderFn', () async {
@@ -290,7 +350,7 @@ void main() {
 
       final container = buildContainer();
       final notifier = container.read(mapMealsControllerProvider(args).notifier)
-        ..assignToSelectedDay('r-A');
+        ..assignToSelectedDay('r-A', 99);
 
       final ok = await notifier.commit();
 
@@ -307,35 +367,40 @@ void main() {
       );
     });
 
-    test('createPlan failure short-circuits before append, records non-fatal',
-        () async {
-      final args = makeArgs();
-      when(
-        () => mockMealPlanService.createPlan(any(), any(), any()),
-      ).thenAnswer((_) async => const Result.failure(ServerException('nope')));
+    test(
+      'createPlan failure short-circuits before append, records non-fatal',
+      () async {
+        final args = makeArgs();
+        when(
+          () => mockMealPlanService.createPlan(any(), any(), any()),
+        ).thenAnswer(
+          (_) async => const Result.failure(ServerException('nope')),
+        );
 
-      final container = buildContainer();
-      final notifier = container.read(mapMealsControllerProvider(args).notifier)
-        ..assignToSelectedDay('r-A');
+        final container = buildContainer();
+        final notifier = container.read(
+          mapMealsControllerProvider(args).notifier,
+        )..assignToSelectedDay('r-A', 99);
 
-      final ok = await notifier.commit();
+        final ok = await notifier.commit();
 
-      expect(ok, isFalse);
-      expect(
-        container.read(mapMealsControllerProvider(args)).errorMessage,
-        'nope',
-      );
-      verifyNever(
-        () => mockMealPlanService.appendMealsToRange(
-          babyId: any(named: 'babyId'),
-          startDate: any(named: 'startDate'),
-          endDate: any(named: 'endDate'),
-          mealPlanId: any(named: 'mealPlanId'),
-          assignments: any(named: 'assignments'),
-        ),
-      );
-      expect(recorderCalls, hasLength(1));
-    });
+        expect(ok, isFalse);
+        expect(
+          container.read(mapMealsControllerProvider(args)).errorMessage,
+          'nope',
+        );
+        verifyNever(
+          () => mockMealPlanService.appendMealsToRange(
+            babyId: any(named: 'babyId'),
+            startDate: any(named: 'startDate'),
+            endDate: any(named: 'endDate'),
+            mealPlanId: any(named: 'mealPlanId'),
+            assignments: any(named: 'assignments'),
+          ),
+        );
+        expect(recorderCalls, hasLength(1));
+      },
+    );
 
     test('empty assignments still creates the plan and returns true '
         '(partial/empty mapping allowed)', () async {
@@ -359,8 +424,9 @@ void main() {
       final ok = await notifier.commit();
 
       expect(ok, isTrue);
-      verify(() => mockMealPlanService.createPlan(any(), any(), any()))
-          .called(1);
+      verify(
+        () => mockMealPlanService.createPlan(any(), any(), any()),
+      ).called(1);
       final captured =
           verify(
                 () => mockMealPlanService.appendMealsToRange(

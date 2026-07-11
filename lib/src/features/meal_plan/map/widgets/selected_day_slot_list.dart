@@ -1,12 +1,9 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:nibbles/gen/assets.gen.dart';
-import 'package:nibbles/src/app/constants/allergen_emoji.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
-import 'package:nibbles/src/common/components/chips/app_chip.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
+import 'package:nibbles/src/features/meal_plan/map/widgets/meal_recipe_card.dart';
 
 /// Verbatim helper line under "Meals for {Day} (X/Y)" — see Figma frames
 /// 971:8375 (inside the empty placeholder) and 971:8476 (above the
@@ -77,140 +74,25 @@ class _PopulatedDayContainer extends StatelessWidget {
           children: [
             for (var i = 0; i < recipes.length; i++) ...[
               if (i != 0) const SizedBox(height: AppSizes.sm),
-              _AssignedRecipeCard(
+              MealRecipeCard(
                 recipe: recipes[i],
-                onRemove: () => onRemoveAt(i),
+                titleMaxLines: 2,
+                trailing: IconButton(
+                  onPressed: () => onRemoveAt(i),
+                  tooltip: 'Remove ${recipes[i].title} from day',
+                  icon: const Icon(
+                    Icons.close,
+                    color: AppColors.fgMuted,
+                    size: 18,
+                  ),
+                  visualDensity: VisualDensity.compact,
+                  splashRadius: AppSizes.iconMd,
+                ),
               ),
             ],
           ],
         ),
       ),
-    );
-  }
-}
-
-/// Recipe card displayed inside a filled day slot.
-///
-/// Mirrors the Figma frame 971:8476 layout — thumbnail, two-line title,
-/// allergen tag chips, and a trailing `close` icon that unassigns this
-/// instance.
-class _AssignedRecipeCard extends StatelessWidget {
-  const _AssignedRecipeCard({required this.recipe, required this.onRemove});
-
-  final Recipe recipe;
-  final VoidCallback onRemove;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSizes.sp12),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-      ),
-      child: Row(
-        children: [
-          _Thumbnail(url: recipe.thumbnailUrl),
-          const SizedBox(width: AppSizes.sp12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  recipe.title,
-                  style: AppTypography.bodyBold,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                if (recipe.allergenTags.isNotEmpty) ...[
-                  const SizedBox(height: AppSizes.xs),
-                  _TagsRow(tags: recipe.allergenTags),
-                ],
-              ],
-            ),
-          ),
-          const SizedBox(width: AppSizes.sm),
-          IconButton(
-            onPressed: onRemove,
-            tooltip: 'Remove ${recipe.title} from day',
-            icon: const Icon(
-              Icons.close,
-              color: AppColors.fgMuted,
-              size: AppSizes.iconMd,
-            ),
-            visualDensity: VisualDensity.compact,
-            splashRadius: AppSizes.iconMd,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Thumbnail extends StatelessWidget {
-  const _Thumbnail({required this.url});
-
-  final String? url;
-
-  Widget _placeholder() => Assets.images.recipe.mockRecipe.image(
-    width: AppSizes.iconXl,
-    height: AppSizes.iconXl,
-    fit: BoxFit.cover,
-  );
-
-  @override
-  Widget build(BuildContext context) {
-    Widget child;
-    if (url == null || url!.isEmpty) {
-      child = _placeholder();
-    } else if (url!.startsWith('assets/')) {
-      child = Image.asset(
-        url!,
-        width: AppSizes.iconXl,
-        height: AppSizes.iconXl,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _placeholder(),
-      );
-    } else {
-      child = CachedNetworkImage(
-        imageUrl: url!,
-        width: AppSizes.iconXl,
-        height: AppSizes.iconXl,
-        fit: BoxFit.cover,
-        placeholder: (_, __) => _placeholder(),
-        errorWidget: (_, __, ___) => _placeholder(),
-      );
-    }
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-      child: child,
-    );
-  }
-}
-
-class _TagsRow extends StatelessWidget {
-  const _TagsRow({required this.tags});
-
-  final List<String> tags;
-
-  @override
-  Widget build(BuildContext context) {
-    final first = tags.first;
-    final overflow = tags.length - 1;
-    return Row(
-      children: [
-        Flexible(
-          child: AppChip(
-            label: AllergenEmoji.displayName(first),
-            emoji: AllergenEmoji.get(first),
-          ),
-        ),
-        if (overflow > 0) ...[
-          const SizedBox(width: AppSizes.xs),
-          AppChip(label: '$overflow', icon: const Icon(Icons.add, size: 12)),
-        ],
-      ],
     );
   }
 }

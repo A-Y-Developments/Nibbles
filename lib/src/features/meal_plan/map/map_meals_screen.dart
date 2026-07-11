@@ -57,28 +57,17 @@ class MapMealsScreen extends ConsumerWidget {
         }
       },
       child: GradientScaffold(
-        appBar: const _MapMealsAppBar(),
+        appBar: _MapMealsAppBar(
+          subtitle:
+              '${state.filledCount} of ${state.totalSlots(mealsPerDay)} '
+              'slots filled',
+        ),
         body: SafeArea(
           top: false,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSizes.pagePaddingH,
-                  0,
-                  AppSizes.pagePaddingH,
-                  AppSizes.md,
-                ),
-                child: Text(
-                  '${state.filledCount} of ${state.totalSlots(mealsPerDay)} '
-                  'slots filled',
-                  style: AppTypography.caption.copyWith(
-                    color: AppColors.fgMuted,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
+              const SizedBox(height: AppSizes.sm),
               DayChipRow(
                 startDate: state.startDate,
                 endDate: state.endDate,
@@ -102,7 +91,7 @@ class MapMealsScreen extends ConsumerWidget {
                     _DayDropZone(
                       recipes: state.recipesForSelectedDay(),
                       onAccept: (recipe) =>
-                          notifier.assignToSelectedDay(recipe.id),
+                          notifier.assignToSelectedDay(recipe.id, mealsPerDay),
                       onRemoveAt: notifier.unassignFromSelectedDayAt,
                     ),
                     const SizedBox(height: AppSizes.lg),
@@ -114,6 +103,7 @@ class MapMealsScreen extends ConsumerWidget {
                         recipe: state.pickedRecipes[i],
                         onTap: () => notifier.assignToSelectedDay(
                           state.pickedRecipes[i].id,
+                          mealsPerDay,
                         ),
                       ),
                     ],
@@ -261,14 +251,17 @@ class _DayDropZone extends StatelessWidget {
 }
 
 class _MapMealsAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const _MapMealsAppBar();
+  const _MapMealsAppBar({required this.subtitle});
+
+  final String subtitle;
 
   @override
-  Size get preferredSize => const Size.fromHeight(AppSizes.appBarHeight);
+  Size get preferredSize => const Size.fromHeight(76);
 
   @override
   Widget build(BuildContext context) {
     return AppBar(
+      toolbarHeight: 76,
       backgroundColor: Colors.transparent,
       surfaceTintColor: Colors.transparent,
       elevation: 0,
@@ -278,7 +271,21 @@ class _MapMealsAppBar extends StatelessWidget implements PreferredSizeWidget {
         tooltip: 'Back',
         onPressed: () => Navigator.of(context).maybePop(),
       ),
-      title: Text('Map Meals Plan', style: AppTypography.textTheme.titleLarge),
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('Map Meals Plan', style: AppTypography.textTheme.titleLarge),
+          const SizedBox(height: 2),
+          Text(
+            subtitle,
+            style: AppTypography.textTheme.bodyMedium?.copyWith(
+              color: AppColors.fgMuted,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
       centerTitle: false,
     );
   }

@@ -114,7 +114,7 @@ class _DayChip extends StatelessWidget {
     final Color borderColor;
     if (isSelected) {
       bg = AppColors.greenDeep;
-      fg = AppColors.onGreen;
+      fg = AppColors.cardCream;
       borderColor = AppColors.greenDeep;
     } else if (isFull) {
       bg = AppColors.butterSoft;
@@ -149,15 +149,25 @@ class _DayChip extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (isFull && !isSelected)
+              if (isFull && !isSelected) ...[
                 Icon(Icons.check, color: fg, size: AppSizes.iconSm),
+                const SizedBox(height: 2),
+              ],
               Text(
                 abbrev,
-                style: AppTypography.caption.copyWith(
-                  color: fg,
-                  fontWeight: FontWeight.w600,
-                ),
+                style:
+                    (isSelected
+                            ? (AppTypography.textTheme.labelMedium ??
+                                  AppTypography.caption)
+                            : AppTypography.caption)
+                        .copyWith(
+                          color: fg,
+                          fontWeight: isSelected
+                              ? FontWeight.w700
+                              : FontWeight.w600,
+                        ),
               ),
+              const SizedBox(height: 2),
               Text(
                 '${day.day} $monthAbbrev',
                 style: AppTypography.caption.copyWith(

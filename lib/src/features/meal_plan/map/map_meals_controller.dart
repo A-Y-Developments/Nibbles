@@ -78,7 +78,11 @@ class MapMealsController extends _$MapMealsController {
   /// day's list). The picked palette is reusable, so the same recipe can be
   /// added to many days and to one day multiple times — this never removes
   /// anything from the palette.
-  void assignToSelectedDay(String recipeId) {
+  ///
+  /// Once the selected day's slots are all filled ([mealsPerDay] reached), the
+  /// active chip auto-advances to the next incomplete day (skipping any days
+  /// already full); if none remain it stays put.
+  void assignToSelectedDay(String recipeId, int mealsPerDay) {
     final day = _dateOnly(state.selectedDay);
     final next = <DateTime, List<String>>{
       for (final entry in state.assignments.entries)
@@ -86,6 +90,14 @@ class MapMealsController extends _$MapMealsController {
     };
     (next[day] ??= <String>[]).add(recipeId);
     state = state.copyWith(assignments: next, errorMessage: null);
+
+    if (state.assignedCountForSelectedDay() >= mealsPerDay) {
+      final nextDay = state.nextIncompleteDay(mealsPerDay);
+      if (nextDay != null) {
+        state = state.copyWith(selectedDay: nextDay);
+      }
+    }
+
     unawaited(
       ref
           .read(analyticsProvider)
