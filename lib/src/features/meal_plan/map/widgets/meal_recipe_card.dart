@@ -6,6 +6,7 @@ import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/chips/app_chip.dart';
+import 'package:nibbles/src/common/components/icons/allergen_icon.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
 
 /// Shared recipe card for the Map Meals Plan screen (NIB-95).
@@ -139,7 +140,7 @@ class AllergenTagsRow extends StatelessWidget {
         Flexible(
           child: AppChip(
             label: AllergenEmoji.displayName(first),
-            emoji: AllergenEmoji.get(first),
+            icon: AllergenIcon(allergenKey: first, size: 14),
           ),
         ),
         if (overflow > 0) ...[
