@@ -97,6 +97,7 @@ platform :ios do
 
   desc "Build prod and upload to TestFlight. Requires ASC API key env."
   lane :beta do
+    setup_ci
     api_key = asc_api_key
     signing_style = ENV["SIGNING"] == "manual" ? "manual" : "automatic"
 
