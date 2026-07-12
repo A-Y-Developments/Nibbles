@@ -48,6 +48,9 @@ jobs:
 
       - run: flutter pub get
 
+      - name: Install FlutterFire CLI (Crashlytics symbol-upload build phase)
+        run: dart pub global activate flutterfire_cli
+
       - name: Build + upload to TestFlight
         working-directory: ios
         run: bundle exec fastlane beta
