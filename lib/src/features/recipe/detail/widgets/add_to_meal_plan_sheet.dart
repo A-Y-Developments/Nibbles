@@ -5,10 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
-import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
-import 'package:nibbles/src/common/components/buttons/app_round_button.dart';
 import 'package:nibbles/src/common/components/cards/recipe_plan_row.dart';
-import 'package:nibbles/src/common/components/feedback/app_toast.dart';
+import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/common/domain/entities/meal_plan_entry.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
 import 'package:nibbles/src/common/services/meal_plan_service.dart';
@@ -185,7 +183,7 @@ class _AddToMealPlanSheetState extends ConsumerState<_AddToMealPlanSheet> {
         onClose: () => Navigator.of(context).pop(),
         child: const SizedBox(
           height: 200,
-          child: Center(child: CircularProgressIndicator()),
+          child: Center(child: BrandFlowerLoader.small()),
         ),
       ),
       error: (error, _) => _SheetShell(

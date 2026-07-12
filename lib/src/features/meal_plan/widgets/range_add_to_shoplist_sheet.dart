@@ -4,7 +4,7 @@ import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_gradients.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
-import 'package:nibbles/src/common/components/feedback/app_toast.dart';
+import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/services/meal_plan_service.dart';
 import 'package:nibbles/src/common/services/shopping_list_service.dart';
@@ -198,7 +198,7 @@ class _RangeAddToShoplistSheetState
 
   Widget _buildList(ScrollController controller) {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: BrandFlowerLoader.small());
     }
     if (_error != null) {
       return Center(

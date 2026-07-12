@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
+import 'package:nibbles/src/common/components/feedback/press_scale.dart';
 
 /// Horizontal day chip row for the Map Meals Plan screen (NIB-95).
 ///
@@ -11,7 +13,7 @@ import 'package:nibbles/src/app/themes/app_typography.dart';
 /// * Selected (current chip)        — forest fill / cream text
 /// * Full (slots for the day met)   — cream fill / forest text + ✓, lime outline
 /// * Not-selected                   — white fill / forest text
-class DayChipRow extends StatelessWidget {
+class DayChipRow extends StatefulWidget {
   const DayChipRow({
     required this.startDate,
     required this.endDate,
@@ -55,15 +57,68 @@ class DayChipRow extends StatelessWidget {
     12: 'Dec',
   };
 
+  static bool _isSameDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
+
+  @override
+  State<DayChipRow> createState() => _DayChipRowState();
+}
+
+class _DayChipRowState extends State<DayChipRow> {
+  final ScrollController _scrollController = ScrollController();
+
   List<DateTime> _days() {
-    final start = DateTime(startDate.year, startDate.month, startDate.day);
-    final end = DateTime(endDate.year, endDate.month, endDate.day);
+    final start = DateTime(
+      widget.startDate.year,
+      widget.startDate.month,
+      widget.startDate.day,
+    );
+    final end = DateTime(
+      widget.endDate.year,
+      widget.endDate.month,
+      widget.endDate.day,
+    );
     final count = end.difference(start).inDays + 1;
     return List<DateTime>.generate(count, (i) => start.add(Duration(days: i)));
   }
 
-  static bool _isSameDay(DateTime a, DateTime b) =>
-      a.year == b.year && a.month == b.month && a.day == b.day;
+  @override
+  void didUpdateWidget(covariant DayChipRow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!DayChipRow._isSameDay(oldWidget.selectedDay, widget.selectedDay)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToSelected());
+    }
+  }
+
+  void _scrollToSelected() {
+    if (!_scrollController.hasClients) return;
+    final days = _days();
+    final index = days.indexWhere(
+      (d) => DayChipRow._isSameDay(d, widget.selectedDay),
+    );
+    if (index < 0) return;
+
+    const step = AppSizes.dayChipW + AppSizes.sm;
+    final viewport = _scrollController.position.viewportDimension;
+    final target =
+        AppSizes.pagePaddingH +
+        index * step -
+        (viewport - AppSizes.dayChipW) / 2;
+    _scrollController.animateTo(
+      target.clamp(
+        _scrollController.position.minScrollExtent,
+        _scrollController.position.maxScrollExtent,
+      ),
+      duration: AppDurations.slide,
+      curve: AppCurves.emphasized,
+    );
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,19 +126,22 @@ class DayChipRow extends StatelessWidget {
     return SizedBox(
       height: AppSizes.dayChipH,
       child: ListView.separated(
+        controller: _scrollController,
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: AppSizes.pagePaddingH),
         itemCount: days.length,
         separatorBuilder: (_, __) => const SizedBox(width: AppSizes.sm),
         itemBuilder: (context, index) {
           final day = days[index];
-          final isSelected = _isSameDay(day, selectedDay);
-          final isFull = fullDays.any((d) => _isSameDay(d, day));
+          final isSelected = DayChipRow._isSameDay(day, widget.selectedDay);
+          final isFull = widget.fullDays.any(
+            (d) => DayChipRow._isSameDay(d, day),
+          );
           return _DayChip(
             day: day,
             isSelected: isSelected,
             isFull: isFull,
-            onTap: () => onSelect(day),
+            onTap: () => widget.onSelect(day),
           );
         },
       ),
@@ -126,15 +184,30 @@ class _DayChip extends StatelessWidget {
       borderColor = AppColors.borderSoft;
     }
 
+    final abbrevStyle =
+        (isSelected
+                ? (AppTypography.textTheme.labelMedium ?? AppTypography.caption)
+                : AppTypography.caption)
+            .copyWith(
+              color: fg,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+            );
+    final dateStyle = AppTypography.caption.copyWith(
+      color: fg,
+      fontWeight: FontWeight.w700,
+    );
+
     return Semantics(
       button: true,
       selected: isSelected,
       label: '$abbrev ${day.day} $monthAbbrev',
       excludeSemantics: true,
       onTap: onTap,
-      child: GestureDetector(
+      child: PressableScale(
         onTap: onTap,
-        child: Container(
+        child: AnimatedContainer(
+          duration: AppDurations.base,
+          curve: AppCurves.standard,
           width: AppSizes.dayChipW,
           decoration: BoxDecoration(
             color: bg,
@@ -149,31 +222,36 @@ class _DayChip extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (isFull && !isSelected) ...[
-                Icon(Icons.check, color: fg, size: AppSizes.iconSm),
-                const SizedBox(height: 2),
-              ],
-              Text(
-                abbrev,
-                style:
-                    (isSelected
-                            ? (AppTypography.textTheme.labelMedium ??
-                                  AppTypography.caption)
-                            : AppTypography.caption)
-                        .copyWith(
-                          color: fg,
-                          fontWeight: isSelected
-                              ? FontWeight.w700
-                              : FontWeight.w600,
-                        ),
+              AnimatedSwitcher(
+                duration: AppDurations.quick,
+                switchInCurve: AppCurves.emphasized,
+                transitionBuilder: (child, animation) => ScaleTransition(
+                  scale: animation,
+                  child: FadeTransition(opacity: animation, child: child),
+                ),
+                child: isFull && !isSelected
+                    ? Column(
+                        key: const ValueKey<bool>(true),
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.check, color: fg, size: AppSizes.iconSm),
+                          const SizedBox(height: 2),
+                        ],
+                      )
+                    : const SizedBox.shrink(key: ValueKey<bool>(false)),
+              ),
+              AnimatedDefaultTextStyle(
+                duration: AppDurations.base,
+                curve: AppCurves.standard,
+                style: abbrevStyle,
+                child: Text(abbrev),
               ),
               const SizedBox(height: 2),
-              Text(
-                '${day.day} $monthAbbrev',
-                style: AppTypography.caption.copyWith(
-                  color: fg,
-                  fontWeight: FontWeight.w700,
-                ),
+              AnimatedDefaultTextStyle(
+                duration: AppDurations.base,
+                curve: AppCurves.standard,
+                style: dateStyle,
+                child: Text('${day.day} $monthAbbrev'),
               ),
             ],
           ),

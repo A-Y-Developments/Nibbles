@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/common/domain/enums/gender.dart';
@@ -51,15 +52,33 @@ class OnboardingBabySetupScreen extends ConsumerWidget {
               horizontal: AppSizes.pagePaddingH,
               vertical: AppSizes.pagePaddingV,
             ),
-            child: switch (state.step) {
-              0 => _NameStep(state: state, controller: controller),
-              1 => _DobStep(state: state, controller: controller),
-              _ => _GenderStep(
-                state: state,
-                controller: controller,
-                onSuccess: () => context.goNamed(AppRoute.home.name),
+            child: AnimatedSwitcher(
+              duration: AppDurations.slide,
+              switchInCurve: AppCurves.emphasized,
+              switchOutCurve: AppCurves.standard,
+              transitionBuilder: (child, animation) => FadeTransition(
+                opacity: animation,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0.06, 0),
+                    end: Offset.zero,
+                  ).animate(animation),
+                  child: child,
+                ),
               ),
-            },
+              child: KeyedSubtree(
+                key: ValueKey<int>(state.step),
+                child: switch (state.step) {
+                  0 => _NameStep(state: state, controller: controller),
+                  1 => _DobStep(state: state, controller: controller),
+                  _ => _GenderStep(
+                    state: state,
+                    controller: controller,
+                    onSuccess: () => context.goNamed(AppRoute.home.name),
+                  ),
+                },
+              ),
+            ),
           ),
         ),
       ),
@@ -181,13 +200,22 @@ class _GenderStep extends StatelessWidget {
             ),
           ),
         ),
-        if (state.errorMessage != null) ...[
-          const SizedBox(height: AppSizes.sm),
-          Text(
-            state.errorMessage!,
-            style: textTheme.bodySmall?.copyWith(color: AppColors.error),
-          ),
-        ],
+        AnimatedSize(
+          duration: AppDurations.base,
+          curve: AppCurves.standard,
+          alignment: Alignment.topCenter,
+          child: state.errorMessage == null
+              ? const SizedBox(width: double.infinity)
+              : Padding(
+                  padding: const EdgeInsets.only(top: AppSizes.sm),
+                  child: Text(
+                    state.errorMessage!,
+                    style: textTheme.bodySmall?.copyWith(
+                      color: AppColors.error,
+                    ),
+                  ),
+                ),
+        ),
         const Spacer(),
         SizedBox(
           width: double.infinity,
@@ -199,16 +227,25 @@ class _GenderStep extends StatelessWidget {
                     final ok = await controller.submit();
                     if (ok && context.mounted) onSuccess();
                   },
-            child: state.isLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppColors.onPrimary,
+            child: AnimatedSwitcher(
+              duration: AppDurations.base,
+              switchInCurve: AppCurves.standard,
+              switchOutCurve: AppCurves.standard,
+              child: state.isLoading
+                  ? const SizedBox(
+                      key: ValueKey('baby_setup_submit_spinner'),
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.onPrimary,
+                      ),
+                    )
+                  : const Text(
+                      "Let's go!",
+                      key: ValueKey('baby_setup_submit_label'),
                     ),
-                  )
-                : const Text("Let's go!"),
+            ),
           ),
         ),
       ],

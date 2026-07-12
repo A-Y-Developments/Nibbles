@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
 
@@ -44,7 +45,9 @@ class DetailStatusPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = _styling();
-    return Container(
+    return AnimatedContainer(
+      duration: AppDurations.base,
+      curve: AppCurves.standard,
       height: AppSizes.chipHeightSm,
       padding: const EdgeInsets.symmetric(horizontal: AppSizes.sm + 2),
       decoration: BoxDecoration(
@@ -52,12 +55,16 @@ class DetailStatusPill extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppSizes.radiusFull),
       ),
       alignment: Alignment.center,
-      child: Text(
-        s.label,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: s.fg,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.4,
+      child: AnimatedSwitcher(
+        duration: AppDurations.quick,
+        child: Text(
+          s.label,
+          key: ValueKey(status),
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            color: s.fg,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.4,
+          ),
         ),
       ),
     );

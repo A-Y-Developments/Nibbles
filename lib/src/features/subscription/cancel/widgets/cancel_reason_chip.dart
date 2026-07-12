@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 
@@ -29,9 +30,6 @@ class CancelReasonChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final fill = selected ? AppColors.greenTint : AppColors.butterSoft;
     final fg = selected ? AppColors.greenDeep : AppColors.text;
-    final border = selected
-        ? const BorderSide(color: AppColors.green, width: 1.5)
-        : BorderSide.none;
 
     // Single-select choice: expose selected + button role so a screen reader
     // announces which reason is picked (mirrors ReasonChoiceRow / SettingsRow).
@@ -40,23 +38,31 @@ class CancelReasonChip extends StatelessWidget {
       selected: selected,
       label: label,
       child: ExcludeSemantics(
-        child: Material(
-          color: fill,
-          shape: RoundedRectangleBorder(
-            side: border,
+        child: AnimatedContainer(
+          duration: AppDurations.quick,
+          curve: AppCurves.standard,
+          decoration: BoxDecoration(
+            color: fill,
             borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+            border: Border.all(
+              color: selected ? AppColors.green : Colors.transparent,
+              width: 1.5,
+            ),
           ),
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-            child: SizedBox(
-              width: double.infinity,
-              child: Padding(
-                // Figma: padding 12 on all sides.
-                padding: const EdgeInsets.all(AppSizes.sp12),
-                child: Text(
-                  label,
-                  style: AppTypography.headline.copyWith(color: fg),
+          child: Material(
+            type: MaterialType.transparency,
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+              child: SizedBox(
+                width: double.infinity,
+                child: Padding(
+                  // Figma: padding 12 on all sides.
+                  padding: const EdgeInsets.all(AppSizes.sp12),
+                  child: Text(
+                    label,
+                    style: AppTypography.headline.copyWith(color: fg),
+                  ),
                 ),
               ),
             ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
+import 'package:nibbles/src/common/components/feedback/press_scale.dart';
 
 /// Cream-surfaced action row used in the Settings list.
 ///
@@ -36,56 +37,58 @@ class SettingsRow extends StatelessWidget {
       value: subtitle,
       hint: danger ? 'Destructive action' : null,
       child: ExcludeSemantics(
-        child: Material(
-          color: AppColors.cream,
-          borderRadius: radius,
-          child: Ink(
-            decoration: BoxDecoration(
-              color: AppColors.cream,
-              borderRadius: radius,
-              boxShadow: AppSizes.shadowCard,
-            ),
-            child: InkWell(
-              onTap: onTap,
-              borderRadius: radius,
-              child: Padding(
-                padding: const EdgeInsets.all(AppSizes.sp12),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Headline/SemiBold — Parkinsans 600 15/22.
-                          Text(
-                            title,
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 15,
-                              height: 22 / 15,
-                              color: titleColor,
-                            ),
-                          ),
-                          if (subtitle != null) ...[
-                            // Body/Regular — Figtree 400 15/22.
+        child: PressableScale(
+          child: Material(
+            color: AppColors.cream,
+            borderRadius: radius,
+            child: Ink(
+              decoration: BoxDecoration(
+                color: AppColors.cream,
+                borderRadius: radius,
+                boxShadow: AppSizes.shadowCard,
+              ),
+              child: InkWell(
+                onTap: onTap,
+                borderRadius: radius,
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSizes.sp12),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Headline/SemiBold — Parkinsans 600 15/22.
                             Text(
-                              subtitle!,
-                              style: theme.textTheme.bodyLarge?.copyWith(
-                                color: AppColors.text,
+                              title,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 15,
+                                height: 22 / 15,
+                                color: titleColor,
                               ),
                             ),
+                            if (subtitle != null) ...[
+                              // Body/Regular — Figtree 400 15/22.
+                              Text(
+                                subtitle!,
+                                style: theme.textTheme.bodyLarge?.copyWith(
+                                  color: AppColors.text,
+                                ),
+                              ),
+                            ],
                           ],
-                        ],
+                        ),
                       ),
-                    ),
-                    ExcludeSemantics(
-                      child: Icon(
-                        Icons.chevron_right_rounded,
-                        size: AppSizes.iconMd,
-                        color: chevronColor,
+                      ExcludeSemantics(
+                        child: Icon(
+                          Icons.chevron_right_rounded,
+                          size: AppSizes.iconMd,
+                          color: chevronColor,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

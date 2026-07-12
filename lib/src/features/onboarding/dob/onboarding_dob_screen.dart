@@ -1,9 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/gen/assets.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/components.dart';
@@ -179,9 +181,21 @@ class _OnboardingDobScreenState extends ConsumerState<OnboardingDobScreen> {
     _day = _today.day;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      _yearCtrl.jumpToItem(_year - _minYear);
-      _monthCtrl.jumpToItem(_month - 1);
-      _dayCtrl.jumpToItem(_day - 1);
+      _yearCtrl.animateToItem(
+        _year - _minYear,
+        duration: AppDurations.slide,
+        curve: AppCurves.standard,
+      );
+      _monthCtrl.animateToItem(
+        _month - 1,
+        duration: AppDurations.slide,
+        curve: AppCurves.standard,
+      );
+      _dayCtrl.animateToItem(
+        _day - 1,
+        duration: AppDurations.slide,
+        curve: AppCurves.standard,
+      );
     });
   }
 
@@ -244,10 +258,16 @@ class _OnboardingDobScreenState extends ConsumerState<OnboardingDobScreen> {
               ),
               const SizedBox(height: AppSizes.xl),
               Center(
-                child: Assets.images.onboarding.babyIcon.svg(
-                  width: 154,
-                  height: 154,
-                ),
+                child: Assets.images.onboarding.babyIcon
+                    .svg(width: 154, height: 154)
+                    .animate()
+                    .fadeIn(duration: AppDurations.fade)
+                    .scale(
+                      duration: AppDurations.slow,
+                      curve: AppCurves.emphasized,
+                      begin: const Offset(0.8, 0.8),
+                      end: const Offset(1, 1),
+                    ),
               ),
               const SizedBox(height: AppSizes.md),
               Center(
@@ -324,9 +344,19 @@ class _AgeChip extends StatelessWidget {
         color: AppColors.coralSoft,
         borderRadius: BorderRadius.circular(AppSizes.radiusFull),
       ),
-      child: Text(
-        label,
-        style: AppTypography.bodyBold.copyWith(color: AppColors.coralDeep),
+      child: AnimatedSwitcher(
+        duration: AppDurations.base,
+        switchInCurve: AppCurves.standard,
+        switchOutCurve: AppCurves.standard,
+        transitionBuilder: (child, animation) => FadeTransition(
+          opacity: animation,
+          child: ScaleTransition(scale: animation, child: child),
+        ),
+        child: Text(
+          label,
+          key: ValueKey<String>(label),
+          style: AppTypography.bodyBold.copyWith(color: AppColors.coralDeep),
+        ),
       ),
     );
   }

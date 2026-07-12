@@ -1,5 +1,7 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/utils/age_in_months.dart';
 
@@ -28,32 +30,42 @@ class GreetingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accent = _accentRun(DateTime.now());
+    final now = DateTime.now();
+    final dob = dateOfBirth;
+    final targetMonths = dob == null ? ageMonths : ageInMonths(dob, now: now);
+    final days = dob == null
+        ? null
+        : _daysIntoCurrentMonth(dob, now, targetMonths);
     final base = AppTypography.textTheme.titleLarge ?? const TextStyle();
 
-    return Text.rich(
-      TextSpan(
-        style: base.copyWith(color: AppColors.fgStrong),
-        children: [
-          TextSpan(text: '$babyName is '),
+    return TweenAnimationBuilder<int>(
+      tween: IntTween(begin: 0, end: targetMonths),
+      duration: AppDurations.slow,
+      curve: AppCurves.emphasized,
+      builder: (context, months, _) {
+        final accent = days == null
+            ? '$months months '
+            : '$months months $days days ';
+        return AutoSizeText.rich(
           TextSpan(
-            text: accent,
-            style: base.copyWith(color: AppColors.greenDeep),
+            style: base.copyWith(color: AppColors.fgStrong),
+            children: [
+              TextSpan(text: '$babyName is '),
+              TextSpan(
+                text: accent,
+                style: base.copyWith(color: AppColors.greenDeep),
+              ),
+              // Word joiner (U+2060) glues the emoji to "today!" so it never
+              // wraps onto its own line (NIB-172).
+              const TextSpan(text: 'today!\u{2060}🎉'),
+            ],
           ),
-          // Word joiner (U+2060) glues the emoji to "today!" so it never
-          // wraps onto its own line (NIB-172).
-          const TextSpan(text: 'today!\u{2060}🎉'),
-        ],
-      ),
+          maxLines: 3,
+          minFontSize: 15,
+          overflow: TextOverflow.ellipsis,
+        );
+      },
     );
-  }
-
-  String _accentRun(DateTime now) {
-    final dob = dateOfBirth;
-    if (dob == null) return '$ageMonths months ';
-    final months = ageInMonths(dob, now: now);
-    final days = _daysIntoCurrentMonth(dob, now, months);
-    return '$months months $days days ';
   }
 
   /// Days elapsed since the most recent month anniversary of [dob].

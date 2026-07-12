@@ -368,15 +368,30 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
-  // Add flow via the "+" chip → inline editable row at the top of the list
-  // (Reminders-style direct add, no modal sheet).
-  //   Optimistic insert (appears immediately) then reconcile with the server,
-  //   and P2 toast on add failure. Return commits and keeps the row open for
-  //   continuous entry.
+  // Add flow via the inline card revealed by the header "+" chip.
+  //   Tap "+" → the "Ingredients" field appears (autofocus). Typing + tapping
+  //   the butter "Add" pill (or submitting) commits an optimistic insert
+  //   (appears immediately) then reconciles with the server. The field clears
+  //   after a successful add and keeps focus for continuous entry; blanks are
+  //   ignored; a P2 toast surfaces on add failure. Card is hidden until "+".
   // ---------------------------------------------------------------------------
 
   group('ShoppingListScreen - add', () {
-    testWidgets('adding inline inserts optimistically then reconciles', (
+    testWidgets('the add field is hidden until the "+" chip is tapped', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_buildSut(mockService));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TextField), findsNothing);
+
+      await tester.tap(find.byIcon(Icons.add));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TextField), findsOneWidget);
+    });
+
+    testWidgets('typing + Add inserts the item then reconciles and clears', (
       tester,
     ) async {
       final backing = <ShoppingListItem>[];
@@ -391,64 +406,35 @@ void main() {
       await tester.pumpWidget(_buildSut(mockService));
       await tester.pumpAndSettle();
 
+      // Reveal the inline add card via the header "+" chip.
       await tester.tap(find.byIcon(Icons.add));
       await tester.pumpAndSettle();
 
       await tester.enterText(find.byType(TextField), 'Carrots');
-      await tester.testTextInput.receiveAction(TextInputAction.done);
-
-      // Optimistic: the row is present before the server refetch settles.
-      await tester.pump();
-      expect(find.text('Carrots'), findsOneWidget);
-
-      // Reconciled: still present after the invalidate/refetch resolves.
+      await tester.tap(find.widgetWithText(AppPillButton, 'Add'));
       await tester.pumpAndSettle();
+
+      // The item renders (row) after the refetch resolves and the field clears.
       expect(find.text('Carrots'), findsOneWidget);
+      expect(
+        tester.widget<TextField>(find.byType(TextField)).controller?.text,
+        isEmpty,
+      );
       verify(() => mockService.addManualItem(_babyId, 'Carrots')).called(1);
     });
 
-    testWidgets('the row stays open after commit for continuous entry', (
-      tester,
-    ) async {
-      final backing = <ShoppingListItem>[];
-      when(
-        () => mockService.getItems(any()),
-      ).thenAnswer((_) async => Result.success(List.of(backing)));
-      when(() => mockService.addManualItem(any(), any())).thenAnswer((
-        invocation,
-      ) async {
-        backing.add(
-          _makeItem(
-            id: 'server-${backing.length + 1}',
-            name: invocation.positionalArguments[1] as String,
-          ),
-        );
-        return const Result.success(null);
-      });
-
+    testWidgets('blank entry is ignored (no add)', (tester) async {
       await tester.pumpWidget(_buildSut(mockService));
       await tester.pumpAndSettle();
 
       await tester.tap(find.byIcon(Icons.add));
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextField), 'Carrots');
-      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.enterText(find.byType(TextField), '   ');
+      await tester.tap(find.widgetWithText(AppPillButton, 'Add'));
       await tester.pumpAndSettle();
 
-      // Field is still present and empty, ready for the next item.
-      expect(find.byType(TextField), findsOneWidget);
-      expect(
-        tester.widget<TextField>(find.byType(TextField)).controller!.text,
-        '',
-      );
-
-      await tester.enterText(find.byType(TextField), 'Bananas');
-      await tester.testTextInput.receiveAction(TextInputAction.done);
-      await tester.pumpAndSettle();
-
-      expect(find.text('Carrots'), findsOneWidget);
-      expect(find.text('Bananas'), findsOneWidget);
+      verifyNever(() => mockService.addManualItem(any(), any()));
     });
 
     testWidgets('add failure surfaces P2 toast', (tester) async {

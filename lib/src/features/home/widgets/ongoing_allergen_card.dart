@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:nibbles/gen/assets.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
+import 'package:nibbles/src/common/components/feedback/press_scale.dart';
+import 'package:nibbles/src/common/components/icons/allergen_icon.dart';
 import 'package:nibbles/src/features/allergen/detail/widgets/detail_segment_bar.dart';
 import 'package:nibbles/src/features/allergen/tracker/widgets/allergen_icon_tile.dart';
 import 'package:nibbles/src/features/home/widgets/start_allergen_button.dart';
@@ -43,96 +47,118 @@ class OngoingAllergenCard extends StatelessWidget {
     final radius = BorderRadius.circular(AppSizes.radiusXl);
 
     return Material(
-      color: AppColors.burgundyDark,
-      borderRadius: radius,
-      clipBehavior: Clip.antiAlias,
-      child: Stack(
-        children: [
-          Positioned(
-            right: -30,
-            top: -24,
-            child: Opacity(
-              opacity: 0.5,
-              child: ColorFiltered(
-                colorFilter: const ColorFilter.mode(
-                  AppColors.cardBurgundy,
-                  BlendMode.srcIn,
-                ),
-                child: Assets.images.allergen.allergenBlob.image(
-                  width: 200,
-                  fit: BoxFit.contain,
-                ),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(AppSizes.md),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Semantics(
-                  button: true,
-                  label: '$displayName, introduced $clamped of $_target times',
-                  identifier: 'home_ongoing_allergen_card',
-                  excludeSemantics: true,
-                  onTap: onTap,
-                  child: InkWell(
-                    onTap: onTap,
-                    borderRadius: radius,
-                    child: Row(
-                      children: [
-                        AllergenIconTile(
-                          backing: Colors.white.withValues(alpha: 0.10),
-                          borderColor: AppColors.cream.withValues(alpha: 0.45),
-                        ),
-                        const SizedBox(width: AppSizes.sp12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                displayName,
-                                style: AppTypography.textTheme.titleMedium
-                                    ?.copyWith(color: AppColors.cream),
-                              ),
-                              const SizedBox(height: AppSizes.sp2),
-                              Text(
-                                '$clamped/$_target times',
-                                style: AppTypography.textTheme.bodyMedium
-                                    ?.copyWith(
-                                      color: AppColors.cream.withValues(
-                                        alpha: 0.7,
-                                      ),
-                                    ),
-                              ),
-                              const SizedBox(height: AppSizes.sm),
-                              DetailSegmentBar(
-                                reactionFlags: reactionFlags,
-                                onDark: true,
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: AppSizes.sm),
-                        const _ChevronButton(),
-                      ],
+          color: AppColors.burgundyDark,
+          borderRadius: radius,
+          clipBehavior: Clip.antiAlias,
+          child: Stack(
+            children: [
+              Positioned(
+                right: -30,
+                top: -24,
+                child: Opacity(
+                  opacity: 0.5,
+                  child: ColorFiltered(
+                    colorFilter: const ColorFilter.mode(
+                      AppColors.cardBurgundy,
+                      BlendMode.srcIn,
+                    ),
+                    child: Assets.images.allergen.allergenBlob.image(
+                      width: 200,
+                      fit: BoxFit.contain,
                     ),
                   ),
                 ),
-                if (showStartButton) ...[
-                  const SizedBox(height: AppSizes.md),
-                  StartAllergenButton(
-                    onDark: true,
-                    onPressed: onStart ?? onTap,
-                  ),
-                ],
-              ],
-            ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(AppSizes.md),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Semantics(
+                      button: true,
+                      label:
+                          '$displayName, introduced $clamped of $_target times',
+                      identifier: 'home_ongoing_allergen_card',
+                      excludeSemantics: true,
+                      onTap: onTap,
+                      child: InkWell(
+                        onTap: onTap,
+                        borderRadius: radius,
+                        child: Row(
+                          children: [
+                            AllergenIconTile(
+                              allergenKey: allergenKey,
+                              variant: AllergenIconVariant.maroon,
+                            ),
+                            const SizedBox(width: AppSizes.sp12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    displayName,
+                                    style: AppTypography.textTheme.titleMedium
+                                        ?.copyWith(color: AppColors.cream),
+                                  ),
+                                  const SizedBox(height: AppSizes.sp2),
+                                  Text(
+                                    '$clamped/$_target times',
+                                    style: AppTypography.textTheme.bodyMedium
+                                        ?.copyWith(
+                                          color: AppColors.cream.withValues(
+                                            alpha: 0.7,
+                                          ),
+                                        ),
+                                  ),
+                                  const SizedBox(height: AppSizes.sm),
+                                  DetailSegmentBar(
+                                    reactionFlags: reactionFlags,
+                                    onDark: true,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: AppSizes.sm),
+                            const PressableScale(
+                              enabled: true,
+                              child: _ChevronButton(),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    AnimatedSize(
+                      duration: AppDurations.slide,
+                      curve: AppCurves.emphasized,
+                      alignment: Alignment.topCenter,
+                      child: showStartButton
+                          ? Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                const SizedBox(height: AppSizes.md),
+                                StartAllergenButton(
+                                  onDark: true,
+                                  onPressed: onStart ?? onTap,
+                                ),
+                              ],
+                            )
+                          : const SizedBox(width: double.infinity),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-    );
+        )
+        .animate()
+        .fadeIn(duration: AppDurations.fade)
+        .slideY(
+          begin: 0.06,
+          end: 0,
+          duration: AppDurations.slide,
+          curve: AppCurves.emphasized,
+        );
   }
 }
 

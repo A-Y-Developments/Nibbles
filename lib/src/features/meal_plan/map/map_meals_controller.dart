@@ -79,9 +79,8 @@ class MapMealsController extends _$MapMealsController {
   /// added to many days and to one day multiple times — this never removes
   /// anything from the palette.
   ///
-  /// Once the selected day's slots are all filled ([mealsPerDay] reached), the
-  /// active chip auto-advances to the next incomplete day (skipping any days
-  /// already full); if none remain it stays put.
+  /// The active day chip stays put after a day's slots fill — the user moves
+  /// to another day themselves; it never auto-advances.
   void assignToSelectedDay(String recipeId, int mealsPerDay) {
     final day = _dateOnly(state.selectedDay);
     final next = <DateTime, List<String>>{
@@ -90,13 +89,6 @@ class MapMealsController extends _$MapMealsController {
     };
     (next[day] ??= <String>[]).add(recipeId);
     state = state.copyWith(assignments: next, errorMessage: null);
-
-    if (state.assignedCountForSelectedDay() >= mealsPerDay) {
-      final nextDay = state.nextIncompleteDay(mealsPerDay);
-      if (nextDay != null) {
-        state = state.copyWith(selectedDay: nextDay);
-      }
-    }
 
     unawaited(
       ref

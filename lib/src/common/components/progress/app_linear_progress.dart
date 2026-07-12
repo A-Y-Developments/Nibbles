@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 
 /// Colour variant for [AppLinearProgress] — components-progress preview.
@@ -49,8 +50,12 @@ class AppLinearProgress extends StatelessWidget {
       child: Stack(
         children: [
           Container(height: height, width: double.infinity, color: _track),
-          FractionallySizedBox(
-            widthFactor: value.clamp(0.0, 1.0),
+          TweenAnimationBuilder<double>(
+            tween: Tween<double>(end: value.clamp(0.0, 1.0)),
+            duration: AppDurations.slow,
+            curve: AppCurves.emphasized,
+            builder: (context, animatedValue, child) =>
+                FractionallySizedBox(widthFactor: animatedValue, child: child),
             child: Container(
               height: height,
               decoration: BoxDecoration(

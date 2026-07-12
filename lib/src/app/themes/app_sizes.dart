@@ -39,9 +39,11 @@ abstract final class AppSizes {
   static const double listItemPaddingV = 12;
 
   // Component-specific
-  static const double buttonHeight = 38;
-  static const double buttonHeightSm = 40;
+  // Design-review: all buttons standardized to h49 (Figma resizing panel).
+  static const double buttonHeight = 49;
+  static const double buttonHeightSm = 49;
   static const double roundButton = 44;
+  static const double roundButtonMd = 40;
   static const double roundButtonSm = 32;
   static const double inputHeight = 52;
   // Kit .field is 48px (inputHeight=52 is a deferred decision; do not mutate).

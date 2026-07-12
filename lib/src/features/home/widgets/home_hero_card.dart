@@ -1,8 +1,10 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:nibbles/gen/assets.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/chips/app_chip.dart';
@@ -49,6 +51,8 @@ class HomeHeroCard extends StatelessWidget {
   final VoidCallback onOpenDetail;
 
   static const double _leftColumnWidth = 185;
+  static const double _bowlImageWidth = 185;
+  static const double _bowlOverhang = 24;
 
   @override
   Widget build(BuildContext context) {
@@ -79,72 +83,93 @@ class HomeHeroCard extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onStartTracker,
-          child: Stack(
-            children: [
-              Positioned(
-                top: -8,
-                right: -24,
-                child: Assets.images.home.heroBowl.image(
-                  width: 185,
-                  height: 200,
-                  fit: BoxFit.contain,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(AppSizes.md),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    SizedBox(
-                      width: _leftColumnWidth,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          GreetingCard(
-                            babyName: babyName,
-                            ageMonths: ageMonths,
-                            dateOfBirth: dateOfBirth,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final bowlLeftEdge =
+                  constraints.maxWidth - _bowlImageWidth + _bowlOverhang;
+              final greetingMaxWidth =
+                  (bowlLeftEdge - AppSizes.md - AppSizes.sm).clamp(
+                    120.0,
+                    _leftColumnWidth,
+                  );
+
+              return Stack(
+                children: [
+                  Positioned(
+                    top: -8,
+                    right: -_bowlOverhang,
+                    child: Assets.images.home.heroBowl.image(
+                      width: _bowlImageWidth,
+                      height: 200,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(AppSizes.md),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        SizedBox(
+                          width: _leftColumnWidth,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SizedBox(
+                                width: greetingMaxWidth,
+                                child: GreetingCard(
+                                  babyName: babyName,
+                                  ageMonths: ageMonths,
+                                  dateOfBirth: dateOfBirth,
+                                ),
+                              ),
+                              const SizedBox(height: AppSizes.md),
+                              _StatRing(
+                                label: 'TODAY MEALS',
+                                max: '/$mealTarget',
+                                numerator: mealCount,
+                                denominator: mealTarget,
+                              ),
+                              const SizedBox(height: AppSizes.sp12),
+                              _StatRing(
+                                label: 'ALLERGEN',
+                                max: '/${kAllergenKeys.length}',
+                                numerator: introducedCount,
+                                denominator: kAllergenKeys.length,
+                              ),
+                            ],
                           ),
+                        ),
+                        if (chips.isNotEmpty) ...[
                           const SizedBox(height: AppSizes.md),
-                          _StatRing(
-                            label: 'TODAY MEALS',
-                            value: '$mealCount',
-                            max: '/$mealTarget',
-                            numerator: mealCount,
-                            denominator: mealTarget,
-                          ),
-                          const SizedBox(height: AppSizes.sp12),
-                          _StatRing(
-                            label: 'ALLERGEN',
-                            value: '$introducedCount',
-                            max: '/${kAllergenKeys.length}',
-                            numerator: introducedCount,
-                            denominator: kAllergenKeys.length,
+                          Wrap(
+                            spacing: AppSizes.sm,
+                            runSpacing: AppSizes.sm,
+                            children: chips
+                                .animate(interval: AppDurations.fast)
+                                .fadeIn(duration: AppDurations.fade)
+                                .scale(
+                                  begin: const Offset(0.9, 0.9),
+                                  end: const Offset(1, 1),
+                                  duration: AppDurations.base,
+                                  curve: AppCurves.emphasized,
+                                ),
                           ),
                         ],
-                      ),
+                        const SizedBox(height: AppSizes.md),
+                        HeroAllergenSection(
+                          heroState: heroState,
+                          allergenKey: allergenKey,
+                          displayName: allergenDisplayName,
+                          reactionFlags: allergenReactionFlags,
+                          onStartTracker: onStartTracker,
+                          onOpenDetail: onOpenDetail,
+                        ),
+                      ],
                     ),
-                    if (chips.isNotEmpty) ...[
-                      const SizedBox(height: AppSizes.md),
-                      Wrap(
-                        spacing: AppSizes.sm,
-                        runSpacing: AppSizes.sm,
-                        children: chips,
-                      ),
-                    ],
-                    const SizedBox(height: AppSizes.md),
-                    HeroAllergenSection(
-                      heroState: heroState,
-                      allergenKey: allergenKey,
-                      displayName: allergenDisplayName,
-                      reactionFlags: allergenReactionFlags,
-                      onStartTracker: onStartTracker,
-                      onOpenDetail: onOpenDetail,
-                    ),
-                  ],
-                ),
-              ),
-            ],
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),
@@ -157,20 +182,19 @@ class HomeHeroCard extends StatelessWidget {
 class _StatRing extends StatelessWidget {
   const _StatRing({
     required this.label,
-    required this.value,
     required this.max,
     required this.numerator,
     required this.denominator,
   });
 
   final String label;
-  final String value;
   final String max;
   final int numerator;
   final int denominator;
 
   static const double _ringSize = 54;
   static const double _holeSize = 40;
+  static const double _creamGap = 8;
 
   double get _fraction {
     if (denominator <= 0) return 0;
@@ -182,16 +206,29 @@ class _StatRing extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        SizedBox(
-          width: _ringSize,
-          height: _ringSize,
-          child: CustomPaint(
-            painter: _RingPainter(
-              fraction: _fraction,
-              fillColor: AppColors.coralDeep,
-              trackColor: AppColors.coral.withValues(alpha: 0.18),
-              holeColor: AppColors.lime,
-              holeSize: _holeSize,
+        Container(
+          width: _ringSize + _creamGap * 2,
+          height: _ringSize + _creamGap * 2,
+          alignment: Alignment.center,
+          decoration: const BoxDecoration(
+            color: AppColors.cardCream,
+            shape: BoxShape.circle,
+          ),
+          child: SizedBox(
+            width: _ringSize,
+            height: _ringSize,
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: _fraction),
+              duration: AppDurations.slow,
+              curve: AppCurves.emphasized,
+              builder: (context, fraction, _) => CustomPaint(
+                painter: _RingPainter(
+                  fraction: fraction,
+                  fillColor: AppColors.coralDeep,
+                  trackColor: AppColors.coral.withValues(alpha: 0.18),
+                  strokeWidth: (_ringSize - _holeSize) / 2,
+                ),
+              ),
             ),
           ),
         ),
@@ -212,10 +249,15 @@ class _StatRing extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.baseline,
                 textBaseline: TextBaseline.alphabetic,
                 children: [
-                  Text(
-                    value,
-                    style: AppTypography.textTheme.titleLarge?.copyWith(
-                      height: 1,
+                  TweenAnimationBuilder<int>(
+                    tween: IntTween(begin: 0, end: numerator),
+                    duration: AppDurations.slow,
+                    curve: AppCurves.emphasized,
+                    builder: (context, count, _) => Text(
+                      '$count',
+                      style: AppTypography.textTheme.titleLarge?.copyWith(
+                        height: 1,
+                      ),
                     ),
                   ),
                   const SizedBox(width: AppSizes.sp2),
@@ -240,32 +282,37 @@ class _RingPainter extends CustomPainter {
     required this.fraction,
     required this.fillColor,
     required this.trackColor,
-    required this.holeColor,
-    required this.holeSize,
+    required this.strokeWidth,
   });
 
   final double fraction;
   final Color fillColor;
   final Color trackColor;
-  final Color holeColor;
-  final double holeSize;
+  final double strokeWidth;
 
   @override
   void paint(Canvas canvas, Size size) {
     final centre = Offset(size.width / 2, size.height / 2);
-    final radius = size.shortestSide / 2;
+    final radius = size.shortestSide / 2 - strokeWidth / 2;
     final rect = Rect.fromCircle(center: centre, radius: radius);
 
-    canvas.drawCircle(centre, radius, Paint()..color = trackColor);
+    canvas.drawCircle(
+      centre,
+      radius,
+      Paint()
+        ..color = trackColor
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth,
+    );
 
     if (fraction > 0) {
       final paint = Paint()
         ..color = fillColor
-        ..style = PaintingStyle.fill;
-      canvas.drawArc(rect, -math.pi / 2, 2 * math.pi * fraction, true, paint);
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth
+        ..strokeCap = StrokeCap.round;
+      canvas.drawArc(rect, -math.pi / 2, 2 * math.pi * fraction, false, paint);
     }
-
-    canvas.drawCircle(centre, holeSize / 2, Paint()..color = holeColor);
   }
 
   @override
@@ -273,6 +320,5 @@ class _RingPainter extends CustomPainter {
       oldDelegate.fraction != fraction ||
       oldDelegate.fillColor != fillColor ||
       oldDelegate.trackColor != trackColor ||
-      oldDelegate.holeColor != holeColor ||
-      oldDelegate.holeSize != holeSize;
+      oldDelegate.strokeWidth != strokeWidth;
 }

@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/components.dart';
@@ -89,53 +91,73 @@ class _StartingGuideHubScreenState
     );
 
     return GradientScaffold(
-      body: guideAsync.when(
-        loading: () => Column(
-          children: [
-            header,
-            const Expanded(child: Center(child: CircularProgressIndicator())),
-          ],
-        ),
-        error: (_, __) => Column(
-          children: [
-            header,
-            Expanded(
-              child: Center(
-                child: EmptyState(
-                  title: "Couldn't load the Starting Guide.",
-                  subtitle: 'Pull down or tap retry to try again.',
-                  ctaLabel: 'Retry',
-                  onCtaPressed: () =>
-                      ref.invalidate(startingGuideControllerProvider),
+      body: AnimatedSwitcher(
+        duration: AppDurations.fade,
+        switchInCurve: AppCurves.standard,
+        switchOutCurve: AppCurves.standard,
+        child: guideAsync.when(
+          loading: () => Column(
+            key: const ValueKey('starting_guide_hub_loading'),
+            children: [
+              header,
+              const Expanded(child: Center(child: BrandFlowerLoader.small())),
+            ],
+          ),
+          error: (_, __) => Column(
+            key: const ValueKey('starting_guide_hub_error'),
+            children: [
+              header,
+              Expanded(
+                child: Center(
+                  child: EmptyState(
+                    title: "Couldn't load the Starting Guide.",
+                    subtitle: 'Pull down or tap retry to try again.',
+                    ctaLabel: 'Retry',
+                    onCtaPressed: () =>
+                        ref.invalidate(startingGuideControllerProvider),
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
-        data: (state) => CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(child: header),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSizes.md,
-                AppSizes.md,
-                AppSizes.md,
-                AppSizes.xl,
+            ],
+          ),
+          data: (state) => CustomScrollView(
+            key: const ValueKey('starting_guide_hub_data'),
+            slivers: [
+              SliverToBoxAdapter(child: header),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSizes.md,
+                  AppSizes.md,
+                  AppSizes.md,
+                  AppSizes.xl,
+                ),
+                sliver: SliverList.separated(
+                  itemCount: state.articles.length,
+                  separatorBuilder: (_, __) =>
+                      const SizedBox(height: AppSizes.md),
+                  itemBuilder: (context, index) {
+                    final article = state.articles[index];
+                    return ArticleCard(
+                          article: article,
+                          onTap: () => _openArticle(article.slug),
+                        )
+                        .animate()
+                        .fadeIn(
+                          delay: (60 * index).ms,
+                          duration: AppDurations.fade,
+                        )
+                        .slideY(
+                          delay: (60 * index).ms,
+                          duration: AppDurations.slide,
+                          curve: AppCurves.standard,
+                          begin: 0.1,
+                          end: 0,
+                        );
+                  },
+                ),
               ),
-              sliver: SliverList.separated(
-                itemCount: state.articles.length,
-                separatorBuilder: (_, __) =>
-                    const SizedBox(height: AppSizes.md),
-                itemBuilder: (context, index) {
-                  final article = state.articles[index];
-                  return ArticleCard(
-                    article: article,
-                    onTap: () => _openArticle(article.slug),
-                  );
-                },
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

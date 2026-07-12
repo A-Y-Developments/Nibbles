@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/components.dart';
@@ -29,10 +30,12 @@ import 'package:nibbles/src/features/shopping_list/widgets/swipe_reveal_row.dart
 ///
 /// Per-row trailing close-X commits delete directly (no confirm modal).
 /// Swipe-left reveals a burgundy Delete pill; tap commits delete.
-/// "+" chip inserts an inline editable row at the top of the List tab
-/// (Reminders-style direct add — no modal sheet). Return commits the item
-/// and keeps the row open for continuous entry; tapping away or submitting
-/// empty closes it.
+/// The header "+" chip reveals an inline add card docked at the bottom of the
+/// List tab (971:9872) — a borderless, centered "Ingredients" field (autofocus)
+/// under a butter "Add" pill. Tapping "Add" commits the trimmed name via the
+/// controller and clears the field, keeping focus for rapid entry; blanks are
+/// ignored. The card auto-hides when the field loses focus (tap-away / keyboard
+/// dismiss).
 class ShoppingListScreen extends ConsumerWidget {
   const ShoppingListScreen({super.key});
 
@@ -43,7 +46,7 @@ class ShoppingListScreen extends ConsumerWidget {
     return babyIdAsync.when(
       loading: () => const GradientScaffold(
         resizeToAvoidBottomInset: false,
-        body: Center(child: CircularProgressIndicator()),
+        body: Center(child: BrandFlowerLoader.small()),
       ),
       error: (_, __) => const GradientScaffold(
         resizeToAvoidBottomInset: false,
@@ -80,30 +83,60 @@ class _ShoppingListBody extends ConsumerStatefulWidget {
 
 class _ShoppingListBodyState extends ConsumerState<_ShoppingListBody> {
   int _selectedTab = 0; // 0 = List, 1 = Bought
-  bool _isAddingItem = false;
 
   // Controller that tracks which row (by id) currently has its swipe
   // reveal open. Allows tap-outside-to-close and one-open-at-a-time.
   final SwipeRevealController _swipeController = SwipeRevealController();
 
+  // Separate controllers per tab: the tab-swap AnimatedSwitcher briefly keeps
+  // both _ItemsList instances mounted, and a ScrollController cannot attach to
+  // two scroll views at once.
+  final ScrollController _listScrollController = ScrollController();
+  final ScrollController _boughtScrollController = ScrollController();
+
+  // Inline add card — revealed by the header "+", auto-hidden on focus loss.
   final TextEditingController _addController = TextEditingController();
   final FocusNode _addFocusNode = FocusNode();
-  final ScrollController _listScrollController = ScrollController();
+  bool _adding = false;
 
   @override
   void initState() {
     super.initState();
-    _addFocusNode.addListener(_handleAddFocusChange);
+    _addFocusNode.addListener(_onAddFocusChange);
   }
 
   @override
   void dispose() {
-    _addFocusNode.removeListener(_handleAddFocusChange);
     _swipeController.dispose();
-    _addController.dispose();
-    _addFocusNode.dispose();
     _listScrollController.dispose();
+    _boughtScrollController.dispose();
+    _addFocusNode
+      ..removeListener(_onAddFocusChange)
+      ..dispose();
+    _addController.dispose();
     super.dispose();
+  }
+
+  void _startAdding() {
+    setState(() {
+      _selectedTab = 0;
+      _adding = true;
+    });
+  }
+
+  void _onAddFocusChange() {
+    if (!_addFocusNode.hasFocus && _adding) {
+      _addController.clear();
+      setState(() => _adding = false);
+    }
+  }
+
+  void _submitAddField() {
+    final name = _addController.text.trim();
+    if (name.isEmpty) return;
+    _submitItem(name);
+    _addController.clear();
+    _addFocusNode.requestFocus();
   }
 
   Future<void> _showClearConfirmation() async {
@@ -113,6 +146,11 @@ class _ShoppingListBodyState extends ConsumerState<_ShoppingListBody> {
       ref.read(shoppingListControllerProvider(widget.babyId).notifier).clearAll,
       errorMessage: "Couldn't clear list. Try again.",
     );
+  }
+
+  Future<void> _refresh() async {
+    ref.invalidate(shoppingListControllerProvider(widget.babyId));
+    await ref.read(shoppingListControllerProvider(widget.babyId).future);
   }
 
   Future<void> _copyToClipboard() async {
@@ -181,57 +219,6 @@ class _ShoppingListBodyState extends ConsumerState<_ShoppingListBody> {
     }
   }
 
-  void _startAddingItem() {
-    _swipeController.close();
-    setState(() {
-      _selectedTab = 0;
-      _isAddingItem = true;
-    });
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      _addFocusNode.requestFocus();
-      if (_listScrollController.hasClients) {
-        _listScrollController.animateTo(
-          0,
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOut,
-        );
-      }
-    });
-  }
-
-  void _handleAddFocusChange() {
-    if (!_addFocusNode.hasFocus) _endAdding();
-  }
-
-  void _handleAddEditingComplete() {
-    if (_addController.text.trim().isEmpty) {
-      _addFocusNode.unfocus();
-    } else {
-      _commitAndContinueAdding();
-    }
-  }
-
-  /// Commits the typed item and keeps the row open (Reminders-style
-  /// continuous entry) — focus never leaves the field, so the keyboard
-  /// stays up for the next item.
-  Future<void> _commitAndContinueAdding() async {
-    final raw = _addController.text;
-    if (raw.trim().isEmpty) return;
-    _addController.clear();
-    await _submitItem(raw);
-  }
-
-  /// Tapping away or dismissing the keyboard ends the add session — commits
-  /// a non-empty draft, otherwise just closes the empty row.
-  void _endAdding() {
-    if (!_isAddingItem) return;
-    final raw = _addController.text;
-    _addController.clear();
-    setState(() => _isAddingItem = false);
-    if (raw.trim().isNotEmpty) _submitItem(raw);
-  }
-
   Future<void> _submitItem(String raw) async {
     try {
       await ref
@@ -253,7 +240,7 @@ class _ShoppingListBodyState extends ConsumerState<_ShoppingListBody> {
       bottom: false,
       child: Stack(
         children: [
-          // Tap anywhere outside the add row / open swipe row to dismiss them.
+          // Tap anywhere outside the add card / open swipe row to dismiss both.
           GestureDetector(
             behavior: HitTestBehavior.translucent,
             onTap: () {
@@ -270,7 +257,7 @@ class _ShoppingListBodyState extends ConsumerState<_ShoppingListBody> {
               child: Column(
                 children: [
                   _ShoppingListHeader(
-                    onAddPressed: _startAddingItem,
+                    onAddPressed: _startAdding,
                     onMenuSelected: (action) {
                       switch (action) {
                         case ShoppingListMenuAction.copy:
@@ -285,44 +272,73 @@ class _ShoppingListBodyState extends ConsumerState<_ShoppingListBody> {
                     segments: const ['List', 'Bought'],
                     selectedIndex: _selectedTab,
                     onChanged: (i) {
-                      _endAdding();
+                      _addFocusNode.unfocus();
                       setState(() => _selectedTab = i);
                     },
                   ),
                   const SizedBox(height: AppSizes.sp12),
                   Expanded(
-                    child: controllerAsync.when(
-                      loading: () =>
-                          const Center(child: CircularProgressIndicator()),
-                      error: (e, _) => _ErrorState(
-                        onRetry: () => ref.invalidate(
-                          shoppingListControllerProvider(widget.babyId),
+                    child: AnimatedSwitcher(
+                      duration: AppDurations.fade,
+                      switchInCurve: AppCurves.standard,
+                      switchOutCurve: AppCurves.standard,
+                      child: controllerAsync.when(
+                        loading: () => const Center(
+                          key: ValueKey('shopping-loading'),
+                          child: BrandFlowerLoader.small(),
+                        ),
+                        error: (e, _) => _ErrorState(
+                          key: const ValueKey('shopping-error'),
+                          onRetry: () => ref.invalidate(
+                            shoppingListControllerProvider(widget.babyId),
+                          ),
+                        ),
+                        data: (state) => BrandRefreshIndicator(
+                          key: ValueKey('shopping-refresh-$_selectedTab'),
+                          onRefresh: _refresh,
+                          child: _selectedTab == 0
+                              ? _ItemsList(
+                                  key: const ValueKey('shopping-list-active'),
+                                  items: state.listItems,
+                                  swipeController: _swipeController,
+                                  scrollController: _listScrollController,
+                                  onToggle: _check,
+                                  onDelete: _delete,
+                                )
+                              : _ItemsList(
+                                  key: const ValueKey('shopping-list-bought'),
+                                  items: state.boughtItems,
+                                  swipeController: _swipeController,
+                                  scrollController: _boughtScrollController,
+                                  onToggle: _uncheck,
+                                  onDelete: _delete,
+                                ),
                         ),
                       ),
-                      data: (state) => _selectedTab == 0
-                          ? _ItemsList(
-                              items: state.listItems,
-                              swipeController: _swipeController,
-                              scrollController: _listScrollController,
-                              onToggle: _check,
-                              onDelete: _delete,
-                              addRow: _isAddingItem
-                                  ? _AddItemRow(
-                                      controller: _addController,
-                                      focusNode: _addFocusNode,
-                                      onEditingComplete:
-                                          _handleAddEditingComplete,
-                                    )
-                                  : null,
-                            )
-                          : _ItemsList(
-                              items: state.boughtItems,
-                              swipeController: _swipeController,
-                              scrollController: _listScrollController,
-                              onToggle: _uncheck,
-                              onDelete: _delete,
-                            ),
                     ),
+                  ),
+                  AnimatedSize(
+                    duration: AppDurations.slide,
+                    curve: AppCurves.emphasized,
+                    alignment: Alignment.topCenter,
+                    child: (_selectedTab == 0 && _adding)
+                        ? Padding(
+                            padding: EdgeInsets.only(
+                              top: AppSizes.sm,
+                              bottom:
+                                  MediaQuery.of(context).viewInsets.bottom +
+                                  AppSizes.sp20,
+                            ),
+                            child: _AddCard(
+                              controller: _addController,
+                              focusNode: _addFocusNode,
+                              onAdd: _submitAddField,
+                            ),
+                          )
+                        : const SizedBox(
+                            width: double.infinity,
+                            height: AppSizes.sm,
+                          ),
                   ),
                 ],
               ),
@@ -410,41 +426,6 @@ class _MenuItemContent extends StatelessWidget {
   }
 }
 
-/// 40x40 green-deep rounded-square chip with "+" icon. Opens the floating
-/// Add Ingredient card. Mirrors the header chip treatment in 971:9872.
-class _AddChip extends StatelessWidget {
-  const _AddChip({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: 'Add ingredient',
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: Container(
-          width: 40,
-          height: 40,
-          decoration: const BoxDecoration(
-            color: AppColors.greenDeep,
-            shape: BoxShape.circle,
-          ),
-          alignment: Alignment.center,
-          child: const Icon(
-            Icons.add,
-            color: AppColors.onGreen,
-            size: AppSizes.iconMd,
-            semanticLabel: '',
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 /// 40x40 green-deep rounded-square chip hosting the more_horiz overflow.
 /// Used as the child of the header's native overflow PopupMenuButton.
 /// Mirrors Figma 971:9858 / 971:9943 (Button-chips, bg ForestDarkn, rounded-[10px]).
@@ -454,8 +435,8 @@ class _OverflowChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 40,
-      height: 40,
+      width: AppSizes.roundButtonMd,
+      height: AppSizes.roundButtonMd,
       decoration: const BoxDecoration(
         color: AppColors.greenDeep,
         shape: BoxShape.circle,
@@ -471,18 +452,151 @@ class _OverflowChip extends StatelessWidget {
   }
 }
 
+/// Green-deep circular chip hosting the add "+".
+/// Mirrors [_OverflowChip]; reveals the inline add card on tap.
+class _AddChip extends StatelessWidget {
+  const _AddChip({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: 'Add ingredient',
+      child: Material(
+        color: AppColors.greenDeep,
+        shape: const CircleBorder(),
+        child: InkWell(
+          onTap: onTap,
+          customBorder: const CircleBorder(),
+          child: const SizedBox(
+            width: AppSizes.roundButtonMd,
+            height: AppSizes.roundButtonMd,
+            child: Icon(
+              Icons.add,
+              color: AppColors.onGreen,
+              size: AppSizes.iconMd,
+              semanticLabel: '',
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Inline add card — Figma 971:9872. Revealed by the header "+" chip; a
+// borderless, centered "Ingredients" field (autofocus) under a butter "Add"
+// pill. Bespoke to this screen: the field has no fill or border by design.
+// ---------------------------------------------------------------------------
+
+class _AddCard extends StatelessWidget {
+  const _AddCard({
+    required this.controller,
+    required this.focusNode,
+    required this.onAdd,
+  });
+
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final VoidCallback onAdd;
+
+  @override
+  Widget build(BuildContext context) {
+    final fieldStyle = AppTypography.textTheme.bodyLarge?.copyWith(
+      fontSize: 18,
+      fontWeight: FontWeight.w700,
+    );
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(
+        AppSizes.md,
+        AppSizes.sp12,
+        AppSizes.md,
+        AppSizes.md,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppSizes.radius3xl),
+        boxShadow: AppSizes.shadowCardLifted,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              AppPillButton(
+                label: 'Add',
+                variant: AppPillButtonVariant.ghost,
+                size: AppPillButtonSize.small,
+                expand: false,
+                onPressed: onAdd,
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSizes.sm),
+          TextField(
+            controller: controller,
+            focusNode: focusNode,
+            autofocus: true,
+            textAlign: TextAlign.center,
+            textInputAction: TextInputAction.done,
+            textCapitalization: TextCapitalization.sentences,
+            onSubmitted: (_) => onAdd(),
+            style: fieldStyle,
+            cursorColor: AppColors.greenDeep,
+            decoration: InputDecoration(
+              isCollapsed: true,
+              filled: false,
+              contentPadding: const EdgeInsets.symmetric(vertical: AppSizes.sm),
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              errorBorder: InputBorder.none,
+              focusedErrorBorder: InputBorder.none,
+              disabledBorder: InputBorder.none,
+              hintText: 'Ingredients',
+              hintStyle: fieldStyle?.copyWith(color: AppColors.fgFaint),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // ---------------------------------------------------------------------------
 // List body
 // ---------------------------------------------------------------------------
 
-class _ItemsList extends StatelessWidget {
+/// Stable-keyed model entry backing the [AnimatedList]. [key] persists across
+/// the optimistic placeholder → server-item swap so the row updates in place
+/// (id filled, no re-animation) rather than fading out and back in.
+class _AnimatedEntry {
+  _AnimatedEntry(this.key, this.item);
+
+  final String key;
+  ShoppingListItem item;
+}
+
+/// Ingredient list with fade + collapse animations on add / remove.
+///
+/// Native [AnimatedList] (Material) driven by a diff of the reactive [items]
+/// against a locally-held keyed model. Adds fade+slide in; deletes (and checks,
+/// which drop an item off the List tab) fade+collapse out. The last item
+/// removed snaps to the empty state rather than animating.
+class _ItemsList extends StatefulWidget {
   const _ItemsList({
     required this.items,
     required this.swipeController,
     required this.scrollController,
     required this.onToggle,
     required this.onDelete,
-    this.addRow,
+    super.key,
   });
 
   final List<ShoppingListItem> items;
@@ -490,116 +604,143 @@ class _ItemsList extends StatelessWidget {
   final ScrollController scrollController;
   final ValueChanged<String> onToggle;
   final void Function(String itemId, {required String via}) onDelete;
-  final Widget? addRow;
 
   @override
-  Widget build(BuildContext context) {
-    if (items.isEmpty && addRow == null) {
-      return const _EmptyState();
-    }
-    final hasAddRow = addRow != null;
-    return ListView.separated(
-      controller: scrollController,
-      padding: const EdgeInsets.only(bottom: AppSizes.md),
-      itemCount: items.length + (hasAddRow ? 1 : 0),
-      separatorBuilder: (_, __) => const SizedBox(height: AppSizes.sp12),
-      itemBuilder: (_, i) {
-        if (hasAddRow && i == 0) return addRow!;
-        final item = items[hasAddRow ? i - 1 : i];
-        // Optimistic placeholder id=='' would collide if multiple are pending;
-        // fall back to a createdAt-based key.
-        final rowKey = item.id.isNotEmpty
-            ? item.id
-            : 'pending-${item.createdAt.microsecondsSinceEpoch}';
-        return SwipeRevealRow(
-          key: ValueKey(rowKey),
-          rowId: rowKey,
-          controller: swipeController,
-          onDelete: () => onDelete(item.id, via: 'swipe'),
-          child: _ShoppingItemRow(
-            item: item,
-            onToggle: () => onToggle(item.id),
-            onDelete: () => onDelete(item.id, via: 'button'),
-          ),
-        );
-      },
-    );
-  }
+  State<_ItemsList> createState() => _ItemsListState();
 }
 
-// ---------------------------------------------------------------------------
-// Inline add row — always the first item in the List tab while adding.
-// Same card chrome as a normal row; a hollow (draft) circle stands in for
-// the checkbox and a borderless TextField replaces the label.
-// ---------------------------------------------------------------------------
+class _ItemsListState extends State<_ItemsList> {
+  static const Duration _animDuration = Duration(milliseconds: 240);
 
-class _AddItemRow extends StatelessWidget {
-  const _AddItemRow({
-    required this.controller,
-    required this.focusNode,
-    required this.onEditingComplete,
-  });
+  final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
+  final List<_AnimatedEntry> _entries = [];
+  int _keySeq = 0;
 
-  final TextEditingController controller;
-  final FocusNode focusNode;
+  @override
+  void initState() {
+    super.initState();
+    for (final item in widget.items) {
+      _entries.add(_AnimatedEntry(_nextKey(), item));
+    }
+  }
 
-  /// Driven via [TextField.onEditingComplete] rather than `onSubmitted` —
-  /// supplying `onEditingComplete` opts out of Flutter's default behavior of
-  /// auto-unfocusing on [TextInputAction.done], which is what let us keep the
-  /// keyboard up for continuous entry.
-  final VoidCallback onEditingComplete;
+  @override
+  void didUpdateWidget(covariant _ItemsList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _sync(widget.items);
+  }
+
+  String _nextKey() => 'e${_keySeq++}';
+
+  /// Reconcile [incoming] into [_entries], animating insertions and removals.
+  /// Items keep their relative order (both tabs sort by createdAt desc), so a
+  /// left-to-right insert pass keeps [_entries] and the [AnimatedList] in sync
+  /// without needing to handle reorders.
+  void _sync(List<ShoppingListItem> incoming) {
+    final matched = <int, _AnimatedEntry>{};
+    final used = <_AnimatedEntry>{};
+
+    for (var i = 0; i < incoming.length; i++) {
+      final it = incoming[i];
+      if (it.id.isEmpty) continue;
+      for (final e in _entries) {
+        if (!used.contains(e) && e.item.id == it.id) {
+          matched[i] = e;
+          used.add(e);
+          break;
+        }
+      }
+    }
+
+    // Reconcile the just-added optimistic placeholder (id=='') against its
+    // server-assigned row by name so the swap is an in-place update.
+    for (var i = 0; i < incoming.length; i++) {
+      if (matched.containsKey(i)) continue;
+      final it = incoming[i];
+      for (final e in _entries) {
+        if (!used.contains(e) && e.item.id.isEmpty && e.item.name == it.name) {
+          matched[i] = e;
+          used.add(e);
+          break;
+        }
+      }
+    }
+
+    for (var idx = _entries.length - 1; idx >= 0; idx--) {
+      final e = _entries[idx];
+      if (used.contains(e)) continue;
+      _entries.removeAt(idx);
+      _listKey.currentState?.removeItem(
+        idx,
+        (context, animation) => _buildRow(e, animation, active: false),
+        duration: _animDuration,
+      );
+    }
+
+    for (var i = 0; i < incoming.length; i++) {
+      final e = matched[i];
+      if (e != null) {
+        e.item = incoming[i];
+      } else {
+        final entry = _AnimatedEntry(_nextKey(), incoming[i]);
+        _entries.insert(i, entry);
+        _listKey.currentState?.insertItem(i, duration: _animDuration);
+      }
+    }
+  }
+
+  Widget _buildRow(
+    _AnimatedEntry entry,
+    Animation<double> animation, {
+    required bool active,
+  }) {
+    final curved = CurvedAnimation(parent: animation, curve: Curves.easeOut);
+    final item = entry.item;
+    final row = Padding(
+      padding: const EdgeInsets.only(bottom: AppSizes.sp12),
+      child: active
+          ? SwipeRevealRow(
+              key: ValueKey(entry.key),
+              rowId: entry.key,
+              controller: widget.swipeController,
+              onDelete: () => widget.onDelete(item.id, via: 'swipe'),
+              child: _ShoppingItemRow(
+                item: item,
+                onToggle: () => widget.onToggle(item.id),
+                onDelete: () => widget.onDelete(item.id, via: 'button'),
+              ),
+            )
+          : _ShoppingItemRow(item: item, onToggle: () {}, onDelete: () {}),
+    );
+    return FadeTransition(
+      opacity: curved,
+      child: SizeTransition(sizeFactor: curved, axisAlignment: -1, child: row),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.sp12,
-        vertical: AppSizes.sm,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.cream,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        boxShadow: AppSizes.shadowCard,
-      ),
-      child: Row(
-        children: [
-          SizedBox(
-            width: AppSizes.xxl,
-            height: AppSizes.xxl,
-            child: Center(
-              child: Container(
-                width: 30,
-                height: 30,
-                decoration: BoxDecoration(
-                  color: AppColors.cream,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.borderSoft, width: 1.5),
-                ),
-              ),
-            ),
+    // Empty state stays pull-to-refresh–able: a viewport-tall scrollable keeps
+    // the flower reachable even with no rows.
+    if (widget.items.isEmpty) {
+      return LayoutBuilder(
+        builder: (context, constraints) => SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: const _EmptyState(),
           ),
-          const SizedBox(width: AppSizes.sp12),
-          Expanded(
-            child: TextField(
-              controller: controller,
-              focusNode: focusNode,
-              autofocus: true,
-              onEditingComplete: onEditingComplete,
-              textInputAction: TextInputAction.done,
-              style: AppTypography.textTheme.bodyLarge,
-              cursorColor: AppColors.greenDeep,
-              decoration: InputDecoration(
-                isCollapsed: true,
-                border: InputBorder.none,
-                hintText: 'Add item',
-                hintStyle: AppTypography.textTheme.bodyLarge?.copyWith(
-                  color: AppColors.fgFaint,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
+        ),
+      );
+    }
+    return AnimatedList(
+      key: _listKey,
+      controller: widget.scrollController,
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.only(bottom: AppSizes.sm),
+      initialItemCount: _entries.length,
+      itemBuilder: (context, index, animation) =>
+          _buildRow(_entries[index], animation, active: true),
     );
   }
 }
@@ -653,14 +794,20 @@ class _ShoppingItemRow extends StatelessWidget {
               ),
               const SizedBox(width: AppSizes.sp12),
               Expanded(
-                child: Text(
-                  item.name,
-                  style: AppTypography.textTheme.bodyLarge?.copyWith(
-                    decoration: item.isChecked
-                        ? TextDecoration.lineThrough
-                        : null,
-                    color: item.isChecked ? AppColors.fgMuted : AppColors.text,
-                  ),
+                child: AnimatedDefaultTextStyle(
+                  duration: AppDurations.base,
+                  curve: AppCurves.standard,
+                  style:
+                      (AppTypography.textTheme.bodyLarge ?? const TextStyle())
+                          .copyWith(
+                            decoration: item.isChecked
+                                ? TextDecoration.lineThrough
+                                : TextDecoration.none,
+                            color: item.isChecked
+                                ? AppColors.fgMuted
+                                : AppColors.text,
+                          ),
+                  child: Text(item.name),
                 ),
               ),
               const SizedBox(width: AppSizes.sp12),
@@ -700,7 +847,9 @@ class _SquareCheckbox extends StatelessWidget {
         width: AppSizes.xxl,
         height: AppSizes.xxl,
         child: Center(
-          child: Container(
+          child: AnimatedContainer(
+            duration: AppDurations.base,
+            curve: AppCurves.standard,
             width: size,
             height: size,
             decoration: BoxDecoration(
@@ -709,9 +858,16 @@ class _SquareCheckbox extends StatelessWidget {
               border: Border.all(color: AppColors.greenDeep, width: 1.5),
             ),
             alignment: Alignment.center,
-            child: value
-                ? const Icon(Icons.check, size: 18, color: AppColors.onGreen)
-                : null,
+            child: AnimatedScale(
+              scale: value ? 1 : 0,
+              duration: AppDurations.base,
+              curve: AppCurves.emphasized,
+              child: const Icon(
+                Icons.check,
+                size: 18,
+                color: AppColors.onGreen,
+              ),
+            ),
           ),
         ),
       ),
@@ -765,17 +921,16 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
+    return const Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const BrandFlower(size: 153),
-          // Figma 971:9989 empty-state gap-[10px] (no 10px spacing token).
-          const SizedBox(height: 10),
+          BrandFlower(size: AppSizes.avatarXl),
+          SizedBox(height: AppSizes.md),
           Text(
             'You don’t have any list yet',
             textAlign: TextAlign.center,
-            style: AppTypography.textTheme.bodyLarge,
+            style: AppTypography.sectionTitle,
           ),
         ],
       ),
@@ -788,7 +943,7 @@ class _EmptyState extends StatelessWidget {
 // ---------------------------------------------------------------------------
 
 class _ErrorState extends StatelessWidget {
-  const _ErrorState({required this.onRetry});
+  const _ErrorState({required this.onRetry, super.key});
 
   final VoidCallback onRetry;
 

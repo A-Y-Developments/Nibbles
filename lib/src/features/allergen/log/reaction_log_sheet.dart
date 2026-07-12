@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/constants/symptom_presets.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/components.dart';
@@ -262,31 +263,44 @@ class _ReactionLogSheetState extends ConsumerState<_ReactionLogSheet> {
                       hadReaction: state.hadReaction,
                       onToggle: controller.toggleReaction,
                     ),
-                    if (state.hadReaction) ...[
-                      const SizedBox(height: AppSizes.md),
-                      const _SectionLabel('Symptoms'),
-                      const SizedBox(height: AppSizes.sm),
-                      for (final symptom in SymptomPresets.all) ...[
-                        _SymptomRow(
-                          label: symptom,
-                          checked: state.symptoms.contains(symptom),
-                          onTap: () => controller.toggleSymptom(symptom),
-                        ),
-                        const SizedBox(height: AppSizes.sm),
-                      ],
-                      const SizedBox(height: AppSizes.xs),
-                      const _SectionLabel('Severity'),
-                      const SizedBox(height: AppSizes.sm),
-                      for (final option in _severityOptions) ...[
-                        _SeverityCard(
-                          title: option.title,
-                          subtitle: option.subtitle,
-                          selected: state.severity == option.severity,
-                          onTap: () => controller.setSeverity(option.severity),
-                        ),
-                        const SizedBox(height: AppSizes.sm),
-                      ],
-                    ],
+                    AnimatedSize(
+                      duration: AppDurations.fade,
+                      curve: AppCurves.emphasized,
+                      alignment: Alignment.topCenter,
+                      child: state.hadReaction
+                          ? Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const SizedBox(height: AppSizes.md),
+                                const _SectionLabel('Symptoms'),
+                                const SizedBox(height: AppSizes.sm),
+                                for (final symptom in SymptomPresets.all) ...[
+                                  _SymptomRow(
+                                    label: symptom,
+                                    checked: state.symptoms.contains(symptom),
+                                    onTap: () =>
+                                        controller.toggleSymptom(symptom),
+                                  ),
+                                  const SizedBox(height: AppSizes.sm),
+                                ],
+                                const SizedBox(height: AppSizes.xs),
+                                const _SectionLabel('Severity'),
+                                const SizedBox(height: AppSizes.sm),
+                                for (final option in _severityOptions) ...[
+                                  _SeverityCard(
+                                    title: option.title,
+                                    subtitle: option.subtitle,
+                                    selected: state.severity == option.severity,
+                                    onTap: () =>
+                                        controller.setSeverity(option.severity),
+                                  ),
+                                  const SizedBox(height: AppSizes.sm),
+                                ],
+                              ],
+                            )
+                          : const SizedBox(width: double.infinity),
+                    ),
                     const SizedBox(height: AppSizes.md),
                     const _SectionLabel('Notes'),
                     const SizedBox(height: AppSizes.sm),
@@ -507,11 +521,17 @@ class _SymptomRow extends StatelessWidget {
                 AppCheckbox(value: checked, onChanged: (_) => onTap()),
                 const SizedBox(width: AppSizes.sp12),
                 Expanded(
-                  child: Text(
-                    label,
-                    style: AppTypography.textTheme.bodyLarge?.copyWith(
-                      color: AppColors.fgStrong,
-                    ),
+                  child: AnimatedDefaultTextStyle(
+                    duration: AppDurations.quick,
+                    curve: AppCurves.standard,
+                    style:
+                        AppTypography.textTheme.bodyLarge?.copyWith(
+                          color: checked
+                              ? AppColors.greenDeep
+                              : AppColors.fgStrong,
+                        ) ??
+                        const TextStyle(),
+                    child: Text(label),
                   ),
                 ),
               ],
@@ -554,12 +574,20 @@ class _SeverityCard extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  selected
-                      ? Icons.radio_button_checked
-                      : Icons.radio_button_unchecked,
-                  size: AppSizes.iconMd - 2,
-                  color: selected ? AppColors.greenDeep : AppColors.borderMuted,
+                AnimatedSwitcher(
+                  duration: AppDurations.quick,
+                  transitionBuilder: (child, animation) =>
+                      ScaleTransition(scale: animation, child: child),
+                  child: Icon(
+                    selected
+                        ? Icons.radio_button_checked
+                        : Icons.radio_button_unchecked,
+                    key: ValueKey(selected),
+                    size: AppSizes.iconMd - 2,
+                    color: selected
+                        ? AppColors.greenDeep
+                        : AppColors.borderMuted,
+                  ),
                 ),
                 const SizedBox(width: AppSizes.sp12),
                 Expanded(

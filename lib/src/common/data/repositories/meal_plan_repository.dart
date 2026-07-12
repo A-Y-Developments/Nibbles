@@ -102,6 +102,10 @@ abstract interface class MealPlanRepository {
     DateTime end,
   );
 
+  /// Persists a new `end_date` for [planId] — backs "+ Add Date" so the widened
+  /// window survives a refetch and reaches Home's date strip.
+  Future<Result<MealPlan>> updatePlanEndDate(String planId, DateTime endDate);
+
   /// Deletes a plan by ID — cascades its `meal_plan_entries`.
   Future<Result<void>> deletePlan(String planId);
 }
@@ -350,6 +354,27 @@ class MealPlanRepositoryImpl implements MealPlanRepository {
             'start_date': _formatDate(start),
             'end_date': _formatDate(end),
           })
+          .select()
+          .single();
+
+      return Result.success(_planFromRow(data));
+    } on PostgrestException catch (e) {
+      return Result.failure(ServerException(e.message));
+    } on Object {
+      return const Result.failure(UnknownException());
+    }
+  }
+
+  @override
+  Future<Result<MealPlan>> updatePlanEndDate(
+    String planId,
+    DateTime endDate,
+  ) async {
+    try {
+      final data = await _supabase
+          .from('meal_plans')
+          .update(<String, dynamic>{'end_date': _formatDate(endDate)})
+          .eq('id', planId)
           .select()
           .single();
 

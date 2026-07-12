@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 
 /// Selectable pill used for radio-style choices (e.g. Yes / No).
@@ -26,27 +27,32 @@ class RadioPill extends StatelessWidget {
       selected: selected,
       button: true,
       child: Material(
-        color: selected ? AppColors.greenDeep : Colors.transparent,
-        shape: StadiumBorder(
-          side: selected
-              ? BorderSide.none
-              : const BorderSide(color: AppColors.greenDeep, width: 1.5),
-        ),
+        color: Colors.transparent,
+        shape: const StadiumBorder(),
         child: InkWell(
           onTap: onTap,
           customBorder: const StadiumBorder(),
-          child: Padding(
+          child: AnimatedContainer(
+            duration: AppDurations.fast,
+            curve: AppCurves.standard,
+            decoration: ShapeDecoration(
+              color: selected ? AppColors.greenDeep : Colors.transparent,
+              shape: StadiumBorder(
+                side: selected
+                    ? BorderSide.none
+                    : const BorderSide(color: AppColors.greenDeep, width: 1.5),
+              ),
+            ),
             padding: const EdgeInsets.symmetric(
               horizontal: AppSizes.md - 2,
               vertical: AppSizes.sm,
             ),
-            child: Text(
-              label,
-              style: theme.textTheme.labelMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: fg,
-                height: 1,
-              ),
+            child: AnimatedDefaultTextStyle(
+              duration: AppDurations.fast,
+              curve: AppCurves.standard,
+              style: (theme.textTheme.labelMedium ?? const TextStyle())
+                  .copyWith(fontWeight: FontWeight.w700, color: fg, height: 1),
+              child: Text(label),
             ),
           ),
         ),

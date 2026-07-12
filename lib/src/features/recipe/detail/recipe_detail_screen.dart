@@ -1,8 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
@@ -42,9 +44,12 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
     final babyIdAsync = ref.watch(currentBabyIdProvider);
 
     return babyIdAsync.when(
-      loading: () => const GradientScaffold(
+      loading: () => GradientScaffold(
         body: Center(
-          child: CircularProgressIndicator(semanticsLabel: 'Loading recipe'),
+          child: Semantics(
+            label: 'Loading recipe',
+            child: const BrandFlowerLoader.small(),
+          ),
         ),
       ),
       error: (_, __) => GradientScaffold(
@@ -85,23 +90,38 @@ class _RecipeDetailBody extends ConsumerWidget {
     );
 
     return GradientScaffold(
-      body: detailAsync.when(
-        loading: () => const Center(
-          child: CircularProgressIndicator(semanticsLabel: 'Loading recipe'),
+      body: AnimatedSwitcher(
+        duration: AppDurations.fade,
+        switchInCurve: AppCurves.standard,
+        switchOutCurve: AppCurves.standard,
+        child: detailAsync.when(
+          loading: () => Center(
+            key: const ValueKey('recipe-detail-loading'),
+            child: Semantics(
+              label: 'Loading recipe',
+              child: const BrandFlowerLoader.small(),
+            ),
+          ),
+          error: (error, _) => _ErrorView(
+            key: const ValueKey('recipe-detail-error'),
+            onRetry: () => ref.invalidate(
+              recipeDetailControllerProvider(babyId, recipeId),
+            ),
+          ),
+          data: (state) => _RecipeContent(
+            key: const ValueKey('recipe-detail-data'),
+            babyId: babyId,
+            recipeId: recipeId,
+            state: state,
+          ),
         ),
-        error: (error, _) => _ErrorView(
-          onRetry: () =>
-              ref.invalidate(recipeDetailControllerProvider(babyId, recipeId)),
-        ),
-        data: (state) =>
-            _RecipeContent(babyId: babyId, recipeId: recipeId, state: state),
       ),
     );
   }
 }
 
 class _ErrorView extends StatelessWidget {
-  const _ErrorView({required this.onRetry});
+  const _ErrorView({required this.onRetry, super.key});
 
   final VoidCallback onRetry;
 
@@ -131,6 +151,7 @@ class _RecipeContent extends ConsumerStatefulWidget {
     required this.babyId,
     required this.recipeId,
     required this.state,
+    super.key,
   });
 
   final String babyId;
@@ -243,7 +264,27 @@ class _RecipeContentState extends ConsumerState<_RecipeContent> {
     final recipe = state.recipe;
     final hasStorage = state.storageNote != null || state.freezerNote != null;
 
+    final bodyCards = <Widget>[
+      if (recipe.allergenTags.isNotEmpty)
+        ContainsAllergensCard(allergenTags: recipe.allergenTags),
+      RecipeStepsCard(
+        ingredients: recipe.ingredients,
+        steps: recipe.steps,
+        utensils: state.utensils ?? const [],
+      ),
+      if (hasStorage)
+        RecipeStorageRow(
+          storageNote: state.storageNote,
+          freezerNote: state.freezerNote,
+        ),
+      if (state.textureTip != null)
+        RecipeTipCard(kind: RecipeTipKind.textureTip, body: state.textureTip),
+      if (state.whyThisMeal != null)
+        RecipeTipCard(kind: RecipeTipKind.whyThisMeal, body: state.whyThisMeal),
+    ];
+
     return SafeArea(
+      bottom: false,
       child: Column(
         children: [
           _TopBar(
@@ -252,11 +293,12 @@ class _RecipeContentState extends ConsumerState<_RecipeContent> {
           ),
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.only(bottom: AppSizes.xxl),
+              padding: const EdgeInsets.only(bottom: AppSizes.md),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   RecipeHeroBanner(
+                    recipeId: recipe.id,
                     imageUrl: recipe.thumbnailUrl,
                     title: recipe.title,
                     ageRange: recipe.ageRange,
@@ -273,60 +315,22 @@ class _RecipeContentState extends ConsumerState<_RecipeContent> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        if (recipe.allergenTags.isNotEmpty) ...[
-                          ContainsAllergensCard(
-                            allergenTags: recipe.allergenTags,
-                          ),
-                          const SizedBox(height: AppSizes.md),
-                        ],
-                        RecipeStepsCard(
-                          ingredients: recipe.ingredients,
-                          steps: recipe.steps,
-                          utensils: state.utensils ?? const [],
-                        ),
-                        if (hasStorage) ...[
-                          const SizedBox(height: AppSizes.md),
-                          RecipeStorageRow(
-                            storageNote: state.storageNote,
-                            freezerNote: state.freezerNote,
-                          ),
-                        ],
-                        if (state.textureTip != null) ...[
-                          const SizedBox(height: AppSizes.md),
-                          RecipeTipCard(
-                            kind: RecipeTipKind.textureTip,
-                            body: state.textureTip,
-                          ),
-                        ],
-                        if (state.whyThisMeal != null) ...[
-                          const SizedBox(height: AppSizes.md),
-                          RecipeTipCard(
-                            kind: RecipeTipKind.whyThisMeal,
-                            body: state.whyThisMeal,
-                          ),
-                        ],
-                        const SizedBox(height: AppSizes.md),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: AppPillButton(
-                                label: 'Add to Meal Plan',
-                                onPressed: _handleAddToMealPlan,
-                                identifier: 'recipe_detail_add_to_meal_plan',
+                        for (var i = 0; i < bodyCards.length; i++) ...[
+                          if (i > 0) const SizedBox(height: AppSizes.md),
+                          bodyCards[i]
+                              .animate()
+                              .fadeIn(
+                                delay: _bodyStagger * i,
+                                duration: AppDurations.fade,
+                              )
+                              .slideY(
+                                begin: 0.05,
+                                end: 0,
+                                delay: _bodyStagger * i,
+                                duration: AppDurations.slide,
+                                curve: AppCurves.emphasized,
                               ),
-                            ),
-                            const SizedBox(width: AppSizes.sm),
-                            Expanded(
-                              child: AppPillButton(
-                                label: 'Add to Shopping List',
-                                variant: AppPillButtonVariant.secondary,
-                                onPressed: _handleAddToShoppingList,
-                                identifier:
-                                    'recipe_detail_add_to_shopping_list',
-                              ),
-                            ),
-                          ],
-                        ),
+                        ],
                       ],
                     ),
                   ),
@@ -334,6 +338,49 @@ class _RecipeContentState extends ConsumerState<_RecipeContent> {
               ),
             ),
           ),
+          Container(
+                decoration: const BoxDecoration(
+                  color: AppColors.surface,
+                  boxShadow: AppSizes.shadowCardLifted,
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(AppSizes.radiusXl),
+                  ),
+                ),
+                padding: const EdgeInsets.fromLTRB(
+                  AppSizes.md,
+                  AppSizes.lg,
+                  AppSizes.md,
+                  AppSizes.xxl,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: AppPillButton(
+                        label: 'Add to Meal Plan',
+                        onPressed: _handleAddToMealPlan,
+                        identifier: 'recipe_detail_add_to_meal_plan',
+                      ),
+                    ),
+                    const SizedBox(width: AppSizes.sm),
+                    Expanded(
+                      child: AppPillButton(
+                        label: 'Add to Shopping List',
+                        variant: AppPillButtonVariant.secondary,
+                        onPressed: _handleAddToShoppingList,
+                        identifier: 'recipe_detail_add_to_shopping_list',
+                      ),
+                    ),
+                  ],
+                ),
+              )
+              .animate()
+              .fadeIn(duration: AppDurations.fade)
+              .slideY(
+                begin: 0.4,
+                end: 0,
+                duration: AppDurations.slide,
+                curve: AppCurves.emphasized,
+              ),
         ],
       ),
     );
@@ -377,3 +424,5 @@ class _TopBar extends StatelessWidget {
     );
   }
 }
+
+const Duration _bodyStagger = Duration(milliseconds: 60);

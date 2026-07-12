@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/features/onboarding/onboarding_controller.dart';
@@ -153,13 +154,19 @@ class _OnboardingReadinessScreenState
                             'Question ${_currentIndex + 1} of '
                             '$_readinessTotalSteps',
                         child: Center(
-                          child: Text(
-                            '${_currentIndex + 1} of '
-                            '$_readinessTotalSteps Questions',
+                          child: AnimatedSwitcher(
                             key: const Key('onboarding_readiness_counter'),
-                            style: textTheme.bodyMedium?.copyWith(
-                              color: AppColors.fgStrong,
-                              fontWeight: FontWeight.w600,
+                            duration: AppDurations.base,
+                            switchInCurve: AppCurves.standard,
+                            switchOutCurve: AppCurves.standard,
+                            child: Text(
+                              '${_currentIndex + 1} of '
+                              '$_readinessTotalSteps Questions',
+                              key: ValueKey<int>(_currentIndex),
+                              style: textTheme.bodyMedium?.copyWith(
+                                color: AppColors.fgStrong,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ),
@@ -170,45 +177,77 @@ class _OnboardingReadinessScreenState
                         currentIndex: _currentIndex,
                       ),
                       const SizedBox(height: AppSizes.xl),
-                      Text(
-                        title,
-                        textAlign: TextAlign.center,
-                        style: textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: AppSizes.md),
-                      Text(
-                        step.body,
-                        textAlign: TextAlign.center,
-                        style: textTheme.bodyMedium?.copyWith(
-                          color: AppColors.fgMuted,
+                      AnimatedSwitcher(
+                        duration: AppDurations.slide,
+                        switchInCurve: AppCurves.emphasized,
+                        switchOutCurve: AppCurves.standard,
+                        transitionBuilder: (child, animation) {
+                          final slide = Tween<Offset>(
+                            begin: const Offset(0.06, 0),
+                            end: Offset.zero,
+                          ).animate(animation);
+                          return FadeTransition(
+                            opacity: animation,
+                            child: SlideTransition(
+                              position: slide,
+                              child: child,
+                            ),
+                          );
+                        },
+                        layoutBuilder: (currentChild, previousChildren) =>
+                            Stack(
+                              alignment: Alignment.topCenter,
+                              children: [
+                                ...previousChildren,
+                                if (currentChild != null) currentChild,
+                              ],
+                            ),
+                        child: Column(
+                          key: ValueKey<int>(_currentIndex),
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                              title,
+                              textAlign: TextAlign.center,
+                              style: textTheme.titleLarge,
+                            ),
+                            const SizedBox(height: AppSizes.md),
+                            Text(
+                              step.body,
+                              textAlign: TextAlign.center,
+                              style: textTheme.bodyMedium?.copyWith(
+                                color: AppColors.fgMuted,
+                              ),
+                            ),
+                            const SizedBox(height: AppSizes.lg),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: ReadinessChoiceCard(
+                                    key: const Key('readiness_choice_yes'),
+                                    identifier: 'readiness_choice_yes',
+                                    label: step.yesLabel,
+                                    selected: currentAnswer ?? false,
+                                    affirmative: true,
+                                    onTap: () => _recordAnswer(isYes: true),
+                                  ),
+                                ),
+                                const SizedBox(width: AppSizes.md),
+                                Expanded(
+                                  child: ReadinessChoiceCard(
+                                    key: const Key('readiness_choice_unsure'),
+                                    identifier: 'readiness_choice_unsure',
+                                    label: step.noLabel,
+                                    selected: currentAnswer == false,
+                                    affirmative: false,
+                                    onTap: () => _recordAnswer(isYes: false),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                      ),
-                      const SizedBox(height: AppSizes.lg),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: ReadinessChoiceCard(
-                              key: const Key('readiness_choice_yes'),
-                              identifier: 'readiness_choice_yes',
-                              label: step.yesLabel,
-                              selected: currentAnswer ?? false,
-                              affirmative: true,
-                              onTap: () => _recordAnswer(isYes: true),
-                            ),
-                          ),
-                          const SizedBox(width: AppSizes.md),
-                          Expanded(
-                            child: ReadinessChoiceCard(
-                              key: const Key('readiness_choice_unsure'),
-                              identifier: 'readiness_choice_unsure',
-                              label: step.noLabel,
-                              selected: currentAnswer == false,
-                              affirmative: false,
-                              onTap: () => _recordAnswer(isYes: false),
-                            ),
-                          ),
-                        ],
                       ),
                     ],
                   ),

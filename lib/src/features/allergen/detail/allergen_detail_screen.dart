@@ -29,7 +29,7 @@ class AllergenDetailScreen extends ConsumerWidget {
     return asyncState.when(
       loading: () => GradientScaffold(
         appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
-        body: const Center(child: CircularProgressIndicator()),
+        body: const Center(child: BrandFlowerLoader.small()),
       ),
       error: (err, _) => GradientScaffold(
         appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
@@ -108,6 +108,7 @@ class _AllergenDetailView extends ConsumerWidget {
       body: Column(
         children: [
           AllergenDetailHeader(
+            allergenKey: state.allergen.key,
             name: state.allergen.name,
             status: state.status,
             reactionFlags: _reactionFlags,

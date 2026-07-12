@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/components.dart';
@@ -63,7 +64,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
 
     return babyIdAsync.when(
       loading: () => const GradientScaffold(
-        body: Center(child: CircularProgressIndicator()),
+        body: Center(child: BrandFlowerLoader.small()),
       ),
       error: (_, __) => _ProfileEditError(
         message: 'Could not load profile.',
@@ -93,7 +94,7 @@ class _ProfileEditBody extends ConsumerWidget {
 
     return asyncState.when(
       loading: () => const GradientScaffold(
-        body: Center(child: CircularProgressIndicator()),
+        body: Center(child: BrandFlowerLoader.small()),
       ),
       error: (err, _) => _ProfileEditError(
         message: err is AppException ? err.message : 'Something went wrong.',
@@ -122,7 +123,6 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
   late final FocusNode _firstNameFocus;
   late final FocusNode _lastNameFocus;
   late final FocusNode _emailFocus;
-  bool _emailTouched = false;
 
   @override
   void initState() {
@@ -238,37 +238,33 @@ class _ProfileEditFormState extends ConsumerState<_ProfileEditForm> {
                           key: const Key('edit_email_field'),
                           controller: _emailController,
                           focusNode: _emailFocus,
+                          enabled: false,
                           keyboardType: TextInputType.emailAddress,
                           textInputAction: TextInputAction.done,
                           autocorrect: false,
                           enableSuggestions: false,
-                          onChanged: (value) {
-                            if (!_emailTouched) {
-                              setState(() => _emailTouched = true);
-                            }
-                            controller.updateEmail(value);
-                          },
-                          onSubmitted: (_) {
-                            if (canSave) unawaited(_save());
-                          },
-                          errorText: _emailTouched && !emailValid
-                              ? 'Enter a valid email address.'
-                              : null,
                         ),
                       ),
                     ),
-                    if (formState.errorMessage != null) ...[
-                      const SizedBox(height: AppSizes.sm),
-                      Semantics(
-                        liveRegion: true,
-                        child: Text(
-                          'Error: ${formState.errorMessage!}',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: AppColors.error,
-                          ),
-                        ),
-                      ),
-                    ],
+                    AnimatedSize(
+                      duration: AppDurations.base,
+                      curve: AppCurves.standard,
+                      alignment: Alignment.topCenter,
+                      child: formState.errorMessage != null
+                          ? Padding(
+                              padding: const EdgeInsets.only(top: AppSizes.sm),
+                              child: Semantics(
+                                liveRegion: true,
+                                child: Text(
+                                  'Error: ${formState.errorMessage!}',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: AppColors.error,
+                                  ),
+                                ),
+                              ),
+                            )
+                          : const SizedBox(width: double.infinity),
+                    ),
                     const SizedBox(height: AppSizes.xl - 4),
                     AppPillButton(
                       key: const Key('edit_profile_save_button'),
@@ -331,7 +327,7 @@ class _EditHeader extends StatelessWidget {
           const SizedBox(width: AppSizes.sp2),
           Expanded(
             child: Text(
-              'Change Profile',
+              'Edit Baby Profile',
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w700,
                 color: AppColors.fgStrong,

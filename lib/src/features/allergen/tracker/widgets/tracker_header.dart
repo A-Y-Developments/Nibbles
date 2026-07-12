@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/components.dart';
 
@@ -108,9 +109,14 @@ class _StatColumn extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          '$value',
-          style: textTheme.displaySmall?.copyWith(color: AppColors.fgStrong),
+        TweenAnimationBuilder<int>(
+          tween: IntTween(begin: 0, end: value),
+          duration: AppDurations.slow,
+          curve: AppCurves.emphasized,
+          builder: (context, animatedValue, _) => Text(
+            '$animatedValue',
+            style: textTheme.displaySmall?.copyWith(color: AppColors.fgStrong),
+          ),
         ),
         const SizedBox(height: AppSizes.xs),
         Text(

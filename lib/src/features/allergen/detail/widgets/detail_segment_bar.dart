@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 
 /// Three discrete introduction segments (one per logged give, max 3).
@@ -39,7 +40,9 @@ class DetailSegmentBar extends StatelessWidget {
         return Expanded(
           child: Padding(
             padding: EdgeInsets.only(right: i == 2 ? 0 : AppSizes.xs),
-            child: Container(
+            child: AnimatedContainer(
+              duration: AppDurations.base,
+              curve: AppCurves.standard,
               height: 8,
               decoration: BoxDecoration(
                 color: color,

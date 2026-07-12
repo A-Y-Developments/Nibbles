@@ -1,80 +1,39 @@
 import 'package:flutter/material.dart';
-import 'package:nibbles/gen/assets.gen.dart';
-import 'package:nibbles/src/app/themes/app_sizes.dart';
+import 'package:nibbles/src/common/components/icons/allergen_icon.dart';
 
-/// Quatrefoil allergen tile (Figma "Milk" instance, 62x62). A single burgundy
-/// `allergenMilk` glyph stands in for every allergen for now.
-///
-/// [backing] paints a rounded-square behind the glyph so it stays legible on
-/// dark surfaces (burgundy hero / detail header). [greyscale] desaturates the
-/// glyph for the "Not Tried" grey cards.
+/// Quatrefoil allergen tile (Figma "Allergen Icon" component set). Renders the
+/// branded per-allergen glyph for [allergenKey] in [variant] — each variant PNG
+/// is a self-contained quatrefoil, so this is a thin, intent-carrying wrapper
+/// over [AllergenIcon]:
+///  - [AllergenIconVariant.maroon] on burgundy surfaces (detail header, home
+///    ongoing/exposure cards),
+///  - [AllergenIconVariant.filled] for introducing/tried light cards,
+///  - [AllergenIconVariant.grey] for the "Not Tried" state.
 class AllergenIconTile extends StatelessWidget {
   const AllergenIconTile({
+    required this.allergenKey,
+    this.variant = AllergenIconVariant.filled,
     this.size = 56,
-    this.backing,
-    this.borderColor,
-    this.greyscale = false,
+    this.heroTag,
     super.key,
   });
 
+  final String allergenKey;
+  final AllergenIconVariant variant;
   final double size;
-  final Color? backing;
 
-  /// Optional hairline border around the backing tile (Figma outlines the
-  /// rounded-square on the burgundy hero / detail header).
-  final Color? borderColor;
-  final bool greyscale;
-
-  static const List<double> _greyMatrix = <double>[
-    0.2126,
-    0.7152,
-    0.0722,
-    0,
-    0,
-    0.2126,
-    0.7152,
-    0.0722,
-    0,
-    0,
-    0.2126,
-    0.7152,
-    0.0722,
-    0,
-    0,
-    0,
-    0,
-    0,
-    1,
-    0,
-  ];
+  /// When set, the glyph flies between screens under this tag. Left null on
+  /// list tiles that share a route to avoid duplicate-tag conflicts.
+  final Object? heroTag;
 
   @override
   Widget build(BuildContext context) {
-    Widget glyph = Assets.images.allergen.allergenMilk.image(
-      width: size,
-      height: size,
-      fit: BoxFit.contain,
+    final icon = AllergenIcon(
+      allergenKey: allergenKey,
+      variant: variant,
+      size: size,
     );
-
-    if (greyscale) {
-      glyph = ColorFiltered(
-        colorFilter: const ColorFilter.matrix(_greyMatrix),
-        child: Opacity(opacity: 0.55, child: glyph),
-      );
-    }
-
-    if (backing == null) return glyph;
-
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: backing,
-        borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-        border: borderColor != null ? Border.all(color: borderColor!) : null,
-      ),
-      alignment: Alignment.center,
-      child: Padding(padding: const EdgeInsets.all(AppSizes.xs), child: glyph),
-    );
+    if (heroTag == null) return icon;
+    return Hero(tag: heroTag!, child: icon);
   }
 }

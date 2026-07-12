@@ -28,6 +28,7 @@ void main() {
   group('OngoingAllergenCard — content', () {
     testWidgets('renders name + "N/3 times" + a 3-segment bar', (tester) async {
       await tester.pumpWidget(_wrap(_card()));
+      await tester.pumpAndSettle();
 
       expect(find.text('Milk'), findsOneWidget);
       expect(find.text('2/3 times'), findsOneWidget);
@@ -38,6 +39,7 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(_wrap(_card(reactionFlags: const [false, true])));
+      await tester.pumpAndSettle();
 
       expect(find.text('2/3 times'), findsOneWidget);
     });
@@ -48,6 +50,7 @@ void main() {
       await tester.pumpWidget(
         _wrap(_card(reactionFlags: const [false, false, false, false, false])),
       );
+      await tester.pumpAndSettle();
 
       expect(find.text('3/3 times'), findsOneWidget);
     });
@@ -56,12 +59,14 @@ void main() {
   group('OngoingAllergenCard — inset start button', () {
     testWidgets('absent when showStartButton is false', (tester) async {
       await tester.pumpWidget(_wrap(_card()));
+      await tester.pumpAndSettle();
 
       expect(find.byType(StartAllergenButton), findsNothing);
     });
 
     testWidgets('present when showStartButton is true', (tester) async {
       await tester.pumpWidget(_wrap(_card(showStartButton: true)));
+      await tester.pumpAndSettle();
 
       expect(find.byType(StartAllergenButton), findsOneWidget);
     });
@@ -71,6 +76,7 @@ void main() {
       await tester.pumpWidget(
         _wrap(_card(showStartButton: true, onStart: () => started = true)),
       );
+      await tester.pumpAndSettle();
 
       await tester.tap(find.byType(StartAllergenButton));
       expect(started, isTrue);
@@ -81,6 +87,7 @@ void main() {
     testWidgets('tapping the row fires onTap', (tester) async {
       var opened = false;
       await tester.pumpWidget(_wrap(_card(onTap: () => opened = true)));
+      await tester.pumpAndSettle();
 
       await tester.tap(find.byType(InkWell));
       expect(opened, isTrue);

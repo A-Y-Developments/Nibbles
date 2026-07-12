@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/brand/brand_flower.dart';
@@ -20,24 +22,32 @@ class RecipeSearchEmpty extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Center(
-      child: Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: AppSizes.pagePaddingH,
-          vertical: AppSizes.xl,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            BrandFlower(size: 136),
-            SizedBox(height: AppSizes.sm + 2),
-            Text(
-              'We couldn’t find any recipes',
-              textAlign: TextAlign.center,
-              style: AppTypography.emptyStateTitle,
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: AppSizes.pagePaddingH,
+              vertical: AppSizes.xl,
             ),
-          ],
-        ),
-      ),
-    );
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                BrandFlower(size: 136),
+                SizedBox(height: AppSizes.sm + 2),
+                Text(
+                  'We couldn’t find any recipes',
+                  textAlign: TextAlign.center,
+                  style: AppTypography.emptyStateTitle,
+                ),
+              ],
+            ),
+          ),
+        )
+        .animate()
+        .fadeIn(duration: AppDurations.fade)
+        .slideY(
+          begin: 0.06,
+          end: 0,
+          duration: AppDurations.slide,
+          curve: AppCurves.emphasized,
+        );
   }
 }

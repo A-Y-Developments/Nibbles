@@ -1,10 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/constants/allergen_emoji.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
@@ -62,26 +64,48 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final babyIdAsync = ref.watch(currentBabyIdProvider);
 
-    return babyIdAsync.when(
-      skipLoadingOnRefresh: true,
-      skipLoadingOnReload: true,
-      loading: () => const _HomeLoadingScaffold(),
-      error: (_, __) => _HomeErrorScaffold(
-        message: 'Could not load baby profile.',
-        onRetry: () => ref.invalidate(currentBabyIdProvider),
-      ),
-      data: (babyId) {
-        if (babyId == null) {
-          return GradientScaffold(
-            body: SafeArea(
-              child: HomeEmptyStateFull(onCreateMealPlan: _onCreateFirstMeal),
-            ),
+    return _CrossFade(
+      child: babyIdAsync.when(
+        skipLoadingOnRefresh: true,
+        skipLoadingOnReload: true,
+        loading: () => const _HomeLoadingScaffold(),
+        error: (_, __) => _HomeErrorScaffold(
+          message: 'Could not load baby profile.',
+          onRetry: () => ref.invalidate(currentBabyIdProvider),
+        ),
+        data: (babyId) {
+          if (babyId == null) {
+            return GradientScaffold(
+              body: SafeArea(
+                child: HomeEmptyStateFull(onCreateMealPlan: _onCreateFirstMeal),
+              ),
+            );
+          }
+          return _HomeBody(
+            babyId: babyId,
+            onCreateFirstMeal: _onCreateFirstMeal,
           );
-        }
-        return _HomeBody(babyId: babyId, onCreateFirstMeal: _onCreateFirstMeal);
-      },
+        },
+      ),
     );
   }
+}
+
+/// Fade-through between Home's async phases (loading ↔ error ↔ content).
+/// Each phase supplies a distinct key so the switcher cross-fades on change
+/// while `skipLoadingOn*` keeps refreshes from flashing the loader.
+class _CrossFade extends StatelessWidget {
+  const _CrossFade({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => AnimatedSwitcher(
+    duration: AppDurations.fade,
+    switchInCurve: AppCurves.standard,
+    switchOutCurve: AppCurves.standard,
+    child: child,
+  );
 }
 
 class _HomeBody extends ConsumerWidget {
@@ -94,19 +118,24 @@ class _HomeBody extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncState = ref.watch(homeControllerProvider(babyId));
 
-    return asyncState.when(
-      skipLoadingOnRefresh: true,
-      skipLoadingOnReload: true,
-      loading: () => const _HomeLoadingScaffold(),
-      error: (err, _) => _HomeErrorScaffold(
-        message: err is AppException ? err.message : 'Something went wrong.',
-        onRetry: () => ref.invalidate(homeControllerProvider(babyId)),
-      ),
-      data: (state) => _HomeContent(
-        babyId: babyId,
-        state: state,
-        onCreateFirstMeal: onCreateFirstMeal,
-        onRefresh: () async => ref.invalidate(homeControllerProvider(babyId)),
+    return _CrossFade(
+      child: asyncState.when(
+        skipLoadingOnRefresh: true,
+        skipLoadingOnReload: true,
+        loading: () => const _HomeLoadingScaffold(),
+        error: (err, _) => _HomeErrorScaffold(
+          message: err is AppException ? err.message : 'Something went wrong.',
+          onRetry: () => ref.invalidate(homeControllerProvider(babyId)),
+        ),
+        data: (state) => _HomeContent(
+          babyId: babyId,
+          state: state,
+          onCreateFirstMeal: onCreateFirstMeal,
+          onRefresh: () async {
+            ref.invalidate(homeControllerProvider(babyId));
+            await ref.read(homeControllerProvider(babyId).future);
+          },
+        ),
       ),
     );
   }
@@ -193,7 +222,8 @@ class _HomeContent extends ConsumerWidget {
     return GradientScaffold(
       body: SafeArea(
         top: false,
-        child: RefreshIndicator(
+        child: BrandRefreshIndicator(
+          topOffset: topInset,
           onRefresh: onRefresh,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -204,53 +234,66 @@ class _HomeContent extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _hPad(
-                  HomeHeader(
-                    babyName: baby.name,
-                    ageMonths: ageMonths,
-                    onAvatarTap: () => context.pushNamed(AppRoute.profile.name),
-                    onTodayTap: () =>
-                        ref.read(selectedHomeDateProvider.notifier).state =
-                            homeDateOnly(DateTime.now()),
+                _entrance(
+                  0,
+                  _hPad(
+                    HomeHeader(
+                      babyName: baby.name,
+                      ageMonths: ageMonths,
+                      onAvatarTap: () =>
+                          context.pushNamed(AppRoute.profile.name),
+                      onTodayTap: () =>
+                          ref.read(selectedHomeDateProvider.notifier).state =
+                              homeDateOnly(DateTime.now()),
+                    ),
                   ),
                 ),
                 const SizedBox(height: AppSizes.md),
-                _hPad(
-                  HomeHeroCard(
-                    babyName: baby.name,
-                    ageMonths: ageMonths,
-                    dateOfBirth: baby.dateOfBirth,
-                    mealCount: dayView.mealCount,
-                    mealTarget: dayView.mealTarget,
-                    introducedCount: state.introducedCount,
-                    ironRich: dayView.ironRich,
-                    hasActiveProgramAllergen: state.hasActiveProgramAllergen,
-                    heroState: state.allergenHeroState,
-                    allergenKey: key,
-                    allergenDisplayName: key == null
-                        ? ''
-                        : AllergenEmoji.displayName(key),
-                    allergenReactionFlags: state.currentAllergenReactionFlags,
-                    onStartTracker: () => _openTracker(context, ref),
-                    onOpenDetail: () => _openAllergenDetail(context),
+                _entrance(
+                  1,
+                  _hPad(
+                    HomeHeroCard(
+                      babyName: baby.name,
+                      ageMonths: ageMonths,
+                      dateOfBirth: baby.dateOfBirth,
+                      mealCount: dayView.mealCount,
+                      mealTarget: dayView.mealTarget,
+                      introducedCount: state.introducedCount,
+                      ironRich: dayView.ironRich,
+                      hasActiveProgramAllergen: state.hasActiveProgramAllergen,
+                      heroState: state.allergenHeroState,
+                      allergenKey: key,
+                      allergenDisplayName: key == null
+                          ? ''
+                          : AllergenEmoji.displayName(key),
+                      allergenReactionFlags: state.currentAllergenReactionFlags,
+                      onStartTracker: () => _openTracker(context, ref),
+                      onOpenDetail: () => _openAllergenDetail(context),
+                    ),
                   ),
                 ),
                 if (state.mealPrepSetUp) ...[
                   const SizedBox(height: AppSizes.md),
-                  WeekStrip(
-                    days: _buildWeekDays(state.plannedDates, selected),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSizes.pagePaddingH,
+                  _entrance(
+                    2,
+                    WeekStrip(
+                      days: _buildWeekDays(state.plannedDates, selected),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSizes.pagePaddingH,
+                      ),
+                      onDaySelected: (i) =>
+                          ref.read(selectedHomeDateProvider.notifier).state =
+                              state.plannedDates[i],
                     ),
-                    onDaySelected: (i) =>
-                        ref.read(selectedHomeDateProvider.notifier).state =
-                            state.plannedDates[i],
                   ),
                 ],
                 const SizedBox(height: AppSizes.md),
-                _hPad(_mealsSection(context, ref, dayView)),
+                _entrance(3, _hPad(_mealsSection(context, ref, dayView))),
                 const SizedBox(height: AppSizes.md),
-                _hPad(HelpfulGuidanceCard(tips: dayView.guidance)),
+                _entrance(
+                  4,
+                  _hPad(HelpfulGuidanceCard(tips: dayView.guidance)),
+                ),
                 const SizedBox(height: AppSizes.xl),
               ],
             ),
@@ -265,29 +308,58 @@ class _HomeContent extends ConsumerWidget {
     child: child,
   );
 
+  Widget _entrance(int order, Widget child) => child
+      .animate(delay: AppDurations.fast * order)
+      .fadeIn(duration: AppDurations.fade)
+      .slideY(
+        begin: 0.06,
+        end: 0,
+        duration: AppDurations.slide,
+        curve: AppCurves.emphasized,
+      );
+
   Widget _mealsSection(
     BuildContext context,
     WidgetRef ref,
     HomeDayView dayView,
   ) {
+    final Widget section;
     if (!state.mealPrepSetUp) {
-      return ReadyToStartCard(
+      section = ReadyToStartCard(
+        key: const ValueKey('home_meals_ready'),
         babyName: state.baby?.name,
         onPressed: onCreateFirstMeal,
       );
-    }
-    if (dayView.meals.isEmpty) {
-      return HomeNoMealsState(
+    } else if (dayView.meals.isEmpty) {
+      section = HomeNoMealsState(
+        key: const ValueKey('home_meals_empty'),
         babyName: state.baby?.name,
         onAddMeal: () => _onAddMeal(context, ref),
       );
+    } else {
+      section = TodaysMealsCard(
+        key: const ValueKey('home_meals_populated'),
+        meals: dayView.meals,
+        recipes: dayView.recipes,
+        mealCount: dayView.mealCount,
+        mealTarget: dayView.mealTarget,
+        onAdd: () => _onAddMeal(context, ref),
+      );
     }
-    return TodaysMealsCard(
-      meals: dayView.meals,
-      recipes: dayView.recipes,
-      mealCount: dayView.mealCount,
-      mealTarget: dayView.mealTarget,
-      onAdd: () => _onAddMeal(context, ref),
+
+    return AnimatedSwitcher(
+      duration: AppDurations.base,
+      switchInCurve: AppCurves.standard,
+      switchOutCurve: AppCurves.standard,
+      transitionBuilder: (child, animation) => FadeTransition(
+        opacity: animation,
+        child: SizeTransition(
+          sizeFactor: animation,
+          axisAlignment: -1,
+          child: child,
+        ),
+      ),
+      child: section,
     );
   }
 
@@ -322,7 +394,7 @@ class _HomeLoadingScaffold extends StatelessWidget {
     body: Center(
       child: Semantics(
         label: 'Loading home dashboard',
-        child: const CircularProgressIndicator(),
+        child: const BrandFlowerLoader.small(),
       ),
     ),
   );

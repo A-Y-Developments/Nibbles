@@ -273,15 +273,18 @@ void main() {
       final day = DateTime(2026, 5, 30);
       final key = DateTime.utc(2026, 5, 30);
 
+      // A fresh (absent-key) day renders EXPANDED, so the first toggle must
+      // collapse it in a single tap (the render default and toggle default
+      // agree on `true`).
       notifier.toggleExpanded(day);
       var state = container
           .read(mealPlanControllerProvider(_babyId))
           .valueOrNull!;
-      expect(state.expanded[key], isTrue);
+      expect(state.expanded[key], isFalse);
 
       notifier.toggleExpanded(day);
       state = container.read(mealPlanControllerProvider(_babyId)).valueOrNull!;
-      expect(state.expanded[key], isFalse);
+      expect(state.expanded[key], isTrue);
 
       verify(() => mockMealPlanService.getActivePlan(any())).called(1);
     });

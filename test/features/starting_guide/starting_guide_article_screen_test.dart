@@ -18,6 +18,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nibbles/src/common/components/brand/brand_flower_loader.dart';
 import 'package:nibbles/src/features/starting_guide/constants/articles.dart';
 import 'package:nibbles/src/features/starting_guide/starting_guide_article_screen.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
@@ -257,7 +258,7 @@ void main() {
         // The not-found UI surfaces a dedicated title — assert it's present
         // and the loader spinner is gone.
         expect(find.text('Article not found'), findsOneWidget);
-        expect(find.byType(CircularProgressIndicator), findsNothing);
+        expect(find.byType(BrandFlowerLoader), findsNothing);
       },
     );
   });

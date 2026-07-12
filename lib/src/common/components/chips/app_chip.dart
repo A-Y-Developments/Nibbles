@@ -14,6 +14,7 @@ class AppChip extends StatelessWidget {
     this.tone = AppChipTone.neutral,
     this.icon,
     this.emoji,
+    this.flexibleLabel = false,
     super.key,
   });
 
@@ -25,6 +26,11 @@ class AppChip extends StatelessWidget {
 
   /// Optional leading emoji string (alternative to [icon]).
   final String? emoji;
+
+  /// When true, the label shrinks/ellipsizes under a bounded parent instead of
+  /// overflowing. Only set it where the chip sits inside a `Flexible`/`Expanded`
+  /// — a bare `true` in an unbounded row would throw.
+  final bool flexibleLabel;
 
   Color get _background {
     switch (tone) {
@@ -90,17 +96,24 @@ class AppChip extends StatelessWidget {
             ),
             const SizedBox(width: AppSizes.xs),
           ],
-          Text(
-            label,
-            style: TextStyle(
-              fontFamily: FontFamily.parkinsans,
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              height: 1,
-              color: fg,
-            ),
-          ),
+          if (flexibleLabel) Flexible(child: _label(fg)) else _label(fg),
         ],
+      ),
+    );
+  }
+
+  Widget _label(Color fg) {
+    return Text(
+      label,
+      maxLines: 1,
+      softWrap: false,
+      overflow: flexibleLabel ? TextOverflow.ellipsis : TextOverflow.clip,
+      style: TextStyle(
+        fontFamily: FontFamily.parkinsans,
+        fontSize: 13,
+        fontWeight: FontWeight.w700,
+        height: 1,
+        color: fg,
       ),
     );
   }

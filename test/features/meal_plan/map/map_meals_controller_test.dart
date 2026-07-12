@@ -192,60 +192,33 @@ void main() {
     });
   });
 
-  group('MapMealsController auto-advance', () {
-    test(
-      'filling the selected day advances to the next day (mealsPerDay=1)',
-      () {
-        final container = buildContainer();
-        final args = makeArgs(start: DateTime(2026, 5, 30));
-        container
-            .read(mapMealsControllerProvider(args).notifier)
-            .assignToSelectedDay('r-A', 1);
+  group('MapMealsController.assignToSelectedDay stays on the selected day', () {
+    test('filling the selected day does NOT advance to the next day', () {
+      final container = buildContainer();
+      final args = makeArgs(start: DateTime(2026, 5, 30));
+      container
+          .read(mapMealsControllerProvider(args).notifier)
+          .assignToSelectedDay('r-A', 1);
 
-        final state = container.read(mapMealsControllerProvider(args));
-        expect(state.selectedDay, DateTime(2026, 5, 31));
-        expect(state.assignments[DateTime(2026, 5, 30)], ['r-A']);
-      },
-    );
+      final state = container.read(mapMealsControllerProvider(args));
+      expect(
+        state.selectedDay,
+        DateTime(2026, 5, 30),
+        reason: 'The active chip stays put once the day fills — no auto-jump.',
+      );
+      expect(state.assignments[DateTime(2026, 5, 30)], ['r-A']);
+    });
 
-    test('advance skips days that are already full', () {
+    test('stays put even after every slot for the day is filled', () {
       final container = buildContainer();
       final args = makeArgs(start: DateTime(2026, 5, 30));
       container.read(mapMealsControllerProvider(args).notifier)
-        // Fill 5/31 first so it must be skipped.
-        ..selectDay(DateTime(2026, 5, 31))
-        ..assignToSelectedDay('r-B', 1)
-        // Back to 5/30 and fill it → should skip full 5/31 → land on 6/1.
-        ..selectDay(DateTime(2026, 5, 30))
-        ..assignToSelectedDay('r-A', 1);
+        ..assignToSelectedDay('r-A', 2)
+        ..assignToSelectedDay('r-B', 2);
 
       final state = container.read(mapMealsControllerProvider(args));
-      expect(state.selectedDay, DateTime(2026, 6));
-    });
-
-    test('mealsPerDay=2 advances only once the day is truly full', () {
-      final container = buildContainer();
-      final args = makeArgs(start: DateTime(2026, 5, 30));
-      final notifier = container.read(mapMealsControllerProvider(args).notifier)
-        ..assignToSelectedDay('r-A', 2);
-
-      var state = container.read(mapMealsControllerProvider(args));
-      expect(state.selectedDay, DateTime(2026, 5, 30), reason: '1/2 → stay');
-
-      notifier.assignToSelectedDay('r-B', 2);
-      state = container.read(mapMealsControllerProvider(args));
-      expect(state.selectedDay, DateTime(2026, 5, 31), reason: '2/2 → advance');
-    });
-
-    test('no advance when the selected day is the last one in the window', () {
-      final container = buildContainer();
-      final args = makeArgs(start: DateTime(2026, 5, 30));
-      container.read(mapMealsControllerProvider(args).notifier)
-        ..selectDay(DateTime(2026, 6, 5))
-        ..assignToSelectedDay('r-A', 1);
-
-      final state = container.read(mapMealsControllerProvider(args));
-      expect(state.selectedDay, DateTime(2026, 6, 5));
+      expect(state.selectedDay, DateTime(2026, 5, 30));
+      expect(state.assignments[DateTime(2026, 5, 30)], ['r-A', 'r-B']);
     });
   });
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/inputs/app_search_field.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
@@ -37,26 +38,38 @@ class RecommendationCarouselSection extends StatelessWidget {
           child: Text(title, style: textTheme.titleMedium),
         ),
         const SizedBox(height: AppSizes.sm),
-        SizedBox(
-          height: 220,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSizes.pagePaddingH,
-              vertical: AppSizes.xs,
+        TweenAnimationBuilder<double>(
+          tween: Tween<double>(begin: 0, end: 1),
+          duration: AppDurations.slide,
+          curve: AppCurves.emphasized,
+          builder: (context, value, child) => Opacity(
+            opacity: value,
+            child: Transform.translate(
+              offset: Offset(0, (1 - value) * 8),
+              child: child,
             ),
-            itemCount: recipes.length,
-            separatorBuilder: (_, __) => const SizedBox(width: AppSizes.sm),
-            itemBuilder: (context, index) {
-              final recipe = recipes[index];
-              final unsafe = isUnsafe(recipe);
-              return BrowseMealRecipeCard(
-                recipe: recipe,
-                selected: selectedIds.contains(recipe.id),
-                unsafe: unsafe,
-                onTap: () => onToggle(recipe),
-              );
-            },
+          ),
+          child: SizedBox(
+            height: 220,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSizes.pagePaddingH,
+                vertical: AppSizes.xs,
+              ),
+              itemCount: recipes.length,
+              separatorBuilder: (_, __) => const SizedBox(width: AppSizes.sm),
+              itemBuilder: (context, index) {
+                final recipe = recipes[index];
+                final unsafe = isUnsafe(recipe);
+                return BrowseMealRecipeCard(
+                  recipe: recipe,
+                  selected: selectedIds.contains(recipe.id),
+                  unsafe: unsafe,
+                  onTap: () => onToggle(recipe),
+                );
+              },
+            ),
           ),
         ),
         const SizedBox(height: AppSizes.md),
@@ -167,7 +180,9 @@ class _Counter extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
+      child: AnimatedContainer(
+        duration: AppDurations.base,
+        curve: AppCurves.standard,
         padding: const EdgeInsets.symmetric(
           horizontal: AppSizes.sp12,
           vertical: AppSizes.xs,
@@ -175,13 +190,21 @@ class _Counter extends StatelessWidget {
         decoration: BoxDecoration(
           color: background,
           borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-          border: active ? Border.all(color: foreground, width: 1.5) : null,
+          border: Border.all(
+            color: active ? foreground : Colors.transparent,
+            width: 1.5,
+          ),
         ),
-        child: Text(
-          label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: foreground,
-            fontWeight: FontWeight.w600,
+        child: AnimatedSwitcher(
+          duration: AppDurations.fade,
+          switchInCurve: AppCurves.standard,
+          child: Text(
+            label,
+            key: ValueKey<String>(label),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: foreground,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ),

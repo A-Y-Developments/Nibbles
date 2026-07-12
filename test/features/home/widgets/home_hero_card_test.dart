@@ -23,8 +23,12 @@ Future<void> _pump(
   HomeAllergenHeroState heroState = HomeAllergenHeroState.start,
   String? allergenKey = 'milk',
   List<bool> allergenReactionFlags = const [false, false],
+  Size physicalSize = const Size(1080, 2400),
+  String babyName = 'Milkshake',
+  int ageMonths = 7,
+  DateTime? dateOfBirth,
 }) async {
-  tester.view.physicalSize = const Size(1080, 2400);
+  tester.view.physicalSize = physicalSize;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
@@ -32,9 +36,9 @@ Future<void> _pump(
   await tester.pumpWidget(
     _wrap(
       HomeHeroCard(
-        babyName: 'Milkshake',
-        ageMonths: 7,
-        dateOfBirth: DateTime(2025, 6),
+        babyName: babyName,
+        ageMonths: ageMonths,
+        dateOfBirth: dateOfBirth ?? DateTime(2025, 6),
         mealCount: mealCount,
         mealTarget: mealTarget,
         introducedCount: introducedCount,
@@ -71,6 +75,30 @@ void main() {
       expect(find.text('/2'), findsOneWidget);
       expect(find.text('/11'), findsOneWidget);
     });
+  });
+
+  group('HomeHeroCard — greeting fits without overflow', () {
+    testWidgets(
+      'long name + older age on a narrow screen does not overflow the bowl',
+      (tester) async {
+        // 320pt-wide logical viewport (narrowest supported) with the longest
+        // realistic content — the greeting must clear the bleeding bowl and
+        // never throw a layout overflow.
+        await _pump(
+          tester,
+          physicalSize: const Size(320, 1200),
+          babyName: 'Alessandra',
+          ageMonths: 13,
+          dateOfBirth: DateTime(2024, 6, 3),
+        );
+
+        expect(tester.takeException(), isNull);
+        // Rings still render — the responsive greeting width didn't disturb
+        // the rest of the left column.
+        expect(find.text('TODAY MEALS'), findsOneWidget);
+        expect(find.text('ALLERGEN'), findsOneWidget);
+      },
+    );
   });
 
   group('HomeHeroCard — status chips', () {

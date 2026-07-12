@@ -61,23 +61,23 @@ abstract final class AppTypography {
     ),
     titleLarge: const TextStyle(
       fontFamily: FontFamily.parkinsans,
-      fontSize: 22,
+      fontSize: 24,
       fontWeight: FontWeight.w700,
       height: 1.273,
       color: AppColors.text,
     ),
-    // title3 — 20/700 h1.30.
+    // title3 — 20/700 h1.30 (+2px design-review bump → 22).
     titleMedium: const TextStyle(
       fontFamily: FontFamily.parkinsans,
-      fontSize: 20,
+      fontSize: 22,
       fontWeight: FontWeight.w700,
       height: 1.30,
       color: AppColors.text,
     ),
-    // headline — 17/600 h1.294 (Parkinsans display headline slot).
+    // headline — 17/600 h1.294 (Parkinsans display headline slot; +2px → 19).
     titleSmall: const TextStyle(
       fontFamily: FontFamily.parkinsans,
-      fontSize: 17,
+      fontSize: 19,
       fontWeight: FontWeight.w600,
       height: 1.294,
       color: AppColors.text,
@@ -103,24 +103,24 @@ abstract final class AppTypography {
       height: 1.333,
       color: AppColors.subtext,
     ),
-    // label (headline metrics 17/600 h1.294) — Figtree label slot.
+    // label (headline metrics 17/600 h1.294; +2px design-review bump → 19).
     labelLarge: GoogleFonts.figtree(
-      fontSize: 17,
+      fontSize: 19,
       fontWeight: FontWeight.w600,
       height: 1.294,
       color: AppColors.text,
     ),
-    // subhead — 13/600 h1.538. Parkinsans display family per kit (--font-display).
+    // subhead — 13/600 h1.538 (+2px → 15). Parkinsans display family per kit.
     labelMedium: const TextStyle(
       fontFamily: FontFamily.parkinsans,
-      fontSize: 13,
+      fontSize: 15,
       fontWeight: FontWeight.w600,
       height: 1.538,
       color: AppColors.text,
     ),
-    // overline — 10/700 h1.20 ls0.6 (uppercase applied at widget level).
+    // overline — 10/700 h1.20 ls0.6 (+2px → 12; uppercase at widget level).
     labelSmall: GoogleFonts.figtree(
-      fontSize: 10,
+      fontSize: 12,
       fontWeight: FontWeight.w700,
       height: 1.20,
       color: AppColors.subtext,
@@ -140,10 +140,10 @@ abstract final class AppTypography {
     letterSpacing: -0.84,
   );
 
-  // sectionTitle — title3 (20/700 h1.30). Parkinsans display slot.
+  // sectionTitle — title3 (20/700 h1.30; +2px design-review bump → 22).
   static const TextStyle sectionTitle = TextStyle(
     fontFamily: FontFamily.parkinsans,
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: FontWeight.w700,
     height: 1.30,
     color: AppColors.text,
@@ -162,7 +162,7 @@ abstract final class AppTypography {
   // 700 16px/1.2 var(--font-display) color var(--fg-strong).
   static const TextStyle emptyStateTitle = TextStyle(
     fontFamily: FontFamily.parkinsans,
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: FontWeight.w700,
     height: 1.2,
     color: AppColors.fgStrong,
@@ -176,9 +176,9 @@ abstract final class AppTypography {
     color: AppColors.subtext,
   );
 
-  // button ~ headline (15/700 h1.294). Figtree body helper.
+  // button ~ headline (15/700 h1.294; +2px design-review bump → 17). Figtree.
   static final TextStyle button = GoogleFonts.figtree(
-    fontSize: 15,
+    fontSize: 17,
     fontWeight: FontWeight.w700,
     height: 1.294,
     color: AppColors.onPrimary,

@@ -28,7 +28,6 @@ import 'package:nibbles/src/features/meal_plan/widgets/meal_plan_header.dart';
 import 'package:nibbles/src/features/meal_plan/widgets/range_add_to_shoplist_sheet.dart';
 import 'package:nibbles/src/logging/analytics.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
-import 'package:nibbles/src/utils/age_in_months.dart';
 
 /// `yyyy-MM-dd` for analytics. Locale-stable, no PII.
 String _isoDate(DateTime dt) {
@@ -53,7 +52,7 @@ class MealPlanScreen extends ConsumerWidget {
 
     return babyIdAsync.when(
       loading: () => const GradientScaffold(
-        body: Center(child: CircularProgressIndicator()),
+        body: Center(child: BrandFlowerLoader.small()),
       ),
       error: (_, __) => GradientScaffold(
         body: Center(
@@ -122,11 +121,6 @@ class _MealPlanBody extends ConsumerStatefulWidget {
 }
 
 class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
-  /// Local override that extends the visible window beyond the controller's
-  /// `windowEnd`. "+ Add Date" increments this by 1 day. Cleared when the plan
-  /// changes (a fresh create/delete resets the body).
-  DateTime? _extraEnd;
-
   /// Guard so `meal_plan_viewed` only fires once per mount, after the
   /// controller resolves with an active plan.
   bool _viewedFired = false;
@@ -139,7 +133,7 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
 
     return GradientScaffold(
       body: controllerAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(child: BrandFlowerLoader.small()),
         error: (_, __) => _ErrorView(
           onRetry: () =>
               ref.invalidate(mealPlanControllerProvider(widget.babyId)),
@@ -157,7 +151,6 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
     if (state.plan == null) {
       return MealPlanEmptyState(
         babyName: baby.name,
-        ageMonths: ageInMonths(baby.dateOfBirth),
         onSetMealPrep: (range) => _startAiFlow(range, baby),
         onFillInMyself: _startManualFlow,
       );
@@ -167,7 +160,8 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
       babyId: widget.babyId,
       state: state,
       baby: baby,
-      effectiveWindowEnd: _effectiveWindowEnd(state),
+      effectiveWindowEnd: state.windowEnd,
+      onRefresh: _refresh,
       onAddDate: _onAddDate,
       onScreenMenuSelected: _onScreenMenuSelected,
       onDayAdd: _onDayAdd,
@@ -185,12 +179,17 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
       state.windowStart.month,
       state.windowStart.day,
     );
-    final end = _effectiveWindowEnd(state);
+    final end = state.windowEnd;
     final dayCount =
         DateTime(end.year, end.month, end.day).difference(start).inDays + 1;
     unawaited(
       ref.read(analyticsProvider).logMealPlanViewed(dayCount: dayCount),
     );
+  }
+
+  Future<void> _refresh() async {
+    ref.invalidate(mealPlanControllerProvider(widget.babyId));
+    await ref.read(mealPlanControllerProvider(widget.babyId).future);
   }
 
   void _onToggleExpanded(DateTime day) {
@@ -212,22 +211,14 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
     }
   }
 
-  DateTime _effectiveWindowEnd(MealPlanState state) {
-    final extra = _extraEnd;
-    if (extra == null) return state.windowEnd;
-    return extra.isAfter(state.windowEnd) ? extra : state.windowEnd;
-  }
-
-  void _onAddDate() {
-    final state = ref
-        .read(mealPlanControllerProvider(widget.babyId))
-        .valueOrNull;
-    if (state == null) return;
-    setState(() {
-      final current = _effectiveWindowEnd(state);
-      _extraEnd = current.add(const Duration(days: 1));
-    });
+  Future<void> _onAddDate() async {
     unawaited(ref.read(analyticsProvider).logMealPlanAddDateTapped());
+    final ok = await ref
+        .read(mealPlanControllerProvider(widget.babyId).notifier)
+        .addDate();
+    if (!ok && mounted) {
+      AppToast.error(context, "Couldn't add date. Try again.");
+    }
   }
 
   // --- Meal-prep entry flows ------------------------------------------------
@@ -341,7 +332,7 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
           state.windowStart.month,
           state.windowStart.day,
         );
-        final end = _effectiveWindowEnd(state);
+        final end = state.windowEnd;
         final dayCount =
             DateTime(end.year, end.month, end.day).difference(start).inDays + 1;
         unawaited(analytics.logMealPlanAddToShopList(dayCount: dayCount));
@@ -373,7 +364,7 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
     final result = await showSelectPeriodDateSheet(
       context,
       initialStart: state.windowStart,
-      initialEnd: _effectiveWindowEnd(state),
+      initialEnd: state.windowEnd,
     );
     if (result == null || !mounted) return;
 
@@ -397,7 +388,6 @@ class _MealPlanBodyState extends ConsumerState<_MealPlanBody> {
       }
       return;
     }
-    setState(() => _extraEnd = null);
     unawaited(ref.read(analyticsProvider).logMealPlanDeleted());
   }
 
@@ -483,6 +473,7 @@ class _PopulatedView extends StatelessWidget {
     required this.state,
     required this.baby,
     required this.effectiveWindowEnd,
+    required this.onRefresh,
     required this.onAddDate,
     required this.onScreenMenuSelected,
     required this.onDayAdd,
@@ -495,6 +486,7 @@ class _PopulatedView extends StatelessWidget {
   final MealPlanState state;
   final Baby baby;
   final DateTime effectiveWindowEnd;
+  final Future<void> Function() onRefresh;
   final VoidCallback onAddDate;
   final ValueChanged<_ScreenMenuAction> onScreenMenuSelected;
   final ValueChanged<DateTime> onDayAdd;
@@ -532,8 +524,6 @@ class _PopulatedView extends StatelessWidget {
       children: [
         MealPlanHeader(
           babyName: baby.name,
-          ageMonths: ageInMonths(baby.dateOfBirth),
-          dayCount: days.length,
           overflowButton: _NoFlashMenuTheme(
             child: Builder(
               builder: (btnContext) => MealPlanOverflowButton(
@@ -543,28 +533,33 @@ class _PopulatedView extends StatelessWidget {
           ),
         ),
         Expanded(
-          child: CustomScrollView(
-            slivers: [
-              const SliverToBoxAdapter(child: SizedBox(height: AppSizes.sm)),
-              SliverList(
-                delegate: SliverChildBuilderDelegate((context, i) {
-                  final day = days[i];
-                  return DayAccordionCard(
-                    day: day,
-                    entries: _entriesForDay(day),
-                    recipes: state.recipes,
-                    flaggedAllergenKeys: state.flaggedAllergenKeys,
-                    isExpanded: state.expanded[_expandedKey(day)] ?? true,
-                    onToggle: () => onToggleExpanded(day),
-                    onAdd: () => onDayAdd(day),
-                    onRecipeTap: onRecipeTap,
-                    onMenuSelected: (action) => onDayMenuSelected(day, action),
-                  );
-                }, childCount: days.length),
-              ),
-              SliverToBoxAdapter(child: AddDatePill(onPressed: onAddDate)),
-              const SliverToBoxAdapter(child: SizedBox(height: AppSizes.xl)),
-            ],
+          child: BrandRefreshIndicator(
+            onRefresh: onRefresh,
+            child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                const SliverToBoxAdapter(child: SizedBox(height: AppSizes.sm)),
+                SliverList(
+                  delegate: SliverChildBuilderDelegate((context, i) {
+                    final day = days[i];
+                    return DayAccordionCard(
+                      day: day,
+                      entries: _entriesForDay(day),
+                      recipes: state.recipes,
+                      flaggedAllergenKeys: state.flaggedAllergenKeys,
+                      isExpanded: state.expanded[_expandedKey(day)] ?? true,
+                      onToggle: () => onToggleExpanded(day),
+                      onAdd: () => onDayAdd(day),
+                      onRecipeTap: onRecipeTap,
+                      onMenuSelected: (action) =>
+                          onDayMenuSelected(day, action),
+                    );
+                  }, childCount: days.length),
+                ),
+                SliverToBoxAdapter(child: AddDatePill(onPressed: onAddDate)),
+                const SliverToBoxAdapter(child: SizedBox(height: AppSizes.xl)),
+              ],
+            ),
           ),
         ),
       ],

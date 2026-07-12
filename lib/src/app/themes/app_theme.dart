@@ -4,9 +4,11 @@ import 'package:nibbles/gen/fonts.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
+import 'package:nibbles/src/routing/transitions.dart';
 
 export 'package:nibbles/src/app/themes/app_colors.dart';
 export 'package:nibbles/src/app/themes/app_gradients.dart';
+export 'package:nibbles/src/app/themes/app_motion.dart';
 export 'package:nibbles/src/app/themes/app_sizes.dart';
 export 'package:nibbles/src/app/themes/app_typography.dart';
 
@@ -43,6 +45,12 @@ abstract final class AppTheme {
       textTheme: textTheme,
       fontFamily: FontFamily.parkinsans,
       scaffoldBackgroundColor: const Color(0xFFF5F5F5),
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.android: FadeThroughPageTransitionsBuilder(),
+        },
+      ),
       dividerColor: AppColors.borderSoft,
       dividerTheme: const DividerThemeData(
         color: AppColors.borderSoft,
@@ -106,6 +114,19 @@ abstract final class AppTheme {
           side: const BorderSide(color: AppColors.greenDeep, width: 1.5),
           shape: const StadiumBorder(),
           textStyle: AppTypography.button.copyWith(color: AppColors.greenDeep),
+        ),
+      ),
+      // Standardize inline FilledButtons to the pill spec (h49 via
+      // buttonHeight) so they match ElevatedButton, not raw M3 defaults.
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: AppColors.greenDeep,
+          foregroundColor: AppColors.cream,
+          disabledBackgroundColor: AppColors.borderMuted,
+          disabledForegroundColor: AppColors.cream,
+          minimumSize: const Size.fromHeight(AppSizes.buttonHeight),
+          shape: const StadiumBorder(),
+          textStyle: AppTypography.button,
         ),
       ),
       textButtonTheme: TextButtonThemeData(

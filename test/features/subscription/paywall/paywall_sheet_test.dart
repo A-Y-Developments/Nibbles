@@ -193,6 +193,10 @@ void main() {
       find.byKey(const Key('paywall_view_all_plans_button')),
       findsOneWidget,
     );
+
+    // Drain the _ScrollContent entrance animations (flutter_animate) so no
+    // timer is pending when the tree is disposed.
+    await tester.pumpAndSettle();
   });
 
   // -------------------------------------------------------------------------
@@ -214,8 +218,9 @@ void main() {
     // First pump — the controller has scheduled the offerings load but it
     // hasn't resolved yet, so the loading card is visible.
     expect(find.byKey(const Key('paywall_trial_card_loading')), findsOneWidget);
-    // Resolve so the test ends cleanly (no pending timers).
-    await tester.pump();
+    // Resolve offerings + drain the entrance animations so the test ends
+    // cleanly (no pending timers).
+    await tester.pumpAndSettle();
   });
 
   // -------------------------------------------------------------------------
@@ -245,6 +250,9 @@ void main() {
     // The primary CTA stays in its disabled-pill state while offerings are
     // unavailable — guarded by `state.phase == ready` in the body.
     expect(find.text(r'Try for $0'), findsOneWidget);
+
+    // Drain the _ScrollContent entrance animations (flutter_animate).
+    await tester.pumpAndSettle();
   });
 
   // -------------------------------------------------------------------------
@@ -276,6 +284,9 @@ void main() {
     expect(find.byKey(const Key('paywall_error_dialog')), findsOneWidget);
     expect(find.text('Purchase failed'), findsOneWidget);
     expect(find.text('Card declined.'), findsOneWidget);
+
+    // Drain the _ScrollContent entrance animations (flutter_animate).
+    await tester.pumpAndSettle();
   });
 
   // -------------------------------------------------------------------------
@@ -307,6 +318,9 @@ void main() {
     // Canonical copy from error-handling.md — overrides whatever the
     // service message happens to be when the failure is `NotFoundException`.
     expect(find.text('No active subscription found.'), findsOneWidget);
+
+    // Drain the _ScrollContent entrance animations (flutter_animate).
+    await tester.pumpAndSettle();
   });
 
   // -------------------------------------------------------------------------
@@ -364,6 +378,9 @@ void main() {
 
     expect(find.byKey(const Key('paywall_dev_skip_button')), findsNothing);
     expect(find.text('Maybe later (dev)'), findsNothing);
+
+    // Drain the _ScrollContent entrance animations (flutter_animate).
+    await tester.pumpAndSettle();
   });
 
   testWidgets('dev skip link sets the skip flag and routes home (dev)', (
@@ -463,5 +480,8 @@ void main() {
     expect(cardRect.bottom, lessThanOrEqualTo(screenHeight));
     // Price disclosure sits above the purchase CTA (App Review 3.1.2).
     expect(cardRect.bottom, lessThanOrEqualTo(ctaRect.top));
+
+    // Drain the _ScrollContent entrance animations (flutter_animate).
+    await tester.pumpAndSettle();
   });
 }

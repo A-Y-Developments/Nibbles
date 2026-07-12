@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
@@ -35,14 +36,34 @@ class SelectedDaySlotList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final borderColor = isHovering ? AppColors.green : AppColors.borderMuted;
-    if (recipes.isEmpty) {
-      return _EmptyDayPlaceholder(borderColor: borderColor);
-    }
-    return _PopulatedDayContainer(
-      recipes: recipes,
-      onRemoveAt: onRemoveAt,
-      borderColor: borderColor,
+    final targetBorder = isHovering ? AppColors.green : AppColors.borderMuted;
+    return TweenAnimationBuilder<Color?>(
+      tween: ColorTween(end: targetBorder),
+      duration: AppDurations.base,
+      curve: AppCurves.standard,
+      builder: (context, color, _) {
+        final borderColor = color ?? targetBorder;
+        return AnimatedSize(
+          duration: AppDurations.base,
+          curve: AppCurves.standard,
+          alignment: Alignment.topCenter,
+          child: AnimatedSwitcher(
+            duration: AppDurations.fade,
+            switchInCurve: AppCurves.standard,
+            child: recipes.isEmpty
+                ? _EmptyDayPlaceholder(
+                    key: const ValueKey<bool>(true),
+                    borderColor: borderColor,
+                  )
+                : _PopulatedDayContainer(
+                    key: const ValueKey<bool>(false),
+                    recipes: recipes,
+                    onRemoveAt: onRemoveAt,
+                    borderColor: borderColor,
+                  ),
+          ),
+        );
+      },
     );
   }
 }
@@ -53,6 +74,7 @@ class _PopulatedDayContainer extends StatelessWidget {
     required this.recipes,
     required this.onRemoveAt,
     required this.borderColor,
+    super.key,
   });
 
   final List<Recipe> recipes;
@@ -76,7 +98,6 @@ class _PopulatedDayContainer extends StatelessWidget {
               if (i != 0) const SizedBox(height: AppSizes.sm),
               MealRecipeCard(
                 recipe: recipes[i],
-                titleMaxLines: 2,
                 trailing: IconButton(
                   onPressed: () => onRemoveAt(i),
                   tooltip: 'Remove ${recipes[i].title} from day',
@@ -98,7 +119,7 @@ class _PopulatedDayContainer extends StatelessWidget {
 }
 
 class _EmptyDayPlaceholder extends StatelessWidget {
-  const _EmptyDayPlaceholder({required this.borderColor});
+  const _EmptyDayPlaceholder({required this.borderColor, super.key});
 
   final Color borderColor;
 

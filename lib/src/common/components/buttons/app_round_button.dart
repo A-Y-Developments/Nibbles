@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
+import 'package:nibbles/src/common/components/feedback/press_scale.dart';
 
 /// Background tone for [AppRoundButton] — maps to kit `.rbtn--*`.
 enum AppRoundButtonTone { white, ghost, green, butter, lime }
@@ -49,24 +50,27 @@ class AppRoundButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final iconSize = size == AppRoundButtonSize.small ? 18.0 : 22.0;
+    const iconSize = AppSizes.iconMd;
 
     return Semantics(
       button: true,
       label: semanticLabel,
-      child: Material(
-        color: _background,
-        shape: const CircleBorder(),
-        child: InkWell(
-          onTap: onPressed,
-          customBorder: const CircleBorder(),
-          child: SizedBox(
-            width: _diameter,
-            height: _diameter,
-            child: Center(
-              child: IconTheme.merge(
-                data: IconThemeData(color: _foreground, size: iconSize),
-                child: icon,
+      child: PressableScale(
+        enabled: onPressed != null,
+        child: Material(
+          color: _background,
+          shape: const CircleBorder(),
+          child: InkWell(
+            onTap: onPressed,
+            customBorder: const CircleBorder(),
+            child: SizedBox(
+              width: _diameter,
+              height: _diameter,
+              child: Center(
+                child: IconTheme.merge(
+                  data: IconThemeData(color: _foreground, size: iconSize),
+                  child: icon,
+                ),
               ),
             ),
           ),

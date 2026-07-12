@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/gen/assets.gen.dart';
-import 'package:nibbles/gen/fonts.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
+import 'package:nibbles/src/app/themes/app_typography.dart';
+import 'package:nibbles/src/common/components/feedback/press_scale.dart';
 
 /// NIB-65 — Butter-wash header for the Home dashboard.
 ///
@@ -39,23 +40,25 @@ class HomeHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSizes.sm),
-      child: Row(
+      child: Stack(
+        alignment: Alignment.center,
         children: [
-          _TodayPill(onTap: onTodayTap),
-          Expanded(
-            child: Center(
-              child: Semantics(
-                label: 'Nibbles',
-                image: true,
-                excludeSemantics: true,
-                child: Assets.images.home.nibblesWordmark.image(
-                  height: 22,
-                  fit: BoxFit.contain,
-                ),
-              ),
+          Semantics(
+            label: 'Nibbles',
+            image: true,
+            excludeSemantics: true,
+            child: Assets.images.home.nibblesWordmark.image(
+              height: 22,
+              fit: BoxFit.contain,
             ),
           ),
-          _HeaderAvatar(onTap: onAvatarTap),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _TodayPill(onTap: onTodayTap),
+              _HeaderAvatar(onTap: onAvatarTap),
+            ],
+          ),
         ],
       ),
     );
@@ -70,21 +73,20 @@ class _TodayPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final pill = Container(
-      height: AppSizes.roundButtonSm,
-      padding: const EdgeInsets.symmetric(horizontal: AppSizes.sm),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSizes.md,
+        vertical: AppSizes.sm,
+      ),
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppSizes.radiusFull),
       ),
-      child: const Text(
+      child: Text(
         'Today',
-        style: TextStyle(
-          fontFamily: FontFamily.parkinsans,
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-          height: 1,
+        style: AppTypography.textTheme.labelLarge?.copyWith(
           color: AppColors.greenDeep,
+          fontWeight: FontWeight.w700,
         ),
       ),
     );
@@ -96,13 +98,16 @@ class _TodayPill extends StatelessWidget {
       label: 'Jump to today',
       identifier: 'home_today_pill',
       excludeSemantics: true,
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-        child: InkWell(
-          onTap: onTap,
+      child: PressableScale(
+        enabled: true,
+        child: Material(
+          color: Colors.transparent,
           borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-          child: pill,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+            child: pill,
+          ),
         ),
       ),
     );
@@ -114,7 +119,7 @@ class _HeaderAvatar extends StatelessWidget {
 
   final VoidCallback? onTap;
 
-  static const double _size = 36;
+  static const double _size = 40;
 
   @override
   Widget build(BuildContext context) {
@@ -126,7 +131,11 @@ class _HeaderAvatar extends StatelessWidget {
         color: AppColors.greenDeep,
         shape: BoxShape.circle,
       ),
-      child: const Icon(Icons.person_outline, size: 18, color: AppColors.cream),
+      child: const Icon(
+        Icons.person_outline,
+        size: AppSizes.iconMd,
+        color: AppColors.cream,
+      ),
     );
 
     if (onTap == null) return avatar;
@@ -135,11 +144,7 @@ class _HeaderAvatar extends StatelessWidget {
       button: true,
       label: 'Profile',
       identifier: 'home_profile_avatar',
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: avatar,
-      ),
+      child: PressableScale(onTap: onTap, child: avatar),
     );
   }
 }

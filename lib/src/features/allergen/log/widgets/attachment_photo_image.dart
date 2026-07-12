@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/services/allergen_service.dart';
 
@@ -61,7 +62,7 @@ class AttachmentPhotoImage extends ConsumerWidget {
 
     final urlAsync = ref.watch(signedPhotoUrlProvider(remote));
     return urlAsync.when(
-      loading: () => _placeholder(const CircularProgressIndicator()),
+      loading: () => _placeholder(const BrandFlowerLoader.small()),
       error: (_, _) => _placeholder(const Text('Photo unavailable')),
       data: (url) => url == null
           ? _placeholder(const Text('Photo unavailable'))

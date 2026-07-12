@@ -30,10 +30,7 @@ class RecipeTipCard extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.md,
-        vertical: AppSizes.lg,
-      ),
+      padding: const EdgeInsets.only(left: AppSizes.md, right: AppSizes.sm),
       decoration: BoxDecoration(
         color: AppColors.cardCream,
         borderRadius: BorderRadius.circular(AppSizes.radiusXl),
@@ -60,8 +57,8 @@ class RecipeTipCard extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: AppSizes.sm),
-          _illustration.image(width: 100, fit: BoxFit.contain),
+          const SizedBox(width: AppSizes.xs),
+          _illustration.image(width: 160, fit: BoxFit.contain),
         ],
       ),
     );

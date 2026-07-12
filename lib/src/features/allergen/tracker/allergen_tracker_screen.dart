@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/common/domain/entities/allergen.dart';
@@ -44,7 +46,7 @@ class AllergenTrackerScreen extends ConsumerWidget {
 
     return babyIdAsync.when(
       loading: () => const GradientScaffold(
-        body: Center(child: CircularProgressIndicator()),
+        body: Center(child: BrandFlowerLoader.small()),
       ),
       error: (_, __) => const GradientScaffold(
         body: Center(child: Text('Could not load baby profile.')),
@@ -88,21 +90,31 @@ class _TrackerBodyState extends ConsumerState<_TrackerBody> {
     return GradientScaffold(
       body: SafeArea(
         bottom: false,
-        child: trackerAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, _) => _ErrorState(
-            onRetry: () => ref.invalidate(
-              allergenTrackerControllerProvider(widget.babyId),
+        child: AnimatedSwitcher(
+          duration: AppDurations.fade,
+          switchInCurve: AppCurves.standard,
+          switchOutCurve: AppCurves.standard,
+          child: trackerAsync.when(
+            loading: () => const Center(
+              key: ValueKey('loading'),
+              child: BrandFlowerLoader.small(),
             ),
-          ),
-          data: (state) => _TrackerContent(
-            babyId: widget.babyId,
-            state: state,
-            segmentIndex: _segmentIndex,
-            onSegmentChanged: _onSegmentChanged,
-            onStartIntroduce: _startIntroduce,
-            onAddReaction: _addReaction,
-            onStartNew: _startNew,
+            error: (err, _) => _ErrorState(
+              key: const ValueKey('error'),
+              onRetry: () => ref.invalidate(
+                allergenTrackerControllerProvider(widget.babyId),
+              ),
+            ),
+            data: (state) => _TrackerContent(
+              key: const ValueKey('data'),
+              babyId: widget.babyId,
+              state: state,
+              segmentIndex: _segmentIndex,
+              onSegmentChanged: _onSegmentChanged,
+              onStartIntroduce: _startIntroduce,
+              onAddReaction: _addReaction,
+              onStartNew: _startNew,
+            ),
           ),
         ),
       ),
@@ -143,7 +155,7 @@ class _TrackerBodyState extends ConsumerState<_TrackerBody> {
 }
 
 class _ErrorState extends StatelessWidget {
-  const _ErrorState({required this.onRetry});
+  const _ErrorState({required this.onRetry, super.key});
 
   final VoidCallback onRetry;
 
@@ -180,6 +192,7 @@ class _TrackerContent extends ConsumerWidget {
     required this.onStartIntroduce,
     required this.onAddReaction,
     required this.onStartNew,
+    super.key,
   });
 
   final String babyId;
@@ -207,61 +220,70 @@ class _TrackerContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return CustomScrollView(
-      slivers: [
-        SliverToBoxAdapter(child: _TrackerAppBar(onBack: () => context.pop())),
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSizes.pagePaddingH,
-              AppSizes.sm,
-              AppSizes.pagePaddingH,
-              AppSizes.md,
-            ),
-            child: TrackerHeader(
-              introducedCount: _introducedCount,
-              safeCount: _safeCount,
-              flaggedCount: _flaggedCount,
-              notTriedCount: _notTriedCount,
-              showNotTried: _isBig11,
+    return BrandRefreshIndicator(
+      onRefresh: () async {
+        ref.invalidate(allergenTrackerControllerProvider(babyId));
+        await ref.read(allergenTrackerControllerProvider(babyId).future);
+      },
+      child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          SliverToBoxAdapter(
+            child: _TrackerAppBar(onBack: () => context.pop()),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSizes.pagePaddingH,
+                AppSizes.sm,
+                AppSizes.pagePaddingH,
+                AppSizes.md,
+              ),
+              child: TrackerHeader(
+                introducedCount: _introducedCount,
+                safeCount: _safeCount,
+                flaggedCount: _flaggedCount,
+                notTriedCount: _notTriedCount,
+                showNotTried: _isBig11,
+              ),
             ),
           ),
-        ),
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSizes.pagePaddingH,
-            ),
-            child: AppSlidingSegmentedControl(
-              segments: const ['Ongoing', 'Big 11'],
-              selectedIndex: segmentIndex,
-              onChanged: onSegmentChanged,
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSizes.pagePaddingH,
+              ),
+              child: AppSlidingSegmentedControl(
+                segments: const ['Ongoing', 'Big 11'],
+                selectedIndex: segmentIndex,
+                onChanged: onSegmentChanged,
+              ),
             ),
           ),
-        ),
-        const SliverToBoxAdapter(child: SizedBox(height: AppSizes.md)),
-        if (_isBig11)
-          _Big11Sections(
-            allergens: state.allergens,
-            statuses: state.statuses,
-            logs: state.logs,
-            onStartIntroduce: onStartIntroduce,
-            onAllergenTap: (a) =>
-                unawaited(_openAllergenDetail(context, ref, a.key)),
-          )
-        else
-          _OngoingList(
-            allergens: state.allergens,
-            statuses: state.statuses,
-            logs: state.logs,
-            selectedAllergenKey: state.selectedAllergenKey,
-            onAllergenTap: (a) =>
-                unawaited(_openAllergenDetail(context, ref, a.key)),
-            onAddReaction: onAddReaction,
-            onStartNew: onStartNew,
-          ),
-        const SliverToBoxAdapter(child: SizedBox(height: AppSizes.xl)),
-      ],
+          const SliverToBoxAdapter(child: SizedBox(height: AppSizes.md)),
+          if (_isBig11)
+            _Big11Sections(
+              allergens: state.allergens,
+              statuses: state.statuses,
+              logs: state.logs,
+              onStartIntroduce: onStartIntroduce,
+              onAllergenTap: (a) =>
+                  unawaited(_openAllergenDetail(context, ref, a.key)),
+            )
+          else
+            _OngoingList(
+              allergens: state.allergens,
+              statuses: state.statuses,
+              logs: state.logs,
+              selectedAllergenKey: state.selectedAllergenKey,
+              onAllergenTap: (a) =>
+                  unawaited(_openAllergenDetail(context, ref, a.key)),
+              onAddReaction: onAddReaction,
+              onStartNew: onStartNew,
+            ),
+          const SliverToBoxAdapter(child: SizedBox(height: AppSizes.xl)),
+        ],
+      ),
     );
   }
 
@@ -468,12 +490,21 @@ class _OngoingList extends StatelessWidget {
             )
           else ...[
             AllergenExposureCard(
-              allergen: ongoing,
-              reactionFlags: ongoingLogs
-                  .map((l) => l.hadReaction)
-                  .toList(growable: false),
-              onTap: () => onAllergenTap(ongoing),
-            ),
+                  allergen: ongoing,
+                  reactionFlags: ongoingLogs
+                      .map((l) => l.hadReaction)
+                      .toList(growable: false),
+                  heroTag: 'allergen-icon-${ongoing.key}',
+                  onTap: () => onAllergenTap(ongoing),
+                )
+                .animate()
+                .fadeIn(duration: AppDurations.fade)
+                .slideY(
+                  begin: 0.08,
+                  end: 0,
+                  duration: AppDurations.slide,
+                  curve: AppCurves.emphasized,
+                ),
             const SizedBox(height: AppSizes.sm),
             DetailContextualBanner(status: status, allergenName: ongoing.name),
           ],
@@ -496,19 +527,24 @@ class _OngoingList extends StatelessWidget {
               ),
             )
           else
-            for (final entry in _reverseIndexed(ongoingLogs)) ...[
-              Builder(
-                builder: (context) => ReactionLogRow(
-                  log: entry.log,
-                  logIndex: entry.index,
-                  onTap: () => context.pushNamed(
-                    AppRoute.allergenLogDetail.name,
-                    pathParameters: {
-                      'allergenKey': entry.log.allergenKey,
-                      'logId': entry.log.id,
-                    },
+            for (final (position, entry) in _reverseIndexed(
+              ongoingLogs,
+            ).indexed) ...[
+              _staggeredEntrance(
+                Builder(
+                  builder: (context) => ReactionLogRow(
+                    log: entry.log,
+                    logIndex: entry.index,
+                    onTap: () => context.pushNamed(
+                      AppRoute.allergenLogDetail.name,
+                      pathParameters: {
+                        'allergenKey': entry.log.allergenKey,
+                        'logId': entry.log.id,
+                      },
+                    ),
                   ),
                 ),
+                position,
               ),
               const SizedBox(height: AppSizes.sm),
             ],
@@ -560,6 +596,20 @@ class _SectionPlaceholder extends StatelessWidget {
 // ---------------------------------------------------------------------------
 // Big 11 tab — 3 labelled sections (Already Tried / Ongoing / Not Tried).
 // ---------------------------------------------------------------------------
+
+Widget _staggeredEntrance(Widget child, int position) {
+  final delay = (position * 40).ms;
+  return child
+      .animate()
+      .fadeIn(delay: delay, duration: AppDurations.fade)
+      .slideY(
+        begin: 0.06,
+        end: 0,
+        delay: delay,
+        duration: AppDurations.slide,
+        curve: AppCurves.emphasized,
+      );
+}
 
 class _Big11Sections extends StatelessWidget {
   const _Big11Sections({
@@ -644,8 +694,8 @@ class _Big11Sections extends StatelessWidget {
               total: _total,
               dotColor: AppColors.greenDeep,
             ),
-            for (final a in tried) ...[
-              _progressCard(a),
+            for (final (i, a) in tried.indexed) ...[
+              _staggeredEntrance(_progressCard(a), i),
               const SizedBox(height: AppSizes.sm),
             ],
             const SizedBox(height: AppSizes.sm),
@@ -657,8 +707,8 @@ class _Big11Sections extends StatelessWidget {
               total: _total,
               dotColor: AppColors.coral,
             ),
-            for (final a in ongoing) ...[
-              _progressCard(a),
+            for (final (i, a) in ongoing.indexed) ...[
+              _staggeredEntrance(_progressCard(a), i),
               const SizedBox(height: AppSizes.sm),
             ],
             const SizedBox(height: AppSizes.sm),
@@ -670,8 +720,8 @@ class _Big11Sections extends StatelessWidget {
               total: _total,
               dotColor: AppColors.borderMuted,
             ),
-            for (final a in notTried) ...[
-              _notTriedCard(a, enabled: canStart),
+            for (final (i, a) in notTried.indexed) ...[
+              _staggeredEntrance(_notTriedCard(a, enabled: canStart), i),
               const SizedBox(height: AppSizes.sm),
             ],
           ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/gen/assets.gen.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/features/recipe/detail/widgets/recipe_banner_card.dart';
 
@@ -12,6 +13,7 @@ class RecipeHeroBanner extends StatelessWidget {
     required this.title,
     required this.ageRange,
     required this.nutritionTags,
+    this.recipeId,
     this.makes,
     super.key,
   });
@@ -20,6 +22,7 @@ class RecipeHeroBanner extends StatelessWidget {
   final String title;
   final String ageRange;
   final List<String> nutritionTags;
+  final String? recipeId;
   final String? makes;
 
   static const double _imageHeight = 210;
@@ -27,6 +30,11 @@ class RecipeHeroBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Widget image = _HeroImage(imageUrl: imageUrl);
+    if (recipeId != null) {
+      image = Hero(tag: 'recipe-image-$recipeId', child: image);
+    }
+
     return Stack(
       children: [
         Positioned(
@@ -36,7 +44,7 @@ class RecipeHeroBanner extends StatelessWidget {
           child: SizedBox(
             height: _imageHeight,
             width: double.infinity,
-            child: _HeroImage(imageUrl: imageUrl),
+            child: image,
           ),
         ),
         Padding(
@@ -69,6 +77,15 @@ class _HeroImage extends StatelessWidget {
     return Image.network(
       url,
       fit: BoxFit.cover,
+      frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+        if (wasSynchronouslyLoaded) return child;
+        return AnimatedOpacity(
+          opacity: frame == null ? 0 : 1,
+          duration: AppDurations.fade,
+          curve: AppCurves.standard,
+          child: child,
+        );
+      },
       errorBuilder: (_, __, ___) => _fallback(),
     );
   }

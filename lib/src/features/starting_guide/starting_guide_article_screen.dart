@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/components.dart';
@@ -100,26 +102,41 @@ class _StartingGuideArticleScreenState
     final guideAsync = ref.watch(startingGuideControllerProvider);
 
     return GradientScaffold(
-      body: guideAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, __) => _NotFound(onBack: () => _onBack(context)),
-        data: (state) {
-          GuideArticle? article;
-          for (final a in state.articles) {
-            if (a.slug == widget.slug) {
-              article = a;
-              break;
-            }
-          }
-          if (article == null) {
-            return _NotFound(onBack: () => _onBack(context));
-          }
-          return _ArticleBody(
-            article: article,
+      body: AnimatedSwitcher(
+        duration: AppDurations.fade,
+        switchInCurve: AppCurves.standard,
+        switchOutCurve: AppCurves.standard,
+        child: guideAsync.when(
+          loading: () => const Center(
+            key: ValueKey('starting_guide_article_loading'),
+            child: BrandFlowerLoader.small(),
+          ),
+          error: (_, __) => _NotFound(
+            key: const ValueKey('starting_guide_article_error'),
             onBack: () => _onBack(context),
-            onCta: (cta) => _onCta(context, cta),
-          );
-        },
+          ),
+          data: (state) {
+            GuideArticle? article;
+            for (final a in state.articles) {
+              if (a.slug == widget.slug) {
+                article = a;
+                break;
+              }
+            }
+            if (article == null) {
+              return _NotFound(
+                key: const ValueKey('starting_guide_article_not_found'),
+                onBack: () => _onBack(context),
+              );
+            }
+            return _ArticleBody(
+              key: const ValueKey('starting_guide_article_data'),
+              article: article,
+              onBack: () => _onBack(context),
+              onCta: (cta) => _onCta(context, cta),
+            );
+          },
+        ),
       ),
     );
   }
@@ -130,6 +147,7 @@ class _ArticleBody extends StatelessWidget {
     required this.article,
     required this.onBack,
     required this.onCta,
+    super.key,
   });
 
   final GuideArticle article;
@@ -167,7 +185,16 @@ class _ArticleBody extends StatelessWidget {
             itemCount: article.blocks.length,
             separatorBuilder: (_, __) => const SizedBox(height: AppSizes.lg),
             itemBuilder: (context, index) =>
-                _buildBlock(article.blocks[index], onCta),
+                _buildBlock(article.blocks[index], onCta)
+                    .animate()
+                    .fadeIn(delay: (50 * index).ms, duration: AppDurations.fade)
+                    .slideY(
+                      delay: (50 * index).ms,
+                      duration: AppDurations.slide,
+                      curve: AppCurves.standard,
+                      begin: 0.08,
+                      end: 0,
+                    ),
           ),
         ),
       ],
@@ -291,7 +318,7 @@ class _InlineCtaPair extends StatelessWidget {
 }
 
 class _NotFound extends StatelessWidget {
-  const _NotFound({required this.onBack});
+  const _NotFound({required this.onBack, super.key});
 
   final VoidCallback onBack;
 

@@ -3,6 +3,7 @@ import 'package:nibbles/gen/assets.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
+import 'package:nibbles/src/common/components/feedback/press_scale.dart';
 import 'package:nibbles/src/features/starting_guide/constants/articles.dart';
 
 /// Article card rendered on the Starting Guide hub list.
@@ -26,36 +27,39 @@ class ArticleCard extends StatelessWidget {
       button: true,
       label: article.title,
       child: MergeSemantics(
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          child: Material(
-            color: AppColors.butterSoft,
-            child: InkWell(
-              onTap: onTap,
-              child: Padding(
-                padding: const EdgeInsets.only(left: AppSizes.sp12),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        article.title,
-                        style: AppTypography.textTheme.titleSmall?.copyWith(
-                          fontSize: 15,
-                          color: AppColors.fgStrong,
+        child: PressableScale(
+          enabled: true,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+            child: Material(
+              color: AppColors.butterSoft,
+              child: InkWell(
+                onTap: onTap,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: AppSizes.sp12),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          article.title,
+                          style: AppTypography.textTheme.titleSmall?.copyWith(
+                            fontSize: 15,
+                            color: AppColors.fgStrong,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: AppSizes.sm),
-                    ExcludeSemantics(
-                      child: Transform.translate(
-                        offset: const Offset(_blobBleed, 0),
-                        child: Assets.icons.guideNextArrow.svg(
-                          width: _blobWidth,
-                          height: _blobHeight,
+                      const SizedBox(width: AppSizes.sm),
+                      ExcludeSemantics(
+                        child: Transform.translate(
+                          offset: const Offset(_blobBleed, 0),
+                          child: Assets.icons.guideNextArrow.svg(
+                            width: _blobWidth,
+                            height: _blobHeight,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

@@ -243,6 +243,11 @@ class MealPlanService {
     DateTime end,
   ) => _repo.createPlan(babyId, _dateOnly(start), _dateOnly(end));
 
+  /// Persists a widened `end_date` for [planId] (date-only). Backs "+ Add Date"
+  /// so the extra day reaches Home's date strip.
+  Future<Result<MealPlan>> updatePlanEndDate(String planId, DateTime endDate) =>
+      _repo.updatePlanEndDate(planId, _dateOnly(endDate));
+
   /// Deletes a plan by ID — cascades its entries.
   Future<Result<void>> deletePlan(String planId) => _repo.deletePlan(planId);
 

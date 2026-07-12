@@ -145,7 +145,7 @@ class MealPlanController extends _$MealPlanController {
     if (current == null) return;
     final key = _expandedKey(day);
     final next = Map<DateTime, bool>.from(current.expanded);
-    next[key] = !(next[key] ?? false);
+    next[key] = !(next[key] ?? true);
     state = AsyncData(current.copyWith(expanded: next));
   }
 
@@ -216,6 +216,22 @@ class MealPlanController extends _$MealPlanController {
     final result = await ref
         .read(mealPlanServiceProvider)
         .createPlan(_babyId, start, end);
+    if (result.isFailure) return false;
+    ref.invalidateSelf();
+    return true;
+  }
+
+  /// Persists a one-day extension of the active plan's `endDate` so the added
+  /// day survives a refetch and shows on Home's date strip. Returns false on
+  /// failure — caller shows a P2 toast.
+  Future<bool> addDate() async {
+    final current = state.valueOrNull;
+    final plan = current?.plan;
+    if (plan == null) return false;
+    final newEnd = current!.windowEnd.add(const Duration(days: 1));
+    final result = await ref
+        .read(mealPlanServiceProvider)
+        .updatePlanEndDate(plan.id, newEnd);
     if (result.isFailure) return false;
     ref.invalidateSelf();
     return true;

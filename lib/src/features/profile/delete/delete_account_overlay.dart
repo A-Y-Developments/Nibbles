@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
@@ -216,15 +217,24 @@ class _DeleteAccountSheetState extends ConsumerState<_DeleteAccountSheet> {
                     // Chips-to-warning gap.
                     const SizedBox(height: AppSizes.md),
                     const _DeleteWarning(),
-                    if (state.errorMessage != null) ...[
-                      const SizedBox(height: AppSizes.sp12),
-                      _InlineError(
-                        message: state.errorMessage!,
-                        onRetry: reasonPicked && !submitting
-                            ? _onContinue
-                            : null,
-                      ),
-                    ],
+                    AnimatedSize(
+                      duration: AppDurations.base,
+                      curve: AppCurves.standard,
+                      alignment: Alignment.topCenter,
+                      child: state.errorMessage != null
+                          ? Padding(
+                              padding: const EdgeInsets.only(
+                                top: AppSizes.sp12,
+                              ),
+                              child: _InlineError(
+                                message: state.errorMessage!,
+                                onRetry: reasonPicked && !submitting
+                                    ? _onContinue
+                                    : null,
+                              ),
+                            )
+                          : const SizedBox(width: double.infinity),
+                    ),
                     // Figma: warning-to-CTA stack gap (column → bottom stack).
                     const SizedBox(height: AppSizes.lg),
                     _ContinueButton(

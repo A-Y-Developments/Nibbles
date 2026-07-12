@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:nibbles/gen/assets.gen.dart';
 import 'package:nibbles/gen/fonts.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/components.dart';
@@ -200,10 +201,14 @@ class _PasswordSuffixIcon extends StatelessWidget {
       excludeSemantics: true,
       child: IconButton(
         onPressed: onToggle,
-        icon: Icon(
-          obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-          color: AppColors.fgMuted,
-          size: AppSizes.iconMd,
+        icon: AnimatedSwitcher(
+          duration: AppDurations.base,
+          child: Icon(
+            obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+            key: ValueKey(obscure),
+            color: AppColors.fgMuted,
+            size: AppSizes.iconMd,
+          ),
         ),
       ),
     );

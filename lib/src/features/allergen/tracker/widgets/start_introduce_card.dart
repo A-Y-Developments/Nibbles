@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/components.dart';
+import 'package:nibbles/src/common/components/icons/allergen_icon.dart';
 import 'package:nibbles/src/common/domain/entities/allergen.dart';
 import 'package:nibbles/src/features/allergen/tracker/widgets/allergen_icon_tile.dart';
 
@@ -46,41 +48,50 @@ class StartIntroduceCard extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: radius,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSizes.md,
-            vertical: AppSizes.sp12,
-          ),
-          child: Row(
-            children: [
-              const AllergenIconTile(size: 52, greyscale: true),
-              const SizedBox(width: AppSizes.sp12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(allergen.name, style: textTheme.titleSmall),
-                    const SizedBox(height: AppSizes.sp2),
-                    Text(
-                      'Not Tried',
-                      style: textTheme.bodyMedium?.copyWith(
-                        color: AppColors.fgMuted,
-                      ),
-                    ),
-                  ],
+        child: AnimatedOpacity(
+          duration: AppDurations.base,
+          curve: AppCurves.standard,
+          opacity: enabled ? 1 : 0.55,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSizes.md,
+              vertical: AppSizes.sp12,
+            ),
+            child: Row(
+              children: [
+                AllergenIconTile(
+                  allergenKey: allergen.key,
+                  variant: AllergenIconVariant.grey,
+                  size: 52,
                 ),
-              ),
-              const SizedBox(width: AppSizes.sm),
-              AppPillButton(
-                label: 'Start Introduce',
-                identifier: 'allergen_start_introduce_button_${allergen.key}',
-                onPressed: enabled ? onStartIntroduce : null,
-                variant: AppPillButtonVariant.ghost,
-                size: AppPillButtonSize.small,
-                expand: false,
-              ),
-            ],
+                const SizedBox(width: AppSizes.sp12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(allergen.name, style: textTheme.titleSmall),
+                      const SizedBox(height: AppSizes.sp2),
+                      Text(
+                        'Not Tried',
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: AppColors.fgMuted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: AppSizes.sm),
+                AppPillButton(
+                  label: 'Start Introduce',
+                  identifier: 'allergen_start_introduce_button_${allergen.key}',
+                  onPressed: enabled ? onStartIntroduce : null,
+                  variant: AppPillButtonVariant.ghost,
+                  size: AppPillButtonSize.small,
+                  expand: false,
+                ),
+              ],
+            ),
           ),
         ),
       ),

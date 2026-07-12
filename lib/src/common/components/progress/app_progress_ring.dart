@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:nibbles/gen/fonts.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 
 /// Conic progress ring. Mirrors components-progress preview `.ring`:
 /// coralDeep sweep over a coralSoft track, white center hole showing value/max.
@@ -27,12 +28,18 @@ class AppProgressRing extends StatelessWidget {
     return SizedBox(
       width: diameter,
       height: diameter,
-      child: CustomPaint(
-        painter: _RingPainter(
-          progress: progress,
-          thickness: thickness,
-          fill: AppColors.coralDeep,
-          track: AppColors.coralSoft,
+      child: TweenAnimationBuilder<double>(
+        tween: Tween<double>(end: progress),
+        duration: AppDurations.slow,
+        curve: AppCurves.emphasized,
+        builder: (context, animatedProgress, child) => CustomPaint(
+          painter: _RingPainter(
+            progress: animatedProgress,
+            thickness: thickness,
+            fill: AppColors.coralDeep,
+            track: AppColors.coralSoft,
+          ),
+          child: child,
         ),
         child: Center(
           child: RichText(

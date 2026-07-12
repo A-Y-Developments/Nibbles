@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/components.dart';
@@ -57,23 +59,37 @@ class _ManageSubscriptionScreenState
   Widget build(BuildContext context) {
     final asyncState = ref.watch(manageSubscriptionControllerProvider);
 
-    return asyncState.when(
-      loading: () => const GradientScaffold(
-        body: SafeArea(
-          bottom: false,
-          child: Center(
-            key: Key('manage_subscription_loading'),
-            child: CircularProgressIndicator(),
+    final phaseKey = asyncState.isLoading
+        ? 'loading'
+        : asyncState.hasError
+        ? 'error'
+        : 'data';
+
+    return AnimatedSwitcher(
+      duration: AppDurations.fade,
+      switchInCurve: AppCurves.standard,
+      switchOutCurve: AppCurves.standard,
+      child: KeyedSubtree(
+        key: ValueKey(phaseKey),
+        child: asyncState.when(
+          loading: () => const GradientScaffold(
+            body: SafeArea(
+              bottom: false,
+              child: Center(
+                key: Key('manage_subscription_loading'),
+                child: BrandFlowerLoader.small(),
+              ),
+            ),
           ),
+          error: (err, _) => _ManageSubscriptionError(
+            message: err is AppException
+                ? err.message
+                : 'Couldn’t load your subscription. Please try again.',
+            onRetry: () => ref.invalidate(manageSubscriptionControllerProvider),
+          ),
+          data: (state) => _ManageSubscriptionBody(state: state),
         ),
       ),
-      error: (err, _) => _ManageSubscriptionError(
-        message: err is AppException
-            ? err.message
-            : 'Couldn’t load your subscription. Please try again.',
-        onRetry: () => ref.invalidate(manageSubscriptionControllerProvider),
-      ),
-      data: (state) => _ManageSubscriptionBody(state: state),
     );
   }
 }
@@ -104,9 +120,17 @@ class _ManageSubscriptionBody extends StatelessWidget {
                   AppSizes.md,
                   AppSizes.pagePaddingV,
                 ),
-                child: info.isActive
-                    ? _SubscribedSection(info: info)
-                    : const _NotSubscribedSection(),
+                child: AnimatedSwitcher(
+                  duration: AppDurations.fade,
+                  switchInCurve: AppCurves.standard,
+                  switchOutCurve: AppCurves.standard,
+                  child: KeyedSubtree(
+                    key: ValueKey(info.isActive),
+                    child: info.isActive
+                        ? _SubscribedSection(info: info)
+                        : const _NotSubscribedSection(),
+                  ),
+                ),
               ),
             ),
             Padding(
@@ -116,20 +140,26 @@ class _ManageSubscriptionBody extends StatelessWidget {
                 AppSizes.md,
                 AppSizes.pagePaddingV,
               ),
-              child: info.isActive
-                  ? AppPillButton(
-                      key: const Key('manage_subscription_cancel_cta'),
-                      label: 'Cancel Subscription',
-                      variant: AppPillButtonVariant.ghost,
-                      size: AppPillButtonSize.small,
-                      onPressed: () => _onCancelPressed(context),
-                    )
-                  : AppPillButton(
-                      key: const Key('manage_subscription_go_premium_cta'),
-                      label: 'Go Premium',
-                      size: AppPillButtonSize.small,
-                      onPressed: () => context.pushNamed(AppRoute.paywall.name),
-                    ),
+              child: AnimatedSwitcher(
+                duration: AppDurations.fade,
+                switchInCurve: AppCurves.standard,
+                switchOutCurve: AppCurves.standard,
+                child: info.isActive
+                    ? AppPillButton(
+                        key: const Key('manage_subscription_cancel_cta'),
+                        label: 'Cancel Subscription',
+                        variant: AppPillButtonVariant.ghost,
+                        size: AppPillButtonSize.small,
+                        onPressed: () => _onCancelPressed(context),
+                      )
+                    : AppPillButton(
+                        key: const Key('manage_subscription_go_premium_cta'),
+                        label: 'Go Premium',
+                        size: AppPillButtonSize.small,
+                        onPressed: () =>
+                            context.pushNamed(AppRoute.paywall.name),
+                      ),
+              ),
             ),
           ],
         ),
@@ -361,18 +391,26 @@ class _Timeline extends StatelessWidget {
           labelStyle: labelStyle,
         ),
         // Vertical sage connector between the two dots.
-        const Padding(
-          padding: EdgeInsets.symmetric(vertical: AppSizes.xs),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: AppSizes.xs),
           child: Row(
             children: [
               SizedBox(
                 width: _TimelineDot._size,
                 child: Center(
-                  child: SizedBox(
-                    width: 1,
-                    height: AppSizes.sp12,
-                    child: ColoredBox(color: AppColors.green),
-                  ),
+                  child:
+                      const SizedBox(
+                        width: 1,
+                        height: AppSizes.sp12,
+                        child: ColoredBox(color: AppColors.green),
+                      ).animate().scaleY(
+                        begin: 0,
+                        end: 1,
+                        alignment: Alignment.topCenter,
+                        delay: AppDurations.base,
+                        duration: AppDurations.slide,
+                        curve: AppCurves.emphasized,
+                      ),
                 ),
               ),
             ],
@@ -439,7 +477,7 @@ class _TimelineDot extends StatelessWidget {
     final bg = completed ? AppColors.butter : AppColors.switchTrackOff;
     const fg = AppColors.greenDeep;
 
-    return Container(
+    final dot = Container(
       width: _size,
       height: _size,
       decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
@@ -449,6 +487,18 @@ class _TimelineDot extends StatelessWidget {
         color: fg,
       ),
     );
+
+    if (!completed) return dot;
+
+    return dot
+        .animate()
+        .scale(
+          begin: const Offset(0.6, 0.6),
+          end: const Offset(1, 1),
+          duration: AppDurations.base,
+          curve: AppCurves.emphasized,
+        )
+        .fadeIn(duration: AppDurations.fast);
   }
 }
 

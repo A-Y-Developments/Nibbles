@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/features/auth/reset_password/reset_password_controller.dart';
@@ -134,15 +135,25 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                 errorText: confirmHelper,
                 errorColor: AppColors.green,
               ),
-              if (state.errorMessage != null &&
-                  state.errorMessage != 'Password is too short' &&
-                  state.errorMessage != "Password doesn't match") ...[
-                const SizedBox(height: AppSizes.sm),
-                Text(
-                  state.errorMessage!,
-                  style: textTheme.bodySmall?.copyWith(color: AppColors.error),
-                ),
-              ],
+              AnimatedSize(
+                duration: AppDurations.base,
+                curve: AppCurves.standard,
+                alignment: Alignment.topCenter,
+                child:
+                    state.errorMessage != null &&
+                        state.errorMessage != 'Password is too short' &&
+                        state.errorMessage != "Password doesn't match"
+                    ? Padding(
+                        padding: const EdgeInsets.only(top: AppSizes.sm),
+                        child: Text(
+                          state.errorMessage!,
+                          style: textTheme.bodySmall?.copyWith(
+                            color: AppColors.error,
+                          ),
+                        ),
+                      )
+                    : const SizedBox(width: double.infinity),
+              ),
               const Spacer(),
               AppPillButton(
                 key: const Key('reset_password_submit_button'),

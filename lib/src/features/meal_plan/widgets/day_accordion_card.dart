@@ -135,21 +135,32 @@ class DayAccordionCard extends StatelessWidget {
             onToggle: onToggle,
             onMenuSelected: onMenuSelected,
           ),
-          if (isExpanded) ...[
-            const SizedBox(height: AppSizes.sm),
-            _RecipeList(
-              entries: entries,
-              recipes: recipes,
-              flaggedAllergenKeys: flaggedAllergenKeys,
-              onRecipeTap: onRecipeTap,
-            ),
-            const SizedBox(height: AppSizes.sm),
-            AppPillButton(
-              label: 'Add',
-              variant: AppPillButtonVariant.ghost,
-              onPressed: onAdd,
-            ),
-          ],
+          AnimatedSize(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOut,
+            alignment: Alignment.topCenter,
+            child: isExpanded
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SizedBox(height: AppSizes.sm),
+                      _RecipeList(
+                        entries: entries,
+                        recipes: recipes,
+                        flaggedAllergenKeys: flaggedAllergenKeys,
+                        onRecipeTap: onRecipeTap,
+                      ),
+                      const SizedBox(height: AppSizes.sm),
+                      AppPillButton(
+                        label: 'Add',
+                        variant: AppPillButtonVariant.ghost,
+                        onPressed: onAdd,
+                      ),
+                    ],
+                  )
+                : const SizedBox.shrink(),
+          ),
         ],
       ),
     );
@@ -179,7 +190,7 @@ class _Header extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Text(dateLabel, style: AppTypography.textTheme.titleMedium),
+            child: Text(dateLabel, style: AppTypography.textTheme.titleSmall),
           ),
           // Green-filled rounded-square overflow button (Figma 971:8619).
           PopupMenuButton<DayCardMenuAction>(
@@ -211,11 +222,14 @@ class _Header extends StatelessWidget {
           ),
           if (showChevron) ...[
             const SizedBox(width: AppSizes.xs),
-            _DayCardChip(
-              icon: isExpanded
-                  ? Icons.keyboard_arrow_up
-                  : Icons.keyboard_arrow_down,
-              onTap: onToggle,
+            AnimatedRotation(
+              turns: isExpanded ? 0.5 : 0,
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOut,
+              child: _DayCardChip(
+                icon: Icons.keyboard_arrow_down,
+                onTap: onToggle,
+              ),
             ),
           ],
         ],
@@ -236,8 +250,8 @@ class _DayCardChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final box = SizedBox(
-      width: AppSizes.roundButtonSm,
-      height: AppSizes.roundButtonSm,
+      width: AppSizes.roundButtonMd,
+      height: AppSizes.roundButtonMd,
       child: Icon(icon, color: AppColors.onGreen, size: AppSizes.iconMd),
     );
     return Material(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 
 /// Fill tone for [AppSegmentedProgressBar].
@@ -62,7 +63,9 @@ class AppSegmentedProgressBar extends StatelessWidget {
             padding: EdgeInsets.only(
               right: i == totalSegments - 1 ? 0 : AppSizes.xs,
             ),
-            child: Container(
+            child: AnimatedContainer(
+              duration: AppDurations.base,
+              curve: AppCurves.standard,
               height: height,
               decoration: BoxDecoration(
                 color: isFilled ? fill : track,

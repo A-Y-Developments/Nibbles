@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
 import 'package:nibbles/src/common/components/chips/app_chip.dart';
@@ -71,7 +72,9 @@ class _MealNotesSheetState extends State<_MealNotesSheet> {
 
     return SafeArea(
       top: false,
-      child: Padding(
+      child: AnimatedPadding(
+        duration: AppDurations.base,
+        curve: AppCurves.standard,
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,
         ),

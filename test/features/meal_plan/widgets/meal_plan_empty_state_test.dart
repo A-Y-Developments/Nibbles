@@ -8,7 +8,6 @@ import 'package:nibbles/src/features/meal_plan/widgets/meal_prep_calendar.dart';
 Future<void> _pump(
   WidgetTester tester, {
   required String babyName,
-  int ageMonths = 4,
   ValueChanged<DateTimeRange>? onSetMealPrep,
   ValueChanged<DateTimeRange>? onFillInMyself,
 }) async {
@@ -21,7 +20,6 @@ Future<void> _pump(
       home: Scaffold(
         body: MealPlanEmptyState(
           babyName: babyName,
-          ageMonths: ageMonths,
           onSetMealPrep: onSetMealPrep ?? (_) {},
           onFillInMyself: onFillInMyself ?? (_) {},
         ),
@@ -55,7 +53,6 @@ void main() {
 
       expect(find.byType(MealPlanHeader), findsOneWidget);
       expect(find.text('Meal Planner for Oliver'), findsOneWidget);
-      expect(find.text('4 Month'), findsOneWidget);
       expect(find.text("Let's create meal plan for Oliver!"), findsOneWidget);
 
       // Overflow is hidden on the empty state.

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
 import 'package:nibbles/src/features/recipe/library/widgets/recipe_grid_card.dart';
@@ -17,14 +19,18 @@ class RecipeSearchResults extends StatelessWidget {
   const RecipeSearchResults({
     required this.recipes,
     this.flaggedAllergenKeys = const {},
+    this.heroEligibleIds = const {},
     super.key,
   });
 
   final List<Recipe> recipes;
   final Set<String> flaggedAllergenKeys;
+  final Set<String> heroEligibleIds;
 
   static const double _cardWidth = 158;
   static const double _cardHeight = 220;
+  static const Duration _staggerStep = Duration(milliseconds: 40);
+  static const int _maxStaggered = 8;
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +50,7 @@ class RecipeSearchResults extends StatelessWidget {
       itemCount: recipes.length,
       itemBuilder: (context, index) {
         final recipe = recipes[index];
+        final delay = _staggerStep * (index.clamp(0, _maxStaggered));
         // Pin each cell to the 158x220 card box per Figma 971:8803 —
         // align top-left so wider grid cells (tablets) don't stretch the
         // card.
@@ -52,14 +59,31 @@ class RecipeSearchResults extends StatelessWidget {
           child: SizedBox(
             width: _cardWidth,
             height: _cardHeight,
-            child: RecipeGridCard(
-              recipe: recipe,
-              flaggedAllergenKeys: flaggedAllergenKeys,
-              onTap: () => context.pushNamed(
-                AppRoute.recipeDetail.name,
-                pathParameters: {'recipeId': recipe.id},
-              ),
-            ),
+            child:
+                RecipeGridCard(
+                      recipe: recipe,
+                      flaggedAllergenKeys: flaggedAllergenKeys,
+                      heroTag: heroEligibleIds.contains(recipe.id)
+                          ? 'recipe-image-${recipe.id}'
+                          : null,
+                      onTap: () => context.pushNamed(
+                        AppRoute.recipeDetail.name,
+                        pathParameters: {'recipeId': recipe.id},
+                      ),
+                    )
+                    .animate()
+                    .fadeIn(
+                      delay: delay,
+                      duration: AppDurations.fade,
+                      curve: AppCurves.emphasized,
+                    )
+                    .scaleXY(
+                      begin: 0.96,
+                      end: 1,
+                      delay: delay,
+                      duration: AppDurations.slide,
+                      curve: AppCurves.emphasized,
+                    ),
           ),
         );
       },

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
+import 'package:nibbles/src/common/components/feedback/press_scale.dart';
 
 /// Surface variant for [AppCard] — maps to kit `.card`, `.card--soft`,
 /// `.card--dashed`.
@@ -69,9 +70,12 @@ class AppCard extends StatelessWidget {
     }
 
     if (onTap != null) {
-      return Material(
-        color: Colors.transparent,
-        child: InkWell(onTap: onTap, borderRadius: radius, child: content),
+      return PressableScale(
+        enabled: true,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(onTap: onTap, borderRadius: radius, child: content),
+        ),
       );
     }
     return content;

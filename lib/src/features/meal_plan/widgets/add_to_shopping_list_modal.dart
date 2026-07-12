@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
-import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
-import 'package:nibbles/src/common/components/controls/app_checkbox.dart';
-import 'package:nibbles/src/common/components/feedback/app_toast.dart';
+import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/services/meal_plan_service.dart';
 import 'package:nibbles/src/common/services/shopping_list_service.dart';
@@ -164,7 +162,7 @@ class _AddToShoppingListModalState
 
   Widget _buildContent(ScrollController scrollController, TextTheme textTheme) {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: BrandFlowerLoader.small());
     }
     if (_error != null) {
       return Center(

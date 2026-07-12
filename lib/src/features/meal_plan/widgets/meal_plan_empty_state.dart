@@ -10,7 +10,7 @@ import 'package:nibbles/src/features/meal_plan/widgets/meal_plan_header.dart';
 /// Meal Plan empty-state route (Figma 2839:16295 / 2839:15923).
 ///
 /// Layout (top → bottom):
-/// 1. Butter-gradient [MealPlanHeader] (title + age subtitle). The overflow
+/// 1. [MealPlanHeader] (title only). The overflow
 ///    `⋯` is HIDDEN in the empty state — creation happens via the card CTAs.
 /// 2. White rounded form card hosting [MealPlanDateRangeForm] (two date fields
 ///    + the coral "N weeks · M days" info chip once both dates are set) plus
@@ -21,14 +21,12 @@ import 'package:nibbles/src/features/meal_plan/widgets/meal_plan_header.dart';
 class MealPlanEmptyState extends StatefulWidget {
   const MealPlanEmptyState({
     required this.babyName,
-    required this.ageMonths,
     required this.onSetMealPrep,
     required this.onFillInMyself,
     super.key,
   });
 
   final String babyName;
-  final int ageMonths;
 
   /// AI path — fires with the chosen range when "Set a Meal Prep" is tapped.
   final ValueChanged<DateTimeRange> onSetMealPrep;
@@ -50,7 +48,6 @@ class _MealPlanEmptyStateState extends State<MealPlanEmptyState> {
       children: [
         MealPlanHeader(
           babyName: widget.babyName,
-          ageMonths: widget.ageMonths,
           overflowButton: const SizedBox.shrink(),
         ),
         Expanded(
@@ -91,13 +88,13 @@ class _MealPlanEmptyStateState extends State<MealPlanEmptyState> {
                   ),
                 ),
                 const SizedBox(height: AppSizes.xxl),
-                const Center(child: BrandFlower()),
+                const Center(child: BrandFlower(size: AppSizes.avatarXl)),
                 const SizedBox(height: AppSizes.md),
                 Center(
                   child: Text(
                     "Let's create meal plan for ${widget.babyName}!",
                     textAlign: TextAlign.center,
-                    style: AppTypography.emptyStateTitle,
+                    style: AppTypography.sectionTitle,
                   ),
                 ),
                 const SizedBox(height: AppSizes.lg),

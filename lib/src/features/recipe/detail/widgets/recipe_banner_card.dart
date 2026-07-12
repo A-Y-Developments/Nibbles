@@ -38,7 +38,7 @@ class RecipeBannerCard extends StatelessWidget {
     return AppCard(
       padding: const EdgeInsets.all(AppSizes.md),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
             title,

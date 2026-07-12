@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/gen/assets.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/components.dart';
@@ -90,13 +91,24 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 onSubmitted: (_) => _passwordFocus.requestFocus(),
                 errorText: emailErrorText,
                 errorColor: AppColors.burgundy,
-                suffixIcon: state.email.isValid
-                    ? const Icon(
-                        Icons.check_circle_rounded,
-                        color: AppColors.success,
-                        size: AppSizes.iconMd,
-                      )
-                    : null,
+                suffixIcon: AnimatedSwitcher(
+                  duration: AppDurations.base,
+                  switchInCurve: AppCurves.emphasized,
+                  transitionBuilder: (child, animation) => ScaleTransition(
+                    scale: animation,
+                    child: FadeTransition(opacity: animation, child: child),
+                  ),
+                  child: state.email.isValid
+                      ? const Icon(
+                          Icons.check_circle_rounded,
+                          key: ValueKey('register_email_valid'),
+                          color: AppColors.success,
+                          size: AppSizes.iconMd,
+                        )
+                      : const SizedBox.shrink(
+                          key: ValueKey('register_email_invalid'),
+                        ),
+                ),
               ),
               const SizedBox(height: AppSizes.md),
               AppTextField(
@@ -229,10 +241,14 @@ class _ObscureToggle extends StatelessWidget {
       excludeSemantics: true,
       child: IconButton(
         onPressed: onTap,
-        icon: Icon(
-          obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-          color: AppColors.fgMuted,
-          size: AppSizes.iconMd,
+        icon: AnimatedSwitcher(
+          duration: AppDurations.base,
+          child: Icon(
+            obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+            key: ValueKey(obscure),
+            color: AppColors.fgMuted,
+            size: AppSizes.iconMd,
+          ),
         ),
       ),
     );

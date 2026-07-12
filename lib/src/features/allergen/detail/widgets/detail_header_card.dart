@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:nibbles/gen/assets.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
+import 'package:nibbles/src/common/components/icons/allergen_icon.dart';
 import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
 import 'package:nibbles/src/features/allergen/detail/widgets/detail_segment_bar.dart';
 import 'package:nibbles/src/features/allergen/detail/widgets/detail_status_pill.dart';
@@ -13,6 +14,7 @@ import 'package:nibbles/src/features/allergen/tracker/widgets/allergen_icon_tile
 /// progress bar — over a soft `allergenBlob` backdrop with a curved bottom.
 class AllergenDetailHeader extends StatelessWidget {
   const AllergenDetailHeader({
+    required this.allergenKey,
     required this.name,
     required this.status,
     required this.reactionFlags,
@@ -22,6 +24,7 @@ class AllergenDetailHeader extends StatelessWidget {
     super.key,
   });
 
+  final String allergenKey;
   final String name;
   final AllergenStatus status;
 
@@ -104,7 +107,11 @@ class AllergenDetailHeader extends StatelessWidget {
                     const SizedBox(height: AppSizes.lg),
                     Row(
                       children: [
-                        const AllergenIconTile(backing: Colors.white10),
+                        AllergenIconTile(
+                          allergenKey: allergenKey,
+                          variant: AllergenIconVariant.maroon,
+                          heroTag: 'allergen-icon-$allergenKey',
+                        ),
                         const SizedBox(width: AppSizes.sp12),
                         Expanded(
                           child: Column(

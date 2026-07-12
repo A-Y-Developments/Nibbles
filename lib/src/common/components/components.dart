@@ -6,6 +6,7 @@ export 'avatar/baby_avatar.dart';
 export 'brand/brand_flower.dart';
 export 'brand/brand_flower_loader.dart';
 export 'brand/brand_logo.dart';
+export 'brand/brand_refresh_indicator.dart';
 export 'brand/petal_blob.dart';
 export 'brand/quatrefoil.dart';
 export 'buttons/app_pill_button.dart';

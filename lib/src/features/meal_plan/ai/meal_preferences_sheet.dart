@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/gen/fonts.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
 import 'package:nibbles/src/features/meal_plan/ai/meal_notes_sheet.dart';
@@ -138,11 +139,16 @@ class _MealPreferencesSheetState extends State<_MealPreferencesSheet> {
                     color: AppColors.fgMuted,
                   ),
                 ),
-                Text(
-                  '${_selected.length} selected',
-                  style: textTheme.bodyMedium?.copyWith(
-                    color: AppColors.greenDeep,
-                    fontWeight: FontWeight.w700,
+                AnimatedSwitcher(
+                  duration: AppDurations.fade,
+                  switchInCurve: AppCurves.standard,
+                  child: Text(
+                    '${_selected.length} selected',
+                    key: ValueKey<int>(_selected.length),
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: AppColors.greenDeep,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ],
@@ -208,23 +214,29 @@ class _PresetChip extends StatelessWidget {
       label: label,
       excludeSemantics: true,
       child: Material(
-        color: selected ? AppColors.greenDeep : Colors.transparent,
-        shape: StadiumBorder(
-          side: BorderSide(
-            color: selected ? AppColors.greenDeep : AppColors.butterDark,
-            width: 1.5,
-          ),
-        ),
+        color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
           customBorder: const StadiumBorder(),
-          child: Padding(
+          child: AnimatedContainer(
+            duration: AppDurations.base,
+            curve: AppCurves.standard,
+            decoration: ShapeDecoration(
+              color: selected ? AppColors.greenDeep : Colors.transparent,
+              shape: StadiumBorder(
+                side: BorderSide(
+                  color: selected ? AppColors.greenDeep : AppColors.butterDark,
+                  width: 1.5,
+                ),
+              ),
+            ),
             padding: const EdgeInsets.symmetric(
               horizontal: AppSizes.md,
               vertical: AppSizes.sm + 2,
             ),
-            child: Text(
-              label,
+            child: AnimatedDefaultTextStyle(
+              duration: AppDurations.base,
+              curve: AppCurves.standard,
               style: TextStyle(
                 fontFamily: FontFamily.parkinsans,
                 fontSize: 13,
@@ -232,6 +244,7 @@ class _PresetChip extends StatelessWidget {
                 height: 1,
                 color: selected ? AppColors.cream : AppColors.greenDeep,
               ),
+              child: Text(label),
             ),
           ),
         ),

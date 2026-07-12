@@ -66,28 +66,25 @@ void main() {
     analyticsProvider.overrideWithValue(fakeAnalytics),
   ];
 
-  testWidgets(
-    'renders Nibbles logo mark, email + password fields, and submit '
-    '— NO name field',
-    (tester) async {
-      await tester.pumpWidget(_wrap(const RegisterScreen(), buildOverrides()));
-      await tester.pumpAndSettle();
+  testWidgets('renders Nibbles logo mark, email + password fields, and submit '
+      '— NO name field', (tester) async {
+    await tester.pumpWidget(_wrap(const RegisterScreen(), buildOverrides()));
+    await tester.pumpAndSettle();
 
-      // First-nibbles rebuild renders the Nibbles logo SVG (Semantics label
-      // 'Nibbles') in place of the old quatrefoil-only mark.
-      expect(find.bySemanticsLabel('Nibbles'), findsOneWidget);
-      expect(find.text('Start Your Journey'), findsOneWidget);
-      expect(find.byKey(const Key('register_email_field')), findsOneWidget);
-      expect(find.byKey(const Key('register_password_field')), findsOneWidget);
-      expect(find.byKey(const Key('register_submit_button')), findsOneWidget);
+    // First-nibbles rebuild renders the Nibbles logo SVG (Semantics label
+    // 'Nibbles') in place of the old quatrefoil-only mark.
+    expect(find.bySemanticsLabel('Nibbles'), findsOneWidget);
+    expect(find.text('Start Your Journey'), findsOneWidget);
+    expect(find.byKey(const Key('register_email_field')), findsOneWidget);
+    expect(find.byKey(const Key('register_password_field')), findsOneWidget);
+    expect(find.byKey(const Key('register_submit_button')), findsOneWidget);
 
-      // NIB-107 redesign drops the name field entirely.
-      expect(find.text('Name'), findsNothing);
-      expect(find.text('Full name'), findsNothing);
-      expect(find.text('Your name'), findsNothing);
-      expect(find.byKey(const Key('register_name_field')), findsNothing);
-    },
-  );
+    // NIB-107 redesign drops the name field entirely.
+    expect(find.text('Name'), findsNothing);
+    expect(find.text('Full name'), findsNothing);
+    expect(find.text('Your name'), findsNothing);
+    expect(find.byKey(const Key('register_name_field')), findsNothing);
+  });
 
   testWidgets('social buttons (Google + Apple) are present', (tester) async {
     await tester.pumpWidget(_wrap(const RegisterScreen(), buildOverrides()));
@@ -143,7 +140,7 @@ void main() {
     expect(iconInPasswordField(Icons.visibility_outlined), findsNothing);
 
     await tester.tap(iconInPasswordField(Icons.visibility_off_outlined));
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     expect(iconInPasswordField(Icons.visibility_outlined), findsOneWidget);
     expect(iconInPasswordField(Icons.visibility_off_outlined), findsNothing);

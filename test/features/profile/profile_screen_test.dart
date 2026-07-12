@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:nibbles/src/common/components/brand/brand_flower_loader.dart';
 import 'package:nibbles/src/common/data/repositories/account_repository.dart';
 import 'package:nibbles/src/common/data/repositories/auth_repository.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
@@ -245,7 +246,7 @@ void main() {
   // Loading state — never-resolving build()
   // -------------------------------------------------------------------------
 
-  testWidgets('loading state: renders CircularProgressIndicator spinner', (
+  testWidgets('loading state: renders BrandFlowerLoader spinner', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -255,7 +256,7 @@ void main() {
     // would block.
     await tester.pump();
 
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byType(BrandFlowerLoader), findsOneWidget);
   });
 
   // -------------------------------------------------------------------------

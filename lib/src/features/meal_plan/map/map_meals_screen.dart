@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/components.dart';
@@ -88,11 +89,32 @@ class MapMealsScreen extends ConsumerWidget {
                       weekdayNames: _weekdayName,
                     ),
                     const SizedBox(height: AppSizes.sm),
-                    _DayDropZone(
-                      recipes: state.recipesForSelectedDay(),
-                      onAccept: (recipe) =>
-                          notifier.assignToSelectedDay(recipe.id, mealsPerDay),
-                      onRemoveAt: notifier.unassignFromSelectedDayAt,
+                    AnimatedSwitcher(
+                      duration: AppDurations.slide,
+                      switchInCurve: AppCurves.emphasized,
+                      switchOutCurve: AppCurves.standard,
+                      transitionBuilder: _daySwitchTransition,
+                      layoutBuilder: (current, previous) => Stack(
+                        alignment: Alignment.topCenter,
+                        children: [...previous, if (current != null) current],
+                      ),
+                      child: KeyedSubtree(
+                        key: ValueKey<DateTime>(
+                          DateTime(
+                            state.selectedDay.year,
+                            state.selectedDay.month,
+                            state.selectedDay.day,
+                          ),
+                        ),
+                        child: _DayDropZone(
+                          recipes: state.recipesForSelectedDay(),
+                          onAccept: (recipe) => notifier.assignToSelectedDay(
+                            recipe.id,
+                            mealsPerDay,
+                          ),
+                          onRemoveAt: notifier.unassignFromSelectedDayAt,
+                        ),
+                      ),
                     ),
                     const SizedBox(height: AppSizes.lg),
                     _MealsPickedHeader(count: state.pickedRecipes.length),
@@ -219,6 +241,19 @@ class MapMealsScreen extends ConsumerWidget {
   }
 }
 
+Widget _daySwitchTransition(Widget child, Animation<double> animation) {
+  return FadeTransition(
+    opacity: animation,
+    child: SlideTransition(
+      position: Tween<Offset>(
+        begin: const Offset(0.04, 0),
+        end: Offset.zero,
+      ).animate(animation),
+      child: child,
+    ),
+  );
+}
+
 /// `DragTarget<Recipe>` drop-zone wrapping the selected day's slot list.
 ///
 /// Accepting a drop copies the recipe onto the selected day; while a drag
@@ -277,11 +312,16 @@ class _MapMealsAppBar extends StatelessWidget implements PreferredSizeWidget {
         children: [
           Text('Map Meals Plan', style: AppTypography.textTheme.titleLarge),
           const SizedBox(height: 2),
-          Text(
-            subtitle,
-            style: AppTypography.textTheme.bodyMedium?.copyWith(
-              color: AppColors.fgMuted,
-              fontWeight: FontWeight.w600,
+          AnimatedSwitcher(
+            duration: AppDurations.fade,
+            switchInCurve: AppCurves.standard,
+            child: Text(
+              subtitle,
+              key: ValueKey<String>(subtitle),
+              style: AppTypography.textTheme.bodyMedium?.copyWith(
+                color: AppColors.fgStrong,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -308,10 +348,7 @@ class _MealsPickedHeader extends StatelessWidget {
         ),
         Text(
           '$count selected',
-          style: AppTypography.caption.copyWith(
-            color: AppColors.fgMuted,
-            fontWeight: FontWeight.w600,
-          ),
+          style: AppTypography.sectionTitle.copyWith(fontSize: 16),
         ),
       ],
     );
@@ -333,9 +370,15 @@ class _SelectedDayHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final dayName = weekdayNames[state.selectedDay.weekday] ?? '';
     final k = state.assignedCountForSelectedDay();
-    return Text(
-      'Meals for $dayName ($k/$mealsPerDay)',
-      style: AppTypography.sectionTitle,
+    final label = 'Meals for $dayName ($k/$mealsPerDay)';
+    return AnimatedSwitcher(
+      duration: AppDurations.fade,
+      switchInCurve: AppCurves.standard,
+      child: Text(
+        label,
+        key: ValueKey<String>(label),
+        style: AppTypography.sectionTitle,
+      ),
     );
   }
 }
@@ -357,39 +400,45 @@ class _FinishBar extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
           AppSizes.pagePaddingH,
-          AppSizes.sm,
+          AppSizes.md,
           AppSizes.pagePaddingH,
           AppSizes.sp12,
         ),
-        child: isCommitting
-            ? Semantics(
-                button: true,
-                enabled: false,
-                label: 'Saving meal plan',
-                excludeSemantics: true,
-                child: const SizedBox(
-                  height: AppSizes.buttonHeight,
-                  child: Material(
-                    color: AppColors.borderMuted,
-                    shape: StadiumBorder(),
-                    child: Center(
-                      child: SizedBox(
-                        width: AppSizes.iconSm,
-                        height: AppSizes.iconSm,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppColors.onGreen,
+        child: AnimatedSwitcher(
+          duration: AppDurations.fade,
+          switchInCurve: AppCurves.standard,
+          child: isCommitting
+              ? Semantics(
+                  key: const ValueKey<bool>(true),
+                  button: true,
+                  enabled: false,
+                  label: 'Saving meal plan',
+                  excludeSemantics: true,
+                  child: const SizedBox(
+                    height: AppSizes.buttonHeight,
+                    child: Material(
+                      color: AppColors.borderMuted,
+                      shape: StadiumBorder(),
+                      child: Center(
+                        child: SizedBox(
+                          width: AppSizes.iconSm,
+                          height: AppSizes.iconSm,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.onGreen,
+                          ),
                         ),
                       ),
                     ),
                   ),
+                )
+              : AppPillButton(
+                  key: const ValueKey<bool>(false),
+                  label: 'Finish',
+                  onPressed: onFinish,
+                  identifier: 'map-meals-finish',
                 ),
-              )
-            : AppPillButton(
-                label: 'Finish',
-                onPressed: onFinish,
-                identifier: 'map-meals-finish',
-              ),
+        ),
       ),
     );
   }

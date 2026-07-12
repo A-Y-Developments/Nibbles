@@ -1,10 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/gen/fonts.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/brand/brand_logo.dart';
@@ -237,24 +239,29 @@ class _SheetHeader extends StatelessWidget {
               shape: const StadiumBorder(),
               minimumSize: const Size(148, 42),
             ),
-            child: restoreSpinning
-                ? Semantics(
-                    label: 'Restoring purchase',
-                    child: const SizedBox(
-                      width: AppSizes.iconSm,
-                      height: AppSizes.iconSm,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
+            child: AnimatedSwitcher(
+              duration: AppDurations.base,
+              child: restoreSpinning
+                  ? Semantics(
+                      key: const Key('paywall_restore_spinner'),
+                      label: 'Restoring purchase',
+                      child: const SizedBox(
+                        width: AppSizes.iconSm,
+                        height: AppSizes.iconSm,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.text,
+                        ),
+                      ),
+                    )
+                  : Text(
+                      'Restore purchase',
+                      key: const Key('paywall_restore_label'),
+                      style: AppTypography.headline.copyWith(
                         color: AppColors.text,
                       ),
                     ),
-                  )
-                : Text(
-                    'Restore purchase',
-                    style: AppTypography.headline.copyWith(
-                      color: AppColors.text,
-                    ),
-                  ),
+            ),
           ),
         ),
       ],
@@ -269,18 +276,31 @@ class _ScrollContent extends StatelessWidget {
   Widget build(BuildContext context) {
     // Price disclosure (_TrialCard) lives in the always-visible footer above
     // the CTA (NIB-177), not here — so it can never scroll off-screen.
-    return const Column(
+    Widget entrance(Widget child, int step) {
+      return child
+          .animate()
+          .fadeIn(delay: AppDurations.fast * step, duration: AppDurations.fade)
+          .slideY(
+            begin: 0.06,
+            end: 0,
+            delay: AppDurations.fast * step,
+            duration: AppDurations.slide,
+            curve: AppCurves.emphasized,
+          );
+    }
+
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // Column gap from header to logo == 24 per spec.
-        SizedBox(height: AppSizes.lg),
-        _BrandRow(),
-        SizedBox(height: AppSizes.lg),
-        _Heading(),
-        SizedBox(height: AppSizes.lg),
-        _FeatureRows(),
-        SizedBox(height: AppSizes.lg),
-        _SocialProof(),
+        const SizedBox(height: AppSizes.lg),
+        entrance(const _BrandRow(), 0),
+        const SizedBox(height: AppSizes.lg),
+        entrance(const _Heading(), 1),
+        const SizedBox(height: AppSizes.lg),
+        entrance(const _FeatureRows(), 2),
+        const SizedBox(height: AppSizes.lg),
+        entrance(const _SocialProof(), 3),
       ],
     );
   }
@@ -447,19 +467,34 @@ class _SocialProof extends StatelessWidget {
           label: '5 star rating',
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(
-              5,
-              (_) => const Padding(
-                padding: EdgeInsets.symmetric(horizontal: AppSizes.xs + 2),
-                child: ExcludeSemantics(
-                  child: Icon(
-                    Icons.star_rounded,
-                    size: 22,
-                    color: AppColors.coral,
-                  ),
-                ),
-              ),
-            ),
+            children:
+                List.generate(
+                      5,
+                      (_) => const Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: AppSizes.xs + 2,
+                        ),
+                        child: ExcludeSemantics(
+                          child: Icon(
+                            Icons.star_rounded,
+                            size: 22,
+                            color: AppColors.coral,
+                          ),
+                        ),
+                      ),
+                    )
+                    .animate(interval: AppDurations.fast)
+                    .scale(
+                      begin: const Offset(0.4, 0.4),
+                      end: const Offset(1, 1),
+                      delay: AppDurations.slide,
+                      duration: AppDurations.base,
+                      curve: AppCurves.emphasized,
+                    )
+                    .fadeIn(
+                      delay: AppDurations.slide,
+                      duration: AppDurations.fast,
+                    ),
           ),
         ),
         const SizedBox(height: AppSizes.xs),
@@ -628,24 +663,29 @@ class _Footer extends StatelessWidget {
         children: [
           // Price/trial-terms disclosure — pinned above the CTA so it is always
           // visible before purchase (NIB-177; App Review 3.1.2).
-          switch (state.phase) {
-            PaywallPhase.loading => const _TrialCardLoading(),
-            PaywallPhase.error => _TrialCardError(
-              message: state.errorMessage ?? 'Could not load offering.',
-              onRetry: onRetry,
-            ),
-            PaywallPhase.ready => _TrialCard(
-              offering:
-                  state.offering ??
-                  // Defensive — phase=ready always carries an offering.
-                  const SubscriptionOffering(
-                    productId: '',
-                    priceString: '',
-                    periodLabel: '',
-                    trialDays: 0,
-                  ),
-            ),
-          },
+          AnimatedSwitcher(
+            duration: AppDurations.fade,
+            switchInCurve: AppCurves.standard,
+            switchOutCurve: AppCurves.standard,
+            child: switch (state.phase) {
+              PaywallPhase.loading => const _TrialCardLoading(),
+              PaywallPhase.error => _TrialCardError(
+                message: state.errorMessage ?? 'Could not load offering.',
+                onRetry: onRetry,
+              ),
+              PaywallPhase.ready => _TrialCard(
+                offering:
+                    state.offering ??
+                    // Defensive — phase=ready always carries an offering.
+                    const SubscriptionOffering(
+                      productId: '',
+                      priceString: '',
+                      periodLabel: '',
+                      trialDays: 0,
+                    ),
+              ),
+            },
+          ),
           const SizedBox(height: AppSizes.lg),
           // Primary CTA — h48 / radius 24 / Forest-dark fill.
           SizedBox(
@@ -660,24 +700,29 @@ class _Footer extends StatelessWidget {
                 onTap: onPurchase,
                 customBorder: const StadiumBorder(),
                 child: Center(
-                  child: purchasing
-                      ? Semantics(
-                          label: 'Starting free trial',
-                          child: const SizedBox(
-                            width: AppSizes.iconMd,
-                            height: AppSizes.iconMd,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
+                  child: AnimatedSwitcher(
+                    duration: AppDurations.base,
+                    child: purchasing
+                        ? Semantics(
+                            key: const Key('paywall_try_for_zero_spinner'),
+                            label: 'Starting free trial',
+                            child: const SizedBox(
+                              width: AppSizes.iconMd,
+                              height: AppSizes.iconMd,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.cream,
+                              ),
+                            ),
+                          )
+                        : Text(
+                            r'Try for $0',
+                            key: const Key('paywall_try_for_zero_label'),
+                            style: AppTypography.headline.copyWith(
                               color: AppColors.cream,
                             ),
                           ),
-                        )
-                      : Text(
-                          r'Try for $0',
-                          style: AppTypography.headline.copyWith(
-                            color: AppColors.cream,
-                          ),
-                        ),
+                  ),
                 ),
               ),
             ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:nibbles/gen/assets.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
+import 'package:nibbles/src/common/components/icons/allergen_icon.dart';
 import 'package:nibbles/src/common/domain/entities/allergen.dart';
 import 'package:nibbles/src/features/allergen/detail/widgets/detail_segment_bar.dart';
 import 'package:nibbles/src/features/allergen/tracker/widgets/allergen_icon_tile.dart';
@@ -14,6 +15,7 @@ class AllergenExposureCard extends StatelessWidget {
     required this.allergen,
     required this.reactionFlags,
     required this.onTap,
+    this.heroTag,
     super.key,
   });
 
@@ -23,6 +25,10 @@ class AllergenExposureCard extends StatelessWidget {
   /// count and the per-segment colouring.
   final List<bool> reactionFlags;
   final VoidCallback onTap;
+
+  /// Optional Hero tag for the icon tile — set only where this card is the
+  /// unambiguous navigation source into allergen detail (tracker Ongoing tab).
+  final Object? heroTag;
 
   @override
   Widget build(BuildContext context) {
@@ -64,8 +70,9 @@ class AllergenExposureCard extends StatelessWidget {
                 child: Row(
                   children: [
                     AllergenIconTile(
-                      backing: Colors.white.withValues(alpha: 0.10),
-                      borderColor: AppColors.cream.withValues(alpha: 0.45),
+                      allergenKey: allergen.key,
+                      variant: AllergenIconVariant.maroon,
+                      heroTag: heroTag,
                     ),
                     const SizedBox(width: AppSizes.sp12),
                     Expanded(

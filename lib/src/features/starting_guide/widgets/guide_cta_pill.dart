@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:nibbles/gen/fonts.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
+import 'package:nibbles/src/common/components/feedback/press_scale.dart';
 
 /// Full-width green-deep pill CTA used at the bottom of every article.
 ///
@@ -15,42 +16,45 @@ class GuideCtaPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.greenDeep,
-      borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-      child: InkWell(
+    return PressableScale(
+      enabled: true,
+      child: Material(
+        color: AppColors.greenDeep,
         borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-        onTap: onTap,
-        child: Container(
-          height: AppSizes.buttonHeight,
-          alignment: Alignment.center,
-          // Kit `.pillbtn` horizontal padding is 22px — literal because there
-          // is no current token; matches kit.css line 74-80 exactly.
-          padding: const EdgeInsets.symmetric(horizontal: 22),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Flexible(
-                child: Text(
-                  label,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontFamily: FontFamily.parkinsans,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    height: 1,
-                    color: AppColors.cream,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+          onTap: onTap,
+          child: Container(
+            height: AppSizes.buttonHeight,
+            alignment: Alignment.center,
+            // Kit `.pillbtn` horizontal padding is 22px — literal because there
+            // is no current token; matches kit.css line 74-80 exactly.
+            padding: const EdgeInsets.symmetric(horizontal: 22),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: Text(
+                    label,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontFamily: FontFamily.parkinsans,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      height: 1,
+                      color: AppColors.cream,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: AppSizes.sm),
-              const Icon(
-                Icons.arrow_forward_rounded,
-                color: AppColors.cream,
-                size: AppSizes.iconMd,
-              ),
-            ],
+                const SizedBox(width: AppSizes.sm),
+                const Icon(
+                  Icons.arrow_forward_rounded,
+                  color: AppColors.cream,
+                  size: AppSizes.iconMd,
+                ),
+              ],
+            ),
           ),
         ),
       ),

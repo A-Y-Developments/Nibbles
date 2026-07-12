@@ -290,6 +290,12 @@ class _QaMealPlanRepository implements MealPlanRepository {
   ) async => const Result.failure(UnknownException('QA bypass: noop.'));
 
   @override
+  Future<Result<MealPlan>> updatePlanEndDate(
+    String planId,
+    DateTime endDate,
+  ) async => const Result.failure(UnknownException('QA bypass: noop.'));
+
+  @override
   Future<Result<void>> deletePlan(String planId) async =>
       const Result.success(null);
 }

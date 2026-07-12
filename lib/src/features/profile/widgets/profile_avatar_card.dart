@@ -9,8 +9,8 @@ import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
 ///
 /// Layout (column, gap 24):
 ///  - 143x143 peach baby-circle avatar (`BabyAvatar`).
-///  - Name (Title 1/Bold — Parkinsans 700 22 / lh 34) + age subtitle
-///    (Body/Regular — Figtree 400 15 / lh 22), 4px gap between.
+///  - Name (Title 1/Bold — Parkinsans 700 24 / lh 37) + age subtitle
+///    (Body/Regular — Figtree 400 18), 4px gap between.
 ///  - 108x48 butter pill "Edit" (radius 24, Parkinsans SemiBold 15,
 ///    forestDarkn label).
 class ProfileAvatarCard extends StatelessWidget {
@@ -40,23 +40,26 @@ class ProfileAvatarCard extends StatelessWidget {
         children: [
           const BabyAvatar(),
           const SizedBox(height: AppSizes.lg),
-          // Title 1/Bold — Parkinsans 700 22 / lh 34.
+          // Title 1/Bold — Parkinsans 700 24 / lh 37.
           Text(
             name,
             style: const TextStyle(
               fontFamily: FontFamily.parkinsans,
-              fontSize: 22,
+              fontSize: 24,
               fontWeight: FontWeight.w700,
-              height: 34 / 22,
+              height: 37 / 24,
               color: AppColors.text,
             ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppSizes.xs),
-          // Body/Regular — Figtree 400 15 / lh 22.
+          // Body/Regular — Figtree 400 18.
           Text(
             ageLabel,
-            style: theme.textTheme.bodyLarge?.copyWith(color: AppColors.text),
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: AppColors.text,
+              fontSize: 18,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppSizes.lg),

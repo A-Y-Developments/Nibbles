@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nibbles/src/common/components/brand/brand_flower_loader.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/app_exception.dart';
 import 'package:nibbles/src/common/domain/entities/subscription_info.dart';
 import 'package:nibbles/src/features/subscription/manage/manage_subscription_controller.dart';
@@ -271,7 +272,7 @@ void main() {
       find.byKey(const Key('manage_subscription_loading')),
       findsOneWidget,
     );
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byType(BrandFlowerLoader), findsOneWidget);
   });
 
   testWidgets('error: renders error message + retry CTA', (tester) async {

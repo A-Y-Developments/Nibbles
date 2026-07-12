@@ -58,7 +58,7 @@ class AllergenLogDetailScreen extends ConsumerWidget {
     return asyncState.when(
       loading: () => GradientScaffold(
         appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
-        body: const Center(child: CircularProgressIndicator()),
+        body: const Center(child: BrandFlowerLoader.small()),
       ),
       error: (err, _) => GradientScaffold(
         appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),

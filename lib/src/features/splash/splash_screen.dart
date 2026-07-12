@@ -1,11 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/gen/assets.gen.dart';
 import 'package:nibbles/gen/fonts.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
 import 'package:nibbles/src/features/splash/splash_controller.dart';
@@ -53,9 +55,20 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       backgroundColor: AppColors.green,
       body: SafeArea(
         child: Center(
-          child: state.hasError
-              ? _buildError(context, isReloading: state.isLoading)
-              : _buildBranding(context),
+          child: AnimatedSwitcher(
+            duration: AppDurations.fade,
+            switchInCurve: AppCurves.standard,
+            switchOutCurve: AppCurves.standard,
+            child: state.hasError
+                ? KeyedSubtree(
+                    key: const ValueKey('splash_error'),
+                    child: _buildError(context, isReloading: state.isLoading),
+                  )
+                : KeyedSubtree(
+                    key: const ValueKey('splash_branding'),
+                    child: _buildBranding(context),
+                  ),
+          ),
         ),
       ),
     );
@@ -76,17 +89,26 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
               height: 22 / 15,
               color: AppColors.cream,
             ),
-          ),
+          ).animate().fadeIn(duration: AppDurations.slow),
           const SizedBox(height: 17),
           Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSizes.pagePaddingH,
-            ),
-            child: Assets.images.nibblesLogo.image(
-              width: double.infinity,
-              fit: BoxFit.fitWidth,
-            ),
-          ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSizes.pagePaddingH,
+                ),
+                child: Assets.images.nibblesLogo.image(
+                  width: double.infinity,
+                  fit: BoxFit.fitWidth,
+                ),
+              )
+              .animate()
+              .fadeIn(delay: 120.ms, duration: AppDurations.slow)
+              .scale(
+                delay: 120.ms,
+                duration: AppDurations.slow,
+                curve: AppCurves.emphasized,
+                begin: const Offset(0.88, 0.88),
+                end: const Offset(1, 1),
+              ),
         ],
       ),
     );

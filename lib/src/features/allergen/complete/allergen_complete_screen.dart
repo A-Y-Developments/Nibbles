@@ -23,7 +23,7 @@ class AllergenCompleteScreen extends ConsumerWidget {
       },
       child: GradientScaffold(
         body: stateAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const Center(child: BrandFlowerLoader.small()),
           error: (e, _) => Center(
             child: Padding(
               padding: const EdgeInsets.all(AppSizes.pagePaddingH),

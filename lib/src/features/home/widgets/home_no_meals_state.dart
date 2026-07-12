@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
@@ -48,51 +50,59 @@ class HomeNoMealsState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusXl),
-        boxShadow: AppSizes.shadowCard,
-      ),
-      padding: const EdgeInsets.all(AppSizes.sp12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _MealsHeaderRow(filled: filledSlots, total: scheduledSlots),
-          const SizedBox(height: AppSizes.sm),
-          AppCard(
-            variant: AppCardVariant.dashed,
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSizes.lg,
-              vertical: AppSizes.lg,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _MealsHeaderRow(filled: filledSlots, total: scheduledSlots),
+        const SizedBox(height: AppSizes.sm + 2),
+        Container(
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(AppSizes.radiusXl),
+                boxShadow: AppSizes.shadowCard,
+              ),
+              padding: const EdgeInsets.all(AppSizes.sp12),
+              child: AppCard(
+                variant: AppCardVariant.dashed,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSizes.lg,
+                  vertical: AppSizes.lg,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Text(
+                      'No Meals Mapped Yet',
+                      textAlign: TextAlign.center,
+                      style: AppTypography.emptyStateTitle,
+                    ),
+                    const SizedBox(height: AppSizes.xs),
+                    Text(
+                      'Drag & drop or click meals below to add them',
+                      textAlign: TextAlign.center,
+                      style: AppTypography.textTheme.bodyMedium?.copyWith(
+                        color: AppColors.fgFaint,
+                      ),
+                    ),
+                    const SizedBox(height: AppSizes.md),
+                    AppPillButton(
+                      label: '+ Add',
+                      variant: AppPillButtonVariant.ghost,
+                      onPressed: () => _onPressed(context),
+                    ),
+                  ],
+                ),
+              ),
+            )
+            .animate()
+            .fadeIn(duration: AppDurations.fade)
+            .scale(
+              begin: const Offset(0.97, 0.97),
+              end: const Offset(1, 1),
+              duration: AppDurations.slide,
+              curve: AppCurves.emphasized,
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Text(
-                  'No Meals Mapped Yet',
-                  textAlign: TextAlign.center,
-                  style: AppTypography.emptyStateTitle,
-                ),
-                const SizedBox(height: AppSizes.xs),
-                Text(
-                  'Drag & drop or click meals below to add them',
-                  textAlign: TextAlign.center,
-                  style: AppTypography.textTheme.bodyMedium?.copyWith(
-                    color: AppColors.fgFaint,
-                  ),
-                ),
-                const SizedBox(height: AppSizes.md),
-                AppPillButton(
-                  label: '+ Add',
-                  variant: AppPillButtonVariant.ghost,
-                  onPressed: () => _onPressed(context),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+      ],
     );
   }
 }
@@ -111,22 +121,10 @@ class _MealsHeaderRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.baseline,
         textBaseline: TextBaseline.alphabetic,
         children: [
-          Expanded(
-            child: Text(
-              "TODAY'S MEALS",
-              style: AppTypography.textTheme.labelSmall?.copyWith(
-                color: AppColors.greenDeep,
-                letterSpacing: 0.6,
-              ),
-            ),
+          const Expanded(
+            child: Text("Today's Meals", style: AppTypography.sectionTitle),
           ),
-          Text(
-            '$filled/$total',
-            style: AppTypography.caption.copyWith(
-              color: AppColors.fgFaint,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
+          Text('$filled/$total', style: AppTypography.sectionTitle),
         ],
       ),
     );

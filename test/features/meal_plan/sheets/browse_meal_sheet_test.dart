@@ -155,7 +155,7 @@ void main() {
 
     await tester.tap(find.text('Open'));
     // Drive route + sheet entrance + _load() future. Avoid pumpAndSettle —
-    // CircularProgressIndicator animates forever and would block forever.
+    // the BrandFlowerLoader animates forever and would block forever.
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 350));
     await tester.pump();
@@ -383,7 +383,10 @@ void main() {
 
         // Enter review mode via the selected pill — search + carousels hide.
         await tester.tap(find.text('1 selected'));
+        // The search field cross-fades out via AnimatedSwitcher/AnimatedSize;
+        // advance past the transition so the outgoing field fully unmounts.
         await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
 
         expect(find.text('Search recipe'), findsNothing);
       },

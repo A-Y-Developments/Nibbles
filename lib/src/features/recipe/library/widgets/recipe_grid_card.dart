@@ -1,11 +1,14 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:nibbles/gen/assets.gen.dart';
 import 'package:nibbles/gen/fonts.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/chips/app_chip.dart';
+import 'package:nibbles/src/common/components/feedback/press_scale.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
 
 /// Recipe library card (NIB-53 redesign).
@@ -24,12 +27,14 @@ class RecipeGridCard extends StatelessWidget {
     required this.recipe,
     required this.onTap,
     this.flaggedAllergenKeys = const {},
+    this.heroTag,
     super.key,
   });
 
   final Recipe recipe;
   final VoidCallback onTap;
   final Set<String> flaggedAllergenKeys;
+  final String? heroTag;
 
   bool get _hasUnsafeAllergen =>
       recipe.allergenTags.any(flaggedAllergenKeys.contains);
@@ -48,10 +53,12 @@ class RecipeGridCard extends StatelessWidget {
       identifier: 'recipe_card_${recipe.id}',
       excludeSemantics: true,
       onTap: onTap,
-      child: GestureDetector(
+      child: PressableScale(
         onTap: onTap,
-        child: Opacity(
+        child: AnimatedOpacity(
           opacity: isUnsafe ? 0.85 : 1,
+          duration: AppDurations.fade,
+          curve: AppCurves.standard,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(AppSizes.radiusMd),
             child: ColoredBox(
@@ -59,7 +66,11 @@ class RecipeGridCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _CardThumbnail(url: recipe.thumbnailUrl, isUnsafe: isUnsafe),
+                  _CardThumbnail(
+                    url: recipe.thumbnailUrl,
+                    isUnsafe: isUnsafe,
+                    heroTag: heroTag,
+                  ),
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.all(AppSizes.sp12),
@@ -98,37 +109,33 @@ class RecipeGridCard extends StatelessWidget {
 }
 
 class _CardThumbnail extends StatelessWidget {
-  const _CardThumbnail({required this.url, required this.isUnsafe});
+  const _CardThumbnail({
+    required this.url,
+    required this.isUnsafe,
+    this.heroTag,
+  });
 
   final String? url;
   final bool isUnsafe;
+  final String? heroTag;
 
   // Figma 760:7432 thumbnail container: 158w x 117h, white bg.
   static const double _thumbHeight = 117;
 
   @override
   Widget build(BuildContext context) {
+    var image = _buildImage(context);
+    if (heroTag != null) {
+      image = Hero(tag: heroTag!, child: image);
+    }
+
     return SizedBox(
       height: _thumbHeight,
       width: double.infinity,
       child: Stack(
         fit: StackFit.expand,
         children: [
-          if (url == null || url!.isEmpty)
-            _fallback()
-          else if (url!.startsWith('assets/'))
-            Image.asset(url!, fit: BoxFit.cover)
-          else
-            CachedNetworkImage(
-              imageUrl: url!,
-              fit: BoxFit.cover,
-              memCacheWidth: (158 * MediaQuery.devicePixelRatioOf(context))
-                  .round(),
-              memCacheHeight: (117 * MediaQuery.devicePixelRatioOf(context))
-                  .round(),
-              placeholder: (_, __) => const ColoredBox(color: AppColors.tan20),
-              errorWidget: (_, __, ___) => _fallback(),
-            ),
+          image,
           if (isUnsafe)
             const Positioned(
               top: AppSizes.xs + 2,
@@ -138,9 +145,40 @@ class _CardThumbnail extends StatelessWidget {
                 tone: AppChipTone.flag,
                 icon: Icon(Icons.warning_amber_rounded),
               ),
-            ),
+            ).animate().fadeIn(duration: AppDurations.fade),
         ],
       ),
+    );
+  }
+
+  Widget _buildImage(BuildContext context) {
+    if (url == null || url!.isEmpty) return _fallback();
+    if (url!.startsWith('assets/')) {
+      return Image.asset(url!, fit: BoxFit.cover, frameBuilder: _fadeInFrame);
+    }
+    return CachedNetworkImage(
+      imageUrl: url!,
+      fit: BoxFit.cover,
+      fadeInDuration: AppDurations.fade,
+      memCacheWidth: (158 * MediaQuery.devicePixelRatioOf(context)).round(),
+      memCacheHeight: (117 * MediaQuery.devicePixelRatioOf(context)).round(),
+      placeholder: (_, __) => const ColoredBox(color: AppColors.tan20),
+      errorWidget: (_, __, ___) => _fallback(),
+    );
+  }
+
+  Widget _fadeInFrame(
+    BuildContext context,
+    Widget child,
+    int? frame,
+    bool wasSynchronouslyLoaded,
+  ) {
+    if (wasSynchronouslyLoaded) return child;
+    return AnimatedOpacity(
+      opacity: frame == null ? 0 : 1,
+      duration: AppDurations.fade,
+      curve: AppCurves.standard,
+      child: child,
     );
   }
 

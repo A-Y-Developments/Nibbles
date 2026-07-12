@@ -115,7 +115,12 @@ void main() {
       await tester.pump();
 
       await tester.tap(find.text('Select all'));
+      // The CTA label cross-fades via AnimatedSwitcher inside AppPillButton;
+      // rapid (3)->(0)->(3) label flips leave a stale outgoing 'Add (3) items'
+      // Text mid-transition. Advance past the fade so only the final label
+      // remains mounted.
       await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
 
       expect(find.text('Add (3) items'), findsOneWidget);
     });

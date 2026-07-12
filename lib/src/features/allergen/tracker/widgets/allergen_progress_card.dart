@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/common/domain/entities/allergen.dart';
@@ -69,7 +70,7 @@ class AllergenProgressCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                const AllergenIconTile(size: 52),
+                AllergenIconTile(allergenKey: allergen.key, size: 52),
                 const SizedBox(width: AppSizes.sp12),
                 Expanded(
                   child: Column(
@@ -87,10 +88,20 @@ class AllergenProgressCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (trailingChip != null) ...[
-                  trailingChip,
-                  const SizedBox(width: AppSizes.sm),
-                ],
+                AnimatedSwitcher(
+                  duration: AppDurations.quick,
+                  transitionBuilder: (child, animation) => FadeTransition(
+                    opacity: animation,
+                    child: ScaleTransition(scale: animation, child: child),
+                  ),
+                  child: trailingChip == null
+                      ? const SizedBox.shrink()
+                      : Padding(
+                          key: ValueKey(status),
+                          padding: const EdgeInsets.only(right: AppSizes.sm),
+                          child: trailingChip,
+                        ),
+                ),
                 const Icon(
                   Icons.chevron_right_rounded,
                   size: AppSizes.iconMd,

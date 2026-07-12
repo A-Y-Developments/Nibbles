@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/common/services/local_flag_service.dart';
@@ -122,12 +124,21 @@ class _OnboardingConsentScreenState
                 // Figma 971:10229 — flower cluster fills the gap between the
                 // title and the bottom-pinned checklist; scaleDown keeps the
                 // 220 cluster crisp but shrinks it on short screens.
-                const Expanded(
+                Expanded(
                   child: Center(
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: BrandFlower(size: 440),
-                    ),
+                    child:
+                        const FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: BrandFlower(size: 440),
+                            )
+                            .animate()
+                            .fadeIn(duration: AppDurations.slow)
+                            .scale(
+                              duration: AppDurations.slow,
+                              curve: AppCurves.emphasized,
+                              begin: const Offset(0.85, 0.85),
+                              end: const Offset(1, 1),
+                            ),
                   ),
                 ),
                 for (var i = 0; i < _checks.length; i++) ...[
@@ -137,18 +148,28 @@ class _OnboardingConsentScreenState
                     label: _labelFor(i),
                     value: _checks[i],
                     onChanged: (v) => _toggle(i, value: v),
+                  ).animate().fadeIn(
+                    delay: (120 + 70 * i).ms,
+                    duration: AppDurations.fade,
                   ),
                   if (i < _checks.length - 1)
                     const SizedBox(height: AppSizes.sm),
                 ],
-                if (errorMessage != null) ...[
-                  const SizedBox(height: AppSizes.md),
-                  _InlineError(
-                    key: const Key('onboarding_consent_error'),
-                    message: errorMessage,
-                    onRetry: canConfirm ? _onConfirm : null,
-                  ),
-                ],
+                AnimatedSize(
+                  duration: AppDurations.base,
+                  curve: AppCurves.standard,
+                  alignment: Alignment.topCenter,
+                  child: errorMessage == null
+                      ? const SizedBox(width: double.infinity)
+                      : Padding(
+                          padding: const EdgeInsets.only(top: AppSizes.md),
+                          child: _InlineError(
+                            key: const Key('onboarding_consent_error'),
+                            message: errorMessage,
+                            onRetry: canConfirm ? _onConfirm : null,
+                          ).animate().fadeIn(duration: AppDurations.fade),
+                        ),
+                ),
                 const SizedBox(height: AppSizes.md),
                 Row(
                   children: [

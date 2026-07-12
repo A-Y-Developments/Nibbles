@@ -138,7 +138,7 @@ void main() {
       expect(iconInPasswordField(Icons.visibility_outlined), findsNothing);
 
       await tester.tap(iconInPasswordField(Icons.visibility_off_outlined));
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       expect(iconInPasswordField(Icons.visibility_outlined), findsOneWidget);
       expect(iconInPasswordField(Icons.visibility_off_outlined), findsNothing);
@@ -283,36 +283,35 @@ void main() {
   // Submit gating (canSubmit)
   // -------------------------------------------------------------------------
 
-  testWidgets(
-    'primary CTA is disabled until both email + password are valid',
-    (tester) async {
-      await tester.pumpWidget(_wrap(const LoginScreen(), buildOverrides()));
-      await tester.pumpAndSettle();
+  testWidgets('primary CTA is disabled until both email + password are valid', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_wrap(const LoginScreen(), buildOverrides()));
+    await tester.pumpAndSettle();
 
-      AppPillButton submitButton() => tester.widget<AppPillButton>(
-        find.byKey(const Key('login_submit_button')),
-      );
+    AppPillButton submitButton() => tester.widget<AppPillButton>(
+      find.byKey(const Key('login_submit_button')),
+    );
 
-      // Empty form — disabled (onPressed == null).
-      expect(submitButton().onPressed, isNull);
+    // Empty form — disabled (onPressed == null).
+    expect(submitButton().onPressed, isNull);
 
-      // Valid email but no password — still disabled.
-      await tester.enterText(
-        find.byKey(const Key('login_email_field')),
-        'jane@example.com',
-      );
-      await tester.pump();
-      expect(submitButton().onPressed, isNull);
+    // Valid email but no password — still disabled.
+    await tester.enterText(
+      find.byKey(const Key('login_email_field')),
+      'jane@example.com',
+    );
+    await tester.pump();
+    expect(submitButton().onPressed, isNull);
 
-      // Both valid — enabled.
-      await tester.enterText(
-        find.byKey(const Key('login_password_field')),
-        'supersecret',
-      );
-      await tester.pump();
-      expect(submitButton().onPressed, isNotNull);
-    },
-  );
+    // Both valid — enabled.
+    await tester.enterText(
+      find.byKey(const Key('login_password_field')),
+      'supersecret',
+    );
+    await tester.pump();
+    expect(submitButton().onPressed, isNotNull);
+  });
 
   testWidgets('Forgot password link navigates to the forgot-password route', (
     tester,

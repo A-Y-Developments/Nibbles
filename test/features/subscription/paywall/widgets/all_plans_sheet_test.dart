@@ -115,7 +115,9 @@ void main() {
         await _pumpSheet(tester, plans: const [_annual, _monthly]);
 
         await tester.tap(find.text('Monthly'));
-        await tester.pump();
+        // The card border is an AnimatedContainer (redesign) — settle the
+        // interpolation so the read reflects the final selected color.
+        await tester.pumpAndSettle();
 
         expect(_borderColorOf(tester, 'Monthly'), AppColors.greenDeep);
         expect(_borderColorOf(tester, 'Annual'), AppColors.borderMuted);

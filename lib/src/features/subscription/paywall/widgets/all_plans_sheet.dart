@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/domain/entities/subscription_plan.dart';
 import 'package:nibbles/src/logging/analytics.dart';
@@ -284,7 +285,9 @@ class _PlanCard extends StatelessWidget {
               child: InkWell(
                 onTap: onTap,
                 borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-                child: Container(
+                child: AnimatedContainer(
+                  duration: AppDurations.quick,
+                  curve: AppCurves.standard,
                   width: double.infinity,
                   padding: const EdgeInsets.all(AppSizes.sp12),
                   decoration: BoxDecoration(

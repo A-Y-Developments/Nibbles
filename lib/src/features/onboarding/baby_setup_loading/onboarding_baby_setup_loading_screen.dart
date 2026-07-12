@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/features/onboarding/baby_setup_loading/baby_setup_loading_controller.dart';
@@ -112,7 +114,7 @@ class _OnboardingBabySetupLoadingScreenState
                     child: BrandFlowerLoader(
                       blobKey: Key('onboarding_baby_setup_loading_blob'),
                     ),
-                  ),
+                  ).animate().fadeIn(duration: AppDurations.slow),
                   // Footer tagline anchored ~70% down screen — Figma footer at
                   // bottom 611 of an 874 height (≈30% from the bottom = 0.40
                   // on the y axis once expressed as Alignment(0, y)).
@@ -122,15 +124,21 @@ class _OnboardingBabySetupLoadingScreenState
                       padding: const EdgeInsets.symmetric(
                         horizontal: AppSizes.pagePaddingH,
                       ),
-                      child: AnimatedEllipsisText(
-                        key: const Key('onboarding_baby_setup_loading_footer'),
-                        text: footerCopy,
-                        // Body/SemiBold (Figtree 15/22 w600) per audit token.
-                        style: textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.text,
-                        ),
-                      ),
+                      child:
+                          AnimatedEllipsisText(
+                            key: const Key(
+                              'onboarding_baby_setup_loading_footer',
+                            ),
+                            text: footerCopy,
+                            // Body/SemiBold (Figtree 15/22 w600) per audit token.
+                            style: textTheme.bodyLarge?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.text,
+                            ),
+                          ).animate().fadeIn(
+                            delay: 120.ms,
+                            duration: AppDurations.slow,
+                          ),
                     ),
                   ),
                 ],

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
+import 'package:nibbles/src/common/components/feedback/press_scale.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
 import 'package:nibbles/src/features/meal_plan/map/widgets/meal_recipe_card.dart';
 
@@ -35,11 +38,18 @@ class PickedRecipeRow extends StatelessWidget {
         data: recipe,
         dragAnchorStrategy: pointerDragAnchorStrategy,
         feedback: _DragFeedback(recipe: recipe),
-        childWhenDragging: Opacity(opacity: 0.4, child: card),
+        childWhenDragging: TweenAnimationBuilder<double>(
+          tween: Tween<double>(begin: 1, end: 0.4),
+          duration: AppDurations.base,
+          curve: AppCurves.standard,
+          builder: (context, value, child) =>
+              Opacity(opacity: value, child: child),
+          child: card,
+        ),
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-          child: card,
+          child: PressableScale(enabled: true, child: card),
         ),
       ),
     );
@@ -60,15 +70,21 @@ class _DragFeedback extends StatelessWidget {
         color: Colors.transparent,
         child: SizedBox(
           width: 240,
-          child: MealRecipeCard(
-            recipe: recipe,
-            elevated: true,
-            trailing: const Icon(
-              Icons.drag_indicator,
-              color: AppColors.fgFaint,
-              size: AppSizes.iconMd,
-            ),
-          ),
+          child:
+              MealRecipeCard(
+                recipe: recipe,
+                elevated: true,
+                trailing: const Icon(
+                  Icons.drag_indicator,
+                  color: AppColors.fgFaint,
+                  size: AppSizes.iconMd,
+                ),
+              ).animate().scale(
+                begin: const Offset(0.96, 0.96),
+                end: const Offset(1.03, 1.03),
+                duration: AppDurations.quick,
+                curve: AppCurves.emphasized,
+              ),
         ),
       ),
     );

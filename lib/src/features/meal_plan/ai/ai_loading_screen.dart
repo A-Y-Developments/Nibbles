@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/components.dart';
@@ -92,15 +94,19 @@ class _AiLoadingScreenState extends ConsumerState<AiLoadingScreen> {
                 Text(
                   "Building ${widget.args.babyName}'s plan…",
                   textAlign: TextAlign.center,
-                  style: AppTypography.textTheme.titleLarge,
-                ),
+                  style: AppTypography.textTheme.displaySmall,
+                ).animate().fadeIn(duration: AppDurations.fade),
                 const SizedBox(height: AppSizes.sm),
                 Text(
                   'Picking recipes and mapping them across your days.',
                   textAlign: TextAlign.center,
                   style: AppTypography.textTheme.bodyMedium?.copyWith(
+                    fontSize: 16,
                     color: AppColors.fgMuted,
                   ),
+                ).animate().fadeIn(
+                  delay: AppDurations.quick,
+                  duration: AppDurations.fade,
                 ),
               ],
             ),

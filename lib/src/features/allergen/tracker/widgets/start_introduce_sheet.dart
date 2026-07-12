@@ -113,7 +113,7 @@ class _StartIntroduceSheetState extends ConsumerState<_StartIntroduceSheet> {
                 ),
               ),
               const SizedBox(height: AppSizes.lg),
-              const AllergenIconTile(),
+              AllergenIconTile(allergenKey: widget.allergen.key),
               const SizedBox(height: AppSizes.sm),
               Text(
                 widget.allergen.name,

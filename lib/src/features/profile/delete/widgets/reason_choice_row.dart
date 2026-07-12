@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 
@@ -33,8 +35,8 @@ class ReasonChoiceRow extends StatelessWidget {
       label: label,
       child: ExcludeSemantics(
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 140),
-          curve: Curves.easeOut,
+          duration: AppDurations.quick,
+          curve: AppCurves.standard,
           decoration: BoxDecoration(
             color: fill,
             borderRadius: BorderRadius.circular(AppSizes.radiusMd),
@@ -60,7 +62,15 @@ class ReasonChoiceRow extends StatelessWidget {
                     ),
                     if (selected) ...[
                       const SizedBox(width: AppSizes.sm),
-                      const _SelectedCheck(),
+                      const _SelectedCheck()
+                          .animate()
+                          .scale(
+                            begin: const Offset(0.6, 0.6),
+                            end: const Offset(1, 1),
+                            duration: AppDurations.base,
+                            curve: AppCurves.emphasized,
+                          )
+                          .fadeIn(duration: AppDurations.fast),
                     ],
                   ],
                 ),

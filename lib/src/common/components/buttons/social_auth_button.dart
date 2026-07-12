@@ -4,6 +4,7 @@ import 'package:nibbles/gen/assets.gen.dart';
 import 'package:nibbles/gen/fonts.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
+import 'package:nibbles/src/common/components/feedback/press_scale.dart';
 
 /// Social identity provider rendered by [SocialAuthButton].
 enum SocialAuthProvider { google, apple }
@@ -51,30 +52,33 @@ class SocialAuthButton extends StatelessWidget {
 
     return Semantics(
       identifier: identifier,
-      child: Material(
-        color: background,
-        shape: shape,
-        child: InkWell(
-          onTap: disabled ? null : onPressed,
-          customBorder: const StadiumBorder(),
-          child: SizedBox(
-            height: AppSizes.buttonHeight,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ExcludeSemantics(child: _logo(disabled)),
-                const SizedBox(width: AppSizes.sp12),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontFamily: FontFamily.parkinsans,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    height: 20 / 13,
-                    color: foreground,
+      child: PressableScale(
+        enabled: !disabled,
+        child: Material(
+          color: background,
+          shape: shape,
+          child: InkWell(
+            onTap: disabled ? null : onPressed,
+            customBorder: const StadiumBorder(),
+            child: SizedBox(
+              height: AppSizes.buttonHeight,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ExcludeSemantics(child: _logo(disabled)),
+                  const SizedBox(width: AppSizes.sp12),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontFamily: FontFamily.parkinsans,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      height: 20 / 13,
+                      color: foreground,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

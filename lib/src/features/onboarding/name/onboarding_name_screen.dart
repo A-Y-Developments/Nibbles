@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/common/domain/formz/baby_name_input.dart';
@@ -113,10 +115,18 @@ class _OnboardingNameScreenState extends ConsumerState<OnboardingNameScreen> {
             children: [
               const SizedBox(height: AppSizes.xxl),
               Text(
-                "What is your baby's name?",
-                style: textTheme.headlineSmall,
-                textAlign: TextAlign.center,
-              ),
+                    "What is your baby's name?",
+                    style: textTheme.headlineSmall,
+                    textAlign: TextAlign.center,
+                  )
+                  .animate()
+                  .fadeIn(duration: AppDurations.fade)
+                  .slideY(
+                    duration: AppDurations.slide,
+                    curve: AppCurves.emphasized,
+                    begin: 0.12,
+                    end: 0,
+                  ),
               const SizedBox(height: AppSizes.sm),
               Text(
                 "We'll use this to build their personalized 3-6 month guide.",
@@ -124,7 +134,7 @@ class _OnboardingNameScreenState extends ConsumerState<OnboardingNameScreen> {
                   color: AppColors.fgStrong,
                 ),
                 textAlign: TextAlign.center,
-              ),
+              ).animate().fadeIn(delay: 80.ms, duration: AppDurations.fade),
               const SizedBox(height: AppSizes.xl),
               AppTextField(
                 key: const Key('onboarding_first_name_field'),
@@ -136,7 +146,7 @@ class _OnboardingNameScreenState extends ConsumerState<OnboardingNameScreen> {
                 onChanged: _onFirstChanged,
                 errorText: errorText,
                 errorColor: AppColors.destructive,
-              ),
+              ).animate().fadeIn(delay: 160.ms, duration: AppDurations.fade),
               const SizedBox(height: AppSizes.md),
               AppTextField(
                 key: const Key('onboarding_last_name_field'),
@@ -147,7 +157,7 @@ class _OnboardingNameScreenState extends ConsumerState<OnboardingNameScreen> {
                 textInputAction: TextInputAction.done,
                 onChanged: _onLastChanged,
                 onSubmitted: (_) => _onNext(),
-              ),
+              ).animate().fadeIn(delay: 220.ms, duration: AppDurations.fade),
               const Spacer(),
               Row(
                 children: [

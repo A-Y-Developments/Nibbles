@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:nibbles/gen/assets.gen.dart';
 import 'package:nibbles/src/app/constants/allergen_emoji.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/chips/app_chip.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
@@ -45,11 +46,15 @@ class BrowseMealRecipeCard extends StatelessWidget {
           : '${recipe.title}, ${recipe.ageRange}',
       onTap: unsafe ? null : onTap,
       excludeSemantics: true,
-      child: Opacity(
+      child: AnimatedOpacity(
+        duration: AppDurations.base,
+        curve: AppCurves.standard,
         opacity: unsafe ? 0.5 : 1,
         child: GestureDetector(
           onTap: unsafe ? null : onTap,
-          child: Container(
+          child: AnimatedContainer(
+            duration: AppDurations.base,
+            curve: AppCurves.standard,
             width: _cardWidth,
             decoration: BoxDecoration(
               color: AppColors.surface,
@@ -132,7 +137,7 @@ class _NutritionChips extends StatelessWidget {
     final extra = tags.length - 1;
     return Row(
       children: [
-        Flexible(child: AppChip(label: tags.first)),
+        Flexible(child: AppChip(label: tags.first, flexibleLabel: true)),
         if (extra > 0) ...[
           const SizedBox(width: AppSizes.xs),
           AppChip(label: '$extra', icon: const Icon(Icons.add, size: 12)),
@@ -183,7 +188,9 @@ class _SelectIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AnimatedContainer(
+      duration: AppDurations.base,
+      curve: AppCurves.standard,
       width: 24,
       height: 24,
       decoration: BoxDecoration(
@@ -193,9 +200,22 @@ class _SelectIndicator extends StatelessWidget {
           color: selected ? AppColors.primary : AppColors.borderMuted,
         ),
       ),
-      child: selected
-          ? const Icon(Icons.check, size: 16, color: AppColors.onPrimary)
-          : null,
+      child: AnimatedSwitcher(
+        duration: AppDurations.quick,
+        switchInCurve: AppCurves.emphasized,
+        transitionBuilder: (child, animation) => ScaleTransition(
+          scale: animation,
+          child: FadeTransition(opacity: animation, child: child),
+        ),
+        child: selected
+            ? const Icon(
+                Icons.check,
+                key: ValueKey<bool>(true),
+                size: 16,
+                color: AppColors.onPrimary,
+              )
+            : const SizedBox.shrink(key: ValueKey<bool>(false)),
+      ),
     );
   }
 }
@@ -252,7 +272,9 @@ class BrowseMealRecipeRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    return Opacity(
+    return AnimatedOpacity(
+      duration: AppDurations.base,
+      curve: AppCurves.standard,
       opacity: unsafe ? 0.5 : 1,
       child: InkWell(
         onTap: unsafe ? null : onTap,
@@ -371,7 +393,9 @@ class _RowSelectIndicator extends StatelessWidget {
     final border = selected
         ? AppColors.primary
         : (disabled ? AppColors.borderSoft : AppColors.borderMuted);
-    return Container(
+    return AnimatedContainer(
+      duration: AppDurations.base,
+      curve: AppCurves.standard,
       width: AppSizes.checkbox,
       height: AppSizes.checkbox,
       decoration: BoxDecoration(
@@ -379,9 +403,22 @@ class _RowSelectIndicator extends StatelessWidget {
         shape: BoxShape.circle,
         border: Border.all(color: border),
       ),
-      child: selected
-          ? const Icon(Icons.check, size: 16, color: AppColors.onPrimary)
-          : null,
+      child: AnimatedSwitcher(
+        duration: AppDurations.quick,
+        switchInCurve: AppCurves.emphasized,
+        transitionBuilder: (child, animation) => ScaleTransition(
+          scale: animation,
+          child: FadeTransition(opacity: animation, child: child),
+        ),
+        child: selected
+            ? const Icon(
+                Icons.check,
+                key: ValueKey<bool>(true),
+                size: 16,
+                color: AppColors.onPrimary,
+              )
+            : const SizedBox.shrink(key: ValueKey<bool>(false)),
+      ),
     );
   }
 }

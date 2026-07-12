@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/features/auth/forgot_password/forgot_password_controller.dart';
@@ -49,17 +51,25 @@ class ForgotPasswordScreen extends ConsumerWidget {
               ),
               const SizedBox(height: AppSizes.lg),
               Expanded(
-                child: state.sent
-                    ? _ConfirmationView(onBackToLogin: goBack)
-                    : _InputView(
-                        state: state,
-                        onEmailChanged: ref
-                            .read(forgotPasswordControllerProvider.notifier)
-                            .updateEmail,
-                        onSubmit: ref
-                            .read(forgotPasswordControllerProvider.notifier)
-                            .submit,
-                      ),
+                child: AnimatedSwitcher(
+                  duration: AppDurations.fade,
+                  switchInCurve: AppCurves.standard,
+                  switchOutCurve: AppCurves.standard,
+                  child: KeyedSubtree(
+                    key: ValueKey(state.sent),
+                    child: state.sent
+                        ? _ConfirmationView(onBackToLogin: goBack)
+                        : _InputView(
+                            state: state,
+                            onEmailChanged: ref
+                                .read(forgotPasswordControllerProvider.notifier)
+                                .updateEmail,
+                            onSubmit: ref
+                                .read(forgotPasswordControllerProvider.notifier)
+                                .submit,
+                          ),
+                  ),
+                ),
               ),
             ],
           ),
@@ -151,20 +161,29 @@ class _ConfirmationView extends StatelessWidget {
         // and the circle would render centered.
         Align(
           alignment: Alignment.centerLeft,
-          child: Container(
-            width: AppSizes.iconXl + AppSizes.md,
-            height: AppSizes.iconXl + AppSizes.md,
-            decoration: const BoxDecoration(
-              color: AppColors.butter,
-              shape: BoxShape.circle,
-            ),
-            alignment: Alignment.center,
-            child: const Icon(
-              Icons.mark_email_read_outlined,
-              size: AppSizes.iconLg,
-              color: AppColors.greenDeep,
-            ),
-          ),
+          child:
+              Container(
+                    width: AppSizes.iconXl + AppSizes.md,
+                    height: AppSizes.iconXl + AppSizes.md,
+                    decoration: const BoxDecoration(
+                      color: AppColors.butter,
+                      shape: BoxShape.circle,
+                    ),
+                    alignment: Alignment.center,
+                    child: const Icon(
+                      Icons.mark_email_read_outlined,
+                      size: AppSizes.iconLg,
+                      color: AppColors.greenDeep,
+                    ),
+                  )
+                  .animate()
+                  .scale(
+                    begin: const Offset(0.6, 0.6),
+                    end: const Offset(1, 1),
+                    duration: AppDurations.slow,
+                    curve: Curves.easeOutBack,
+                  )
+                  .fadeIn(duration: AppDurations.base),
         ),
         const SizedBox(height: AppSizes.lg),
         Text(

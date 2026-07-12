@@ -3,39 +3,26 @@ import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 
-/// Butter-gradient header for the Meal Plan screen (Figma 971:7804).
+/// Header for the Meal Plan screen (Figma 971:7804). No own background — it
+/// inherits the page `moreWhite` wash from the surrounding `GradientScaffold`
+/// so it reads as a continuation of the page, not a distinct band.
 ///
-/// Title row: 'Meal Planner for {babyName}' (titleLarge), age subtitle
-/// ('{ageMonths} Month'), days label, and a green-deep rounded-square
-/// overflow button on the right. The [overflowButton] slot is owned by
-/// the caller so it can host its own `PopupMenuButton`/`showMenu` flow.
+/// Title row: 'Meal Planner for {babyName}' (titleMedium) and a green-deep
+/// rounded-square overflow button on the right. The [overflowButton] slot is
+/// owned by the caller so it can host its own `PopupMenuButton`/`showMenu` flow.
 class MealPlanHeader extends StatelessWidget {
   const MealPlanHeader({
     required this.babyName,
-    required this.ageMonths,
     required this.overflowButton,
-    this.dayCount,
     super.key,
   });
 
   final String babyName;
-  final int ageMonths;
-  // Optional day-count line. Populated view renders it; empty state omits it
-  // (Figma 971:8199 shows only the title + '4 Month' subtitle on the empty
-  // route).
-  final int? dayCount;
   final Widget overflowButton;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [AppColors.butter, AppColors.butterSoft],
-        ),
-      ),
+    return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSizes.pagePaddingH,
         AppSizes.sm,
@@ -52,24 +39,12 @@ class MealPlanHeader extends StatelessWidget {
                 Expanded(
                   child: Text(
                     'Meal Planner for $babyName',
-                    style: AppTypography.textTheme.titleLarge,
+                    style: AppTypography.textTheme.titleMedium,
                   ),
                 ),
                 overflowButton,
               ],
             ),
-            const SizedBox(height: AppSizes.xs),
-            Text(
-              '$ageMonths Month',
-              style: AppTypography.caption.copyWith(color: AppColors.fgFaint),
-            ),
-            if (dayCount != null) ...[
-              const SizedBox(height: AppSizes.sp12),
-              Text(
-                'Meal plan for $dayCount days',
-                style: AppTypography.sectionTitle,
-              ),
-            ],
           ],
         ),
       ),
@@ -94,8 +69,8 @@ class MealPlanOverflowButton extends StatelessWidget {
         customBorder: const CircleBorder(),
         onTap: onTap,
         child: const SizedBox(
-          width: AppSizes.roundButtonSm,
-          height: AppSizes.roundButtonSm,
+          width: AppSizes.roundButtonMd,
+          height: AppSizes.roundButtonMd,
           child: Icon(
             Icons.more_horiz,
             color: AppColors.onGreen,

@@ -4,8 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nibbles/src/app/constants/allergen_emoji.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
-import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
+import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/common/data/sources/remote/config/result.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
 import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
@@ -372,8 +373,26 @@ class _BrowseMealSheetState extends ConsumerState<_BrowseMealSheet> {
   }
 
   Widget _body() {
+    return AnimatedSwitcher(
+      duration: AppDurations.fade,
+      switchInCurve: AppCurves.standard,
+      child: KeyedSubtree(
+        key: ValueKey<String>(_bodyStateKey),
+        child: _bodyChild(),
+      ),
+    );
+  }
+
+  String get _bodyStateKey {
+    if (_loading) return 'loading';
+    if (_error != null) return 'error';
+    if ((_recipes ?? const <Recipe>[]).isEmpty) return 'empty';
+    return 'content';
+  }
+
+  Widget _bodyChild() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: BrandFlowerLoader.small());
     }
     if (_error != null) {
       return _ErrorPlaceholder(message: _error!, onRetry: _load);
@@ -410,32 +429,49 @@ class _BrowseMealSheetState extends ConsumerState<_BrowseMealSheet> {
         SliverToBoxAdapter(
           child: Column(
             children: [
-              if (!inReviewMode) ...[
-                BrowseMealSearchField(
-                  controller: _searchController,
-                  onChanged: (v) => setState(() => _query = v),
+              AnimatedSize(
+                duration: AppDurations.base,
+                curve: AppCurves.standard,
+                alignment: Alignment.topCenter,
+                child: AnimatedSwitcher(
+                  duration: AppDurations.fade,
+                  switchInCurve: AppCurves.standard,
+                  child: inReviewMode
+                      ? const SizedBox(
+                          key: ValueKey<bool>(true),
+                          width: double.infinity,
+                        )
+                      : Column(
+                          key: const ValueKey<bool>(false),
+                          children: [
+                            BrowseMealSearchField(
+                              controller: _searchController,
+                              onChanged: (v) => setState(() => _query = v),
+                            ),
+                            const SizedBox(height: AppSizes.md),
+                            if (ongoingKey != null && ongoingRecipes.isNotEmpty)
+                              RecommendationCarouselSection(
+                                title:
+                                    'Recommendation for '
+                                    '${AllergenEmoji.get(ongoingKey)} '
+                                    '${_displayName(ongoingKey)}',
+                                recipes: ongoingRecipes,
+                                selectedIds: _selectedRecipeIds,
+                                isUnsafe: _isUnsafe,
+                                onToggle: _toggleRecipe,
+                              ),
+                            for (final group in categoryGroups)
+                              RecommendationCarouselSection(
+                                title: _categoryDisplayTitle(group.key),
+                                recipes: group.value,
+                                selectedIds: _selectedRecipeIds,
+                                isUnsafe: _isUnsafe,
+                                onToggle: _toggleRecipe,
+                              ),
+                          ],
+                        ),
                 ),
-                const SizedBox(height: AppSizes.md),
-                if (ongoingKey != null && ongoingRecipes.isNotEmpty)
-                  RecommendationCarouselSection(
-                    title:
-                        'Recommendation for '
-                        '${AllergenEmoji.get(ongoingKey)} '
-                        '${_displayName(ongoingKey)}',
-                    recipes: ongoingRecipes,
-                    selectedIds: _selectedRecipeIds,
-                    isUnsafe: _isUnsafe,
-                    onToggle: _toggleRecipe,
-                  ),
-                for (final group in categoryGroups)
-                  RecommendationCarouselSection(
-                    title: _categoryDisplayTitle(group.key),
-                    recipes: group.value,
-                    selectedIds: _selectedRecipeIds,
-                    isUnsafe: _isUnsafe,
-                    onToggle: _toggleRecipe,
-                  ),
-              ],
+              ),
               SelectionCounters(
                 selectedCount: selectedCount,
                 unselectedCount: _deselectedRecipeIds.length,

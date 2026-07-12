@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/domain/enums/allergen_status.dart';
 
@@ -52,23 +53,35 @@ class DetailContextualBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = _content();
-    if (c == null) return const SizedBox.shrink();
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.md,
-        vertical: AppSizes.sp12,
-      ),
-      decoration: BoxDecoration(
-        color: c.bg,
-        borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-      ),
-      child: Text(
-        c.text,
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-          color: c.fg,
-          fontWeight: FontWeight.w600,
-        ),
+    return AnimatedSize(
+      duration: AppDurations.fade,
+      curve: AppCurves.emphasized,
+      alignment: Alignment.topCenter,
+      child: AnimatedSwitcher(
+        duration: AppDurations.fade,
+        switchInCurve: AppCurves.standard,
+        switchOutCurve: AppCurves.standard,
+        child: c == null
+            ? const SizedBox(width: double.infinity)
+            : Container(
+                key: ValueKey(status),
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSizes.md,
+                  vertical: AppSizes.sp12,
+                ),
+                decoration: BoxDecoration(
+                  color: c.bg,
+                  borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+                ),
+                child: Text(
+                  c.text,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: c.fg,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
       ),
     );
   }

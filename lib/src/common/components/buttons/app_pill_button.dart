@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
+import 'package:nibbles/src/common/components/feedback/press_scale.dart';
 
 /// Visual variant for [AppPillButton] — maps to kit `.pillbtn--*`.
 /// `text` = transparent, no border, forest label (e.g. a Cancel action).
 enum AppPillButtonVariant { primary, secondary, ghost, destructive, text }
 
-/// Sizing for [AppPillButton]. `full` = h38, `small` = h40 (Figma).
+/// Sizing for [AppPillButton]. Both `full` and `small` are h49 (design-review
+/// standardized all buttons to 49); the variants differ only in intent.
 enum AppPillButtonSize { full, small }
 
-/// Pill-shaped CTA. Mirrors Figma `Regular-button` (radiusFull, Parkinsans
-/// SemiBold 13). full=38h, small=40h.
+/// Pill-shaped CTA. Mirrors Figma `Regular-button` (radiusFull). h49, 24
+/// horizontal padding, 12 icon-label gap.
 class AppPillButton extends StatelessWidget {
   const AppPillButton({
     required this.label,
@@ -75,13 +78,11 @@ class AppPillButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final fg = _foreground(variant);
     final height = _isSmall ? AppSizes.buttonHeightSm : AppSizes.buttonHeight;
-    final hPad = _isSmall ? AppSizes.md : AppSizes.lg;
+    // Design-review: all buttons use 24 horizontal padding + 12 icon-label gap.
+    const hPad = AppSizes.lg;
     final isSecondary = variant == AppPillButtonVariant.secondary;
 
-    final textStyle = AppTypography.button.copyWith(
-      color: fg,
-      fontSize: _isSmall ? 14 : 13,
-    );
+    final textStyle = AppTypography.button.copyWith(color: fg);
 
     final child = Row(
       mainAxisSize: MainAxisSize.min,
@@ -89,13 +90,25 @@ class AppPillButton extends StatelessWidget {
       children: [
         if (leading != null) ...[
           IconTheme.merge(
-            data: IconThemeData(color: fg, size: AppSizes.iconSm),
+            data: IconThemeData(color: fg, size: AppSizes.iconMd),
             child: leading!,
           ),
-          const SizedBox(width: AppSizes.xs),
+          const SizedBox(width: AppSizes.sp12),
         ],
         Flexible(
-          child: Text(label, style: textStyle, overflow: TextOverflow.ellipsis),
+          child: AnimatedSwitcher(
+            duration: AppDurations.quick,
+            switchInCurve: AppCurves.standard,
+            switchOutCurve: AppCurves.standard,
+            transitionBuilder: (child, animation) =>
+                FadeTransition(opacity: animation, child: child),
+            child: Text(
+              label,
+              key: ValueKey(label),
+              style: textStyle,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         ),
       ],
     );
@@ -113,22 +126,25 @@ class AppPillButton extends StatelessWidget {
       enabled: !_disabled,
       label: label,
       excludeSemantics: true,
-      child: Material(
-        color: _background(variant),
-        shape: StadiumBorder(
-          side: isSecondary && !_disabled
-              ? const BorderSide(color: AppColors.greenDeep, width: 1.5)
-              : BorderSide.none,
-        ),
-        child: InkWell(
-          onTap: onPressed,
-          customBorder: const StadiumBorder(),
-          child: SizedBox(
-            height: height,
-            width: expand ? double.infinity : null,
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: hPad),
-              child: Center(child: child),
+      child: PressableScale(
+        enabled: !_disabled,
+        child: Material(
+          color: _background(variant),
+          shape: StadiumBorder(
+            side: isSecondary && !_disabled
+                ? const BorderSide(color: AppColors.greenDeep, width: 1.5)
+                : BorderSide.none,
+          ),
+          child: InkWell(
+            onTap: onPressed,
+            customBorder: const StadiumBorder(),
+            child: SizedBox(
+              height: height,
+              width: expand ? double.infinity : null,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: hPad),
+                child: Center(child: child),
+              ),
             ),
           ),
         ),

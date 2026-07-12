@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:nibbles/src/common/components/brand/brand_flower.dart';
 import 'package:nibbles/src/features/onboarding/baby_setup_loading/baby_setup_loading_controller.dart';
 import 'package:nibbles/src/features/onboarding/baby_setup_loading/onboarding_baby_setup_loading_screen.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
@@ -68,6 +69,13 @@ void main() {
         find.text('We need several data to know more about your babys'),
         findsOneWidget,
       );
+
+      // Drain the controller's dwell/timeout timers + the flutter_animate fade
+      // timers by advancing to the auto-route: the nav unmounts the screen and
+      // cancels every remaining timer before the teardown check runs.
+      await tester.pump(BabySetupLoadingController.maxTimeout);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
     },
   );
 
@@ -110,6 +118,13 @@ void main() {
       AppRoute.onboardingBabySetupLoading.path,
     );
     expect(find.text('HOME_STUB'), findsNothing);
+
+    // Drain the controller's dwell/timeout timers + the flutter_animate fade
+    // timers by advancing to the auto-route (fires after the assertion above):
+    // the nav unmounts the screen and cancels every remaining timer.
+    await tester.pump(BabySetupLoadingController.maxTimeout);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
   });
 
   testWidgets('within maxTimeout window the screen still ends up on /home', (
@@ -143,10 +158,17 @@ void main() {
       );
       await tester.pump();
 
+      // The cluster now carries two RotationTransitions (the flower spin and
+      // the orbiting gold dot). Scope to the flower's — the one wrapping the
+      // BrandFlower illustration — so the rotation-advances assertion targets
+      // the bloom itself, not the orbit.
       final rotation = tester.widget<RotationTransition>(
-        find.descendant(
-          of: find.byKey(const Key('onboarding_baby_setup_loading_blob')),
-          matching: find.byType(RotationTransition),
+        find.ancestor(
+          of: find.byType(BrandFlower),
+          matching: find.descendant(
+            of: find.byKey(const Key('onboarding_baby_setup_loading_blob')),
+            matching: find.byType(RotationTransition),
+          ),
         ),
       );
       final before = rotation.turns.value;
@@ -162,6 +184,13 @@ void main() {
         ),
         findsOneWidget,
       );
+
+      // Drain the controller's dwell/timeout timers + the flutter_animate fade
+      // timers by advancing to the auto-route: the nav unmounts the screen and
+      // cancels every remaining timer before the teardown check runs.
+      await tester.pump(BabySetupLoadingController.maxTimeout);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
     },
   );
 }

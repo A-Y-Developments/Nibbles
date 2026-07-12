@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/gen/assets.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
 import 'package:nibbles/src/common/components/buttons/app_round_button.dart';
@@ -84,12 +86,20 @@ class OnboardingResultScreen extends ConsumerWidget {
                     children: [
                       if (ready) ...[
                         Text(
-                          'New Journey Unlock!',
-                          textAlign: TextAlign.center,
-                          style: textTheme.titleSmall?.copyWith(
-                            color: AppColors.fgStrong,
-                          ),
-                        ),
+                              'New Journey Unlock!',
+                              textAlign: TextAlign.center,
+                              style: textTheme.titleSmall?.copyWith(
+                                color: AppColors.fgStrong,
+                              ),
+                            )
+                            .animate()
+                            .fadeIn(duration: AppDurations.fade)
+                            .scale(
+                              duration: AppDurations.slow,
+                              curve: AppCurves.emphasized,
+                              begin: const Offset(0.9, 0.9),
+                              end: const Offset(1, 1),
+                            ),
                         const SizedBox(height: AppSizes.sm),
                       ],
                       Text(
@@ -98,6 +108,9 @@ class OnboardingResultScreen extends ConsumerWidget {
                         style: textTheme.headlineSmall?.copyWith(
                           color: AppColors.fgStrong,
                         ),
+                      ).animate().fadeIn(
+                        delay: 80.ms,
+                        duration: AppDurations.fade,
                       ),
                       const SizedBox(height: AppSizes.xl),
                       _HeroCard(
@@ -188,10 +201,16 @@ class _HeroCard extends StatelessWidget {
           padding: const EdgeInsets.only(top: overlap),
           child: _SignsCard(signsMet: signsMet, answers: answers, ready: ready),
         ),
-        Assets.images.onboarding.babyIcon.svg(
-          width: _heroSize,
-          height: _heroSize,
-        ),
+        Assets.images.onboarding.babyIcon
+            .svg(width: _heroSize, height: _heroSize)
+            .animate()
+            .fadeIn(duration: AppDurations.fade)
+            .scale(
+              duration: AppDurations.slow,
+              curve: AppCurves.emphasized,
+              begin: const Offset(0.7, 0.7),
+              end: const Offset(1, 1),
+            ),
       ],
     );
   }
@@ -248,12 +267,22 @@ class _SignsCard extends StatelessWidget {
             const SizedBox(height: AppSizes.md),
             for (var i = 0; i < kReadinessSignLabels.length; i++) ...[
               _SignRow(
-                // Ready variant: all rows render as positive per spec — the
-                // X/5 chip still reflects `signsMet` so the user sees their
-                // actual score.
-                positive: ready || (answers[i] ?? false),
-                label: kReadinessSignLabels[i],
-              ),
+                    // Ready variant: all rows render as positive per spec — the
+                    // X/5 chip still reflects `signsMet` so the user sees their
+                    // actual score.
+                    positive: ready || (answers[i] ?? false),
+                    label: kReadinessSignLabels[i],
+                    badgeDelay: (260 + 90 * i).ms,
+                  )
+                  .animate()
+                  .fadeIn(delay: (260 + 90 * i).ms, duration: AppDurations.fade)
+                  .slideX(
+                    delay: (260 + 90 * i).ms,
+                    duration: AppDurations.slide,
+                    curve: AppCurves.standard,
+                    begin: 0.08,
+                    end: 0,
+                  ),
               if (i < kReadinessSignLabels.length - 1)
                 const SizedBox(height: AppSizes.md),
             ],
@@ -283,9 +312,14 @@ class _ScoreChip extends StatelessWidget {
           horizontal: AppSizes.sp12,
           vertical: AppSizes.xs,
         ),
-        child: Text(
-          '$signsMet/$total',
-          style: textTheme.labelMedium?.copyWith(color: AppColors.coralDeep),
+        child: TweenAnimationBuilder<int>(
+          tween: IntTween(begin: 0, end: signsMet),
+          duration: AppDurations.slow,
+          curve: AppCurves.standard,
+          builder: (context, value, _) => Text(
+            '$value/$total',
+            style: textTheme.labelMedium?.copyWith(color: AppColors.coralDeep),
+          ),
         ),
       ),
     );
@@ -293,10 +327,15 @@ class _ScoreChip extends StatelessWidget {
 }
 
 class _SignRow extends StatelessWidget {
-  const _SignRow({required this.positive, required this.label});
+  const _SignRow({
+    required this.positive,
+    required this.label,
+    this.badgeDelay = Duration.zero,
+  });
 
   final bool positive;
   final String label;
+  final Duration badgeDelay;
 
   @override
   Widget build(BuildContext context) {
@@ -312,24 +351,31 @@ class _SignRow extends StatelessWidget {
             SizedBox(
               width: AppSizes.iconLg,
               height: AppSizes.iconLg,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Assets.images.onboarding.readinessSignBadge.svg(
-                    width: AppSizes.iconLg,
-                    height: AppSizes.iconLg,
-                    colorFilter: const ColorFilter.mode(
-                      AppColors.cream,
-                      BlendMode.srcIn,
-                    ),
+              child:
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Assets.images.onboarding.readinessSignBadge.svg(
+                        width: AppSizes.iconLg,
+                        height: AppSizes.iconLg,
+                        colorFilter: const ColorFilter.mode(
+                          AppColors.cream,
+                          BlendMode.srcIn,
+                        ),
+                      ),
+                      Icon(
+                        glyph,
+                        size: AppSizes.iconSm,
+                        color: AppColors.greenDeep,
+                      ),
+                    ],
+                  ).animate().scale(
+                    delay: badgeDelay,
+                    duration: AppDurations.slide,
+                    curve: Curves.easeOutBack,
+                    begin: const Offset(0.5, 0.5),
+                    end: const Offset(1, 1),
                   ),
-                  Icon(
-                    glyph,
-                    size: AppSizes.iconSm,
-                    color: AppColors.greenDeep,
-                  ),
-                ],
-              ),
             ),
             const SizedBox(width: AppSizes.sp12),
             Expanded(

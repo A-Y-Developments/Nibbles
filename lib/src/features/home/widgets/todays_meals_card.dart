@@ -1,8 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/buttons/app_pill_button.dart';
@@ -60,29 +62,63 @@ class TodaysMealsCard extends StatelessWidget {
             borderWidth: 2,
             cornerRadius: AppSizes.radiusMd,
             padding: const EdgeInsets.all(AppSizes.sp12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                ...List<Widget>.generate(meals.length, (i) {
-                  final entry = meals[i];
-                  return Padding(
-                    padding: EdgeInsets.only(top: i == 0 ? 0 : AppSizes.sp12),
-                    child: RecipePlanRow(
-                      recipe: recipes[entry.recipeId],
-                      onTap: () => _openRecipe(context, entry.recipeId),
+            child: AnimatedSize(
+              duration: AppDurations.slide,
+              curve: AppCurves.emphasized,
+              alignment: Alignment.topCenter,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  ...List<Widget>.generate(meals.length, (i) {
+                    final entry = meals[i];
+                    return Padding(
+                      padding: EdgeInsets.only(top: i == 0 ? 0 : AppSizes.sp12),
+                      child:
+                          RecipePlanRow(
+                                recipe: recipes[entry.recipeId],
+                                onTap: () =>
+                                    _openRecipe(context, entry.recipeId),
+                              )
+                              .animate(delay: AppDurations.fast * i)
+                              .fadeIn(duration: AppDurations.fade)
+                              .slideY(
+                                begin: 0.08,
+                                end: 0,
+                                duration: AppDurations.slide,
+                                curve: AppCurves.emphasized,
+                              ),
+                    );
+                  }),
+                  AnimatedSwitcher(
+                    duration: AppDurations.base,
+                    switchInCurve: AppCurves.standard,
+                    switchOutCurve: AppCurves.standard,
+                    transitionBuilder: (child, animation) => FadeTransition(
+                      opacity: animation,
+                      child: SizeTransition(
+                        sizeFactor: animation,
+                        axisAlignment: -1,
+                        child: child,
+                      ),
                     ),
-                  );
-                }),
-                if (mealCount < mealTarget) ...[
-                  const SizedBox(height: AppSizes.sp12),
-                  AppPillButton(
-                    label: 'Add',
-                    variant: AppPillButtonVariant.ghost,
-                    onPressed: onAdd,
-                    identifier: 'home_add_meal_button',
+                    child: mealCount < mealTarget
+                        ? Column(
+                            key: const ValueKey('home_add_meal_slot'),
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const SizedBox(height: AppSizes.sp12),
+                              AppPillButton(
+                                label: 'Add',
+                                variant: AppPillButtonVariant.ghost,
+                                onPressed: onAdd,
+                                identifier: 'home_add_meal_button',
+                              ),
+                            ],
+                          )
+                        : const SizedBox.shrink(),
                   ),
                 ],
-              ],
+              ),
             ),
           ),
         ),
@@ -106,7 +142,7 @@ class _MealsOverlineRow extends StatelessWidget {
         textBaseline: TextBaseline.alphabetic,
         children: [
           const Expanded(
-            child: Text("TODAY'S MEALS", style: AppTypography.sectionTitle),
+            child: Text("Today's Meals", style: AppTypography.sectionTitle),
           ),
           Text('$count/$target', style: AppTypography.sectionTitle),
         ],

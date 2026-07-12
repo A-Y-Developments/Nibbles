@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/features/profile/feedback/feedback_controller.dart';
@@ -92,15 +93,25 @@ class _FeedbackScreenState extends ConsumerState<FeedbackScreen> {
 
     // submitting + success both render the brand loader; the caption only
     // fades in once [_showSent] flips (success edge + min-dwell, see _submit).
-    if (state.phase != FeedbackPhase.idle) {
-      return _FeedbackTransitionScreen(showSent: _showSent);
-    }
+    final inTransition = state.phase != FeedbackPhase.idle;
 
-    return _FeedbackEntryScreen(
-      message: state.message,
-      onBack: _goBack,
-      onChanged: ref.read(feedbackControllerProvider.notifier).updateMessage,
-      onSubmit: _submit,
+    return AnimatedSwitcher(
+      duration: AppDurations.fade,
+      switchInCurve: AppCurves.standard,
+      switchOutCurve: AppCurves.standard,
+      child: KeyedSubtree(
+        key: ValueKey(inTransition),
+        child: inTransition
+            ? _FeedbackTransitionScreen(showSent: _showSent)
+            : _FeedbackEntryScreen(
+                message: state.message,
+                onBack: _goBack,
+                onChanged: ref
+                    .read(feedbackControllerProvider.notifier)
+                    .updateMessage,
+                onSubmit: _submit,
+              ),
+      ),
     );
   }
 
@@ -238,18 +249,23 @@ class _FeedbackTransitionScreen extends StatelessWidget {
               Semantics(
                 liveRegion: true,
                 label: showSent ? 'Feedback sent' : 'Sending',
-                child: showSent
-                    ? Text(
-                        'Feedback sent',
-                        key: const Key('feedback_sent_caption'),
-                        textAlign: TextAlign.center,
-                        style: captionStyle,
-                      )
-                    : AnimatedEllipsisText(
-                        key: const Key('feedback_loading_caption'),
-                        text: 'Sending',
-                        style: captionStyle,
-                      ),
+                child: AnimatedSwitcher(
+                  duration: AppDurations.fade,
+                  switchInCurve: AppCurves.standard,
+                  switchOutCurve: AppCurves.standard,
+                  child: showSent
+                      ? Text(
+                          'Feedback sent',
+                          key: const Key('feedback_sent_caption'),
+                          textAlign: TextAlign.center,
+                          style: captionStyle,
+                        )
+                      : AnimatedEllipsisText(
+                          key: const Key('feedback_loading_caption'),
+                          text: 'Sending',
+                          style: captionStyle,
+                        ),
+                ),
               ),
             ],
           ),

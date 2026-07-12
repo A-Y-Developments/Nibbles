@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/gen/assets.gen.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
+import 'package:nibbles/src/common/components/feedback/press_scale.dart';
 
 /// First-launch 'New to Starting Solids?' banner for the Recipe Library
 /// (Figma 971:8644 → 1015:6820). The forest-green card, blobs, title, body
@@ -34,7 +35,7 @@ class ReadGuideBanner extends StatelessWidget {
         label: 'Read Guide',
         excludeSemantics: true,
         onTap: onTap,
-        child: GestureDetector(
+        child: PressableScale(
           onTap: onTap,
           child: AspectRatio(
             aspectRatio: _bannerAspectRatio,

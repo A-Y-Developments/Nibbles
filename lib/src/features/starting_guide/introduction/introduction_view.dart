@@ -6,6 +6,7 @@ import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/components.dart';
+import 'package:nibbles/src/common/components/feedback/press_scale.dart';
 import 'package:nibbles/src/common/domain/entities/baby.dart';
 import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
@@ -380,21 +381,24 @@ class _LimePillButton extends StatelessWidget {
       button: true,
       label: label,
       excludeSemantics: true,
-      child: Material(
-        color: AppColors.lime,
-        shape: const StadiumBorder(),
-        child: InkWell(
-          onTap: onPressed,
-          customBorder: const StadiumBorder(),
-          child: SizedBox(
-            height: AppSizes.buttonHeight,
-            width: double.infinity,
-            child: Center(
-              child: Text(
-                label,
-                style: AppTypography.button.copyWith(
-                  color: AppColors.greenDeep,
-                  fontSize: 13,
+      child: PressableScale(
+        enabled: true,
+        child: Material(
+          color: AppColors.lime,
+          shape: const StadiumBorder(),
+          child: InkWell(
+            onTap: onPressed,
+            customBorder: const StadiumBorder(),
+            child: SizedBox(
+              height: AppSizes.buttonHeight,
+              width: double.infinity,
+              child: Center(
+                child: Text(
+                  label,
+                  style: AppTypography.button.copyWith(
+                    color: AppColors.greenDeep,
+                    fontSize: 13,
+                  ),
                 ),
               ),
             ),

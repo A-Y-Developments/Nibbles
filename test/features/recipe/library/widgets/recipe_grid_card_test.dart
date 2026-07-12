@@ -5,6 +5,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
 import 'package:nibbles/src/features/recipe/library/widgets/recipe_grid_card.dart';
 
@@ -59,6 +60,10 @@ void main() {
     await tester.pump();
 
     expect(find.bySemanticsLabel('Pea Puree, not safe'), findsOneWidget);
+
+    // The 'Not safe' chip fades in via flutter_animate; let its timer complete
+    // so no timer is left pending at teardown.
+    await tester.pump(AppDurations.fade);
 
     handle.dispose();
   });

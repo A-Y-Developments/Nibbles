@@ -63,8 +63,7 @@ class RecipePlanRow extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: AppTypography.textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
+                  style: AppTypography.textTheme.labelMedium?.copyWith(
                     color: AppColors.fgStrong,
                   ),
                   maxLines: 2,

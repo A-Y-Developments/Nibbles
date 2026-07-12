@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/gen/assets.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 
@@ -55,36 +56,42 @@ class ReadinessChoiceCard extends StatelessWidget {
       excludeSemantics: true,
       child: AspectRatio(
         aspectRatio: 1,
-        child: Material(
-          color: surface,
-          shape: RoundedRectangleBorder(
+        child: AnimatedContainer(
+          duration: AppDurations.base,
+          curve: AppCurves.standard,
+          decoration: BoxDecoration(
+            color: surface,
             borderRadius: BorderRadius.circular(AppSizes.radius2xl),
-            side: BorderSide(color: borderColor, width: borderWidth),
+            border: Border.all(color: borderColor, width: borderWidth),
           ),
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(AppSizes.radius2xl),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSizes.sp12,
-                vertical: AppSizes.md,
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _ChoiceBadge(affirmative: affirmative),
-                  const SizedBox(height: AppSizes.sm),
-                  Flexible(
-                    child: Text(
-                      label,
-                      textAlign: TextAlign.center,
-                      // Figma card label = Headline/SemiBold (Parkinsans 15/22).
-                      style: AppTypography.headline.copyWith(
-                        color: AppColors.greenDeep,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(AppSizes.radius2xl),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSizes.sp12,
+                  vertical: AppSizes.md,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _ChoiceBadge(affirmative: affirmative),
+                    const SizedBox(height: AppSizes.sm),
+                    Flexible(
+                      child: Text(
+                        label,
+                        textAlign: TextAlign.center,
+                        // Figma card label = Headline/SemiBold (Parkinsans
+                        // 15/22).
+                        style: AppTypography.headline.copyWith(
+                          color: AppColors.greenDeep,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

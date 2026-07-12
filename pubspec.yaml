@@ -14,6 +14,7 @@ dependencies:
   collection: ^1.19.1
   confetti: ^0.8.0
   crypto: ^3.0.0
+  custom_refresh_indicator: ^4.0.1
   dio: ^5.8.0+1
   easy_localization: ^3.0.1
   firebase_analytics: ^11.4.0
@@ -104,6 +105,9 @@ flutter:
     - assets/icons/
     - assets/icons/nav/
     - assets/icons/allergen/
+    - assets/icons/allergen/maroon/
+    - assets/icons/allergen/grey/
+    - assets/icons/allergen/outline/
     - assets/jsons/
     # Figtree body font — bundled so google_fonts resolves from assets (no
     # runtime HTTP fetch). Files MUST keep the Google Fonts API names so

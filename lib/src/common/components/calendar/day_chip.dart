@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
+import 'package:nibbles/src/app/themes/app_typography.dart';
 
 /// Visual state for [DayChip] — mirrors components-calendar preview states.
 enum DayChipState { selected, idle, filled }
@@ -56,18 +58,26 @@ class DayChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dowStyle = TextStyle(
-      fontFamily: _fontFamily(context),
-      fontSize: 13,
-      fontWeight: FontWeight.w700,
-      height: 1,
+    final isSelected = state == DayChipState.selected;
+    final dayStyle =
+        (isSelected
+                ? (AppTypography.textTheme.labelMedium ?? AppTypography.caption)
+                : AppTypography.caption)
+            .copyWith(
+              color: _foreground,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+            );
+    final dateStyle = AppTypography.caption.copyWith(
       color: _foreground,
+      fontWeight: FontWeight.w700,
     );
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: Container(
+      child: AnimatedContainer(
+        duration: AppDurations.quick,
+        curve: AppCurves.standard,
         width: AppSizes.dayChipW,
         height: AppSizes.dayChipH,
         decoration: BoxDecoration(
@@ -78,17 +88,37 @@ class DayChip extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if (state == DayChipState.filled)
-              const Icon(Icons.check, size: 18, color: AppColors.green),
-            Text(dayOfWeek, style: dowStyle),
+            AnimatedSwitcher(
+              duration: AppDurations.base,
+              transitionBuilder: (child, animation) => ScaleTransition(
+                scale: animation,
+                child: FadeTransition(opacity: animation, child: child),
+              ),
+              child: state == DayChipState.filled
+                  ? const Icon(
+                      Icons.check,
+                      key: ValueKey('filled'),
+                      size: 18,
+                      color: AppColors.green,
+                    )
+                  : const SizedBox.shrink(key: ValueKey('empty')),
+            ),
+            AnimatedDefaultTextStyle(
+              duration: AppDurations.quick,
+              curve: AppCurves.standard,
+              style: dayStyle,
+              child: Text(dayOfWeek),
+            ),
             const SizedBox(height: AppSizes.xs),
-            Text(date, style: dowStyle),
+            AnimatedDefaultTextStyle(
+              duration: AppDurations.quick,
+              curve: AppCurves.standard,
+              style: dateStyle,
+              child: Text(date),
+            ),
           ],
         ),
       ),
     );
   }
-
-  String _fontFamily(BuildContext context) =>
-      Theme.of(context).textTheme.bodyLarge?.fontFamily ?? '';
 }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:nibbles/gen/assets.gen.dart';
 import 'package:nibbles/src/app/constants/allergen_emoji.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/chips/app_chip.dart';
@@ -35,19 +36,21 @@ class MealRecipeCard extends StatelessWidget {
     final cardHeight = titleMaxLines >= 2 ? 96.0 : 76.0;
     return SizedBox(
       height: cardHeight,
-      child: DecoratedBox(
+      child: AnimatedContainer(
+        duration: AppDurations.base,
+        curve: AppCurves.standard,
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-          boxShadow: elevated
-              ? const [
-                  BoxShadow(
-                    color: Color(0x33000000),
-                    blurRadius: 16,
-                    offset: Offset(0, 8),
-                  ),
-                ]
-              : null,
+          boxShadow: [
+            BoxShadow(
+              color: elevated
+                  ? const Color(0x33000000)
+                  : const Color(0x00000000),
+              blurRadius: elevated ? 16 : 0,
+              offset: elevated ? const Offset(0, 8) : Offset.zero,
+            ),
+          ],
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(AppSizes.radiusLg),
@@ -141,6 +144,7 @@ class AllergenTagsRow extends StatelessWidget {
           child: AppChip(
             label: AllergenEmoji.displayName(first),
             icon: AllergenIcon(allergenKey: first, size: 14),
+            flexibleLabel: true,
           ),
         ),
         if (overflow > 0) ...[

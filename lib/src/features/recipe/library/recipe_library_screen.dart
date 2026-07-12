@@ -1,10 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nibbles/src/app/constants/allergen_emoji.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
+import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/app/themes/app_typography.dart';
 import 'package:nibbles/src/common/components/components.dart';
@@ -51,9 +53,12 @@ class RecipeLibraryScreen extends ConsumerWidget {
     final babyIdAsync = ref.watch(currentBabyIdProvider);
 
     return babyIdAsync.when(
-      loading: () => const GradientScaffold(
+      loading: () => GradientScaffold(
         body: Center(
-          child: CircularProgressIndicator(semanticsLabel: 'Loading recipes'),
+          child: Semantics(
+            label: 'Loading recipes',
+            child: const BrandFlowerLoader.small(),
+          ),
         ),
       ),
       error: (_, __) => GradientScaffold(
@@ -137,17 +142,28 @@ class _RecipeLibraryBodyState extends ConsumerState<_RecipeLibraryBody> {
             onBookmarkTap: _onBookmarkTap,
           ),
           Expanded(
-            child: libraryAsync.when(
-              loading: () => const Center(
-                child: CircularProgressIndicator(
-                  semanticsLabel: 'Loading recipes',
+            child: AnimatedSwitcher(
+              duration: AppDurations.fade,
+              switchInCurve: AppCurves.standard,
+              switchOutCurve: AppCurves.standard,
+              child: libraryAsync.when(
+                loading: () => Center(
+                  key: const ValueKey('recipe-library-loading'),
+                  child: Semantics(
+                    label: 'Loading recipes',
+                    child: const BrandFlowerLoader.small(),
+                  ),
                 ),
-              ),
-              error: (_, __) => _ErrorView(onRetry: _refresh),
-              data: (state) => _RecipeContent(
-                state: state,
-                onReadGuideTap: _onReadGuideTap,
-                onRefresh: _refresh,
+                error: (_, __) => _ErrorView(
+                  key: const ValueKey('recipe-library-error'),
+                  onRetry: _refresh,
+                ),
+                data: (state) => _RecipeContent(
+                  key: const ValueKey('recipe-library-data'),
+                  state: state,
+                  onReadGuideTap: _onReadGuideTap,
+                  onRefresh: _refresh,
+                ),
               ),
             ),
           ),
@@ -162,6 +178,7 @@ class _RecipeContent extends StatelessWidget {
     required this.state,
     required this.onReadGuideTap,
     required this.onRefresh,
+    super.key,
   });
 
   final RecipeLibraryState state;
@@ -177,21 +194,62 @@ class _RecipeContent extends StatelessWidget {
     return _allRecipes.where((r) => r.allergenTags.contains(key)).toList();
   }
 
+  // A recipe can surface in more than one category row (and again in the
+  // recommendation strip). Hero tags must be unique per screen, so only ids
+  // that appear exactly once across the category rows are hero-eligible; the
+  // recommendation strip never carries a hero (its cards duplicate a category
+  // row). Non-eligible cards fall back to a plain push.
+  Set<String> get _categoryHeroIds {
+    final counts = <String, int>{};
+    for (final recipes in state.recipesByCategory.values) {
+      for (final r in recipes) {
+        counts[r.id] = (counts[r.id] ?? 0) + 1;
+      }
+    }
+    return {
+      for (final entry in counts.entries)
+        if (entry.value == 1) entry.key,
+    };
+  }
+
+  Set<String> _uniqueIds(List<Recipe> recipes) {
+    final counts = <String, int>{};
+    for (final r in recipes) {
+      counts[r.id] = (counts[r.id] ?? 0) + 1;
+    }
+    return {
+      for (final entry in counts.entries)
+        if (entry.value == 1) entry.key,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: AppDurations.fade,
+      switchInCurve: AppCurves.standard,
+      switchOutCurve: AppCurves.standard,
+      child: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
     if (state.searchQuery.isNotEmpty) {
       final results = state.filteredRecipes;
       if (results.isEmpty) {
-        return const RecipeSearchEmpty();
+        return const RecipeSearchEmpty(key: ValueKey('recipe-search-empty'));
       }
       return RecipeSearchResults(
+        key: const ValueKey('recipe-search-results'),
         recipes: results,
         flaggedAllergenKeys: state.flaggedAllergenKeys,
+        heroEligibleIds: _uniqueIds(results),
       );
     }
 
     if (state.recipesByCategory.isEmpty) {
-      return RefreshIndicator(
+      return BrandRefreshIndicator(
+        key: const ValueKey('recipe-empty'),
         onRefresh: onRefresh,
         child: _EmptyView(onReadGuideTap: onReadGuideTap),
       );
@@ -199,35 +257,59 @@ class _RecipeContent extends StatelessWidget {
 
     final ongoingKey = state.ongoingAllergenKey;
     final recommendations = _recommendations;
+    final heroIds = _categoryHeroIds;
 
-    return RefreshIndicator(
+    final sections = <Widget>[
+      ReadGuideBanner(onTap: onReadGuideTap),
+      if (ongoingKey != null && recommendations.isNotEmpty)
+        RecipeCategoryRow(
+          title:
+              'Recommendation for '
+              '${AllergenEmoji.displayName(ongoingKey)} '
+              '${AllergenEmoji.get(ongoingKey)}',
+          recipes: recommendations,
+          flaggedAllergenKeys: state.flaggedAllergenKeys,
+        ),
+      for (final entry in state.recipesByCategory.entries)
+        if (entry.value.isNotEmpty)
+          RecipeCategoryRow(
+            title: entry.key,
+            recipes: entry.value,
+            flaggedAllergenKeys: state.flaggedAllergenKeys,
+            heroEligibleIds: heroIds,
+          ),
+    ];
+
+    return BrandRefreshIndicator(
+      key: const ValueKey('recipe-categories'),
       onRefresh: onRefresh,
-      child: ListView(
+      child: ListView.builder(
         padding: EdgeInsets.zero,
-        children: [
-          ReadGuideBanner(onTap: onReadGuideTap),
-          if (ongoingKey != null && recommendations.isNotEmpty)
-            RecipeCategoryRow(
-              title:
-                  'Recommendation for '
-                  '${AllergenEmoji.displayName(ongoingKey)} '
-                  '${AllergenEmoji.get(ongoingKey)}',
-              recipes: recommendations,
-              flaggedAllergenKeys: state.flaggedAllergenKeys,
-            ),
-          for (final entry in state.recipesByCategory.entries)
-            if (entry.value.isNotEmpty)
-              RecipeCategoryRow(
-                title: entry.key,
-                recipes: entry.value,
-                flaggedAllergenKeys: state.flaggedAllergenKeys,
-              ),
-          const SizedBox(height: AppSizes.xl),
-        ],
+        itemCount: sections.length + 1,
+        itemBuilder: (context, index) {
+          if (index == sections.length) {
+            return const SizedBox(height: AppSizes.xl);
+          }
+          return sections[index]
+              .animate()
+              .fadeIn(
+                delay: _sectionStagger * index,
+                duration: AppDurations.fade,
+              )
+              .slideY(
+                begin: 0.04,
+                end: 0,
+                delay: _sectionStagger * index,
+                duration: AppDurations.slide,
+                curve: AppCurves.emphasized,
+              );
+        },
       ),
     );
   }
 }
+
+const Duration _sectionStagger = Duration(milliseconds: 60);
 
 /// Visual-only mock body used while [kRecipeLibraryUseMock] is on. Owns a
 /// local search controller and renders [_RecipeContent] from
@@ -278,13 +360,13 @@ class _RecipeLibraryMockBodyState extends State<_RecipeLibraryMockBody> {
 }
 
 class _ErrorView extends StatelessWidget {
-  const _ErrorView({required this.onRetry});
+  const _ErrorView({required this.onRetry, super.key});
 
   final Future<void> Function() onRetry;
 
   @override
   Widget build(BuildContext context) {
-    return RefreshIndicator(
+    return BrandRefreshIndicator(
       onRefresh: onRetry,
       child: ListView(
         padding: EdgeInsets.zero,
