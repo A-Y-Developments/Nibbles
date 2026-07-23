@@ -66,9 +66,18 @@ Generated files (`*.freezed.dart`, `*.g.dart`) ARE committed to source control.
 
 ## Simulator (UI verification)
 
-> ⚠️ **Paused (temporary):** Do not run, boot, build to, or drive the simulator for now — this applies to all work on this project, including end-of-session verification. Skip sim-based UI checks until this note is removed.
+Canonical sim: **iPhone 17 / iOS 26.0** — resolve UDID by name (`xcrun simctl list devices | grep "iPhone 17 ("`), don't hardcode it; two "iPhone 17" entries exist (iOS 26.0 + iOS 26.5) so match the runtime section, not just the name.
 
-Canonical sim: **iPhone 17 / iOS 26.0** — the only sim with `com.aydev.nibbles.dev` installed. Resolve UDID by name (`xcrun simctl list devices | grep "iPhone 17 ("`), don't hardcode it. Drive UI with `axe`: coordinates from `describe-ui` frames (point space), tap at frame center, verify every action with a screenshot — axe exit 0 only means the gesture was delivered. Dev test account for automated flows: see `.env.dev` (`TEST_ACCOUNT_EMAIL` / `TEST_ACCOUNT_PASSWORD`).
+**Build prereq:** `dart pub global activate flutterfire_cli`. Without it the Runner `upload-crashlytics-symbols` script phase fails the sim build with `flutterfire: command not found`.
+
+Sim build + install:
+```
+flutter build ios --simulator --debug -t lib/main_dev.dart --flavor dev --no-codesign
+```
+
+Drive UI with `axe` only — get coordinates from `describe-ui` frames (point space) and tap at frame center. Never estimate taps by scaling screenshot pixels; screenshots are ~2.29x/2.18x the point space and the error silently misses small targets. Verify every action with a screenshot: axe exit 0 only means the gesture was delivered.
+
+Dev test account for automated flows: see `.env.dev` (`TEST_ACCOUNT_EMAIL` / `TEST_ACCOUNT_PASSWORD`). If login returns `invalid_credentials` the account was wiped — re-seed it: `POST /auth/v1/signup` with the anon key (auto-confirmed on dev), then create the baby via the `create_baby_with_program` RPC. An auth user plus one baby row with `onboarding_completed = true` is all that's needed to land on `/home`.
 
 ---
 
