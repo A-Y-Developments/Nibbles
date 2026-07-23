@@ -14,8 +14,10 @@ jobs:
 
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.x"
-          channel: stable
+          # Pinned to match ci.yml and the team's local SDK. A floating "3.x"
+          # silently upgraded to 3.44.7 and failed every PR on framework API
+          # drift unrelated to the diff under review.
+          flutter-version: 3.38.8
           cache: true
 
       - name: Install dependencies
