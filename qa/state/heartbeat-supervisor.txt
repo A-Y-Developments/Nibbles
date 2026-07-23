@@ -1,1 +1,0 @@
-2026-06-15T02:25:22Z supervisor: coverage STALLED 283m (process alive pgrep=1, peers MCP offline, user notified); explorer 13m fixer 13m gate 22m healthy; no hygiene actions
