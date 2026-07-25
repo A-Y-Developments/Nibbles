@@ -59,11 +59,14 @@ import 'package:nibbles/src/routing/route_enums.dart';
 
 const _babyId = 'baby-001';
 
+// ~7 months old relative to now so the age-derived meals ring is a stable /2
+// (6–8mo → 2 meals/day) regardless of when the suite runs. An absolute DOB
+// would drift the target once the meals ring stopped being hardcoded.
 final _fakeBaby = Baby(
   id: _babyId,
   userId: 'user-001',
   name: 'Lily',
-  dateOfBirth: DateTime(2025, 6),
+  dateOfBirth: DateTime.now().subtract(const Duration(days: 210)),
   gender: Gender.female,
   onboardingCompleted: true,
 );
