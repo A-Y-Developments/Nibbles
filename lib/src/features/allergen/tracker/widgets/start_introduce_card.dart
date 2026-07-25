@@ -73,7 +73,7 @@ class StartIntroduceCard extends StatelessWidget {
                       Text(allergen.name, style: textTheme.titleSmall),
                       const SizedBox(height: AppSizes.sp2),
                       Text(
-                        'Not Tried',
+                        'Not Introduced',
                         style: textTheme.bodyMedium?.copyWith(
                           color: AppColors.fgMuted,
                         ),
@@ -83,7 +83,7 @@ class StartIntroduceCard extends StatelessWidget {
                 ),
                 const SizedBox(width: AppSizes.sm),
                 AppPillButton(
-                  label: 'Start Introduce',
+                  label: 'Introduce',
                   identifier: 'allergen_start_introduce_button_${allergen.key}',
                   onPressed: enabled ? onStartIntroduce : null,
                   variant: AppPillButtonVariant.ghost,

@@ -29,15 +29,16 @@ import 'package:nibbles/src/routing/route_enums.dart';
 
 /// Redesigned Allergen Tracker board (NIB-79).
 ///
-/// Ongoing tab (Figma 1089:17373): burgundy "Allergen Exposure" hero for the
-/// currently-ongoing allergen + a Reaction Log feed of its logs.
-/// Big 11 tab (Figma 2780:13178): grouped "Already Tried" / "Ongoing" /
-/// "Not Tried" sections; "Not Tried" opens the pre-introduce sheet.
+/// Keep Offering tab (Figma 1089:17373): burgundy "Allergen Exposure" hero for
+/// the currently-ongoing allergen + a Reaction Log feed of its logs.
+/// All Allergen tab (Figma 2780:13178): grouped "Already Tried" /
+/// "Keep Offering" / "Not Introduced" sections; "Not Introduced" opens the
+/// pre-introduce sheet.
 class AllergenTrackerScreen extends ConsumerWidget {
   const AllergenTrackerScreen({this.initialSegmentIndex = 0, super.key});
 
-  /// 0 = Ongoing, 1 = Big 11. Set via the `?tab=big11` query param so a
-  /// "Start New Allergen" CTA can land straight on the Big 11 picker.
+  /// 0 = Keep Offering, 1 = All Allergen. Set via the `?tab=big11` query param
+  /// so a "Start New Allergen" CTA can land straight on the picker.
   final int initialSegmentIndex;
 
   @override
@@ -78,7 +79,7 @@ class _TrackerBody extends ConsumerStatefulWidget {
 }
 
 class _TrackerBodyState extends ConsumerState<_TrackerBody> {
-  // 0 = Ongoing, 1 = Big 11. Seeded from the route, then held locally.
+  // 0 = Keep Offering, 1 = All Allergen. Seeded from the route, held locally.
   late int _segmentIndex = widget.initialSegmentIndex;
 
   @override
@@ -128,7 +129,7 @@ class _TrackerBodyState extends ConsumerState<_TrackerBody> {
     unawaited(Analytics.instance.logAllergenSegmentChanged(segment: segment));
   }
 
-  /// "Start New Allergen" — jump to the Big 11 tab to pick the next allergen.
+  /// "Start New Allergen" — jump to the All Allergen tab to pick the next.
   void _startNew() => _onSegmentChanged(1);
 
   Future<void> _addReaction(String allergenKey) async {
@@ -209,7 +210,7 @@ class _TrackerContent extends ConsumerWidget {
   int get _flaggedCount =>
       state.statuses.values.where((s) => s == AllergenStatus.flagged).length;
 
-  int get _notTriedCount =>
+  int get _notIntroducedCount =>
       state.statuses.values.where((s) => s == AllergenStatus.notStarted).length;
 
   /// "Introduced" = anything past `notStarted`. Drives the ring numerator.
@@ -243,8 +244,8 @@ class _TrackerContent extends ConsumerWidget {
                 introducedCount: _introducedCount,
                 safeCount: _safeCount,
                 flaggedCount: _flaggedCount,
-                notTriedCount: _notTriedCount,
-                showNotTried: _isBig11,
+                notIntroducedCount: _notIntroducedCount,
+                showNotIntroduced: _isBig11,
               ),
             ),
           ),
@@ -254,7 +255,7 @@ class _TrackerContent extends ConsumerWidget {
                 horizontal: AppSizes.pagePaddingH,
               ),
               child: AppSlidingSegmentedControl(
-                segments: const ['Ongoing', 'Big 11'],
+                segments: const ['Keep Offering', 'All Allergen'],
                 selectedIndex: segmentIndex,
                 onChanged: onSegmentChanged,
               ),
@@ -331,8 +332,7 @@ class _TrackerAppBar extends StatelessWidget {
           ),
           Expanded(
             child: Text(
-              // Verbatim Figma copy: plural "Trackers".
-              'Allergen Trackers',
+              'Allergen Tracker',
               textAlign: TextAlign.center,
               style: Theme.of(
                 context,
@@ -409,7 +409,7 @@ class _AddReactionButton extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Ongoing tab — burgundy "Allergen Exposure" hero + Reaction Log feed.
+// Keep Offering tab — burgundy "Allergen Exposure" hero + Reaction Log feed.
 // ---------------------------------------------------------------------------
 
 class _OngoingList extends StatelessWidget {
@@ -594,7 +594,8 @@ class _SectionPlaceholder extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Big 11 tab — 3 labelled sections (Already Tried / Ongoing / Not Tried).
+// All Allergen tab — 3 labelled sections (Already Tried / Keep Offering /
+// Not Introduced).
 // ---------------------------------------------------------------------------
 
 Widget _staggeredEntrance(Widget child, int position) {
@@ -702,7 +703,7 @@ class _Big11Sections extends StatelessWidget {
           ],
           if (ongoing.isNotEmpty) ...[
             _Big11SectionHeader(
-              title: 'Ongoing',
+              title: 'Keep Offering',
               count: ongoing.length,
               total: _total,
               dotColor: AppColors.coral,
@@ -715,7 +716,7 @@ class _Big11Sections extends StatelessWidget {
           ],
           if (notTried.isNotEmpty) ...[
             _Big11SectionHeader(
-              title: 'Not Tried',
+              title: 'Not Introduced',
               count: notTried.length,
               total: _total,
               dotColor: AppColors.borderMuted,
@@ -764,7 +765,7 @@ class _Big11SectionHeader extends StatelessWidget {
             ),
           ),
           Text(
-            '$count/$total',
+            '$count/$total remaining',
             style: textTheme.bodyMedium?.copyWith(color: AppColors.fgFaint),
           ),
         ],

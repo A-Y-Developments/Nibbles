@@ -23,7 +23,7 @@ class DetailStatusPill extends StatelessWidget {
         );
       case AllergenStatus.inProgress:
         return (
-          label: 'Ongoing',
+          label: 'Keep Offering',
           bg: AppColors.coralSoft,
           fg: AppColors.coralDeep,
         );

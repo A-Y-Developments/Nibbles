@@ -27,7 +27,8 @@ abstract final class AllergenEmoji {
   /// casing stays consistent app-wide — use instead of ad-hoc
   /// `key.replaceAll('_', ' ')`.
   static const Map<String, String> nameMap = {
-    'milk': 'Milk',
+    // Key stays `milk` (FKs, route params, icon assets); the label is "Dairy".
+    'milk': 'Dairy',
     'walnut': 'Walnut',
     'peanut': 'Peanut',
     'egg': 'Egg',
