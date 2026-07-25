@@ -57,7 +57,8 @@ enum AppRoute {
   recipeDetail(path: '/home/recipes/:recipeId', name: 'recipe-detail'),
   profile(path: '/home/profile', name: 'profile'),
   profileEdit(path: '/home/profile/edit', name: 'profile-edit'),
-  profileFeedback(path: '/home/profile/feedback', name: 'profile-feedback');
+  profileFeedback(path: '/home/profile/feedback', name: 'profile-feedback'),
+  legalDocument(path: '/legal/:slug', name: 'legal-document');
 
   const AppRoute({required this.path, required this.name});
 

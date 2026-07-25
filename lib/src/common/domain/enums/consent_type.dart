@@ -1,15 +1,19 @@
 /// Consent acknowledgement types persisted on onboarding submit (NIB-145).
 ///
 /// The string value is the canonical DB encoding — matches the
-/// `consents.consent_type` CHECK constraint
-/// (`'solids_introduction' | 'under_6mo_responsibility'`).
+/// `consents.consent_type` CHECK constraint.
 enum ConsentType {
-  /// Top-of-screen acknowledgement: educational info, not medical advice,
-  /// and the user has medical clearance. Always recorded on submit.
+  /// Nibbles is a general guide, the parent remains responsible, and the child
+  /// will be supervised while eating. Covers the first two consent checkboxes.
   solidsIntroduction('solids_introduction'),
 
-  /// Early-solids responsibility clause — only recorded when the baby is
-  /// younger than 6 months at consent time.
+  /// Terms of Use, Medical & Safety Disclaimer and Privacy Policy acceptance —
+  /// the third consent checkbox.
+  termsAndPrivacy('terms_and_privacy'),
+
+  /// Early-solids responsibility clause. RETIRED — the checkbox was removed
+  /// from the design and is no longer written. Kept so historical rows still
+  /// decode.
   under6MoResponsibility('under_6mo_responsibility');
 
   const ConsentType(this.dbValue);

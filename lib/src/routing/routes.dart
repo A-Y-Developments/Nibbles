@@ -14,6 +14,7 @@ import 'package:nibbles/src/features/auth/register/register_screen.dart';
 import 'package:nibbles/src/features/auth/reset_password/reset_password_screen.dart';
 import 'package:nibbles/src/features/home/home_screen.dart';
 import 'package:nibbles/src/features/home/home_shell_screen.dart';
+import 'package:nibbles/src/features/legal/legal_document_screen.dart';
 import 'package:nibbles/src/features/meal_plan/ai/ai_loading_screen.dart';
 import 'package:nibbles/src/features/meal_plan/map/map_meals_screen.dart';
 import 'package:nibbles/src/features/meal_plan/map/map_meals_state.dart';
@@ -79,6 +80,12 @@ String? resolveAppRedirect({
 }) {
   // Allow splash through — it handles its own redirect after init.
   if (location == AppRoute.splash.path) return null;
+
+  // Legal documents are readable from anywhere, at any onboarding phase and
+  // signed out. They are pushed on top of whatever screen linked to them (the
+  // consent checkbox today), so a phase whitelist would bounce them straight
+  // back to the screen the user just left.
+  if (location.startsWith('/legal/')) return null;
 
   // 1. First launch → onboarding intro (no login required).
   if (!hasLaunched) {
@@ -298,6 +305,16 @@ GoRouter goRouter(Ref ref) {
         path: AppRoute.manageSubscription.path,
         name: AppRoute.manageSubscription.name,
         builder: (context, state) => const ManageSubscriptionScreen(),
+      ),
+      // Legal documents (Medical & Safety Disclaimer, Privacy Policy). Root
+      // level so they push full-screen over onboarding with no bottom nav, and
+      // whitelisted in the redirect resolver so every phase can reach them.
+      GoRoute(
+        path: AppRoute.legalDocument.path,
+        name: AppRoute.legalDocument.name,
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) =>
+            LegalDocumentScreen(slug: state.pathParameters['slug'] ?? ''),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
