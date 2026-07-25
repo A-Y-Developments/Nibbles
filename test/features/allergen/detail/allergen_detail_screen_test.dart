@@ -188,8 +188,8 @@ void main() {
 
         // Header subtext shows X/3 — for 2 clean logs that's '2/3 times'.
         expect(find.text('2/3 times'), findsOneWidget);
-        // Status pill is Ongoing.
-        expect(find.text('Ongoing'), findsOneWidget);
+        // Status pill reads "Keep Offering".
+        expect(find.text('Keep Offering'), findsOneWidget);
         // The DetailSegmentBar widget renders; visual fill is derived from
         // clean count internally — assertion verifies the widget mounts.
         expect(find.byType(DetailSegmentBar), findsOneWidget);

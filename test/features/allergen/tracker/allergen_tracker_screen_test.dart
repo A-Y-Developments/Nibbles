@@ -98,9 +98,9 @@ class _PushRecorder {
   Map<String, String>? lastPathParams;
 }
 
-/// Tall viewport so the whole Ongoing sliver (card, banner, log feed and the
-/// bottom Start New CTA) builds — the default 600px height leaves the CTA and
-/// add button unbuilt below the fold.
+/// Tall viewport so the whole Keep Offering sliver (card, banner, log feed and
+/// the bottom Start New CTA) builds — the default 600px height leaves the CTA
+/// and add button unbuilt below the fold.
 void _useTallView(WidgetTester tester) {
   tester.view.physicalSize = const Size(1200, 3200);
   tester.view.devicePixelRatio = 1;
@@ -139,7 +139,7 @@ void main() {
     when(
       () => mockService.getLogs(any()),
     ).thenAnswer((_) async => Result.success(logs));
-    // Program-state read backs the "Start Introduce" selection overlay; a
+    // Program-state read backs the "Introduce" selection overlay; a
     // failure degrades gracefully (no selected allergen). The board falls back
     // to the inProgress-status / most-recent-log display allergen.
     when(
@@ -186,12 +186,13 @@ void main() {
   }
 
   // ---------------------------------------------------------------------------
-  // Board content: Ongoing, Big 11, stat columns, segment switching.
+  // Board content: Keep Offering, All Allergen, stat columns, segment switch.
   // ---------------------------------------------------------------------------
 
   group('AllergenTrackerScreen board', () {
-    // milk ongoing, walnut + egg safe, peanut flagged, the remaining 7
-    // not-tried → Safe=2, Unsafe=1, Ongoing=1, Not Tried=7.
+    // milk ongoing, walnut + egg safe, peanut flagged, the remaining 7 not
+    // introduced → Tolerated=2, Reaction Recorded=1, Keep Offering=1,
+    // Not Introduced=7.
     Map<String, AllergenStatus> statusesMixed() => {
       'milk': AllergenStatus.inProgress,
       'walnut': AllergenStatus.safe,
@@ -204,8 +205,8 @@ void main() {
     };
 
     testWidgets(
-      'Ongoing tab shows the in-progress allergen hero; switching to Big 11 '
-      'reveals grouped sections AND Not Tried=7, Safe=2, Unsafe=1 stat columns',
+      'Keep Offering tab shows the in-progress allergen hero; switching to All '
+      'Allergen reveals grouped sections AND the Not Introduced stat column',
       (tester) async {
         final logs = [
           _makeLog(id: 'm1', allergenKey: 'milk'),
@@ -223,31 +224,37 @@ void main() {
         await tester.pumpWidget(buildSubject(_PushRecorder()));
         await tester.pumpAndSettle();
 
-        // Ongoing tab: burgundy exposure hero for the in-progress allergen
-        // (milk) + its Reaction Log feed.
+        // Keep Offering tab: burgundy exposure hero for the in-progress
+        // allergen (milk) + its Reaction Log feed.
         expect(find.text('Allergen Exposure'), findsOneWidget);
         expect(find.byType(AllergenExposureCard), findsOneWidget);
-        // "Safe foods" stat column is shown on Ongoing tab.
-        expect(find.text('Safe foods'), findsOneWidget);
-        // Big 11-only "Not Tried" stat column is hidden in Ongoing.
-        expect(find.text('Not Tried'), findsNothing);
+        // "Tolerated" stat column is shown on the Keep Offering tab.
+        expect(find.text('Tolerated'), findsOneWidget);
+        expect(find.text('Reaction Recorded'), findsOneWidget);
+        // Ring caption sits under the 4/11 fraction.
+        expect(find.text('Introduced'), findsOneWidget);
+        // The All-Allergen-only "Not Introduced" stat column is hidden here.
+        expect(find.text('Not Introduced'), findsNothing);
         expect(find.text('Reaction Log', skipOffstage: false), findsOneWidget);
 
-        // Switch to Big 11 tab.
-        await tester.tap(find.text('Big 11'));
+        // Switch to the All Allergen tab.
+        await tester.tap(find.text('All Allergen'));
         await tester.pumpAndSettle();
 
-        // Big 11 grouped sections — all three headers present.
+        // Grouped sections — all three headers present. Sections below the
+        // fold are not built by the lazy sliver, so match loosely; the
+        // Already Tried header is always on-screen and pins the count format.
         expect(find.text('Already Tried'), findsOneWidget);
-        expect(find.text('Ongoing'), findsOneWidget);
-        expect(find.text('Not Tried'), findsWidgets);
+        expect(find.text('3/11 remaining'), findsOneWidget);
+        expect(find.text('Keep Offering'), findsWidgets);
+        expect(find.text('Not Introduced'), findsWidgets);
         // SliverList builds lazily — some StartIntroduceCards may be below
         // the fold. skipOffstage: false to include them.
         expect(
           find.byType(StartIntroduceCard, skipOffstage: false),
           findsWidgets,
         );
-        // NIB-153 — every Start Introduce CTA carries a per-allergen
+        // NIB-153 — every Introduce CTA carries a per-allergen
         // identifier so axe --id targeting is unambiguous.
         final semantics = tester.ensureSemantics();
         await tester.pump();
@@ -283,7 +290,7 @@ void main() {
     );
 
     testWidgets(
-      'Ongoing tab keeps section scaffolding visible with per-section '
+      'Keep Offering tab keeps section scaffolding visible with per-section '
       'placeholders when there is no in-progress allergen',
       (tester) async {
         stubReads(
@@ -311,7 +318,7 @@ void main() {
     );
 
     testWidgets(
-      'Ongoing tab keeps the exposure hero + logs after an unsafe reaction '
+      'Keep Offering tab keeps the exposure hero + logs after an unsafe '
       'flags the allergen (feed does not vanish)',
       (tester) async {
         _useTallView(tester);
@@ -341,7 +348,7 @@ void main() {
       },
     );
 
-    testWidgets('Tapping Start Introduce opens the pre-introduce sheet '
+    testWidgets('Tapping Introduce opens the pre-introduce sheet '
         'WITHOUT navigating', (tester) async {
       stubReads(
         statuses: {
@@ -353,12 +360,12 @@ void main() {
       await tester.pumpWidget(buildSubject(recorder));
       await tester.pumpAndSettle();
 
-      // Switch to Big 11 so Start Introduce cards render.
-      await tester.tap(find.text('Big 11'));
+      // Switch to All Allergen so the Introduce cards render.
+      await tester.tap(find.text('All Allergen'));
       await tester.pumpAndSettle();
 
-      // Tap the first Start Introduce button.
-      final firstStart = find.text('Start Introduce').first;
+      // Tap the first Introduce button.
+      final firstStart = find.text('Introduce').first;
       await tester.ensureVisible(firstStart);
       await tester.tap(firstStart);
       await tester.pumpAndSettle();
@@ -369,44 +376,43 @@ void main() {
       expect(recorder.lastName, isNull);
     });
 
-    testWidgets(
-      'Start Introduce is disabled while another allergen is in progress',
-      (tester) async {
-        // egg is mid-introduction → single-active lock engaged.
-        stubReads(
-          statuses: {
-            'egg': AllergenStatus.inProgress,
-            for (final a in _allergens.where((a) => a.key != 'egg'))
-              a.key: AllergenStatus.notStarted,
-          },
-          logs: [_makeLog(id: 'e1', allergenKey: 'egg')],
-        );
-        when(
-          () => mockService.startIntroducingAllergen(
-            babyId: any(named: 'babyId'),
-            allergenKey: any(named: 'allergenKey'),
-          ),
-        ).thenAnswer((_) async => const Result.success(null));
+    testWidgets('Introduce is disabled while another allergen is in progress', (
+      tester,
+    ) async {
+      // egg is mid-introduction → single-active lock engaged.
+      stubReads(
+        statuses: {
+          'egg': AllergenStatus.inProgress,
+          for (final a in _allergens.where((a) => a.key != 'egg'))
+            a.key: AllergenStatus.notStarted,
+        },
+        logs: [_makeLog(id: 'e1', allergenKey: 'egg')],
+      );
+      when(
+        () => mockService.startIntroducingAllergen(
+          babyId: any(named: 'babyId'),
+          allergenKey: any(named: 'allergenKey'),
+        ),
+      ).thenAnswer((_) async => const Result.success(null));
 
-        await tester.pumpWidget(buildSubject(_PushRecorder()));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Big 11'));
-        await tester.pumpAndSettle();
+      await tester.pumpWidget(buildSubject(_PushRecorder()));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('All Allergen'));
+      await tester.pumpAndSettle();
 
-        final firstStart = find.text('Start Introduce').first;
-        await tester.ensureVisible(firstStart);
-        await tester.tap(firstStart);
-        await tester.pumpAndSettle();
+      final firstStart = find.text('Introduce').first;
+      await tester.ensureVisible(firstStart);
+      await tester.tap(firstStart);
+      await tester.pumpAndSettle();
 
-        // Locked: the CTA is disabled, so the service is never called.
-        verifyNever(
-          () => mockService.startIntroducingAllergen(
-            babyId: any(named: 'babyId'),
-            allergenKey: any(named: 'allergenKey'),
-          ),
-        );
-      },
-    );
+      // Locked: the CTA is disabled, so the service is never called.
+      verifyNever(
+        () => mockService.startIntroducingAllergen(
+          babyId: any(named: 'babyId'),
+          allergenKey: any(named: 'allergenKey'),
+        ),
+      );
+    });
 
     testWidgets(
       'Tapping an allergen tile navigates to detail; returning refreshes '
@@ -428,8 +434,8 @@ void main() {
         await tester.pumpWidget(buildSubject(recorder));
         await tester.pumpAndSettle();
 
-        // Big 11 renders an AllergenProgressCard for the tried (safe) peanut.
-        await tester.tap(find.text('Big 11'));
+        // All Allergen renders an AllergenProgressCard for the safe peanut.
+        await tester.tap(find.text('All Allergen'));
         await tester.pumpAndSettle();
 
         // Initial load fetched statuses exactly once (segment switch is local).
@@ -514,7 +520,7 @@ void main() {
       },
     );
 
-    testWidgets('Start New Allergen jumps to the Big 11 picker', (
+    testWidgets('Start New Allergen jumps to the All Allergen picker', (
       tester,
     ) async {
       _useTallView(tester);
@@ -537,7 +543,7 @@ void main() {
       await tester.tap(find.byType(StartAllergenButton));
       await tester.pumpAndSettle();
 
-      // Big 11 grouped sections are now visible (tab switched locally).
+      // Grouped sections are now visible (tab switched locally).
       expect(find.text('Already Tried'), findsOneWidget);
       expect(find.byType(AllergenProgressCard), findsWidgets);
     });

@@ -18,8 +18,8 @@ class TrackerHeader extends StatelessWidget {
     required this.introducedCount,
     required this.safeCount,
     required this.flaggedCount,
-    required this.notTriedCount,
-    required this.showNotTried,
+    required this.notIntroducedCount,
+    required this.showNotIntroduced,
     super.key,
   });
 
@@ -29,8 +29,8 @@ class TrackerHeader extends StatelessWidget {
   final int introducedCount;
   final int safeCount;
   final int flaggedCount;
-  final int notTriedCount;
-  final bool showNotTried;
+  final int notIntroducedCount;
+  final bool showNotIntroduced;
 
   static const int _totalAllergens = 11;
 
@@ -39,13 +39,17 @@ class TrackerHeader extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        AppProgressRing(value: introducedCount, max: _totalAllergens),
+        AppProgressRing(
+          value: introducedCount,
+          max: _totalAllergens,
+          caption: 'Introduced',
+        ),
         const SizedBox(height: AppSizes.md),
         _StatRow(
-          showNotTried: showNotTried,
+          showNotIntroduced: showNotIntroduced,
           safeCount: safeCount,
           flaggedCount: flaggedCount,
-          notTriedCount: notTriedCount,
+          notIntroducedCount: notIntroducedCount,
         ),
       ],
     );
@@ -54,32 +58,35 @@ class TrackerHeader extends StatelessWidget {
 
 class _StatRow extends StatelessWidget {
   const _StatRow({
-    required this.showNotTried,
+    required this.showNotIntroduced,
     required this.safeCount,
     required this.flaggedCount,
-    required this.notTriedCount,
+    required this.notIntroducedCount,
   });
 
-  final bool showNotTried;
+  final bool showNotIntroduced;
   final int safeCount;
   final int flaggedCount;
-  final int notTriedCount;
+  final int notIntroducedCount;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
         Expanded(
-          child: _StatColumn(value: safeCount, label: 'Safe foods'),
+          child: _StatColumn(value: safeCount, label: 'Tolerated'),
         ),
         const _StatDivider(),
         Expanded(
-          child: _StatColumn(value: flaggedCount, label: 'Not Safe'),
+          child: _StatColumn(value: flaggedCount, label: 'Reaction Recorded'),
         ),
-        if (showNotTried) ...[
+        if (showNotIntroduced) ...[
           const _StatDivider(),
           Expanded(
-            child: _StatColumn(value: notTriedCount, label: 'Not Tried'),
+            child: _StatColumn(
+              value: notIntroducedCount,
+              label: 'Not Introduced',
+            ),
           ),
         ],
       ],

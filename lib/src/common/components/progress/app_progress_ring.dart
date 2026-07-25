@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:nibbles/gen/fonts.gen.dart';
 import 'package:nibbles/src/app/themes/app_colors.dart';
 import 'package:nibbles/src/app/themes/app_motion.dart';
+import 'package:nibbles/src/app/themes/app_sizes.dart';
 
 /// Conic progress ring. Mirrors components-progress preview `.ring`:
 /// coralDeep sweep over a coralSoft track, white center hole showing value/max.
@@ -11,6 +12,7 @@ class AppProgressRing extends StatelessWidget {
   const AppProgressRing({
     required this.value,
     required this.max,
+    this.caption,
     this.diameter = 110,
     this.thickness = 15,
     super.key,
@@ -18,6 +20,11 @@ class AppProgressRing extends StatelessWidget {
 
   final int value;
   final int max;
+
+  /// Optional word rendered under the `value/max` fraction inside the ring
+  /// (e.g. "Introduced"). Omitted when null.
+  final String? caption;
+
   final double diameter;
   final double thickness;
 
@@ -42,32 +49,51 @@ class AppProgressRing extends StatelessWidget {
           child: child,
         ),
         child: Center(
-          child: RichText(
-            textAlign: TextAlign.center,
-            text: TextSpan(
-              children: [
-                TextSpan(
-                  text: '$value',
-                  style: const TextStyle(
-                    fontFamily: FontFamily.parkinsans,
-                    // Figma "Large/Bold" 28 (report 1089:17373 line 56).
-                    fontSize: 28,
-                    fontWeight: FontWeight.w700,
-                    height: 1,
-                    color: AppColors.coralDeep,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RichText(
+                textAlign: TextAlign.center,
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: '$value',
+                      style: const TextStyle(
+                        fontFamily: FontFamily.parkinsans,
+                        // Figma "Large/Bold" 28 (report 1089:17373 line 56).
+                        fontSize: 28,
+                        fontWeight: FontWeight.w700,
+                        height: 1,
+                        color: AppColors.coralDeep,
+                      ),
+                    ),
+                    TextSpan(
+                      text: '/$max',
+                      style: const TextStyle(
+                        fontFamily: FontFamily.parkinsans,
+                        fontSize: 12,
+                        height: 1,
+                        color: AppColors.fgFaint,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (caption != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: AppSizes.sp2),
+                  child: Text(
+                    caption!,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontFamily: FontFamily.parkinsans,
+                      fontSize: 10,
+                      height: 1,
+                      color: AppColors.fgFaint,
+                    ),
                   ),
                 ),
-                TextSpan(
-                  text: '/$max',
-                  style: const TextStyle(
-                    fontFamily: FontFamily.parkinsans,
-                    fontSize: 12,
-                    height: 1,
-                    color: AppColors.fgFaint,
-                  ),
-                ),
-              ],
-            ),
+            ],
           ),
         ),
       ),

@@ -48,7 +48,7 @@ class AllergenProgressCard extends StatelessWidget {
       case AllergenStatus.flagged:
         return const AppChip(label: 'Unsafe', tone: AppChipTone.flag);
       case AllergenStatus.inProgress:
-        return const AppChip(label: 'Ongoing');
+        return const AppChip(label: 'Keep Offering');
       case AllergenStatus.notStarted:
         return null;
     }
