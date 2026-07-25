@@ -35,3 +35,4 @@ export 'navigation/app_header.dart';
 export 'progress/app_linear_progress.dart';
 export 'progress/app_progress_ring.dart';
 export 'progress/app_segmented_progress_bar.dart';
+export 'text/app_linked_text.dart';

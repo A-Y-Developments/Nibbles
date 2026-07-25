@@ -7,26 +7,29 @@ import 'package:nibbles/src/app/themes/app_motion.dart';
 import 'package:nibbles/src/app/themes/app_sizes.dart';
 import 'package:nibbles/src/common/components/components.dart';
 import 'package:nibbles/src/common/services/local_flag_service.dart';
+import 'package:nibbles/src/features/legal/constants/legal_document.dart';
 import 'package:nibbles/src/features/onboarding/onboarding_controller.dart';
 import 'package:nibbles/src/routing/route_enums.dart';
-import 'package:nibbles/src/utils/age_in_months.dart';
 
-/// Consent / housekeeping — final onboarding stage (NIB-100).
+/// Consent — final onboarding stage (NIB-100).
 ///
-/// Figma nodes: 971:10184 (>=6mo, empty) / 971:10215 (>=6mo, checked) /
-/// 971:10198 (<6mo, empty) / 971:10229 (<6mo, checked).
+/// Figma section 1255:11883 "Terms and service": 971:10184 / 971:10215
+/// (>6mo, empty + checked) and 971:10198 / 971:10229 (<6mo, empty + checked).
 ///
 /// Composition (top → bottom):
-///   - Title `Before we start, some housekeeping`
-///   - Flower cluster (`consent_flower.svg`) centered in the free space
-///   - Age-gated checkbox list (2 boxes when baby >= 6mo, 3 when younger —
-///     extra row carries the "full responsibility" early-solids clause),
-///     pinned to the bottom with the CTA row
+///   - Title `Let's start safely` + 2-line subtitle
+///   - Flower cluster centered in the free space
+///   - Three checkboxes pinned to the bottom with the CTA row
 ///   - Bottom row: butter `AppRoundButton` (back) + primary CTA
 ///     `Check confirmation` (disabled) → `Yes, I Understand` (enabled)
 ///
-/// All checkbox copy is verbatim from the Figma audit (no trailing periods,
-/// matches the spec strings byte-for-byte).
+/// The list is NOT age-gated. Figma only drew the third (Terms / Disclaimer /
+/// Privacy) box on the <6mo frames, but an acceptance collected from half the
+/// users is worthless, so it renders for everyone. The former early-solids
+/// responsibility clause was removed from the design and is gone here too.
+///
+/// Checkbox copy is verbatim from Figma, curly apostrophes and trailing full
+/// stops included.
 ///
 /// Consent itself is EPHEMERAL per NIB-120 — checkbox state lives in this
 /// widget only, never persisted. Submit path validates name/DOB via
@@ -44,21 +47,7 @@ class OnboardingConsentScreen extends ConsumerStatefulWidget {
 
 class _OnboardingConsentScreenState
     extends ConsumerState<OnboardingConsentScreen> {
-  // Default to the safer 2-checkbox path when DOB is missing (spec step 2).
-  static const int _defaultAgeMonths = 6;
-
-  late List<bool> _checks;
-
-  @override
-  void initState() {
-    super.initState();
-    final dob = ref.read(onboardingControllerProvider).dob;
-    final ageMonths = dob != null ? ageInMonths(dob) : _defaultAgeMonths;
-    _checks = List<bool>.filled(_countFor(ageMonths), false);
-  }
-
-  int _countFor(int ageMonths) =>
-      ageMonths >= onboardingEarlySolidsThresholdMonths ? 2 : 3;
+  final List<bool> _checks = List<bool>.filled(_consentLabels.length, false);
 
   bool get _allChecked => _checks.every((c) => c);
 
@@ -116,45 +105,94 @@ class _OnboardingConsentScreenState
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Before we start, some housekeeping',
+                  'Let’s start safely',
                   textAlign: TextAlign.center,
-                  // Figma Title 1/Bold 22 (sibling onboarding titles also 22).
+                  // Figma Title 1/Bold 22 (siblings also 22).
                   style: textTheme.titleLarge,
                 ),
-                // Figma 971:10229 — flower cluster fills the gap between the
-                // title and the bottom-pinned checklist; scaleDown keeps the
-                // 220 cluster crisp but shrinks it on short screens.
-                Expanded(
-                  child: Center(
-                    child:
-                        const FittedBox(
-                              fit: BoxFit.scaleDown,
-                              child: BrandFlower(size: 440),
-                            )
-                            .animate()
-                            .fadeIn(duration: AppDurations.slow)
-                            .scale(
-                              duration: AppDurations.slow,
-                              curve: AppCurves.emphasized,
-                              begin: const Offset(0.85, 0.85),
-                              end: const Offset(1, 1),
-                            ),
+                const SizedBox(height: AppSizes.sp12),
+                // Figma 3126:11876 — Body/Regular, centred, 304 wide inside
+                // the 366 column. The inset is what forces the annotated
+                // 2-line break ("…before your / Nibbles journey begins.").
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSizes.xl),
+                  child: Text(
+                    'A few important things to know before your Nibbles '
+                    'journey begins.',
+                    textAlign: TextAlign.center,
+                    style: textTheme.bodyLarge?.copyWith(
+                      color: AppColors.fgDefault,
+                    ),
                   ),
                 ),
-                for (var i = 0; i < _checks.length; i++) ...[
-                  _ConsentCheckboxRow(
-                    key: Key('onboarding_consent_checkbox_$i'),
-                    identifier: 'onboarding_consent_checkbox_$i',
-                    label: _labelFor(i),
-                    value: _checks[i],
-                    onChanged: (v) => _toggle(i, value: v),
-                  ).animate().fadeIn(
-                    delay: (120 + 70 * i).ms,
-                    duration: AppDurations.fade,
+                // Flower + checklist share the free space. minHeight keeps the
+                // checklist bottom-pinned on a roomy screen; the scroll view is
+                // the release valve on a short one, where three checkboxes plus
+                // the inline P1 error no longer fit (iPhone SE overflowed).
+                Expanded(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) => SingleChildScrollView(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: constraints.maxHeight,
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // Empty leading child so `spaceBetween` splits the
+                            // slack evenly above and below the flower, leaving
+                            // it centred in the gap (Figma) with the checklist
+                            // still pinned to the bottom.
+                            const SizedBox.shrink(),
+                            // Figma 1025:7330 — 220x220 cluster in the gap
+                            // between the subtitle and the checklist.
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: AppSizes.lg,
+                              ),
+                              child:
+                                  const Center(
+                                        child: BrandFlower(size: _flowerSize),
+                                      )
+                                      .animate()
+                                      .fadeIn(duration: AppDurations.slow)
+                                      .scale(
+                                        duration: AppDurations.slow,
+                                        curve: AppCurves.emphasized,
+                                        begin: const Offset(0.85, 0.85),
+                                        end: const Offset(1, 1),
+                                      ),
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                for (var i = 0; i < _checks.length; i++) ...[
+                                  _ConsentCheckboxRow(
+                                    key: Key('onboarding_consent_checkbox_$i'),
+                                    identifier:
+                                        'onboarding_consent_checkbox_$i',
+                                    label: _consentLabels[i],
+                                    labelWidget: i == _linkedConsentIndex
+                                        ? _buildLinkedLabel(context)
+                                        : null,
+                                    value: _checks[i],
+                                    onChanged: (v) => _toggle(i, value: v),
+                                  ).animate().fadeIn(
+                                    delay: (120 + 70 * i).ms,
+                                    duration: AppDurations.fade,
+                                  ),
+                                  if (i < _checks.length - 1)
+                                    const SizedBox(height: AppSizes.sm),
+                                ],
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
-                  if (i < _checks.length - 1)
-                    const SizedBox(height: AppSizes.sm),
-                ],
+                ),
                 AnimatedSize(
                   duration: AppDurations.base,
                   curve: AppCurves.standard,
@@ -178,7 +216,7 @@ class _OnboardingConsentScreenState
                       icon: const Icon(Icons.arrow_back_rounded),
                       tone: AppRoundButtonTone.butter,
                       semanticLabel: 'Back',
-                      // Gate back during submit to prevent orphan-baby race.
+                      // Gate back during submit: orphan-baby race.
                       onPressed: isSubmitting ? null : _onBack,
                     ),
                     const SizedBox(width: AppSizes.sp12),
@@ -199,28 +237,57 @@ class _OnboardingConsentScreenState
     );
   }
 
-  /// Verbatim copy for each checkbox row from the Figma audit
-  /// (.figma-audit/onboarding/baby-setup-{gt6mo,lt6mo}-1/report.md).
+  /// Row 3 rendered with tappable document links. The flat string still backs
+  /// the row's semantics label, so screen readers read the whole sentence.
   ///
-  /// Index 2 only renders when `_checks.length == 3` (baby younger than
-  /// 6 months) and carries the early-solids responsibility acknowledgement.
-  String _labelFor(int index) {
-    switch (index) {
-      case 0:
-        return 'I understand that Nibbles shares general educational '
-            'information, not medical advice, and that parents make the '
-            'final decisions for their baby';
-      case 1:
-        return 'I confirm I have received medical clearance and understand '
-            'the above';
-      case 2:
-        return 'I accept full responsibility for my decision to start solids '
-            'before 6 months';
-      default:
-        return '';
-    }
+  /// "Terms of Use" is deliberately NOT a link — that document does not exist
+  /// yet. "Privacy Policy" links only once [kPrivacyPolicyPublished] flips.
+  Widget _buildLinkedLabel(BuildContext context) {
+    void open(String slug) => context.pushNamed(
+      AppRoute.legalDocument.name,
+      pathParameters: {'slug': slug},
+    );
+
+    return AppLinkedText(
+      text: _consentLabels[_linkedConsentIndex],
+      links: {
+        'Medical & Safety Disclaimer': () => open(kLegalDisclaimerSlug),
+        'Privacy Policy': kPrivacyPolicyPublished
+            ? () => open(kLegalPrivacyPolicySlug)
+            : null,
+      },
+    );
   }
 }
+
+// Declared individually so each can wrap across lines —
+// `no_adjacent_strings_in_list` bans that inside the list literal itself.
+const String _consentGuideLabel =
+    'I understand that Nibbles is a general guide and that I remain '
+    'responsible for making feeding decisions based on my child’s individual '
+    'needs.';
+
+const String _consentSuperviseLabel =
+    'I will actively supervise my child while eating, follow the safety '
+    'guidance, check ingredients and allergens, and seek professional or '
+    'emergency help when needed.';
+
+const String _consentTermsLabel =
+    'I have read and agree to the Terms of Use, including the Medical & '
+    'Safety Disclaimer, and acknowledge the Privacy Policy.';
+
+/// Verbatim checkbox copy from Figma section 1255:11883.
+const List<String> _consentLabels = [
+  _consentGuideLabel,
+  _consentSuperviseLabel,
+  _consentTermsLabel,
+];
+
+/// Index of the row that carries the document links.
+const int _linkedConsentIndex = 2;
+
+/// Figma 1025:7330 — the flower cluster's drawn size.
+const double _flowerSize = 220;
 
 /// Row composed of [AppCheckbox] + label text. Tapping the row toggles the
 /// checkbox so the whole label is a hit target (kit pattern).
@@ -230,10 +297,15 @@ class _ConsentCheckboxRow extends StatelessWidget {
     required this.value,
     required this.onChanged,
     required this.identifier,
+    this.labelWidget,
     super.key,
   });
 
   final String label;
+
+  /// Replaces the plain [Text] rendering of [label] when the row needs inline
+  /// links. [label] still backs the semantics so the sentence reads whole.
+  final Widget? labelWidget;
   final bool value;
   final ValueChanged<bool> onChanged;
   final String identifier;
@@ -265,13 +337,15 @@ class _ConsentCheckboxRow extends StatelessWidget {
               ),
               const SizedBox(width: AppSizes.sp12),
               Expanded(
-                child: Text(
-                  label,
-                  // Body/Regular per Figma audit (Figtree 15/22) → bodyLarge.
-                  style: textTheme.bodyLarge?.copyWith(
-                    color: AppColors.fgDefault,
-                  ),
-                ),
+                child:
+                    labelWidget ??
+                    Text(
+                      label,
+                      // Body/Regular per Figma (Figtree 15/22) → bodyLarge.
+                      style: textTheme.bodyLarge?.copyWith(
+                        color: AppColors.fgDefault,
+                      ),
+                    ),
               ),
             ],
           ),

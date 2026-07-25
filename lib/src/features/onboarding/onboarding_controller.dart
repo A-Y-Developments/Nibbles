@@ -9,15 +9,9 @@ import 'package:nibbles/src/common/services/baby_profile_service.dart';
 import 'package:nibbles/src/common/services/consent_service.dart';
 import 'package:nibbles/src/common/services/local_flag_service.dart';
 import 'package:nibbles/src/features/onboarding/onboarding_state.dart';
-import 'package:nibbles/src/utils/age_in_months.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'onboarding_controller.g.dart';
-
-/// Age cutoff (in whole months) for the early-solids responsibility consent.
-/// Babies younger than this at submit time are recorded against the second
-/// consent type per NIB-145.
-const int onboardingEarlySolidsThresholdMonths = 6;
 
 /// Injectable Crashlytics recorder so unit tests can assert the non-fatal
 /// payload without touching real Firebase. Mirrors the
@@ -155,7 +149,7 @@ class OnboardingController extends _$OnboardingController {
         // gated by the consent screen. Failures here MUST NOT block onboarding
         // (the in-app gate is already satisfied); they are logged to
         // Crashlytics for triage and we proceed regardless.
-        await _recordOnboardingConsents(babyId: baby.id, dob: state.dob!);
+        await _recordOnboardingConsents(babyId: baby.id);
         state = state.copyWith(isSubmitting: false);
         return true;
       },
@@ -170,21 +164,15 @@ class OnboardingController extends _$OnboardingController {
   }
 
   /// Persists the consent acknowledgements taken on the consent screen
-  /// (NIB-145). Always records `solidsIntroduction`. If the baby is younger
-  /// than [onboardingEarlySolidsThresholdMonths] at submit time, also records
-  /// `under6MoResponsibility` (matches the extra checkbox surfaced for <6mo
-  /// DOB on the consent screen).
+  /// (NIB-145). The screen is no longer age-gated — every user ticks the same
+  /// three boxes, so both receipts are always written.
   ///
   /// P2 — failures are recorded to Crashlytics and swallowed; the caller does
   /// not surface an inline error and the flow proceeds to /home.
-  Future<void> _recordOnboardingConsents({
-    required String babyId,
-    required DateTime dob,
-  }) async {
-    final consents = <ConsentType>[
+  Future<void> _recordOnboardingConsents({required String babyId}) async {
+    const consents = <ConsentType>[
       ConsentType.solidsIntroduction,
-      if (ageInMonths(dob) < onboardingEarlySolidsThresholdMonths)
-        ConsentType.under6MoResponsibility,
+      ConsentType.termsAndPrivacy,
     ];
 
     final consentService = ref.read(consentServiceProvider);

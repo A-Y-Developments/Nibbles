@@ -34,6 +34,34 @@ void main() {
     devPaywallSkipped: devSkip,
   );
 
+  group('legal documents', () {
+    const disclaimer = '/legal/medical-safety-disclaimer';
+
+    test('reachable from every onboarding phase', () {
+      // Phase A (name/DOB), phase B (readiness), phase C (result/consent).
+      expect(resolve(at: disclaimer), isNull);
+      expect(resolve(at: disclaimer, babySetup: true), isNull);
+      expect(resolve(at: disclaimer, babySetup: true, readiness: true), isNull);
+    });
+
+    test('reachable signed out and before first launch', () {
+      expect(resolve(at: disclaimer, loggedIn: false), isNull);
+      expect(resolve(at: disclaimer, launched: false, loggedIn: false), isNull);
+    });
+
+    test('not bounced to /home once onboarding is done', () {
+      expect(
+        resolve(
+          at: disclaimer,
+          babySetup: true,
+          readiness: true,
+          onboarding: true,
+        ),
+        isNull,
+      );
+    });
+  });
+
   group('splash + first launch', () {
     test('splash is always a pass-through', () {
       expect(resolve(at: AppRoute.splash.path), isNull);

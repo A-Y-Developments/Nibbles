@@ -71,9 +71,9 @@ ProviderContainer _makeContainer({
 }
 
 /// NIB-145 — `OnboardingController.submit` must persist the consent
-/// acknowledgements after a successful baby creation. Always records
-/// `solidsIntroduction`; additionally records `under6MoResponsibility` when
-/// the baby is younger than 6 months at submit time. P2 — failures log to
+/// acknowledgements after a successful baby creation. Records
+/// `solidsIntroduction` + `termsAndPrivacy` for every user; the retired
+/// `under6MoResponsibility` receipt is never written. P2 — failures log to
 /// Crashlytics and never block onboarding.
 void main() {
   late _MockBabyProfileService babyProfile;
@@ -102,9 +102,9 @@ void main() {
     ).thenAnswer((_) async => const Result.success(null));
   });
 
-  test(
-    'records solidsIntroduction only when baby DOB >= 6 months at submit time',
-    () async {
+  test('records solidsIntroduction + termsAndPrivacy regardless of baby age '
+      '(the consent screen is no longer age-gated)', () async {
+    for (final dobDays in <int>[250, 60]) {
       final container = _makeContainer(
         babyProfile: babyProfile,
         consent: consent,
@@ -112,9 +112,7 @@ void main() {
       );
       final controller = container.read(onboardingControllerProvider.notifier)
         ..updateName('Lily')
-        // 8 months old: clearly >= 6mo at "today" — exact day doesn't matter
-        // as long as the diff is >= 6 whole months.
-        ..updateDob(DateTime.now().subtract(const Duration(days: 250)));
+        ..updateDob(DateTime.now().subtract(Duration(days: dobDays)));
 
       final ok = await controller.submit();
 
@@ -125,42 +123,19 @@ void main() {
           type: ConsentType.solidsIntroduction,
         ),
       ).called(1);
+      verify(
+        () => consent.recordConsent(
+          babyId: 'baby-001',
+          type: ConsentType.termsAndPrivacy,
+        ),
+      ).called(1);
       verifyNever(
         () => consent.recordConsent(
           babyId: any(named: 'babyId'),
           type: ConsentType.under6MoResponsibility,
         ),
       );
-    },
-  );
-
-  test('records BOTH solidsIntroduction and under6MoResponsibility when baby '
-      'DOB is younger than 6 months at submit time', () async {
-    final container = _makeContainer(
-      babyProfile: babyProfile,
-      consent: consent,
-      crashRecorder: crashRecorder,
-    );
-    final controller = container.read(onboardingControllerProvider.notifier)
-      ..updateName('Lily')
-      // 2 months old — well under the 6mo cutoff.
-      ..updateDob(DateTime.now().subtract(const Duration(days: 60)));
-
-    final ok = await controller.submit();
-
-    expect(ok, isTrue);
-    verify(
-      () => consent.recordConsent(
-        babyId: 'baby-001',
-        type: ConsentType.solidsIntroduction,
-      ),
-    ).called(1);
-    verify(
-      () => consent.recordConsent(
-        babyId: 'baby-001',
-        type: ConsentType.under6MoResponsibility,
-      ),
-    ).called(1);
+    }
   });
 
   test('P2 — consent insert failure does NOT block submit and logs to '
@@ -202,7 +177,7 @@ void main() {
     verify(
       () => consent.recordConsent(
         babyId: 'baby-001',
-        type: ConsentType.under6MoResponsibility,
+        type: ConsentType.termsAndPrivacy,
       ),
     ).called(1);
 
@@ -215,7 +190,7 @@ void main() {
       crashRecorder.captured.expand((c) => c.information).toList(),
       containsAll(<String>[
         'consent_type=solids_introduction',
-        'consent_type=under_6mo_responsibility',
+        'consent_type=terms_and_privacy',
       ]),
     );
   });
