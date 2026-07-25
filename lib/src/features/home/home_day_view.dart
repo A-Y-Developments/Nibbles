@@ -3,6 +3,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:nibbles/src/common/domain/entities/guidance_tip.dart';
 import 'package:nibbles/src/common/domain/entities/meal_plan_entry.dart';
 import 'package:nibbles/src/common/domain/entities/recipe.dart';
+import 'package:nibbles/src/common/domain/meal_stage.dart';
 import 'package:nibbles/src/common/services/guidance_service.dart';
 import 'package:nibbles/src/features/home/home_controller.dart';
 import 'package:nibbles/src/utils/age_in_months.dart';
@@ -11,7 +12,9 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'home_day_view.freezed.dart';
 part 'home_day_view.g.dart';
 
-/// Number of meals a full day targets — drives the meals ring (`/2`).
+/// Fallback meals-per-day target used only when the baby's DOB is unknown.
+/// The live value comes from the age ladder ([mealsPerDayForAge]) so the Home
+/// meals ring tracks the baby's stage (milk-only/1 → 6–8mo/2 → 9mo+/3).
 const int kDailyMealTarget = 2;
 
 /// Pure client-side slice of `HomeState` for a single selected day. Recomputed
@@ -75,11 +78,15 @@ HomeDayView homeDayView(
   final ageMonths = state.baby == null
       ? 0
       : ageInMonths(state.baby!.dateOfBirth);
+  final mealTarget = state.baby == null
+      ? kDailyMealTarget
+      : mealsPerDayForDob(state.baby!.dateOfBirth);
 
   return HomeDayView(
     meals: meals,
     recipes: recipes,
     mealCount: meals.length,
+    mealTarget: mealTarget,
     ironRich: ironRich,
     isToday: isToday,
     guidance: GuidanceService.tipsFor(
